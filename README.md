@@ -160,6 +160,10 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Search, performance & media](docs/PERFORMANCE.md)
 - [Security & trust](docs/SECURITY.md)
 - [Infrastructure & scaling](docs/INFRASTRUCTURE.md)
+- [End-to-end architecture stress test](docs/STRESS-TEST.md)
+- [Unit economics & rent stress test](docs/ECONOMICS.md)
+- [Failure & recovery requirements](docs/FAILURE-RECOVERY.md)
+- [Technical Specification v0](docs/TECHNICAL-SPEC-V0.md)
 - [MVP & validation roadmap](docs/MVP.md)
 - [Architecture decisions](docs/DECISIONS.md)
 
