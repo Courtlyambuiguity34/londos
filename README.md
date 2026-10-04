@@ -174,6 +174,9 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Illustrative LSS JSON Schema](docs/SHOP-SPEC-SCHEMA-V0.1.json)
 - [Conversational shop-design pipeline](docs/SHOP-DESIGN-PIPELINE.md)
 - [Component building code](docs/COMPONENT-BUILDING-CODE.md)
+- [Stack comparison](docs/STACK-COMPARISON.md)
+- [Vertical architecture prototype](docs/VERTICAL-PROTOTYPE.md)
+- [ADR-0001: initial application architecture](docs/ADR/0001-initial-application-architecture.md)
 - [Architecture decisions](docs/DECISIONS.md)
 
 ## Current phase
