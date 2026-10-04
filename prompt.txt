@@ -1,0 +1,578 @@
+LONDOS — MASTER CODEX BUILD INSTRUCTION
+
+MISSION
+
+Build the Londos application described by this repository into a coherent, secure, deployable working system.
+
+Repository: Courtlyambuiguity34/londos
+
+Before changing code, READ THE ENTIRE REPOSITORY, especially every document under docs/, the README, architecture decisions, LSS specification/schema, security, data model, performance, economics, failure/recovery, search/ranking, pilot, operations and infrastructure documents. Treat those documents collectively as the product specification. Resolve conflicts by preferring the most recent explicit decisions in this prompt and documenting the resolution.
+
+Do not merely scaffold the project. Implement, test, benchmark, document and prepare it for deployment. Do not claim a feature works unless it actually does. Do not publish/deploy to a production environment without the repository owner's explicit authorization and required credentials. You may prepare deployment configuration and verify builds.
+
+ARCHITECTURE DECISION
+
+The previous proposed Django architecture is superseded. Preserve the old ADR as history, but update architecture documentation to record the current decision.
+
+Core:
+- Next.js
+- TypeScript
+- Node.js
+- PostgreSQL
+- server rendering / React Server Components where appropriate
+- minimal client JavaScript
+- object storage semantics for media
+- background queue/workers for asynchronous work
+- CDN/cache-friendly public rendering
+
+Node/TypeScript is the primary runtime. Python is NOT required in the normal customer request path. If a future AI/ML/vision workload demonstrably benefits from Python, isolate it behind a worker/service interface rather than coupling public traffic to Python.
+
+PRODUCT CONSTITUTION
+
+Londos is NOT a generic multi-vendor marketplace, Shopify clone, Jumia clone, or website builder.
+
+It is a DIGITAL MALL / DIGITAL COMMERCIAL REAL-ESTATE PLATFORM.
+
+Hierarchy:
+Platform -> Mall -> Shop -> Department -> Product/Service
+
+The shop is the fundamental commercial identity. Products belong to shops. Search discovers shops through their contents. A search for "shoes" should surface relevant shops; selecting Annette's shop should enter Annette's relevant shoes context while preserving the ability to browse the rest of her shop.
+
+Businesses rent autonomous digital premises inside Londos. The platform supplies the building, shared discovery, rules, infrastructure and management. Merchants retain their own shop identity and initially control their commerce/contact arrangements.
+
+PUBLIC AND PRIVATE SURFACES
+
+Build four clearly separated surfaces:
+
+1. Public Mall
+- no mandatory customer account
+- entrance/directory
+- category navigation
+- global search
+- shop discovery
+- relevant shop results
+- navigation into individual shops
+
+2. Public Shop
+- strong merchant identity
+- departments
+- products/services
+- optimized media
+- shop-local navigation/search
+- stable direct shop URL
+- deep links to relevant departments/products
+- merchant-configured contact/commerce actions
+- fast mobile-first rendering
+
+3. Shopkeeper
+- authenticated merchant environment
+- shop profile/branding
+- departments
+- products/services
+- media
+- LSS design/revisions/preview/rollback
+- commerce/contact settings
+- delivery/pickup information
+- publication
+- tenancy/rent status
+- useful analytics
+- security/account controls
+- MFA-ready architecture
+
+4. Landlord / Londos Management
+- strong authentication; MFA architecture mandatory
+- applications/review
+- merchant verification
+- approval/rejection
+- shop provisioning
+- logical mall assignment/capacity
+- immutable shop IDs
+- rent/tenancy management
+- reminders/grace/closure/reopening
+- reports/moderation/suspension
+- audit history
+- operational statistics
+
+CUSTOMERS
+
+Never require a customer account merely to browse, search, enter a shop, inspect products, call, open WhatsApp or make an ordinary enquiry. Optional accounts can be added later for convenience.
+
+MULTI-TENANCY
+
+Every shop has an immutable ID such as SHOP-UG-00000451. Names/slugs may change; shop identity must not.
+
+Use a tenant-aware relational model. Do NOT create a database/table per shop.
+
+All shop-owned records must be securely scoped. Every protected server operation must verify actor authorization for the target shop. Add explicit automated attack tests proving Merchant A cannot read or modify Merchant B resources by changing identifiers.
+
+LOGICAL MALLS
+
+Support internal logical malls. Approximately 1,500 shops per logical mall is a planning/operational target, NOT a hard database ceiling. Additional logical malls can be created as capacity grows. Customers normally should not experience infrastructure partitions as "Mall 1/Mall 2". Global discovery spans eligible shops across logical malls, and internal mall assignment must not confer organic ranking advantage.
+
+LONDOS SHOP SPECIFICATION (LSS)
+
+The repository's LSS documents are central.
+
+A shop design is a safe, versioned structured specification, not arbitrary merchant code. Canonical catalogue/business data remains separate from presentation.
+
+Implement the LSS schema, validation and typed component registry. Render only approved components. Existing examples include ShopHero, ShopLogo, Heading, RichText, ProductCard, ProductShelf, DepartmentCard, DepartmentRail, CollectionGrid, PromotionBanner, Image, Gallery, ContactPanel, WhatsAppAction, CallAction, EnquiryAction, PickupInfo, DeliveryInfo, BusinessHours, LocationCard, VerificationBadge and SocialLinks.
+
+Never permit tenant arbitrary JavaScript, arbitrary server code, direct database access, secrets or unrestricted CSS.
+
+Implement bounded theme/design tokens, platform-controlled responsive behavior, accessibility rules and performance budgets.
+
+LSS REVISIONS
+
+Implement:
+- working draft
+- preview
+- immutable published revision
+- revision history
+- rollback by creating a new revision
+- optimistic concurrency/base revision checks
+
+A stale editor must never silently overwrite a newer revision.
+
+CONVERSATIONAL SHOP DESIGN
+
+The merchant-facing Designer should feel like speaking to an interior/shop designer, not programming a website.
+
+Examples:
+- "I sell women's clothes and shoes. Make dresses first."
+- "Make it elegant."
+- "Put new arrivals at the entrance."
+- "Move shoes before handbags."
+- "Remove the call button."
+- "Keep WhatsApp visible."
+- "Make this electronics shop feel like a premium showroom."
+
+The pipeline is:
+merchant instruction -> authorized context -> structured design intent -> proposed LSS patch -> deterministic validation -> optional AI review/repair -> preview -> merchant confirmation -> immutable revision -> publish -> targeted cache invalidation
+
+AI NEVER directly publishes.
+
+AI NEVER writes arbitrary production React/HTML/JS/SQL.
+
+AI NEVER receives database credentials, deployment credentials, secrets, unrelated merchant data, another shop's private data, unrestricted filesystem access or arbitrary execution capability.
+
+AI PROVIDER ARCHITECTURE
+
+Implement a provider-neutral interface so shop-design logic is not coupled to one vendor. Conceptually:
+AIProvider
+  -> GeminiProvider
+  -> OpenAIProvider
+
+Above providers, implement a LondosDesignOrchestrator.
+
+Use server-side environment variables only. Never expose API credentials to the browser, generated HTML, logs, analytics, error messages or repository. Never commit real keys.
+
+Example configuration names:
+GEMINI_API_KEY_1
+GEMINI_API_KEY_2
+GEMINI_API_KEY_3
+GEMINI_API_KEY_4
+GEMINI_API_KEY_5
+OPENAI_API_KEY
+
+Support multiple Gemini credentials only as a secure credential/failover pool where usage complies with the provider's policies. Do NOT implement key cycling intended to evade quotas, rate limits, billing, restrictions or terms. If a provider reports a quota/rate-limit condition, obey the provider's rules and degrade gracefully rather than deliberately exhausting successive free allowances.
+
+Secrets must be validated server-side at startup/use, redacted from logs, and replaceable without code changes. Use the deployment platform's secret/environment facility in production.
+
+DESIGN ORCHESTRATOR
+
+Do NOT automatically call every model for every edit.
+
+Use the cheapest/simplest safe path.
+
+First perform deterministic Londos checks wherever possible:
+- schema
+- allowed components
+- shop ownership/reference authorization
+- supported operations
+- component counts
+- media/performance budget
+- required data
+- accessibility rules that can be computed
+- revision conflict
+- malformed references
+
+Use Gemini as the initial conversational design/planning provider when configured and available. It should return schema-constrained structured intent/LSS patches, not executable code.
+
+OpenAI is a higher-value critic/reviewer/fallback when configured. Use it selectively for cases such as:
+- complex redesigns
+- low-confidence or ambiguous design
+- repeated failed repair
+- subjective visual hierarchy/merchandising review
+- explicit premium/high-quality review
+- configured fallback when appropriate
+
+A simple valid request such as "move shoes above handbags" should not require a paid OpenAI call.
+
+The OpenAI reviewer should inspect the proposed design against merchant intent, LSS rules, mobile usability, hierarchy, merchandising, accessibility and performance, and return structured recommendations/patches. The result must still pass deterministic Londos validation.
+
+Do not assume OpenAI or Gemini output is trusted simply because it conforms to JSON. Treat model output as untrusted input.
+
+AI SAFETY AND PROMPT INJECTION
+
+Treat catalogue text, merchant product descriptions, uploaded text and external content as DATA, never privileged system instructions.
+
+Construct prompts with clear trust boundaries. Only send the minimum authorized shop context required for the task. Prevent cross-tenant context leakage.
+
+Enforce server-side authorization before context is assembled and again before a proposed patch is committed.
+
+Set timeouts, bounded retries/backoff, request size/context limits, per-shop rate limits and usage accounting. Record provider/model, request outcome, latency and usage metadata where available without storing secrets or unnecessarily retaining sensitive prompt content.
+
+If AI is unavailable/quota-limited, existing public shops, search, Shopkeeper ordinary functions, Landlord, rent and commerce must continue. Templates/manual controls remain usable.
+
+Once a design is published, customer rendering uses validated stored LSS and canonical data. Customer visits must generate ZERO AI calls merely to render an existing shop.
+
+AI DESIGN ROLES
+
+Model these as logical responsibilities, not necessarily separate model calls:
+- Shop Planner: understands business/departments/customer journey
+- Interior Designer: proposes layout/theme/component changes
+- Merchandising Assistant: organizes departments/collections/presentation
+- Design Inspector: critiques proposed design
+
+Combine roles when that reduces latency/cost without reducing safety. Split only when evidence shows value.
+
+COMMERCE
+
+Londos initially acts as landlord/infrastructure, not compulsory payment custodian.
+
+Allow merchant-configurable approved actions such as:
+- WhatsApp
+- call
+- enquiry/message
+- request/reservation
+- COD
+- pay on pickup
+- Mobile Money after confirmation
+- deposit/pre-order instructions
+
+Keep sensitive contact/payment configuration outside arbitrary LSS text; LSS references approved configuration. Do not build a platform wallet or custody merchant funds unless explicitly decided later.
+
+TENANCY / RENT
+
+Implement explicit state machines.
+
+Application:
+draft/submitted -> reviewing -> approved | rejected | needs_information
+
+Shop:
+provisioning -> unpublished -> active -> temporarily_closed | suspended | archived
+
+Tenancy:
+pending -> active -> due -> grace -> closed -> active
+
+Media:
+uploaded -> validating -> processing -> ready | rejected | failed
+
+Do not delete shop data immediately when rent expires. Implement reminders, grace, temporary closure and reopening. Closed/suspended shops must be excluded from public discovery according to policy.
+
+Implement an idempotent rent ledger/event model, not merely paid=true/false.
+
+SEARCH
+
+Begin with PostgreSQL-backed search behind a clean search interface so a dedicated engine can later replace/augment it.
+
+Scopes:
+- global Londos
+- category/department
+- shop-local
+
+Search is shop-first. Product matches help rank/surface relevant shops. Prevent one merchant from flooding a results page with duplicate products. Use bounded cursor/pagination; approximately 20 initial results should be configurable.
+
+Exclude non-public/ineligible shops/products. Internal mall assignment must not influence organic rank. Keep any future sponsored promotion explicitly labelled and separate from organic ranking.
+
+PERFORMANCE
+
+Performance is a first-class feature.
+
+Guiding requirement:
+"A customer on an ordinary Ugandan mobile connection should never have to download the mall to enter the mall."
+
+Optimize for low-end phones and unstable connections:
+- server rendering
+- React Server Components where useful
+- minimal client components/JS
+- code splitting
+- bounded queries
+- pagination
+- lazy media
+- responsive optimized images
+- cacheable public output
+- CDN-friendly design
+- targeted invalidation
+
+Do not turn public shops into heavy SPAs unnecessarily.
+
+Track generated HTML, client JS and media bytes. The meaningful metric is how quickly the shop becomes usable on a customer's phone.
+
+CACHING
+
+Public shops are read-heavy. Cache aggressively where correctness permits.
+
+A single product update should:
+- commit canonical data
+- invalidate only relevant cache
+- update relevant search projection/index
+- preserve unrelated cached shops
+
+Do not flush the whole mall for one merchant update.
+
+MEDIA
+
+Never deliver raw multi-megabyte merchant phone uploads when optimized variants can be used.
+
+Pipeline:
+upload -> validation/quarantine -> metadata stripping/safety checks -> asynchronous processing -> variants -> object storage -> CDN/public delivery
+
+Generate thumbnails/search-card/product-display/compressed high-quality variants. Lazy-load noncritical media. Do not store large media blobs in PostgreSQL.
+
+Failed/delayed media processing must not crash public browsing.
+
+BACKGROUND JOBS
+
+Use a suitable Node-compatible queue/worker architecture for image processing, indexing, analytics aggregation, rent reminders, notifications, scheduled tenancy transitions and future AI jobs.
+
+Jobs must be observable, retryable and idempotent where appropriate. Public storefront requests must not wait for noncritical analytics/jobs.
+
+DATABASE
+
+Use PostgreSQL with migrations, foreign keys, indexes, constraints and clear transaction boundaries.
+
+Model at minimum:
+users
+merchant organizations
+memberships/roles
+malls
+applications
+shops
+shop memberships
+departments
+products/services
+product media
+shop designs
+LSS revisions
+contact/commerce settings
+rent accounts
+rent ledger/events
+verification
+reports/moderation
+audit events
+analytics events
+
+Use JSONB where appropriate for validated LSS. Do not use MongoDB merely because LSS is JSON-like.
+
+SECURITY
+
+Security is architecture, not a hidden URL.
+
+Implement:
+- secure password/session/auth architecture
+- server-side authorization
+- strict tenant isolation
+- CSRF protection where applicable
+- XSS defenses
+- secure cookies
+- rate limiting
+- upload validation
+- secrets outside source
+- audit logging
+- MFA-ready Shopkeeper
+- mandatory-MFA architecture for Landlord
+- step-up authentication capability for high-risk actions
+
+Sensitive actions include ownership/contact/payment-detail changes, suspension, destructive operations and high-impact Landlord actions.
+
+Never log secrets. Provide .env.example with placeholder variable names only.
+
+FAILURE ISOLATION
+
+Design graceful degradation:
+- search incident: direct shops should continue where practical
+- AI incident: non-AI Londos continues
+- analytics incident: storefront continues
+- worker backlog: browsing continues
+- media processor delay: existing content continues/placeholders where needed
+- cache incident: correctness before speed
+- database write outage: fail safely; never fabricate successful writes
+
+DEVELOPMENT STRUCTURE
+
+Use a modular architecture even if initially deployed as a modular monolith. Suggested domains:
+identity
+applications
+malls
+shops
+tenancy
+catalogue
+shop-design/LSS
+discovery/search
+media
+rent
+trust/moderation
+analytics
+landlord
+shopkeeper
+AI/design-orchestrator
+
+Keep domain logic out of React components where practical. Avoid a giant miscellaneous utils layer.
+
+UI/UX
+
+Create a professional modern digital-mall experience, not a generic marketplace clone.
+
+The experience should communicate:
+enter Londos -> discover commercial area -> find shops -> enter a merchant's premises.
+
+Each shop retains strong identity. Prioritize mobile, clarity, speed, accessibility, low data use and strong visual hierarchy.
+
+Shopkeeper must be usable by nontechnical merchants. Landlord prioritizes operational clarity.
+
+SEED AND SCALE DATA
+
+Provide realistic development seed data including multiple logical malls, multiple merchants, Annette Fashion House, dresses/shoes/handbags/new arrivals, varied tenancy states, merchant users and landlord user.
+
+Provide a programmatic synthetic generator capable of approximately:
+- 1,500 shops
+- roughly 100 products/shop (~150,000 products)
+
+Do not commit hundreds of thousands of generated records.
+
+TESTS
+
+Create meaningful automated tests, especially:
+- authentication/authorization
+- cross-tenant attack tests
+- shop ownership
+- tenancy transitions
+- closed/suspended discovery exclusion
+- LSS validation
+- LSS revision conflicts
+- rent idempotency
+- search/pagination
+- media validation
+- sensitive setting changes
+- AI provider failure
+- malformed/untrusted model output
+- AI cross-tenant leakage prevention
+- prompt-injection resistance at the orchestration boundary
+
+DOCUMENTATION AND DECISIONS
+
+Update documentation as implementation evolves. Preserve architectural history. Mark the old Django proposal superseded and record the Node/TypeScript decision.
+
+Document:
+- setup
+- environment variables (names only; never secrets)
+- database/migrations
+- seeding
+- tests
+- AI providers and safe credential configuration
+- local development
+- deployment preparation
+- architecture changes
+- operational/failure behavior
+
+GIT WORKFLOW
+
+Inspect repository state before coding. Work on a dedicated implementation branch unless the environment/task explicitly provides another safe branch. Use coherent commits. Never commit secrets. Do not delete architecture documentation simply because implementation has begun.
+
+IMPLEMENTATION ORDER
+
+Proceed autonomously through a sensible dependency order, approximately:
+1. repository audit and decision reconciliation
+2. Next.js/TypeScript foundation
+3. PostgreSQL schema/migrations
+4. identity/auth
+5. malls/shops/multi-tenancy
+6. catalogue
+7. LSS schema/validator/renderer
+8. public shop
+9. mall/search
+10. Shopkeeper
+11. Landlord
+12. tenancy/rent
+13. media pipeline
+14. background jobs
+15. AI provider abstraction + safe Design Orchestrator
+16. trust/moderation
+17. analytics
+18. automated tests/security tests
+19. synthetic scale benchmark
+20. performance optimization
+21. documentation/deployment preparation
+
+Adjust ordering when dependencies require it, but do not stop after scaffolding.
+
+EXTERNAL SERVICES
+
+Where credentials/services are unavailable:
+- implement the abstraction/interface
+- provide safe local/mock development behavior
+- expose clear UI state
+- document exactly what is missing
+- continue everything else
+
+Never invent credentials or embed sample secrets that could be mistaken for real ones.
+
+PERFORMANCE BENCHMARK
+
+Before declaring completion, use synthetic data to test approximately 1,500 shops and up to ~150,000 products where the environment reasonably permits.
+
+Measure and document:
+- public shop response
+- search latency/query plans
+- database query behavior
+- pagination
+- memory/CPU where measurable
+- generated HTML bytes
+- client JS bytes
+- media behavior
+- cache behavior
+- concurrent requests where possible
+- targeted update/invalidation behavior
+
+Optimize obvious bottlenecks and record limitations honestly.
+
+DEFINITION OF COMPLETION
+
+Completion is not "Next.js scaffold created."
+
+A coherent build should allow:
+- merchant application
+- Landlord review/approval
+- shop provisioning
+- merchant department/product management
+- safe LSS design/rendering
+- conversational design through provider abstraction when configured
+- preview/confirm/publish
+- public no-login entrance
+- search/discovery of relevant shops
+- entry into relevant shop context
+- browsing the rest of that shop
+- working approved contact/commerce actions
+- tenancy state affecting public availability
+- Landlord management
+- tenant-isolation tests
+- synthetic scale generation
+- documented setup/tests
+- successful production build
+- deployment configuration/preparation
+
+Do not claim deployment/publication unless it actually occurred with explicit authorization and credentials.
+
+FINAL OPERATING INSTRUCTION
+
+Treat Londos as a serious commercial platform.
+
+Preserve this central principle:
+"Londos is a digital mall where businesses rent autonomous digital shops inside a shared commercial destination."
+
+Read ALL repository documentation before implementation. Use the repository as the source of truth together with this prompt. Where older documents conflict with explicit newer decisions here, update the documentation rather than silently ignoring the conflict.
+
+Architect, implement, test, benchmark, secure, document and prepare the complete build. When ambiguity is minor, record a reasonable assumption and continue instead of stopping. When ambiguity could cause irreversible security, financial, destructive-data, or production-deployment consequences, stop and request authorization.
+
+At the end, provide a precise implementation report: what was built, tests run/results, benchmarks, security controls, remaining external-service requirements, known limitations, migration/deployment steps, and the exact commits/branch/PR containing the work.
