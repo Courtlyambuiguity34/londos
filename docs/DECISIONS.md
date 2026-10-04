@@ -49,10 +49,12 @@ This file distinguishes **settled principles**, **working hypotheses**, and **op
 
 ## Open technical decisions
 
-- frontend framework;
-- backend language/framework;
-- relational DB choice;
-- search technology;
+Current direction is **Next.js / TypeScript / Node.js / PostgreSQL**, per the master instruction and [ADR-0002](ADR/0002-nextjs-node-application-architecture.md). The old Django ADR is historical. The foundation uses npm and pins runtime/dependency versions; see `package.json` and `.nvmrc`.
+
+Remaining decisions:
+- authentication/MFA library and PostgreSQL schema/query tooling;
+- PostgreSQL hosting;
+- later dedicated search technology (initial search is PostgreSQL-backed);
 - cache/queue;
 - media/object storage;
 - CDN;

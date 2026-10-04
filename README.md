@@ -2,7 +2,26 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** Architecture and validation phase. This repository is intentionally documentation-first. Technology choices that are not yet proven are recorded as decisions to make, not facts.
+**Status:** Sol 6.1 High foundation complete; awaiting Sol 6.1 Extra High for secure persistence, authentication and jobs. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
+
+## Recommendations
+
+Use **Sol 6.1 High** for the foundation, ordinary interface work, routine tests and documentation. Use **Sol 6.1 Extra High** for schema/migrations, tenant isolation, financial correctness, concurrency, safe LSS and AI boundaries. Use **6 Astra Extra High** for critical architecture/security and release reviews.
+
+The assistant will record progress and remind you at each model boundary. You control the model selector and confirm the change before the next stage starts. See [RECOMMENDATIONS](RECOMMENDATIONS.md) for the full workflow, [the implementation plan](docs/IMPLEMENTATION-PLAN.md) for task dependencies, and [BUILD-STATUS](docs/BUILD-STATUS.md) for the next action.
+
+## Run the public preview
+
+Use Node 24.19.0 and npm 11.9.0. From the repository root:
+
+```bash
+npm ci --no-fund
+npm run dev
+```
+
+For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
+
+The current stage uses fictional, read-only shops and illustrated products. It does not accept purchases/enquiries or provide merchant/operator accounts. [BUILD-STATUS](docs/BUILD-STATUS.md) distinguishes this foundation from the later database, security, rent, LSS and AI work.
 
 ## What Londos is
 
@@ -154,6 +173,13 @@ Londos may recommend safer/better practices, but should not force one checkout m
 
 ## Documentation map
 
+- [Model recommendations and handoffs](RECOMMENDATIONS.md)
+- [Implementation plan](docs/IMPLEMENTATION-PLAN.md)
+- [Build status and next model setting](docs/BUILD-STATUS.md)
+- [Development setup](docs/DEVELOPMENT.md)
+- [System and journey illustrations](docs/ILLUSTRATIONS.md)
+- [Current Next.js / Node architecture ADR](docs/ADR/0002-nextjs-node-application-architecture.md)
+- [Domain contracts for X1 review](docs/CONTRACTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Product & UX](docs/PRODUCT.md)
 - [Data & tenancy](docs/DATA-MODEL.md)
@@ -181,6 +207,6 @@ Londos may recommend safer/better practices, but should not force one checkout m
 
 ## Current phase
 
-We are deliberately **not coding the full platform yet**. The immediate job is to stress-test the business model, tenant/customer journeys, security boundaries, operational economics and architecture before committing to a stack.
+The owner authorized implementation. Begin with an executable, tested public foundation, then move through the plan's security, data, merchant/operator, design, rent and release gates using the model handoffs above. Current-stage completion is distinct from complete-build or production readiness.
 
 The architecture should be able to grow toward millions of users and many thousands of shops, but the first deployment should pay only for the scale that actually exists.

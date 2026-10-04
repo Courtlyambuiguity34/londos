@@ -1,5 +1,9 @@
 # Londos Architecture
 
+## Current implementation decision
+
+The current build uses **Next.js / TypeScript / Node.js / PostgreSQL**, following the owner's master instruction and [ADR-0002](ADR/0002-nextjs-node-application-architecture.md). The Django proposal is superseded. Public server rendering, separate domain policies, safe LSS and a durable Node worker preserve the logical boundaries below. See [BUILD-STATUS](BUILD-STATUS.md) for capabilities actually verified; the first stage uses fictional read-only fixtures.
+
 ## Architectural goal
 
 Build a digital commercial property that can begin with tens of merchants and evolve to many logical malls and very large traffic without redesigning the product metaphor.
@@ -91,15 +95,14 @@ Do not rebuild every shop or wait until end-of-day for ordinary price/stock/cata
 
 No single merchant/customer request should depend on downloading or querying unrelated tenants. Failures in analytics, media transformation or optional features should not unnecessarily block the storefront.
 
-## Decisions intentionally open
+## Decisions still open
 
-- implementation language/framework;
 - cloud provider;
-- database vendor;
-- search engine;
+- PostgreSQL hosting and schema/query tooling;
+- later dedicated search engine (pilot search begins with PostgreSQL);
 - cache/queue products;
 - object-storage/CDN vendor;
 - exact deployment topology;
-- whether storefront rendering is SSR, static regeneration, hybrid, or another measured approach.
+- exact SSR/cache/revalidation policy within the server-rendered Next.js direction.
 
 Choose these after requirements/benchmarks, not because they are fashionable.

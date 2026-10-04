@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-04",
+  "environment": "Node 24.19.0; Next 16.3.8 production standalone; local loopback; Chromium 151",
+  "scope": "Read-only fixture preview, ten sequential warm-process samples per route. Not the PostgreSQL scale benchmark. Gzip HTML size is an estimate, not observed wire compression.",
+  "measurements": [
+    {
+      "path": "/",
+      "samples": 10,
+      "p50_ms": 10.4,
+      "p95_ms": 38.2,
+      "html_raw_bytes": 37388,
+      "html_gzip_estimate_bytes": 5995,
+      "initial_js_encoded_bytes": 143294,
+      "initial_illustration_encoded_bytes": 5184
+    },
+    {
+      "path": "/search?q=shoes",
+      "samples": 10,
+      "p50_ms": 8.7,
+      "p95_ms": 13.6,
+      "html_raw_bytes": 19082,
+      "html_gzip_estimate_bytes": 4211,
+      "initial_js_encoded_bytes": 143294,
+      "initial_illustration_encoded_bytes": 925
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "samples": 10,
+      "p50_ms": 7.9,
+      "p95_ms": 16.9,
+      "html_raw_bytes": 25589,
+      "html_gzip_estimate_bytes": 4617,
+      "initial_js_encoded_bytes": 143294,
+      "initial_illustration_encoded_bytes": 3362
+    },
+    {
+      "path": "/shops/annette-fashion-house/products/everyday-canvas-sneakers",
+      "samples": 10,
+      "p50_ms": 8.4,
+      "p95_ms": 12.7,
+      "html_raw_bytes": 23756,
+      "html_gzip_estimate_bytes": 4256,
+      "initial_js_encoded_bytes": 143294,
+      "initial_illustration_encoded_bytes": 2437
+    }
+  ]
+}

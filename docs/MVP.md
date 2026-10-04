@@ -1,5 +1,7 @@
 # MVP & Validation Roadmap
 
+The master build instruction adds provider-neutral conversational design to the full requested build. Advanced design can remain disabled for an explicitly limited pilot, but a manual-only pilot does not establish full-build completion. Follow the model stages and evidence in [BUILD-STATUS](BUILD-STATUS.md).
+
 ## Goal
 
 Prove that merchants and customers value the **digital mall / rented shop** model before building every possible feature.

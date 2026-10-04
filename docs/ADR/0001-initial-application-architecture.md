@@ -1,6 +1,6 @@
 # ADR-0001: Initial Application Architecture
 
-- **Status:** Proposed — benchmark required
+- **Status:** Superseded by [ADR-0002](0002-nextjs-node-application-architecture.md) and the explicit Next.js / Node master build instruction. Retained as architectural history.
 - **Date:** 2026-10-04
 - **Decision:** Django 6 modular monolith for the first Londos implementation
 

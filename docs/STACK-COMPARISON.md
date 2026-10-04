@@ -1,5 +1,7 @@
 # Londos Stack Comparison — Decision Round 1
 
+**Historical comparison:** the Django recommendation below was superseded by the owner's explicit instruction in `prompt.txt`. The current direction is recorded in [ADR-0002](ADR/0002-nextjs-node-application-architecture.md). Retain the comparison's benchmark criteria and original estimates as history; they are not measured results or the current implementation selection.
+
 **Date:** 2026-10-04
 
 ## Decision context

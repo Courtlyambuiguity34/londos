@@ -1,8 +1,8 @@
 # Technical Specification v0
 
-**Status:** pre-stack, architecture contract.
+**Status:** architecture contract under implementation. The current Next.js / TypeScript / Node.js / PostgreSQL direction is defined in [ADR-0002](ADR/0002-nextjs-node-application-architecture.md).
 
-This specification defines what the first implementation must accomplish without prematurely selecting frameworks/vendors.
+This specification defines required behavior. Vendor and deployment choices remain evidence-driven; follow the selected stack and track verified capabilities in [BUILD-STATUS](BUILD-STATUS.md).
 
 ## 1. Public capabilities
 
@@ -168,9 +168,9 @@ Architecture should permit:
 
 Production must not have the user's local mini PC as its sole availability dependency. Owner-controlled hardware can provide encrypted independent backup/recovery and development functions.
 
-## 13. Implementation gate
+## 13. Production implementation gate
 
-Before choosing the production stack, validate:
+Before production rollout and selecting remaining vendors/policies, validate:
 - expected pilot traffic;
 - media volume;
 - payment/rent collection approach;
@@ -180,4 +180,4 @@ Before choosing the production stack, validate:
 - deployment budget;
 - expected developer/operator capacity.
 
-Then select the simplest stack that satisfies this specification.
+Validate the chosen Next.js / Node / PostgreSQL direction against this specification and choose the simplest supported deployment shape. Any proposed framework change requires a new documented decision rather than silently reviving a superseded proposal.

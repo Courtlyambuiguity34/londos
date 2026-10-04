@@ -1,5 +1,7 @@
 # Technology Stack Selection Criteria
 
+**Current direction:** the owner selected Next.js / TypeScript / Node.js / PostgreSQL in the master instruction; see [ADR-0002](ADR/0002-nextjs-node-application-architecture.md). The criteria below guide remaining tooling/vendor choices and any explicitly justified future reconsideration. They do not require restarting framework selection during the current build.
+
 ## Rule
 
 Choose technology after the product and operational requirements, not before them.
