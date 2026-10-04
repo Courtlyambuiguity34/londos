@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://londos.example/spec/shop/v0.1.schema.json",
+  "title": "Londos Shop Specification v0.1 - Illustrative Draft",
+  "type": "object",
+  "required": ["schema_version", "shop_id", "revision", "spaces"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "shop_id": {"type": "string", "minLength": 1},
+    "design_id": {"type": "string"},
+    "revision": {"type": "integer", "minimum": 1},
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": {"type": "string"},
+        "density": {"enum": ["compact", "comfortable", "spacious"]},
+        "palette": {"type": "object"},
+        "typography": {"type": "object"},
+        "shape": {"type": "object"}
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["department-led", "curated", "minimal"]},
+        "items": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "additionalProperties": false,
+            "properties": {
+              "label": {"type": "string", "maxLength": 60},
+              "department_ref": {"type": "string"},
+              "space_ref": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "entrance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": {"type": "string"},
+        "headline": {"type": "string", "maxLength": 120},
+        "media_ref": {"type": "string"},
+        "primary_destination": {"type": "string"},
+        "announcement": {"type": "string", "maxLength": 200}
+      }
+    },
+    "spaces": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"$ref": "#/$defs/space"}
+    },
+    "floating_actions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["type", "contact_ref"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {"enum": ["whatsapp", "call", "enquiry"]},
+          "contact_ref": {"type": "string"},
+          "visibility": {"enum": ["shopwide", "entrance", "product-context"]}
+        }
+      }
+    },
+    "seo": {"type": "object"},
+    "performance": {"type": "object"},
+    "extensions": {"type": "object"}
+  },
+  "$defs": {
+    "space": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "type": {
+          "enum": ["entrance", "display", "department", "collection", "story", "offer", "contact", "service_desk", "gallery"]
+        },
+        "title": {"type": "string", "maxLength": 120},
+        "emphasis": {"enum": ["low", "normal", "high"]},
+        "department_ref": {"type": "string"},
+        "source": {"$ref": "#/$defs/source"},
+        "components": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {"$ref": "#/$defs/component"}
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {"enum": ["product_query", "manual_products"]},
+        "department_ref": {"type": "string"},
+        "tags": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {"type": "string", "maxLength": 40}
+        },
+        "product_refs": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {"type": "string"}
+        },
+        "limit": {"type": "integer", "minimum": 1, "maximum": 30},
+        "sort": {"enum": ["merchant_featured", "newest", "price_low", "price_high"]}
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": ["component"],
+      "additionalProperties": true,
+      "properties": {
+        "component": {
+          "enum": ["ShopHero", "ShopLogo", "Heading", "RichText", "ProductCard", "ProductShelf", "DepartmentCard", "DepartmentRail", "CollectionGrid", "PromotionBanner", "Image", "Gallery", "ContactPanel", "WhatsAppAction", "CallAction", "EnquiryAction", "PickupInfo", "DeliveryInfo", "BusinessHours", "LocationCard", "VerificationBadge", "SocialLinks"]
+        }
+      }
+    }
+  }
+}
