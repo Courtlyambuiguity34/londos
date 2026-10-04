@@ -165,6 +165,11 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Failure & recovery requirements](docs/FAILURE-RECOVERY.md)
 - [Technical Specification v0](docs/TECHNICAL-SPEC-V0.md)
 - [MVP & validation roadmap](docs/MVP.md)
+- [Business model & revenue architecture](docs/BUSINESS-MODEL.md)
+- [Automation & landlord operations](docs/AUTOMATION-OPERATIONS.md)
+- [Search ranking principles](docs/SEARCH-RANKING.md)
+- [First pilot experiment](docs/PILOT-EXPERIMENT.md)
+- [Technology stack selection criteria](docs/STACK-CRITERIA.md)
 - [Architecture decisions](docs/DECISIONS.md)
 
 ## Current phase
