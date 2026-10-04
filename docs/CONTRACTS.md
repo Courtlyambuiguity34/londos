@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: design baseline for X1 review; these contracts are not yet backed by database/authentication code.
+Status: initial state records and identity/permission/transaction contracts are backed by X1 PostgreSQL/authentication/worker code and local tests. Lifecycle transitions, public eligibility, publication/media and live financial commands remain later phases. Review the implemented boundary under R1; see [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -26,18 +26,18 @@ Public eligibility must combine current publication, tenancy, moderation and res
 | Approve/provision/suspend/reinstate | No | No | Specific operator permission, MFA, reason and audit |
 | Read private evidence/reports | Only policy-approved own records | No implicit permission | Least-privilege verification/trust permission |
 
-Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. Public demo portal pages show no private data and implement no privileged actions.
+Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. With core services disabled, demo portal pages show no private data/actions. With explicit local core configuration, protected profiles/security/operator job views enforce these policies. Staff additionally require a per-shop grant; operator support/review resources require an explicit shop scope.
 
 ## Persistence and side effects
 
 Canonical mutations require a database transaction, tenant-consistent references, conflict checks where relevant, and durable audit/event registration. Outbox/transactional queue processing must survive crashes and tolerate duplicate/out-of-order delivery. Prices use exact money representation. Rent corrections create new events rather than overwrite history.
 
-## Interfaces to implement under X1 and subsequent stages
+## Interface progress
 
-- Actor/session/permission resolver with explicit denial.
-- Scoped repository and tenant-consistent database constraints.
+- Implemented: current actor/session/action/shop permission resolver with explicit denial.
+- Implemented: scoped private profile/membership/invitation services and tenant-consistent database constraints. Extend to every new resource.
 - Public eligibility resolver and cache/projection revocation contract.
-- Durable event/job handler with entity version and idempotency key.
+- Implemented: transactional queue, version-aware internal profile projection, idempotency/lease/effect receipts, scheduler and local notification/storage interfaces. New consequential handlers require their own tests.
 - LSS structural/semantic/reference/policy validator and compare-and-swap publication.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 

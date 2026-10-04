@@ -1,0 +1,5 @@
+CREATE FUNCTION prevent_membership_identity_change() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.merchant_id <> OLD.merchant_id OR NEW.user_id <> OLD.user_id THEN RAISE EXCEPTION 'Membership identity is immutable'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER membership_identity BEFORE UPDATE ON memberships FOR EACH ROW EXECUTE FUNCTION prevent_membership_identity_change();
+CREATE TABLE mfa_code_receipts (user_id text NOT NULL REFERENCES "user"(id), code_hash text NOT NULL, expires_at timestamptz NOT NULL, PRIMARY KEY(user_id,code_hash));
+CREATE FUNCTION prevent_job_contract_change() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id <> OLD.id OR NEW.kind <> OLD.kind OR NEW.schema_version <> OLD.schema_version OR NEW.dedupe_key <> OLD.dedupe_key OR NEW.payload <> OLD.payload OR NEW.merchant_id IS DISTINCT FROM OLD.merchant_id OR NEW.shop_id IS DISTINCT FROM OLD.shop_id THEN RAISE EXCEPTION 'Job contract is immutable'; END IF; RETURN NEW; END $$;
+CREATE TRIGGER job_contract BEFORE UPDATE ON jobs FOR EACH ROW EXECUTE FUNCTION prevent_job_contract_change();

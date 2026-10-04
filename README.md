@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** Sol 6.1 High foundation complete; awaiting Sol 6.1 Extra High for secure persistence, authentication and jobs. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
+**Status:** Sol 6.1 Extra High X1 security foundation implemented and locally verified; next is **6 Astra Extra High R1 review** before dependent protected features. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
 
 ## Recommendations
 
@@ -21,7 +21,11 @@ npm run dev
 
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
-The current stage uses fictional, read-only shops and illustrated products. It does not accept purchases/enquiries or provide merchant/operator accounts. [BUILD-STATUS](docs/BUILD-STATUS.md) distinguishes this foundation from the later database, security, rent, LSS and AI work.
+Public browsing uses fictional, read-only shops and illustrated products. X1 adds local PostgreSQL accounts, real MFA, tenant-scoped private profiles and durable jobs. It does not accept purchases/enquiries or enable live rent, uploads, LSS publication or AI.
+
+For the full local X1 setup, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
+
+The next handoff is **6 Astra Extra High**: confirm the switch and say **“Continue R1.”** [BUILD-STATUS](docs/BUILD-STATUS.md) and [X1 evidence](docs/evidence/X1-STAGE.md) distinguish stage completion from complete-build/production readiness.
 
 ## What Londos is
 
@@ -179,7 +183,10 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Development setup](docs/DEVELOPMENT.md)
 - [System and journey illustrations](docs/ILLUSTRATIONS.md)
 - [Current Next.js / Node architecture ADR](docs/ADR/0002-nextjs-node-application-architecture.md)
-- [Domain contracts for X1 review](docs/CONTRACTS.md)
+- [Identity and durable jobs ADR](docs/ADR/0003-identity-and-durable-jobs.md)
+- [X1 security and Astra review scope](docs/X1-SECURITY.md)
+- [X1 verification evidence](docs/evidence/X1-STAGE.md)
+- [Domain contracts for review](docs/CONTRACTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Product & UX](docs/PRODUCT.md)
 - [Data & tenancy](docs/DATA-MODEL.md)

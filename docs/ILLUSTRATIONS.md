@@ -28,7 +28,69 @@ flowchart TB
   Confirm --> Domain
 ```
 
-PostgreSQL, the security boundary, durable worker, LSS publication and AI are planned for the later model stages. Their appearance in the diagram does not claim they are implemented.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. Public PostgreSQL eligibility/search, media processing, rent workflows, LSS publication and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+
+## Implemented X1 identity and mutation boundary
+
+```mermaid
+flowchart TD
+  Login[Password and verified email] --> Challenge{MFA enrolled?}
+  Challenge -->|Yes| Factor[TOTP or unused recovery code]
+  Factor --> Proof[Server proof bound to current session]
+  Challenge -->|No| Session[Password session]
+  Proof --> Policy[Current session and explicit action permission]
+  Session --> Policy
+  Policy --> Tenant[Merchant ownership and staff shop grant]
+  Tenant --> Lock[Merchant lock and current version]
+  Lock --> Commit[(One PostgreSQL transaction)]
+  Commit --> Profile[Canonical profile]
+  Commit --> Audit[Append-only audit]
+  Commit --> Job[Durable job]
+  Proof --> Operator[Separate operator permission and scope]
+  Operator --> Sensitive[Fresh MFA for replay or sensitive action]
+```
+
+Private page policy also runs before HTML/Flight streaming. Domain/handler authorization remains required. Customers continue browsing without authentication.
+
+## Implemented X1 job recovery
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending: domain transaction commits
+  pending --> running: claim and unique lease token
+  running --> done: idempotent effect then acknowledgment
+  running --> pending: lease expires or retryable failure
+  running --> dead: attempt budget exhausted
+  dead --> pending: scoped operator with fresh MFA replays
+  done --> [*]
+```
+
+The separate worker reads canonical versions, fences old leases and uses a durable effect receipt. Local notifications use an atomic private file keyed by job ID. Forced process-death tests cover commit, effect and delivery boundaries; real provider delivery still requires its own idempotency evidence.
+
+## Initial canonical relationships
+
+```mermaid
+erDiagram
+  USER ||--o{ SESSION : authenticates
+  SESSION ||--o| MFA_PROOF : verifies
+  USER ||--o{ MEMBERSHIP : joins
+  MERCHANT ||--o{ MEMBERSHIP : authorizes
+  MERCHANT ||--o{ SHOP : owns
+  MALL ||--o{ SHOP : groups
+  SHOP ||--o{ STAFF_SHOP_GRANT : scopes
+  SHOP ||--o{ DEPARTMENT : contains
+  DEPARTMENT ||--o{ PRODUCT : groups
+  SHOP ||--|| PUBLICATION : separates
+  SHOP ||--|| TENANCY : separates
+  SHOP ||--|| MODERATION : separates
+  MERCHANT ||--o{ APPLICATION : applies
+  APPLICATION ||--o{ INVOICE : precedes_shop
+  INVOICE ||--o{ RENT_EVENT : records
+  MERCHANT ||--o{ AUDIT_EVENT : audits
+  MERCHANT ||--o{ JOB : queues
+```
+
+Composite database keys additionally enforce tenant/shop agreement; the diagram omits those columns for readability. Future feature schemas and command transitions evolve through new reviewed migrations.
 
 ## Implemented anonymous preview journey
 
@@ -67,3 +129,5 @@ The assistant records the next setting in BUILD-STATUS. The owner operates the m
 The application renders these fixed trusted SVGs with explicit dimensions and lazy loading except for initial hero/product art. Arbitrary tenant SVG uploads are not enabled; their validation policy belongs to the media-security stage.
 
 Validated screenshots and their exact stage/environment are recorded in [the High-stage evidence report](evidence/HIGH-STAGE.md).
+
+The [X1 evidence report](evidence/X1-STAGE.md#visual-evidence) records inspected desktop shop-profile and mobile account-security screenshots from the local production build. All pictured identities and shops are fictional; no authentication secrets are pictured.

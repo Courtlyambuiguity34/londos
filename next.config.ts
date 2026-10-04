@@ -6,6 +6,22 @@ const nextConfig: NextConfig = {
   experimental: { cpus: 2 },
   async headers() {
     return [
+      ...[
+        "/shopkeeper/:path*",
+        "/landlord/:path*",
+        "/security",
+        "/sign-in",
+        "/recover",
+        "/api/auth/:path*",
+        "/api/workspace/:path*",
+        "/api/operator/:path*",
+      ].map((source) => ({
+        source,
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      })),
       {
         source: "/:path*",
         headers: [

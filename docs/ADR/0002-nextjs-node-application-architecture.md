@@ -14,7 +14,7 @@ The explicit [master instruction](../../prompt.txt) supersedes the earlier Djang
 
 The High-stage foundation pins Node 24.19.0, npm 11.9.0, Next.js 16.3.8, React 19.3.0 and TypeScript 5.9.3. Next.js accepts the selected Node/React versions. TypeScript 5.9 stays within a well-established compiler generation while the newly released 7.x toolchain is evaluated separately. Actual compatibility is demonstrated by type checks, lint, tests and production build, not dependency metadata alone.
 
-Use one npm lockfile and frozen `npm ci` installs. System fonts and local illustrations avoid build-time font/image network dependencies. PostgreSQL driver/ORM, auth/MFA library and job backend remain X1 decisions; no temporary private-data implementation is treated as secure infrastructure.
+Use one npm lockfile and frozen `npm ci` installs. System fonts and local illustrations avoid build-time font/image network dependencies. X1 selected PostgreSQL 18.6, pg 8.23.1, Better Auth 1.7.7 and a PostgreSQL transactional queue, with an independently built Node worker. See [ADR-0003](0003-identity-and-durable-jobs.md) for tested contracts and current limits.
 
 ## Boundaries
 

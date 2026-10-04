@@ -22,6 +22,7 @@ jobs:
       - run: npm run format:check
       - run: npm audit --audit-level=high
       - run: npm run build
+      - run: npm run check:bundle-secrets
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
@@ -31,4 +32,42 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          retention-days: 7
+  postgres-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
+        env:
+          POSTGRES_USER: londos
+          POSTGRES_DB: londos_development
+          POSTGRES_PASSWORD: ci_only_not_a_deployed_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U londos -d londos_development"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://londos:ci_only_not_a_deployed_password@127.0.0.1:5432/londos_development
+      LONDOS_LOCAL_ADAPTERS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-fund
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm run check:bundle-secrets
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:core
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: postgres-browser-results
+          path: |
+            playwright-report/core/
+            test-results/core/
           retention-days: 7

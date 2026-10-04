@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 
+// Standalone changes its working directory; load the root server configuration
+// before spawning it. Explicit process variables retain precedence.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
+
 const args = process.argv.slice(2);
 let port = process.env.PORT ?? "3000";
 for (let i = 0; i < args.length; i++) {

@@ -2,6 +2,8 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
+**Current handoff (2026-10-05, Africa/Kampala):** H and X1 secure foundation work are complete and locally verified. Next: **6 Astra Extra High R1**. Confirm that setting and say **“Continue R1.”** See BUILD-STATUS and X1 evidence before continuing.
+
 ## Model settings
 
 | Stage | Model / reasoning | Work |

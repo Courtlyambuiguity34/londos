@@ -1,0 +1,8 @@
+-- This table is both transactional outbox and durable queue. No dispatch gap.
+CREATE TABLE jobs (id uuid PRIMARY KEY, merchant_id uuid REFERENCES merchants(id), shop_id uuid, kind text NOT NULL, schema_version integer NOT NULL DEFAULT 1 CHECK(schema_version>0), dedupe_key text NOT NULL UNIQUE, payload jsonb NOT NULL CHECK(jsonb_typeof(payload)='object'), state text NOT NULL DEFAULT 'pending' CHECK(state IN ('pending','running','done','dead')), attempts integer NOT NULL DEFAULT 0 CHECK(attempts>=0), max_attempts integer NOT NULL DEFAULT 5 CHECK(max_attempts BETWEEN 1 AND 10), available_at timestamptz NOT NULL DEFAULT now(), lease_token uuid, lease_until timestamptz, last_error text, created_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz, FOREIGN KEY(shop_id,merchant_id) REFERENCES shops(id,merchant_id), CHECK(shop_id IS NULL OR merchant_id IS NOT NULL), CHECK((state='running') = (lease_token IS NOT NULL AND lease_until IS NOT NULL)));
+CREATE INDEX jobs_claim ON jobs(available_at,created_at,id) WHERE state='pending';
+CREATE UNIQUE INDEX jobs_tenant_backpressure ON jobs(merchant_id) WHERE state='running' AND merchant_id IS NOT NULL;
+CREATE TABLE job_effects (job_id uuid PRIMARY KEY REFERENCES jobs(id), applied_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE shop_projections (shop_id uuid PRIMARY KEY REFERENCES shops(id), version integer NOT NULL CHECK(version>0), name text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE worker_heartbeats (worker_id uuid PRIMARY KEY, seen_at timestamptz NOT NULL, state text NOT NULL CHECK(state IN ('running','stopped')));
+CREATE TABLE scheduler_ticks (tick text PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now());

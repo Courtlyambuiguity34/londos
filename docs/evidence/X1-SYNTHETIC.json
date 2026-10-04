@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-04",
+  "databaseVersion": "18.6 (Debian 18.6-1.pgdg13+2)",
+  "seed": "londos-x1-scale-v1",
+  "syntheticShops": 1500,
+  "syntheticProducts": 150000,
+  "repeatedGeneration": "same seed executed twice; canonical counts remained exact",
+  "qualification": "Generator capacity only; this is not a search, latency, concurrency or production-load benchmark."
+}

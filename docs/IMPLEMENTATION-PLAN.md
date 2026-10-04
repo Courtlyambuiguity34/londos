@@ -183,31 +183,33 @@ P5–P7 collectively close the architecture-prototype gate. Small UI research, p
 
 **Depends on:** P0/D01–D03/D12 direction. **Produces:** a runnable web/worker/database development base.
 
-- [ ] P1.1 Pin compatible Node, Next.js, TypeScript, PostgreSQL and package-manager versions. Create a single lockfile, strict type checking, linting, formatting and server/client import boundaries. **High stage:** web/runtime/tooling complete; PostgreSQL pin/integration awaits X1.
-- [ ] P1.2 Scaffold the four route surfaces with shared accessible UI primitives. Show explicit loading, denied, unavailable and not-found states. Keep the public shell light. **High stage:** public routes, error/not-found/loading components and unavailable private gateways complete; authenticated denial flows await X1.
-- [ ] P1.3 Add typed server configuration and `.env.example` containing names and unmistakable placeholders only. Classify required core values versus optional capabilities; reject insecure production defaults.
-- [ ] P1.4 Add reproducible local PostgreSQL and, when selected, object-storage/job dependencies. Container definitions must preserve normal TLS, signatures and checksums; follow cloud proxy/CA guidance when used in this environment.
-- [ ] P1.5 Define scripts for development, worker startup, build/start, type checking, tests, migrations, seed and benchmark. Document working directories and readiness checks. Ensure builds do not unexpectedly contact production services.
-- [ ] P1.6 Set up test runners for domain tests, real-PostgreSQL integration tests and browser flows. Use isolated test databases; do not substitute SQLite for PostgreSQL-specific correctness.
-- [ ] P1.7 Establish CI for frozen installation, lint/types, tests, migrations and production build. Start secret/dependency scanning; triage findings rather than blanket-disabling checks.
-- [ ] P1.8 Add structured redacted logging, request/correlation IDs, liveness and meaningful readiness. Separate optional-provider failures from core service readiness.
+- [x] P1.1 Pin compatible Node, Next.js, TypeScript, PostgreSQL and package-manager versions. Create a single lockfile, strict type checking, linting, formatting and server/client import boundaries. **X1:** web/runtime/tooling and pinned PostgreSQL integration verified; see X1 evidence.
+- [x] P1.2 Scaffold the four route surfaces with shared accessible UI primitives. Show explicit loading, denied, unavailable and not-found states. Keep the public shell light. **X1:** public foundation plus authenticated private profiles/security/operator job views and pre-render denial flows verified; full product workflows remain later phases.
+- [x] P1.3 Add typed server configuration and `.env.example` containing names and unmistakable placeholders only. Classify required core values versus optional capabilities; reject insecure production defaults.
+- [x] P1.4 Add reproducible local PostgreSQL and, when selected, object-storage/job dependencies. Container definitions must preserve normal TLS, signatures and checksums; follow cloud proxy/CA guidance when used in this environment.
+- [ ] P1.5 Define scripts for development, worker startup, build/start, type checking, tests, migrations, seed and benchmark. Document working directories and readiness checks. Ensure builds do not unexpectedly contact production services. **X1 progress / remaining owner:** Web/worker/migration/seed/generator/test scripts implemented; full architecture benchmark remains P7/P11.
+- [x] P1.6 Set up test runners for domain tests, real-PostgreSQL integration tests and browser flows. Use isolated test databases; do not substitute SQLite for PostgreSQL-specific correctness.
+- [ ] P1.7 Establish CI for frozen installation, lint/types, tests, migrations and production build. Start secret/dependency scanning; triage findings rather than blanket-disabling checks. **X1 progress / remaining owner:** Frozen checks, PostgreSQL/browser CI, dependency audit and configured-value artifact scan implemented; general repository/production secret scanning remains P11.
+- [ ] P1.8 Add structured redacted logging, request/correlation IDs, liveness and meaningful readiness. Separate optional-provider failures from core service readiness. **X1 progress / remaining owner:** Initial redacted event logs, API request IDs and health/readiness implemented; broader telemetry/correlation belongs P11/P12.
 
 **Gate:** a clean checkout can install, migrate, start, serve a representative request, run the initial tests and build using documented commands. A second setup does not corrupt persistent state. No client bundle or build log contains a server secret.
 
 **Containment:** no real merchant data or credentials; generated data and caches are ignored, not committed.
 
+X1 validates the initial security foundation under P2–P4. Checked items apply to the implemented development surfaces; they do not certify future consumers or live providers. See [X1 evidence](evidence/X1-STAGE.md) and the required [R1 review](X1-SECURITY.md).
+
 ### P2 — Canonical data, constraints and deterministic fixtures
 
 **Depends on:** P1 plus state/role/catalogue decisions. **Produces:** a migration-controlled domain model.
 
-- [ ] P2.1 Implement the domain tables from section 4 with foreign keys, unique constraints, tenant-consistent references, indexes, timestamps and explicit version columns where concurrent editing matters.
-- [ ] P2.2 Separate application, merchant, shop, publication, tenancy, rent and moderation records. Permit pre-provisioning invoices; distinguish immutable internal IDs from editable names/slugs.
-- [ ] P2.3 Define currency precision, locale/time handling and rent period boundaries. Store financial events with source/reference/actor and non-destructive adjustment semantics.
-- [ ] P2.4 Create append-oriented audit and durable-event/outbox tables. Transactions that change sensitive state must record their audit/event consistently.
-- [ ] P2.5 Build a safe development seed: multiple merchants/malls, Annette Fashion House, Dresses/Shoes/Handbags/New Arrivals, staff/operator roles, and unpublished/active/grace/closed/suspended fixtures. Supply development sign-in through an explicit local procedure; never create a deployed default administrator password.
-- [ ] P2.6 Create a repeatable synthetic generator with size/seed parameters and realistic distributions, including hot shops, skewed catalogue sizes and duplicate-like content. Target 1,500 shops and about 150,000 products without committing generated records.
-- [ ] P2.7 Protect seed/reset tools with an explicit nonproduction database guard; never truncate an unknown database. Make repeat invocation documented and safe.
-- [ ] P2.8 Test migrations on an empty DB and an older fixture schema, integrity constraints, concurrent unique-ID allocation and tenant-invalid references.
+- [ ] P2.1 Implement the domain tables from section 4 with foreign keys, unique constraints, tenant-consistent references, indexes, timestamps and explicit version columns where concurrent editing matters. **X1 progress / remaining owner:** Initial identity/catalogue/publication/tenancy/rent/audit/job schema is implemented. Media variants/quotas, complete contact/design/financial workflow and trust/analytics schemas evolve with P5–P9; do not mark these unimplemented domains complete.
+- [x] P2.2 Separate application, merchant, shop, publication, tenancy, rent and moderation records. Permit pre-provisioning invoices; distinguish immutable internal IDs from editable names/slugs.
+- [ ] P2.3 Define currency precision, locale/time handling and rent period boundaries. Store financial events with source/reference/actor and non-destructive adjustment semantics. **X1 progress / remaining owner:** Exact money/currency and UTC nonempty periods implemented; live rent boundaries/closure/retention policies and financial replay tests remain P8.
+- [x] P2.4 Create append-oriented audit and durable-event/outbox tables. Transactions that change sensitive state must record their audit/event consistently.
+- [x] P2.5 Build a safe development seed: multiple merchants/malls, Annette Fashion House, Dresses/Shoes/Handbags/New Arrivals, staff/operator roles, and unpublished/active/grace/closed/suspended fixtures. Supply development sign-in through an explicit local procedure; never create a deployed default administrator password.
+- [x] P2.6 Create a repeatable synthetic generator with size/seed parameters and realistic distributions, including hot shops, skewed catalogue sizes and duplicate-like content. Target 1,500 shops and about 150,000 products without committing generated records.
+- [x] P2.7 Protect seed/reset tools with an explicit nonproduction database guard; never truncate an unknown database. Make repeat invocation documented and safe.
+- [x] P2.8 Test migrations on an empty DB and an older fixture schema, integrity constraints, concurrent unique-ID allocation and tenant-invalid references.
 
 **Gate:** database constraints reject invalid relationships; fresh and upgrade migrations work; fixtures are reproducible and isolated from production.
 
@@ -217,12 +219,12 @@ P5–P7 collectively close the architecture-prototype gate. Small UI research, p
 
 **Depends on:** P2. **Produces:** the security boundary all private functionality will use.
 
-- [ ] P3.1 Implement login/logout, session expiry/revocation, recovery, verification where required and secure cookies. Prevent account enumeration; rate-limit sensitive endpoints and define CSRF/origin defenses for cookie-authenticated mutations.
-- [ ] P3.2 Implement scoped merchant memberships/roles and separate operator permissions. Verify permissions in server actions, handlers and domain services; check resource ownership independently of request IDs.
-- [ ] P3.3 Deliver working Landlord MFA enrollment, challenge, recovery and enforcement, plus Shopkeeper MFA and risk-policy hooks. High-risk changes require fresh authentication. Architecture placeholders are insufficient for live operator access.
-- [ ] P3.4 Protect invitations, role changes, ownership transfer and removal of the last owner. Invalidate access when membership/session state changes; audit it.
-- [ ] P3.5 Create reusable Merchant A/B attack fixtures and a permission test harness. Exercise private reads, writes, nested references, bulk operations, search-like private APIs, uploads, previews and exports as they are introduced.
-- [ ] P3.6 Ensure private data cannot escape via public RSC payloads, cache reuse, errors, static generation or logs. Public customer flows remain usable without authentication.
+- [x] P3.1 Implement login/logout, session expiry/revocation, recovery, verification where required and secure cookies. Prevent account enumeration; rate-limit sensitive endpoints and define CSRF/origin defenses for cookie-authenticated mutations.
+- [x] P3.2 Implement scoped merchant memberships/roles and separate operator permissions. Verify permissions in server actions, handlers and domain services; check resource ownership independently of request IDs.
+- [x] P3.3 Deliver working Landlord MFA enrollment, challenge, recovery and enforcement, plus Shopkeeper MFA and risk-policy hooks. High-risk changes require fresh authentication. Architecture placeholders are insufficient for live operator access.
+- [x] P3.4 Protect invitations, role changes, ownership transfer and removal of the last owner. Invalidate access when membership/session state changes; audit it.
+- [x] P3.5 Create reusable Merchant A/B attack fixtures and a permission test harness. Exercise private reads, writes, nested references, bulk operations, search-like private APIs, uploads, previews and exports as they are introduced.
+- [x] P3.6 Ensure private data cannot escape via public RSC payloads, cache reuse, errors, static generation or logs. Public customer flows remain usable without authentication.
 
 **Gate:** the complete initial role matrix passes positive and negative tests; guessed IDs and stale/revoked sessions do not grant access; actual MFA protects Landlord routes and actions.
 
@@ -232,12 +234,12 @@ P5–P7 collectively close the architecture-prototype gate. Small UI research, p
 
 **Depends on:** P2/P3. **Produces:** a reliable substrate for media, search, rent, notifications and analytics.
 
-- [ ] P4.1 Implement selected queue/worker/scheduler adapters and independent process entry points. Use transactional enqueue when it shares the DB transaction, or an outbox dispatcher when it does not.
-- [ ] P4.2 Specify at-least-once delivery semantics. Use deduplication/unique constraints, bounded retries/backoff, timeouts, leases/heartbeat where needed, and observable failed/dead-letter jobs. Do not assume exactly-once execution.
-- [ ] P4.3 Handle delayed and out-of-order events using entity versions or current canonical state. Older media/index events must not resurrect deleted or unpublished content.
-- [ ] P4.4 Implement safe administrative retry/replay and backpressure. Limit per-shop work so one tenant cannot exhaust all processing capacity.
-- [ ] P4.5 Add notification and storage interfaces with local sinks/fakes. Real delivery side effects occur after durable commit and use provider idempotency where available.
-- [ ] P4.6 Test a crash after DB commit but before dispatch, after delivery but before acknowledgment, and during processing. Demonstrate recovery without duplicated financial/tenancy effects.
+- [x] P4.1 Implement selected queue/worker/scheduler adapters and independent process entry points. Use transactional enqueue when it shares the DB transaction, or an outbox dispatcher when it does not.
+- [x] P4.2 Specify at-least-once delivery semantics. Use deduplication/unique constraints, bounded retries/backoff, timeouts, leases/heartbeat where needed, and observable failed/dead-letter jobs. Do not assume exactly-once execution.
+- [ ] P4.3 Handle delayed and out-of-order events using entity versions or current canonical state. Older media/index events must not resurrect deleted or unpublished content. **X1 progress / remaining owner:** Internal profile projection is canonical/version-aware and tested. Public eligibility, media and index resurrection tests remain mandatory when P5–P7 handlers exist.
+- [x] P4.4 Implement safe administrative retry/replay and backpressure. Limit per-shop work so one tenant cannot exhaust all processing capacity.
+- [x] P4.5 Add notification and storage interfaces with local sinks/fakes. Real delivery side effects occur after durable commit and use provider idempotency where available.
+- [ ] P4.6 Test a crash after DB commit but before dispatch, after delivery but before acknowledgment, and during processing. Demonstrate recovery without duplicated financial/tenancy effects. **X1 progress / remaining owner:** Separate-process commit/effect/delivery crash and duplicate-effect recovery tested. Financial/tenancy handlers are not implemented; add their consequence tests under P8.
 
 **Gate:** web and worker restart independently; queued work survives restart; retries converge to correct state; a worker outage produces visible pending state rather than silent loss.
 

@@ -1831,3 +1831,72 @@ p {
     transition: none !important;
   }
 }
+
+.account-page {
+  max-width: 860px;
+  display: grid;
+  gap: 24px;
+}
+.account-form {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+.account-form input,
+.account-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+}
+.account-form label {
+  font-weight: 600;
+}
+.account-form .button {
+  justify-self: start;
+}
+.account-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.text-button {
+  text-decoration: underline;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  color: var(--orange-dark);
+  text-align: left;
+}
+.secret-panel {
+  border: 1px solid var(--line);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+  overflow-wrap: anywhere;
+}
+.secret-panel h2 {
+  font-size: 30px;
+}
+.workspace-list {
+  padding: 0;
+  list-style: none;
+}
+.workspace-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.workspace-list a {
+  text-decoration: underline;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}

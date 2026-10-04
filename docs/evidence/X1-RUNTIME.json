@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-04",
+  "workerStopped": true,
+  "readinessWhileStopped": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "offline",
+    "financialOperations": false,
+    "liveNotifications": false
+  },
+  "profileWritesCommitted": 2,
+  "durableProfileJobsPending": 2,
+  "restartDrain": {
+    "verified": true,
+    "outstandingProfileJobs": 0,
+    "completedProfileEffects": 2,
+    "canonicalVersion": 3,
+    "projectionVersion": 3,
+    "nameMatches": true
+  },
+  "databaseOutage": {
+    "healthStatus": 200,
+    "readinessStatus": 503,
+    "databaseReady": false,
+    "publicHomeStatus": 200,
+    "publicSearchStatus": 200,
+    "authenticatedApiStatus": 503,
+    "authenticatedPageStatus": 503,
+    "webProcessSurvived": true
+  },
+  "databaseRecovery": {
+    "readinessStatus": 200,
+    "databaseReady": true,
+    "authenticatedApiStatus": 200
+  },
+  "recordedAt": "2026-10-04T22:21:57.530Z",
+  "finalReadiness": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "ready",
+    "financialOperations": false,
+    "liveNotifications": false
+  }
+}

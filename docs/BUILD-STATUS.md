@@ -1,54 +1,50 @@
 # Londos build status and model handoff
 
-Updated: 2026-10-04. Current branch: `work` (the isolated task branch).
+Updated: **2026-10-05 (Africa/Kampala)**. Branch: `work`, the existing isolated task branch.
 
 ## Current stage
 
-**H — Sol 6.1 High foundation: COMPLETE and locally verified.** Setting reported by the owner. The assistant cannot verify or change the model-selector UI. Awaiting the owner's confirmation of Sol 6.1 Extra High for X1.
+**X1 — Sol 6.1 Extra High secure foundation: COMPLETE and locally verified.** The owner confirmed the setting and instructed “Continue X1.” The assistant cannot verify/change the model-selector UI. The High foundation was committed as `e65748e`; this stage builds on it.
 
-Scope: architecture reconciliation, reproducible Next.js/TypeScript setup, accessible public interface with clearly labeled fictional fixtures, initial CI/behavior/browser checks, documentation and diagrams.
+Implemented: real local PostgreSQL schema/migrations/seed, maintained sessions/password verification/recovery, working TOTP and backup MFA, scoped merchant/action/shop/operator authorization, protected profile/workspace APIs, invitation/ownership/last-owner safeguards, append audit, a transactional PostgreSQL queue, independent compiled Node worker/scheduler, local adapter interfaces and meaningful readiness.
+
+This is the initial P2–P4 security boundary. It is not a complete merchant product or a production release. Full schemas/commands for later media/design/trust/analytics/financial features remain explicitly assigned in the implementation plan.
 
 ## Next required setting
 
-**Sol 6.1 Extra High**, stage **X1**: canonical PostgreSQL schema/migrations, authentication/MFA, authorization/tenant isolation and durable background jobs (P2–P4).
+**6 Astra Extra High**, stage **R1**: review the state/permission/data contracts, implementation and X1 security evidence before dependent protected features are widened.
 
-Stop at this boundary and remind the owner to change the setting. Resume when the owner says they have switched and asks to continue. The Astra Extra High security review follows X1. See [RECOMMENDATIONS](../RECOMMENDATIONS.md).
+The owner must confirm that setting, then say **“Continue R1.”** Do not infer the switch from “Continue,” elapsed time or tool availability. The reminder is also in README and [RECOMMENDATIONS](../RECOMMENDATIONS.md). Follow [X1-SECURITY](X1-SECURITY.md) for the review scope; record findings/fixes/tests and the next H2/X2 handoff.
 
-## Evidence and progress
+## Evidence
 
-- Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
-- Existing architecture and master build instruction reviewed; `prompt.txt` explicitly supersedes the Django proposal.
-- Node 24.19.0 and npm 11.9.0 available. Chromium is installed for browser validation.
-- Package-registry access works. npm needs a writable cache under the checkout/workspace in this cloud environment.
-- No database/session/AI binding is currently provided under the inspected required names. No secret values were inspected.
-- Next.js 16.3.8 / React 19.3.0 / TypeScript 5.9.3 foundation implemented, with exact npm lockfile and supported ESLint 10/TypeScript/Hooks checks.
-- Anonymous mall entrance, categories, bounded shop-first fixture search, shop/departments/products, closed/unavailable states and workspace gateways implemented.
-- 17 local SVG illustrations, system/journey/handoff diagrams and desktop/mobile screenshots saved. All fixture businesses/products/prices are visibly fictional; no contact, payment or private action is enabled.
-- `bash scripts/cloud-install.sh`: frozen install, lint/types, 15 unit tests, document links and standalone production build passed.
-- Desktop/mobile production-browser checks: **16 passed, 0 failed, 0 skipped**, including six-route accessibility scans per viewport, no overflow, keyboard skip and explicit missing-resource HTTP 404 assertions.
-- `npm audit --audit-level=high`: **0 vulnerabilities** across development/runtime dependencies after isolating and omitting an optional vulnerable Next lint plugin. See DEVELOPMENT for the tooling choice; no advisory or test was disabled.
-- Formatting and document links passed. CI is configured; remote GitHub Actions execution is unverified.
-- Standalone startup was stopped/restarted and verified with `/api/health` plus a real shoes-search request. Live processes must restart in later environments.
-- Cloud `install_script` and `start_skill` draft saved successfully. Saving did not publish/apply it; to activate that draft, review/save it in environment settings and publish the environment. Restoration in a new task is untested.
-- Detailed evidence, initial small-fixture measurements and screenshots: [HIGH-STAGE](evidence/HIGH-STAGE.md).
+- Frozen `npm ci` plus repeatable guarded cloud setup, migrations, seed, checks, integration tests, dependency audit and production web/worker builds passed.
+- PostgreSQL **18.6**, pinned official image digest; pg **8.23.1**, Better Auth **1.7.7**. Identity schema is checked in; runtime auto-migration is disabled.
+- Public unit tests: **15 passed**.
+- Real PostgreSQL integration tests: **26 passed**, covering migration/constraints, permissions/owner races, actual MFA/session recovery, atomic budgets, transaction/outbox consistency, process-death recovery, lease/dead-letter/replay, ordering and deadlines.
+- Production browser tests: **16 public + 4 private passed**, desktop/mobile, including all current protected domain APIs, private HTML/Flight denials, UI MFA enrollment/challenge, accessibility and overflow.
+- Full dependency audit: **0 vulnerabilities**. Configured-secret client/server/worker artifact scan passed without printing values. General production secret/security review remains open.
+- Generator ran twice with the same seed: **1,500 synthetic shops and 150,000 synthetic products**, exact unchanged counts. This is generator capability, not the architecture/load benchmark.
+- Real worker-stop/restart and database-outage observations: [X1 runtime](evidence/X1-RUNTIME.json). Process recovery does not prove disaster/backup restoration.
+- Full report, corrections, provider status and review scope: [X1-STAGE](evidence/X1-STAGE.md), [ADR-0003](ADR/0003-identity-and-durable-jobs.md), [X1-SECURITY](X1-SECURITY.md).
+- CI is configured; remote GitHub Actions execution is unverified. No production deployment or remote push was performed.
+- Reusable cloud configuration is saved as a draft, not applied/published. Review/save it in environment settings and publish to activate it. Fresh-task restoration, Docker-volume persistence and restoration of local-only commits are unverified.
 
 ## Plan coverage
 
-| Phase | Current status |
+| Phase | Status |
 |---|---|
-| P0 | Stack reconciliation complete; state/permission contracts drafted. Policy/threat-model review and the full G0 gate remain open. |
-| P1 | High-scope web/configuration/test/CI/setup foundation verified. Database/worker/structured operations integration still belongs to X1; G1 is not passed. |
-| P2–P4 | Not started. Next stage X1 under Sol 6.1 Extra High. |
-| P5–P7 | Read-only public interface groundwork only. Real catalogue/media/LSS/PostgreSQL search and the architecture benchmark remain open. |
-| P8–P12 | Not started. Private lifecycle/rent/trust/analytics/AI/security/scale/recovery/release work remains planned. |
-| P13 | Requires authorized release and a real merchant cohort. |
-
-## Remaining plan
-
-All security, transactional, financial, upload/LSS publication, private-workspace, worker, live-provider, scale and recovery gates remain open. A public fixture interface is not the architecture-prototype or production-readiness gate.
+| P0 | Stack direction reconciled; initial state/permission/threat contracts documented. Astra review and owner policies remain open. |
+| P1 | Web/worker/PostgreSQL setup and initial checks/readiness verified. Full production telemetry, secret scanning and deployment supervision remain later gates. |
+| P2 | Initial canonical boundary, financial representation, audit/queue, safe seed/generator and migrations tested. Later feature schemas and live rent/retention policy are open. |
+| P3 | Initial sessions, verification/recovery, actual MFA, permission matrix, invitations/ownership and current-surface isolation implemented/tested. Extend attacks as new handlers are introduced. |
+| P4 | Initial queue/worker/scheduler/adapters and process/lease/effect/delivery recovery implemented/tested. New media/financial/index handlers need their own consequence tests. |
+| P5–P7 | Public read-only groundwork plus private ordinary profile edit only. Catalogue/media/LSS/public PostgreSQL discovery and architecture benchmark remain open. |
+| P8–P12 | Live merchant/operator lifecycle, rent/trust/analytics/AI, security hardening, provider integration, scale/recovery/release remain planned. |
+| P13 | Requires an authorized release and real merchant cohort. |
 
 ## Reminder to the owner
 
-**Done with Sol 6.1 High foundation work. Please switch to Sol 6.1 Extra High, then say “I’ve switched to Extra High. Continue X1.”**
+**Done with Sol 6.1 Extra High X1 secure foundation work. Please switch to 6 Astra Extra High and say “I’ve switched to Astra Extra High. Continue R1.”**
 
-After X1 is implemented and verified, the assistant must remind you to switch to **6 Astra Extra High** for the recorded security/architecture review before protected features depend on it.
+After R1, use the next setting recorded by that review for H2 routine features or X2 sensitive implementation. Do not treat passing foundation tests as the complete-build/production gate.
