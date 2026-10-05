@@ -32,6 +32,7 @@ export default defineConfig([
   globalIgnores([
     ".next/**",
     "out/**",
+    "dist/**",
     "node_modules/**",
     ".cache/**",
     "playwright-report/**",

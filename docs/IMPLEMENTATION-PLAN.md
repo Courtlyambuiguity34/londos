@@ -2,7 +2,7 @@
 
 Status: implementation authorized; progress and model handoffs are tracked in [BUILD-STATUS](BUILD-STATUS.md) and [RECOMMENDATIONS](../RECOMMENDATIONS.md).
 
-Current progress (2026-10-05 UTC): H, X1 and **R1 review/fixes are complete** for the initial P2–P4 development boundary. [R1 evidence](evidence/R1-REVIEW.md) records 75 passing tests and preserved upgrade data. Next: owner-confirmed **Sol 6.1 Extra High X2**, starting the [P5 work packet](X2-HANDOFF.md). Future-feature contracts, live owner policies and production gates remain open.
+Current progress (2026-10-05 UTC): H, X1 and **R1 review/fixes are complete** for the initial P2–P4 development boundary. The first local **X2/P5 work packet is verified**, with [105 passing tests and preserved upgrade data](evidence/X2-P5.md). Continue P6 safe design/preview/publication, then P7 eligible public discovery at the already confirmed **Sol 6.1 Extra High** setting. Public P5 rendering, future-feature contracts, live owner policies and production gates remain open.
 
 Prepared: 2026-10-04. Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
 
@@ -204,7 +204,7 @@ X1 implements and R1 reviews/corrects the initial security foundation under P2�
 
 **Depends on:** P1 plus state/role/catalogue decisions. **Produces:** a migration-controlled domain model.
 
-- [ ] P2.1 Implement the domain tables from section 4 with foreign keys, unique constraints, tenant-consistent references, indexes, timestamps and explicit version columns where concurrent editing matters. **X1 progress / remaining owner:** Initial identity/catalogue/publication/tenancy/rent/audit/job schema is implemented. Media variants/quotas, complete contact/design/financial workflow and trust/analytics schemas evolve with P5–P9; do not mark these unimplemented domains complete.
+- [ ] P2.1 Implement the domain tables from section 4 with foreign keys, unique constraints, tenant-consistent references, indexes, timestamps and explicit version columns where concurrent editing matters. **X1 progress / remaining owner:** Initial identity/catalogue/publication/tenancy/rent/audit/job schema is implemented. X2 adds media variants/quotas, contact and guest-request schemas; complete design/financial workflows and trust/analytics schemas evolve with P6–P9; do not mark these unimplemented domains complete.
 - [x] P2.2 Separate application, merchant, shop, publication, tenancy, rent and moderation records. Permit pre-provisioning invoices; distinguish immutable internal IDs from editable names/slugs.
 - [ ] P2.3 Define currency precision, locale/time handling and rent period boundaries. Store financial events with source/reference/actor and non-destructive adjustment semantics. **X1 progress / remaining owner:** Exact money/currency and UTC nonempty periods implemented; live rent boundaries/closure/retention policies and financial replay tests remain P8.
 - [x] P2.4 Create append-oriented audit and durable-event/outbox tables. Transactions that change sensitive state must record their audit/event consistently.
@@ -238,7 +238,7 @@ X1 implements and R1 reviews/corrects the initial security foundation under P2�
 
 - [x] P4.1 Implement selected queue/worker/scheduler adapters and independent process entry points. Use transactional enqueue when it shares the DB transaction, or an outbox dispatcher when it does not.
 - [x] P4.2 Specify at-least-once delivery semantics. Use deduplication/unique constraints, bounded retries/backoff, timeouts, leases/heartbeat where needed, and observable failed/dead-letter jobs. Do not assume exactly-once execution.
-- [ ] P4.3 Handle delayed and out-of-order events using entity versions or current canonical state. Older media/index events must not resurrect deleted or unpublished content. **X1 progress / remaining owner:** Internal profile projection is canonical/version-aware and tested. Public eligibility, media and index resurrection tests remain mandatory when P5–P7 handlers exist.
+- [ ] P4.3 Handle delayed and out-of-order events using entity versions or current canonical state. Older media/index events must not resurrect deleted or unpublished content. **X1 progress / remaining owner:** Internal profile projection is canonical/version-aware and tested. X2 adds media stale-lease/retry/deletion tests. Public publication/index resurrection tests remain mandatory for P6–P7 consumers.
 - [x] P4.4 Implement safe administrative retry/replay and backpressure. Limit per-shop work so one tenant cannot exhaust all processing capacity.
 - [x] P4.5 Add notification and storage interfaces with local sinks/fakes. Real delivery side effects occur after durable commit and use provider idempotency where available.
 - [ ] P4.6 Test a crash after DB commit but before dispatch, after delivery but before acknowledgment, and during processing. Demonstrate recovery without duplicated financial/tenancy effects. **X1 progress / remaining owner:** Separate-process commit/effect/delivery crash and duplicate-effect recovery tested. Financial/tenancy handlers are not implemented; add their consequence tests under P8.
@@ -251,14 +251,16 @@ X1 implements and R1 reviews/corrects the initial security foundation under P2�
 
 **Depends on:** P3/P4 and catalogue decisions. **Produces:** real, safe shop content.
 
-- [ ] P5.1 Implement shop profiles, departments and product/service create/read/update/archive, ordering, availability, price rules and approved contact/commerce configuration. Add version/conflict handling for edits that must not silently overwrite newer values.
-- [ ] P5.2 Support Call, WhatsApp and a bounded guest enquiry/request/reservation flow, plus structured delivery/pickup and merchant payment instructions. Validate phone/URL schemes and prevent unsafe external navigation. An enquiry acknowledgment is not a confirmed order, payment or inventory reservation unless separately implemented.
+**X2 local progress:** [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md) and [P5 evidence](evidence/X2-P5.md) define the verified development implementation and provisional limits. Checked items below apply to those local paths, not production providers, photographic quality or live policy approval. P5.3 remains partial: scoped operator APIs, step-up/audit and bounded local notifications are implemented; operator browser recovery and live notification/privacy policy remain P8/P12 work. P5.7 remains partial: merchant states, alt text and private variants work; responsive public delivery/placeholders are completed through P6/P7. G2 remains open until P7.
+
+- [x] P5.1 Implement shop profiles, departments and product/service create/read/update/archive, ordering, availability, price rules and approved contact/commerce configuration. Add version/conflict handling for edits that must not silently overwrite newer values.
+- [x] P5.2 Support Call, WhatsApp and a bounded guest enquiry/request/reservation flow, plus structured delivery/pickup and merchant payment instructions. Validate phone/URL schemes and prevent unsafe external navigation. An enquiry acknowledgment is not a confirmed order, payment or inventory reservation unless separately implemented.
 - [ ] P5.3 Require step-up authentication and audit history for sensitive contact/payment changes; provide operator investigation/recovery and policy-controlled notifications.
-- [ ] P5.4 Implement owned upload sessions, quarantine, byte/type/signature/dimension/pixel limits, metadata removal and secure decoding. Cover decompression bombs, malformed/polyglot files, unsafe SVG, and arbitrary remote-fetch/SSRF exposure. Explicitly restrict supported formats.
-- [ ] P5.5 Process media asynchronously into thumbnail, search-card, display and retained rebuild-source variants. Select formats/dimensions with quality tests. Keep unsafe originals private; only publish approved ready variants.
-- [ ] P5.6 Enforce concurrent upload/storage quotas, retry visible failures, cleanup abandoned uploads and reference-aware deletion. Ensure preview/draft media is not exposed accidentally through a public bucket or guessable URL.
+- [x] P5.4 Implement owned upload sessions, quarantine, byte/type/signature/dimension/pixel limits, metadata removal and secure decoding. Cover decompression bombs, malformed/polyglot files, unsafe SVG, and arbitrary remote-fetch/SSRF exposure. Explicitly restrict supported formats.
+- [x] P5.5 Process media asynchronously into thumbnail, search-card, display and retained rebuild-source variants. Select formats/dimensions with quality tests. Keep unsafe originals private; only publish approved ready variants.
+- [x] P5.6 Enforce concurrent upload/storage quotas, retry visible failures, cleanup abandoned uploads and reference-aware deletion. Ensure preview/draft media is not exposed accidentally through a public bucket or guessable URL.
 - [ ] P5.7 Show usable merchant processing/error states and public placeholders. Add accessible alt-text workflow, aspect ratios, responsive images and lazy loading.
-- [ ] P5.8 Test tenant reference attacks, guest-enquiry abuse/rate limits, sensitive-change authorization, concurrent edits/uploads, duplicate processing, provider failure and deletion while a media job is pending.
+- [x] P5.8 Test tenant reference attacks, guest-enquiry abuse/rate limits, sensitive-change authorization, concurrent edits/uploads, duplicate processing, provider failure and deletion while a media job is pending.
 
 **Gate:** a merchant can maintain a real catalogue and approved contacts; an oversized phone image becomes optimized variants without blocking browsing; private/unsafe media stays inaccessible; enquiries route to the correct shop without a customer login.
 

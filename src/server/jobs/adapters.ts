@@ -37,6 +37,22 @@ export class LocalPrivateStorage implements PrivateStorageAdapter {
 const messageSchema = z.discriminatedUnion("template", [
   z
     .object({
+      template: z.literal("contact-changed"),
+      to: z.email(),
+      shopId: z.uuid(),
+      version: z.number().int().positive(),
+    })
+    .strict(),
+  z
+    .object({
+      template: z.literal("guest-request"),
+      to: z.email(),
+      shopId: z.uuid(),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
       template: z.literal("invitation"),
       to: z.email(),
       token: z.string().min(32).max(128),

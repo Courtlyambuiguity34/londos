@@ -12,6 +12,11 @@ export async function handle(
 ) {
   if (job.schema_version !== 1) throw new Error("unsupported_job");
   signal.throwIfAborted();
+  if (job.kind === "media.process") {
+    const { processMedia } = await import("../media");
+    await processMedia(pool, job, signal);
+    return;
+  }
   if (job.kind === "notification.local") {
     await notifications.deliver(job.id, job.payload, signal);
     return;
@@ -62,6 +67,8 @@ export async function handle(
         "DELETE FROM request_budgets WHERE window_id<floor(extract(epoch FROM now())/60)::bigint-120",
       );
       await client.query("DELETE FROM mfa_code_receipts WHERE expires_at<now()");
+      const { cleanupMedia } = await import("../media");
+      await cleanupMedia(client);
     }
     signal.throwIfAborted();
   });

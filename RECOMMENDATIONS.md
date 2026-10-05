@@ -2,7 +2,7 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
-**Current handoff (2026-10-05 UTC):** H, X1 and R1 review/fixes are complete and locally verified. Next: **Sol 6.1 Extra High X2**. Confirm that setting and say **“Continue X2.”** Read [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md) before continuing.
+**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1 and X2’s first P5 local packet are complete and verified. Continue **X2 / P6 at Sol 6.1 Extra High**. No new switch is needed between these packets. Read [X2 evidence](docs/evidence/X2-P5.md), [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md).
 
 ## Model settings
 
@@ -17,14 +17,14 @@ The owner requested explicit model handoffs on 2026-10-04. Follow these stages w
 
 Model settings do not replace tests, acceptance gates, review or recovery. Use High for routine work and Extra High at the listed boundaries; Max/Ultra is not the default.
 
-R1 selects X2 next because the remaining P5 domain interfaces introduce new authorization, concurrency and media controls. H2 is a conditional stage for routine interface work once those contracts are stable, not a required detour before implementing them. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
+R1 selected X2 for P5’s new authorization, concurrency and media controls. That local packet is now verified; P6 design/reference/publication contracts also require Extra High. H2 is a conditional stage for routine interface work once those contracts are stable, not a required detour before implementing them. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
 
 ## Handoff and reminder procedure
 
 1. Read [BUILD-STATUS](docs/BUILD-STATUS.md) at the start of each turn. It is the persistent record of completed work, evidence and the next model setting.
 2. Complete the currently authorized stage, run its meaningful checks, and save an honest progress report.
 3. At a model boundary, update BUILD-STATUS and end the response with an explicit reminder. For example: **“Sol 6.1 High work is complete. Please switch to Sol 6.1 Extra High and say ‘Continue X1.’”**
-4. Wait for the owner to state that the setting has changed before executing the dependent stage. Do not infer that a model or reasoning level changed from elapsed time.
+4. At a requested model change, wait for the owner’s setting confirmation before executing dependent work. Continue packets within an already confirmed setting without requesting it again. Do not infer a switch from elapsed time.
 5. The assistant cannot operate the owner's model selector or verify its UI setting. Record the setting the owner reports; do not pretend to have switched it programmatically.
 6. Recheck repository state and the latest evidence after resuming. Continue the existing branch/checkout and preserve completed work.
 7. Give the same explicit handoff for required Astra reviews. The owner controls those model changes; no automatic background reminder or autonomous model switching is promised.

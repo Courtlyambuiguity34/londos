@@ -1,6 +1,6 @@
 # Development setup and verification
 
-Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. Public Mall/Shop rendering still uses clearly fictional fixtures; purchases, enquiries, uploads, rent reconciliation, LSS publication and AI are later stages.
+Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds private catalogue/contact/media work and anonymous requests through a separately enabled canonical contact page. Public Mall/Shop rendering still uses fictional fixtures; purchases, public media delivery/discovery, rent, LSS publication and AI remain later stages.
 
 ## Public preview only
 
@@ -11,7 +11,7 @@ LONDOS_CORE_ENABLED=false npm run dev
 
 `LONDOS_DATA_SOURCE=fixtures` remains the only public data source. It does not select the source of private records. `LONDOS_CORE_ENABLED=false` explicitly disables account/domain APIs, even if local database variables exist.
 
-## Full local X1 environment
+## Full local environment
 
 Docker's managed local daemon must be available; do not start a second daemon as the cloud user. The setup tool clears remote Docker selectors while preserving platform credential/proxy configuration. PostgreSQL does not need outbound HTTPS; normal Docker pulls retain platform TLS/proxy handling.
 
@@ -53,6 +53,14 @@ Sensitive membership/invitation/ownership/replay changes require fresh authentic
 Password change/reset and factor removal revoke preceding sessions and pending MFA challenges. Sign in again and complete MFA as required. Losing active-owner authority permanently revokes that owner's unaccepted invitations; another current owner must issue a new invitation if appropriate. Accepted memberships are unchanged by that invitation policy.
 
 Recovery and verification enqueue notifications. The running worker writes them under ignored `.local/notifications/` as private, complete, idempotent files. These are **local sinks**, not real email/SMS. An authorized local developer can open the appropriate file privately and use its link/token. Do not serve this directory through Next/public/object storage. Remote/live authentication and worker adapters fail explicitly until real providers and production configuration are implemented.
+
+## X2 catalogue, contact and images
+
+Open “Manage catalogue and contacts” from an authorized shop profile. Catalogue edits are private and versioned; reload after a conflict. Contact changes need sensitive permission and recent authentication. The enabled contact page works only for active publication/tenancy with clear moderation, and does not change the public fixture mall. Customer requests appear in the private inbox; no receipt confirms a sale or payment.
+
+Uploads accept non-animated JPEG/PNG/WebP up to 4 MiB, 16 million pixels and 8192 pixels per side. The creating user uploads within 15 minutes. Quota is reserved atomically (128 MiB / 100 nondeleted assets per shop; 20 MiB per pending upload). Keep the worker running for processing, expiry cleanup and local notifications. Failed processing can be retried after its job reaches dead-letter state; rejected files require a new upload. Detach product references before deleting a ready image. Only authenticated ready display variants are readable; quarantine/source are private PostgreSQL blobs. See [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md) for budgets and live-provider obligations.
+
+Upgrade existing R1 databases by stopping old web/worker processes, applying migration 008, rebuilding and restarting matching code. Existing fields and application credentials were preserved in [X2 migration evidence](evidence/X2-MIGRATION.json). Original migration files remain immutable.
 
 ## Configuration and readiness
 
@@ -111,4 +119,4 @@ ESLint 10, TypeScript ESLint and React Hooks peers accept the pinned versions. N
 
 Cloud onboarding uses `bash scripts/cloud-install.sh`: frozen install, guarded local DB startup/migrations/seed, checks, integration tests, audit, web/worker build and artifact scan. It does not start persistent web/worker processes. Saved environment settings are a draft; publishing/restoring is a separate platform step and has not been verified in a new task.
 
-Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. R1 is complete; next is owner-confirmed **Sol 6.1 Extra High X2**. R1 verified 15 unit, 39 integration, 16 public browser and 5 private browser tests.
+Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. X2’s P5 packet is complete; continue P6 within **Sol 6.1 Extra High X2**. Current checks pass 19 unit, 62 integration, 16 public browser and 8 core browser tests. See [X2 evidence](evidence/X2-P5.md).

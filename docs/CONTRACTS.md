@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). Lifecycle transitions, public eligibility, publication/media and live financial commands remain later phases. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
+Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). Full lifecycle, public discovery/design publication, public media delivery and live financial commands remain later phases. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -10,13 +10,13 @@ Status: initial state records and identity/permission/transaction contracts are 
 | Shop publication | provisioning, unpublished, active, temporarily_closed, archived | Immutable shop identity is independent of slug and internal mall placement. |
 | Tenancy | pending, active, due, grace, closed | Verified obligations/events drive state; policy timers remain draft until approved. |
 | Moderation | clear, under_review, suspended | Renewal cannot lift suspension. Only an authorized moderation decision can. |
-| Media | uploaded, validating, processing, ready, rejected, failed | Quarantined/raw assets are not public ready media. |
+| Media | uploaded, validating, processing, ready, rejected, failed, deleted | Quarantined/raw assets are not public ready media. |
 
 Public eligibility must combine current publication, tenancy, moderation and resource visibility. The fixture preview's open/closed/suspended flags are demonstration data, not the implemented policy engine. Grace visibility, notice periods, rent amount and retention remain owner policies to confirm before live operation.
 
 ## Permission matrix and implementation boundary
 
-This matrix includes planned capabilities. X1/R1 implement ordinary profile reads/edits, membership/invitation/ownership services and operator job metadata/replay; catalogue, design, finance, provisioning and private-evidence commands remain later phases. Each new action needs its own grant, scope and attack tests.
+This matrix includes planned capabilities. X1/R1 implement profile/membership/invitation/ownership and job metadata/replay. X2 adds catalogue, contact/request and private media commands, scoped operator support reads and audited contact recovery. Design, finance, provisioning and private-evidence workflows remain later phases. Each new action needs its own grant, scope and attack tests.
 
 | Action | Merchant owner | Staff | Operator |
 |---|---|---|---|
@@ -53,4 +53,4 @@ Canonical mutations require a database transaction, tenant-consistent references
 - LSS structural/semantic/reference/policy validator and compare-and-swap publication.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 
-R1 review of the implemented boundary is complete. Continue under owner-confirmed **Sol 6.1 Extra High X2**, extending contracts/tests as described in [the handoff](X2-HANDOFF.md). Final system/release review remains **6 Astra Extra High R2**.
+R1 review and the first local X2/P5 packet are complete. Continue **Sol 6.1 Extra High X2/P6**, extending contracts/tests as described in [the handoff](X2-HANDOFF.md). Final system/release review remains **6 Astra Extra High R2**.

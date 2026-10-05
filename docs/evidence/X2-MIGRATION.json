@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-05T05:12:51.130Z",
+  "sourceSchema": "007_r1_security_contracts.sql",
+  "targetSchema": "008_p5_catalogue_and_media.sql",
+  "migrationCount": 8,
+  "migrationMs": 566,
+  "existingCanonicalFieldsUnchanged": true,
+  "repeatedMigrationAndSeedPreservedExistingRecords": true,
+  "applicationCredentialFileUnchanged": true,
+  "counts": {
+    "shops": 1506,
+    "products": 150004,
+    "departments": 1504,
+    "media_assets": 0,
+    "invoices": 0,
+    "rent_events": 0
+  },
+  "limit": "Existing-column logical preservation on the development volume; not production backup or disaster restoration."
+}

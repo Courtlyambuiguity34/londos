@@ -16,8 +16,16 @@ export default defineConfig({
       : {},
   },
   projects: [
-    { name: "core-desktop", testMatch: "security.spec.ts", use: { ...devices["Desktop Chrome"] } },
-    { name: "core-mobile", testMatch: "mobile.spec.ts", use: { ...devices["Pixel 7"] } },
+    {
+      name: "core-desktop",
+      testMatch: ["security.spec.ts", "p5.spec.ts"],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "core-mobile",
+      testMatch: ["mobile.spec.ts", "p5-mobile.spec.ts"],
+      use: { ...devices["Pixel 7"] },
+    },
   ],
   webServer: {
     command: "npm run start -- --port 3101",

@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** R1 security review and fixes are complete; **75 tests pass**. Next: **Sol 6.1 Extra High X2** for catalogue, contact and media implementation. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
+**Status:** X2’s first catalogue/contact/private-media packet is complete; **105 tests pass**. Next within **Sol 6.1 Extra High X2**: safe shop design, preview and publication (P6). The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
 
 ## Recommendations
 
@@ -21,11 +21,11 @@ npm run dev
 
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
-Public browsing uses fictional, read-only shops and illustrated products. X1 adds local PostgreSQL accounts, real MFA, tenant-scoped private profiles and durable jobs. It does not accept purchases/enquiries or enable live rent, uploads, LSS publication or AI.
+Public browsing uses fictional, read-only shops and illustrated products. X1 adds local PostgreSQL accounts, real MFA, tenant-scoped private profiles and durable jobs. X2 adds catalogue/contact forms, private image uploads and bounded anonymous requests through an enabled canonical contact page. Purchases, live rent, public image delivery, LSS publication and AI remain later gates.
 
-For the full local X1 setup, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
+For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
-The next handoff is **Sol 6.1 Extra High**: confirm the switch and say **“Continue X2.”** Read the [R1 review](docs/evidence/R1-REVIEW.md) and [X2 work packet](docs/X2-HANDOFF.md). Stage completion is distinct from complete-build/production readiness.
+Continue **X2 / P6 at Sol 6.1 Extra High**; no new setting change is needed between packets. Read [X2 evidence](docs/evidence/X2-P5.md), the [R1 review](docs/evidence/R1-REVIEW.md) and [X2 handoff](docs/X2-HANDOFF.md). Stage completion is distinct from complete-build/production readiness.
 
 ## What Londos is
 
@@ -188,6 +188,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [X1 verification evidence](docs/evidence/X1-STAGE.md)
 - [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)
 - [X2 catalogue and media handoff](docs/X2-HANDOFF.md)
+- [X2 P5 verification and screenshots](docs/evidence/X2-P5.md)
+- [Catalogue/contact/private-media ADR](docs/ADR/0004-catalogue-contact-and-private-media.md)
 - [Domain contracts for review](docs/CONTRACTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Product & UX](docs/PRODUCT.md)

@@ -26,6 +26,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
         change the public fixture preview.
       </p>
       <ProfileForm shop={shop} />
+      <Link className="button" href={`/shopkeeper/shops/${shop.id}/catalogue`}>
+        Manage catalogue and contacts
+      </Link>
       <Link className="text-button" href="/shopkeeper">
         All your shops
       </Link>

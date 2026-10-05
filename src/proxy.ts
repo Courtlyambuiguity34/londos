@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   try {
     const actor = await resolveActor(auth(), request.headers),
       path = request.nextUrl.pathname;
-    const shop = /^\/shopkeeper\/shops\/([^/]+)\/?$/.exec(path);
+    const shop = /^\/shopkeeper\/shops\/([^/]+)(?:\/.*)?$/.exec(path);
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);

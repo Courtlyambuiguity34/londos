@@ -4,9 +4,9 @@ import { Icon } from "./icon";
 export function SiteHeader() {
   return (
     <>
-      <div className="preview-notice">
+      <div className="preview-notice" role="region" aria-label="Preview status">
         Preview mall <span aria-hidden="true">·</span> Fictional shops and illustrated products.
-        Purchases and enquiries are unavailable.
+        Purchases are unavailable in this preview.
       </div>
       <header className="site-header shell">
         <Link href="/" className="wordmark" aria-label="Londos home">

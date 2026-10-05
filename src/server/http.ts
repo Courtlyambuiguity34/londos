@@ -16,6 +16,7 @@ export function privateResponse(data: unknown, status = 200, requestId = randomU
       Vary: "Cookie",
       "X-Request-ID": requestId,
       "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "no-referrer",
     },
   });
 }
@@ -61,7 +62,13 @@ export async function workspaceRequest(request: Request, work: (actor: Actor) =>
     const actor = await resolveActor(auth(), request.headers);
     if (!["GET", "HEAD"].includes(request.method))
       await consumeBudget(database(), `workspace:${actor.userId}`, 60);
-    return privateResponse(await work(actor), 200, requestId);
+    const result = await work(actor);
+    if (result instanceof Response) {
+      for (const [key, value] of privateResponse(null, 200, requestId).headers)
+        if (key !== "content-type") result.headers.set(key, value);
+      return result;
+    }
+    return privateResponse(result, 200, requestId);
   } catch (error) {
     if (error instanceof AccessError)
       return privateResponse({ error: error.code }, error.status, requestId);
@@ -69,5 +76,37 @@ export async function workspaceRequest(request: Request, work: (actor: Actor) =>
       return privateResponse({ error: "invalid_input" }, 422, requestId);
     console.error(JSON.stringify({ event: "request.failed", requestId }));
     return privateResponse({ error: "service_unavailable" }, 503, requestId);
+  }
+}
+
+export async function boundedBytes(request: Request, limit: number) {
+  if (Number(request.headers.get("content-length") ?? 0) > limit)
+    throw new AccessError(422, "request_too_large");
+  const reader = request.body?.getReader();
+  if (!reader) throw new AccessError(422, "upload_required");
+  const signal = AbortSignal.any([request.signal, AbortSignal.timeout(15000)]);
+  const abort = () => {
+    void reader.cancel().catch(() => {});
+  };
+  signal.addEventListener("abort", abort, { once: true });
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      signal.throwIfAborted();
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > limit) {
+        await reader.cancel();
+        throw new AccessError(422, "request_too_large");
+      }
+      chunks.push(value);
+    }
+    signal.throwIfAborted();
+    return Buffer.concat(chunks);
+  } finally {
+    signal.removeEventListener("abort", abort);
+    reader.releaseLock();
   }
 }

@@ -1,6 +1,8 @@
 # X2: catalogue, contact and media implementation handoff
 
-Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2–P4 foundation. Next setting: **Sol 6.1 Extra High**. The owner must confirm the model/level and say **“Continue X2”** before this dependent stage starts. This file is a work packet within the [implementation plan](IMPLEMENTATION-PLAN.md), not a replacement or a claim that P5 is complete.
+Current progress: the first local P5 packet is complete; see [X2 evidence](evidence/X2-P5.md). Next within the same X2 setting is P6 safe manual design/preview/publication, then P7 eligible public discovery and the architecture benchmark.
+
+Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2–P4 foundation. Next setting: **Sol 6.1 Extra High**. The owner authorized this stage by instructing **“Continue X2.”** No new setting change is required for P6/P7; model-selector UI remains outside the assistant’s control. This file is a work packet within the [implementation plan](IMPLEMENTATION-PLAN.md), not a replacement or a claim that P5 is complete.
 
 ## Why Extra High next
 
@@ -19,7 +21,7 @@ The next dependency is P5's tenant-owned catalogue, sensitive contact settings a
 
 ## Acceptance and containment
 
-- The 75-test R1 foundation stays passing; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
+- The R1 foundation stays passing; the current X2 baseline is 105 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
 - Upload/raw/draft assets stay private. Only validated ready variants may enter a later authorized public rendering path. Tenant identifiers and guessable URLs do not grant object access.
 - Preserve the existing anonymous fictional preview until P6/P7 supply public eligibility and cache-revocation contracts. Catalogue persistence alone does not complete public discovery or publication.
 - Provider outages create bounded, visible retry/failure states without corrupting canonical data or quotas. Add no unverified live-provider claims.

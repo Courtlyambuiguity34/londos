@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
         "/shopkeeper/:path*",
         "/landlord/:path*",
         "/security",
+        "/contact/:path*",
+        "/api/guest/:path*",
         "/sign-in",
         "/recover",
         "/api/auth/:path*",

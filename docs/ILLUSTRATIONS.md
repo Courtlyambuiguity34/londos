@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. Public PostgreSQL eligibility/search, media processing, rent workflows, LSS publication and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. Public PostgreSQL search, public media delivery, rent workflows, LSS publication and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -139,7 +139,9 @@ flowchart LR
   Astra --> R1[Save R1 findings, fixes and evidence]
   R1 --> Switch[Owner confirms Sol 6.1 Extra High]
   Switch --> X2[X2 catalogue, contact and media]
-  X2 --> Next[Continue plan gates and later Astra R2 review]
+  X2 --> P6[P6 safe manual design and publication]
+  P6 --> P7[P7 eligible public discovery and benchmark]
+  P7 --> Next[Continue plan gates and later Astra R2 review]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.
@@ -150,8 +152,48 @@ The assistant records the next setting in BUILD-STATUS. The owner operates the m
 - `shop-*.svg`: six category-specific sample storefronts.
 - `product-*.svg`: ten product/service illustrations, marked as samples.
 
-The application renders these fixed trusted SVGs with explicit dimensions and lazy loading except for initial hero/product art. Arbitrary tenant SVG uploads are not enabled; their validation policy belongs to the media-security stage.
+The application renders these fixed trusted SVGs with explicit dimensions and lazy loading except for initial hero/product art. Tenant SVG uploads are rejected by the implemented X2 media policy; only bounded single-frame JPEG, PNG and WebP are accepted.
 
 Validated screenshots and their exact stage/environment are recorded in [the High-stage evidence report](evidence/HIGH-STAGE.md).
 
 The [X1 evidence report](evidence/X1-STAGE.md#visual-evidence) records inspected desktop shop-profile and mobile account-security screenshots from the local production build. All pictured identities and shops are fictional; no authentication secrets are pictured.
+
+
+## Implemented X2 private-media path
+
+```mermaid
+flowchart TD
+  Merchant[Authorized merchant or granted staff] --> Reserve[Owned expiring upload session and atomic quota reservation]
+  Reserve --> Upload[Bounded bytes with matching declared type and length]
+  Upload --> Quarantine[(Private PostgreSQL quarantine)]
+  Upload --> Job[Durable processing job in same transaction]
+  Job --> Decode[Independent worker validates signature, pixels and single frame]
+  Quarantine --> Decode
+  Decode --> Reject[Rejected image, quarantine removed and reservation released]
+  Decode --> Encode[Rotate, strip metadata and generate bounded WebP variants]
+  Encode --> Fence[Recheck lease, asset version and canonical state]
+  Fence --> Ready[(Private ready variants and effect receipt)]
+  Ready --> Read[Current scoped authenticated thumbnail, card or display read]
+  Ready -.-> Future[P6/P7 eligible public delivery remains to implement]
+```
+
+Raw quarantine and the normalized rebuild source have no public or workspace download route. A pending replacement leaves the product's prior ready image attached. Referenced assets cannot be deleted; expiry cleanup and tombstones prevent delayed jobs from resurrecting deleted media.
+
+## Implemented X2 guest-request path
+
+```mermaid
+flowchart LR
+  Customer[Anonymous customer] --> Contact[Enabled contact page with canonical eligibility]
+  Contact --> Submit[Exact origin, bounded body and atomic abuse budgets]
+  Submit --> Check[Recheck shop and optional product under merchant lock]
+  Check --> Retry{Idempotency key and fingerprint}
+  Retry -->|Same request| Receipt[Return prior received receipt]
+  Retry -->|New request| Commit[(Request and local notification job)]
+  Commit --> Receipt
+  Commit --> Inbox[Scoped merchant inbox]
+  Inbox --> Ack[Acknowledge or close with version check and audit]
+```
+
+A received or acknowledged request does not confirm an order, payment or stock reservation. Private customer details stay in the scoped inbox; notification payloads contain identifiers only. Live retention and delivery policies remain owner decisions.
+
+The [X2 evidence report](evidence/X2-P5.md) includes inspected production-browser screenshots of the [catalogue and inbox](evidence/images/x2-catalogue-desktop.png) and [anonymous contact page](evidence/images/x2-guest-contact.png). They contain fictional/sample data, without authentication secrets.
