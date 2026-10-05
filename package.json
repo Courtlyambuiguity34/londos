@@ -27,6 +27,7 @@
     "db:stop": "node scripts/dev-database.mjs stop",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
+    "db:p8": "tsx scripts/enable-local-rent.ts",
     "db:generate": "tsx scripts/generate.ts",
     "worker": "node dist/worker.mjs",
     "test:integration": "tsx scripts/integration-tests.ts",

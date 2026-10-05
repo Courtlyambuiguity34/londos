@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. The P6/P7 prototype adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. Rent, live providers, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning and scheduled tenancy. Live providers, broader administration, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -141,7 +141,8 @@ flowchart LR
   Switch --> X2[X2 catalogue, contact and media]
   X2 --> P6[P6 safe manual design and publication]
   P6 --> P7[P7 eligible public discovery and benchmark]
-  P7 --> Next[Continue plan gates and later Astra R2 review]
+  P7 --> P8[P8 local applications and development rent]
+  P8 --> Next[Finish administration and later gates before Astra R2 review]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.
@@ -221,3 +222,32 @@ flowchart TD
 Restoring a layout never restores an old price/contact/payment setting. The renderer uses a read-only snapshot and current canonical resources; request-local memoization avoids duplicate metadata/page reads without a shared response cache. Future remote browser/CDN revocation and live financial/provider policies require separate evidence.
 
 Inspected X2 prototype captures: [merchant design](evidence/images/x2-design-desktop.png), [public product with a synthetic ready image](evidence/images/x2-public-product.png) and [mobile search on the isolated 1,500-shop dataset](evidence/images/x2-architecture-search.png). See [the complete experiment and limits](evidence/X2-P6-P7.md).
+
+## Implemented P8 development lifecycle
+
+```mermaid
+flowchart TD
+  Owner[Authenticated owner] --> Draft[Versioned application and private normalized evidence]
+  Draft --> Submit[Confirm submission and retain snapshot]
+  Submit --> Review[Scoped reviewer with native MFA]
+  Review -->|Needs information| Draft
+  Review -->|Approved with reason| Invoice[Referenced invoice and immutable policy]
+  Invoice --> Finance[Separately scoped finance operator with fresh MFA]
+  Finance --> Check[Compare invoice reference, currency, amount and unique receipt]
+  Check -->|Partial credit| Pending[Retain credit without provisioning]
+  Check -->|Fully settled| Atomic[(One transaction: ledger, coverage, capacity, unpublished shop, tenancy, audit and jobs)]
+  Atomic --> Workspace[Owner configures catalogue, contacts and design]
+  Workspace --> Publish[Explicit publication with current authority]
+  Publish --> Public[Canonical eligible public discovery and contact]
+  Atomic --> Worker[Scheduled reminders using current coverage and credits]
+  Worker --> Due[Due then grace then closed at the policy boundary]
+  Finance --> Reverse[Linked negative correction retains original history]
+  Reverse --> Debt[Arrears close eligibility and preserve shop data]
+  Due --> Renewal[Verified full renewal]
+  Debt --> Correct[Verified correction within original coverage]
+  Renewal --> Eligibility[Recompute tenancy without changing moderation or publication]
+  Correct --> Eligibility
+  Eligibility --> Public
+```
+
+This is a development workflow: **UGX 5,000 per 30 days, seven days’ grace and manual operator reconciliation; live collection disabled**. Stable command keys, append-only financial events and merchant locks prevent duplicate credit/provisioning. An old job cannot carry an authoritative payment date. Only new P8 contracts enter the scheduler; previous fixtures remain unchanged. See [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md) and [P8 verification/screenshots](evidence/X2-P8.md).

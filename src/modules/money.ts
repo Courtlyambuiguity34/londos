@@ -1,4 +1,8 @@
 // Preserve all minor-unit digits: converting a large price to Number rounds it.
+export function formatSignedMinorMoney(value: string, currency: string) {
+  if (/^-[1-9][0-9]{0,19}$/.test(value)) return `−${formatMinorMoney(value.slice(1), currency)}`;
+  return formatMinorMoney(value, currency);
+}
 export function formatMinorMoney(value: string | null, currency: string) {
   if (value === null) return "Ask for price";
   if (

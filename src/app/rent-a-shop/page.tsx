@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { coreConfigured } from "@/server/config";
 
 export const metadata: Metadata = { title: "A place for your business" };
 
@@ -43,15 +44,20 @@ export default function RentShopPage() {
       <div className="application-preview">
         <div>
           <p className="eyebrow">A careful start</p>
-          <h2>We’re preparing the first shops.</h2>
+          <h2>
+            {coreConfigured() ? "Start your shop application." : "We’re preparing the first shops."}
+          </h2>
           <p>
-            Merchant applications are unavailable in this read-only preview. It does not collect
-            business information or accept rent payments. Rent and space allowances will be
-            confirmed for the pilot.
+            {coreConfigured()
+              ? "Local account holders can save an application and submit fictional verification evidence for review. Approval creates a development invoice; live rent collection remains disabled."
+              : "Merchant applications are unavailable in this read-only preview. It does not collect business information or accept rent payments. Rent and space allowances will be confirmed for the pilot."}
           </p>
         </div>
-        <Link href="/search" className="button">
-          Explore a sample shop
+        <Link
+          href={coreConfigured() ? "/shopkeeper/applications/new" : "/search"}
+          className="button"
+        >
+          {coreConfigured() ? "Apply for a shop" : "Explore a sample shop"}
           <Icon name="arrow" />
         </Link>
       </div>

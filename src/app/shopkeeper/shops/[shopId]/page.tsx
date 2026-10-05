@@ -35,6 +35,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/design`}>
         Design and publish your shop
       </Link>
+      <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/rent`}>
+        Rent and tenancy
+      </Link>
     </section>
   );
 }

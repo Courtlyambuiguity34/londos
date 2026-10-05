@@ -12,6 +12,11 @@ export async function handle(
 ) {
   if (job.schema_version !== 1) throw new Error("unsupported_job");
   signal.throwIfAborted();
+  if (job.kind === "rent.tick") {
+    const { handleRentTick } = await import("./rent");
+    await handleRentTick(pool, job, signal);
+    return;
+  }
   if (job.kind === "media.process") {
     const { processMedia } = await import("../media");
     await processMedia(pool, job, signal);

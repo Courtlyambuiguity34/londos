@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-05T14:36:54.647Z",
+  "sourceSchema": "009_shop_design_and_public_reads.sql",
+  "targetSchema": "010_applications_and_local_rent.sql",
+  "migrationMs": 35,
+  "existingCanonicalFieldsUnchanged": true,
+  "repeatedMigrationAndSeedPreservedExistingRecords": true,
+  "applicationCredentialFileUnchanged": true,
+  "comparison": "Counts and sorted whole-row digests over the original columns in 18 existing business/permission tables; newly added application columns excluded from the comparison.",
+  "counts": {
+    "merchants": 1502,
+    "memberships": 3,
+    "operator_grants": 2,
+    "malls": 3,
+    "shops": 1506,
+    "departments": 1504,
+    "products": 150004,
+    "applications": 0,
+    "tenancies": 1506,
+    "shop_publication": 1506,
+    "shop_moderation": 1506,
+    "media_assets": 0,
+    "shop_revisions": 1,
+    "shop_designs": 1,
+    "shop_contacts": 0,
+    "guest_requests": 0,
+    "invoices": 0,
+    "rent_events": 0
+  },
+  "limit": "Local logical upgrade preservation, not production backup/restore or a downtime guarantee."
+}

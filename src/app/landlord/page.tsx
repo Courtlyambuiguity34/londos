@@ -43,7 +43,8 @@ export default async function LandlordPage() {
       <h1>Care for the mall.</h1>
       <p>
         Current permissions: {grants.map((grant) => grant.permission).join(", ")}. Application
-        review, rent and moderation workflows remain in later stages.
+        review and manual rent reconciliation use scoped records and recent MFA. Live collection
+        remains disabled.
       </p>
       {counts.length ? (
         <>
@@ -58,6 +59,16 @@ export default async function LandlordPage() {
         </>
       ) : null}
       <div className="account-links">
+        {grants.some((g) => g.permission === "review") ? (
+          <Link className="button" href="/landlord/applications">
+            Review applications
+          </Link>
+        ) : null}
+        {grants.some((g) => g.permission === "finance") ? (
+          <Link className="button" href="/landlord/rent">
+            Reconcile development rent
+          </Link>
+        ) : null}
         <Link className="button" href="/security">
           Account security
         </Link>

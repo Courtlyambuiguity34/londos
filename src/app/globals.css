@@ -2007,3 +2007,58 @@ button:disabled {
   align-items: flex-start;
   gap: 12px;
 }
+/* Private application and rent workflows use the existing form vocabulary. */
+.lifecycle-panel {
+  max-width: 760px;
+}
+.lifecycle-summary {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(0, 3fr);
+  gap: 12px 20px;
+  margin: 24px 0;
+}
+.lifecycle-summary dt {
+  font-weight: 700;
+}
+.lifecycle-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.break-anywhere {
+  overflow-wrap: anywhere;
+}
+.ledger-events {
+  list-style: none;
+  padding: 0;
+}
+.ledger-events li {
+  display: grid;
+  gap: 6px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.development-disclosure {
+  padding: 16px;
+  background: #f1eadb;
+  border-radius: 8px;
+  color: #383928;
+}
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.account-form .checkbox-label input {
+  width: auto;
+  min-height: 24px;
+  margin-top: 0;
+}
+@media (max-width: 600px) {
+  .lifecycle-summary {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .lifecycle-summary dd {
+    margin-bottom: 12px;
+  }
+}

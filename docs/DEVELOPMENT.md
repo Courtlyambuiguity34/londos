@@ -1,6 +1,6 @@
 # Development setup and verification
 
-Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds catalogue/contact/media commands, guest requests, safe manual design/preview/publication and eligible PostgreSQL public browsing. The fixture preview remains separately supported; real rent, providers, AI and release remain later stages.
+Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds catalogue/contact/media commands, guest requests, safe manual design/preview/publication and eligible PostgreSQL public browsing. P8 adds local applications, private evidence, scoped MFA review, development rent reconciliation/provisioning and scheduled tenancy. The fixture preview remains supported; live collection/providers, AI and release remain later stages.
 
 ## Public preview only
 
@@ -78,11 +78,29 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run benchmark:x2
 
 This guarded tool creates/removes its own random test database, generates 1,500 shops/150,000 products, adds five collections per synthetic shop, prepares marked synthetic designs, and exercises the compiled server/worker on port 3102. It does not modify the existing development volume. It writes [benchmark measurements](evidence/X2-BENCHMARK.json), [the actual search plan](evidence/X2-SEARCH-PLAN.json) and a fictional search screenshot. Run it without concurrent test/load suites. Budgets are predeclared in [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md); a failed budget causes a nonzero exit and must be investigated. The fixed read burst is not production capacity, sustained mixed-write load, mobile network or recovery proof.
 
+## P8 applications and development rent
+
+Stop only the old web/worker processes you own, apply migration **010**, build and restart matching code. [Upgrade evidence](evidence/X2-P8-MIGRATION.json) preserves existing data and credentials. Do not edit applied migrations or automatically convert existing fixture tenancies into rent contracts.
+
+After ordinary local migration/seed, run `npm run db:p8` to enable **only the existing fictional review operator’s finance grant**. This guarded, repeatable command checks the local database and saved identity; it prints no credentials. The ordinary seed intentionally does not grant finance. Enroll/verify native operator MFA through Account security before review or reconciliation. Setup itself neither collects money nor provisions shops.
+
+1. Sign in as an existing fictional owner (or previously invited account). Open Shopkeeper → Applications → Apply for a shop. Select an owned merchant account or create your own, complete business details and save the draft.
+2. Upload one or two fictional verification images and confirm submission. JPEG/PNG/WebP inputs are bounded at **2 MiB**, single-frame, 16 million pixels and 8192 pixels per side; only normalized WebP is stored. Evidence is private and viewing it requires fresh authentication. Do not use real identity documents in this local demo.
+3. Sign in as the MFA operator, open Landlord → Applications, claim the review and record a reasoned decision. A needs-information decision permits versioned editing/resubmission. Approval selects an immutable policy and issues a referenced invoice; it does not create a shop yet.
+4. In Landlord → Development rent, separately claim finance scope. Compare the exact invoice reference, currency/amount and a unique external receipt with the fictional development ledger. Record a verified payment/waiver with reason and confirmation. Partial credits leave the application unprovisioned. Full first settlement creates an unpublished shop atomically.
+5. The owner opens the invoice’s shop workspace, configures catalogue/contacts/design and explicitly publishes through the existing workflow. Use Rent and tenancy to open or request renewal. Reversals require the finance operator’s current scope, fresh MFA, reason and explicit confirmation; history is retained.
+
+The default immutable policy is **UGX 5,000 per 30 fixed days, seven days’ grace**. A fresh finance operator may create another version with `POST /api/operator/rent-policies`; review lists versions with `GET` and chooses one at approval. The strict body fields are `label`, `amountMinor` (integer string), `periodDays`, `graceDays`, `mallCapacity` and `confirm: true`; currency is fixed server-side to UGX. Existing obligations keep their selected policy. No editor UI or live pricing approval is implied.
+
+Coverage dates are provisional until first full settlement, then immutable. After coverage expires, the first overdue day is due, the remainder of the selected grace window is grace, then tenancy closes at the exact boundary. Grace zero closes at expiry. Run the worker for deduplicated three-day renewal reminders and due/grace/closure notifications in private local sinks. Old jobs re-read current canonical credit/coverage; renewal does not lift moderation. Only P8 contracts are scheduled. Receipt mismatches/overpayment are rejected for operator investigation, without effects.
+
+Live collection, provider callbacks, refunds, public account signup, production verification storage/retention and launch policy remain disabled/unimplemented. This packet does not finish all P8 administration; see [the handoff](X2-HANDOFF.md) and [evidence limits](evidence/X2-P8.md).
+
 ## Configuration and readiness
 
 `.env.example` lists names/placeholders only. `db:local` generates `.env.local` with `DATABASE_URL`, `AUTH_SECRET`, `AUTH_BASE_URL`, `LONDOS_LOCAL_ADAPTERS=true` and fixture public rendering. Never use `NEXT_PUBLIC_` for a secret. Run commands from the repository root so web/worker agree about the local configuration and sink paths.
 
-`GET /api/health` is liveness plus **public preview** capability; its `coreConfigured` and `readiness` fields point to the additional service check. `GET /api/ready` requires the named migration in `src/server/db/schema-contract.ts`, checks configuration, and reports local database/authentication capability and worker heartbeat. Worker offline is visible without failing public browsing. Live notifications and financial operations remain false. A database outage or missing required migration returns readiness 503; public fixture browsing remains available. Private operations fail closed on database errors.
+`GET /api/health` is liveness plus **public preview** capability; its `coreConfigured` and `readiness` fields point to the additional service check. `GET /api/ready` requires the named migration in `src/server/db/schema-contract.ts`, checks configuration, and reports local database/authentication capability and worker heartbeat. Worker offline is visible without failing public browsing. `localRentWorkflow=true` reports only the development workflow; live notifications and financial operations remain false. A database outage or missing required migration returns readiness 503; public fixture browsing remains available. Private operations fail closed on database errors.
 
 Changing the web port also requires the matching `AUTH_BASE_URL` origin. Mutation origins are checked exactly. Explicit test-runner variables override `.env.local`; do not change local credentials to make tests pass.
 
@@ -135,4 +153,4 @@ ESLint 10, TypeScript ESLint and React Hooks peers accept the pinned versions. N
 
 Cloud onboarding uses `bash scripts/cloud-install.sh`: frozen install, guarded local DB startup/migrations/seed, checks, integration tests, audit, web/worker build and artifact scan. It does not start persistent web/worker processes. Saved environment settings are a draft; publishing/restoring is a separate platform step and has not been verified in a new task.
 
-Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. X2’s P5–P7 local prototype is complete; continue P8 within **Sol 6.1 Extra High X2**. Current checks pass 22 unit, 81 integration, 16 fixture public browser and 11 core browser tests. See [current X2 evidence](evidence/X2-P6-P7.md) and [historical P5 evidence](evidence/X2-P5.md).
+Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. The P5–P7 prototype and P8 local lifecycle packet are complete; continue remaining P8 administration at **Sol 6.1 Extra High**. Current checks pass 23 unit, 96 integration, 16 fixture browser and 14 core browser tests. See [P8 evidence](evidence/X2-P8.md) and [historical prototype evidence](evidence/X2-P6-P7.md).

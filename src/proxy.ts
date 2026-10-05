@@ -3,7 +3,14 @@ import { z } from "zod";
 import { coreConfigured, coreConfig } from "./server/config";
 import { database } from "./server/db/pool";
 import { auth } from "./server/security/auth";
-import { resolveActor, requireShop, sessionState } from "./server/security/authorization";
+import {
+  resolveActor,
+  requireShop,
+  requireOperator,
+  sessionState,
+} from "./server/security/authorization";
+import { applicationAccess } from "./server/lifecycle-common";
+import { invoiceAccess } from "./server/rent";
 import { AccessError } from "./server/security/errors";
 
 function unavailable(status: number) {
@@ -31,10 +38,14 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      const permission = /\/(design|preview)(?:\/|$)/.test(path) ? "design" : "catalogue";
+      const permission = /\/rent(?:\/|$)/.test(path)
+        ? "finance"
+        : /\/(design|preview)(?:\/|$)/.test(path)
+          ? "design"
+          : "catalogue";
       await requireShop(database(), actor, parsed.data, permission);
     }
-    if (path === "/landlord") {
+    if (path === "/landlord" || path.startsWith("/landlord/")) {
       const state = await sessionState(database(), actor, true);
       if (
         !(
@@ -46,6 +57,40 @@ export async function proxy(request: NextRequest) {
         return unavailable(403);
       if (!state.mfa_enabled || !state.verified_at)
         return NextResponse.redirect(new URL("/security", coreConfig().baseURL));
+      if (path.startsWith("/landlord/applications"))
+        await requireOperator(database(), actor, "review");
+      if (path.startsWith("/landlord/rent") || path.startsWith("/landlord/invoices"))
+        await requireOperator(database(), actor, "finance");
+    }
+    const application =
+      /^\/(shopkeeper\/applications|landlord\/applications|landlord\/rent)\/([^/]+)$/.exec(path);
+    if (
+      application &&
+      !(application[1] === "shopkeeper/applications" && application[2] === "new")
+    ) {
+      const id = z.uuid().safeParse(application[2]);
+      if (!id.success) return unavailable(404);
+      await applicationAccess(
+        database(),
+        actor,
+        id.data,
+        application[1] === "shopkeeper/applications"
+          ? "owner"
+          : application[1] === "landlord/applications"
+            ? "review"
+            : "finance",
+      );
+    }
+    const invoice = /^\/(shopkeeper|landlord)\/invoices\/([^/]+)$/.exec(path);
+    if (invoice) {
+      const id = z.uuid().safeParse(invoice[2]);
+      if (!id.success) return unavailable(404);
+      await invoiceAccess(
+        database(),
+        actor,
+        id.data,
+        invoice[1] === "shopkeeper" ? "owner" : "finance",
+      );
     }
     return NextResponse.next();
   } catch (error) {

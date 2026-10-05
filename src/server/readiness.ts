@@ -12,6 +12,7 @@ export async function readiness() {
       worker: "not-configured",
       financialOperations: false,
       liveNotifications: false,
+      localRentWorkflow: false,
     };
   try {
     const config = coreConfig();
@@ -31,6 +32,7 @@ export async function readiness() {
       worker: worker.rows[0].ready ? "ready" : "offline",
       financialOperations: false,
       liveNotifications: false,
+      localRentWorkflow: true,
     };
   } catch {
     return {
@@ -41,6 +43,7 @@ export async function readiness() {
       worker: "unknown",
       financialOperations: false,
       liveNotifications: false,
+      localRentWorkflow: false,
     };
   }
 }

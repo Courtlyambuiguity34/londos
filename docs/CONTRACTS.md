@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). Full lifecycle and live financial/provider commands remain later phases. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
+Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). P8 implements local application/private-evidence review and development rent/provisioning under [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md). Administrative completion and live financial/provider commands remain later work. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -8,7 +8,7 @@ Status: initial state records and identity/permission/transaction contracts are 
 |---|---|---|
 | Application | draft, submitted, reviewing, needs_information, approved, rejected | Only authorized review advances approval; resubmission retains history. |
 | Shop publication | provisioning, unpublished, active, temporarily_closed, archived | Immutable shop identity is independent of slug and internal mall placement. |
-| Tenancy | pending, active, due, grace, closed | Verified obligations/events drive state; policy timers remain draft until approved. |
+| Tenancy | pending, active, due, grace, closed | Verified obligations/events drive state; development timers follow the selected immutable policy; live timing remains unapproved. |
 | Moderation | clear, under_review, suspended | Renewal cannot lift suspension. Only an authorized moderation decision can. |
 | Media | uploaded, validating, processing, ready, rejected, failed, deleted | Quarantined/raw assets are not public ready media. |
 
@@ -16,7 +16,7 @@ Public eligibility must combine current publication, tenancy, moderation and res
 
 ## Permission matrix and implementation boundary
 
-This matrix includes planned capabilities. X1/R1 implement profile/membership/invitation/ownership and job metadata/replay. X2 adds catalogue, contact/request and private media commands, scoped operator support reads and audited contact recovery. Design/preview/publish commands now use separate grants, immutable scoped revisions and fresh publication authentication. Finance, provisioning, live report/verification and private-evidence workflows remain later phases. Each new action needs its own grant, scope and attack tests.
+This matrix includes planned capabilities. X1/R1 implement profile/membership/invitation/ownership and job metadata/replay. X2 adds catalogue, contact/request and private media commands, scoped operator support reads and audited contact recovery. Design/preview/publish commands now use separate grants, immutable scoped revisions and fresh publication authentication. P8 adds owner applications/private evidence and separately scoped review/finance commands with native MFA, fresh authority and anti-self-review rules. Live reports/verification and broader administration remain later work. Each new action needs its own grant, scope and attack tests.
 
 | Action | Merchant owner | Staff | Operator |
 |---|---|---|---|
@@ -28,7 +28,7 @@ This matrix includes planned capabilities. X1/R1 implement profile/membership/in
 | Approve/provision/suspend/reinstate | No | No | Specific operator permission, MFA, reason and audit |
 | Read private evidence/reports | Only policy-approved own records | No implicit permission | Least-privilege verification/trust permission |
 
-Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. With core services disabled, demo portal pages show no private data/actions. With explicit local core configuration, protected profiles/security/operator job views enforce these policies. Staff additionally require a per-shop grant; operator support/review resources require an explicit shop scope.
+Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. With core services disabled, demo portal pages show no private data/actions. With explicit local core configuration, protected profiles/security/operator job views enforce these policies. Staff additionally require a per-shop grant; operator support requires a shop scope; P8 review/finance requires a distinct claimed application scope, also before a shop exists.
 
 Operator job metadata/replay uses a separate explicit global job permission and fresh MFA for replay; it does not expose job payloads. That permission does not grant merchant support access.
 
@@ -44,6 +44,14 @@ Mutations recheck authority after serialization waits. Revocation before that fi
 
 Canonical mutations require a database transaction, tenant-consistent references, conflict checks where relevant, and durable audit/event registration. Outbox/transactional queue processing must survive crashes and tolerate duplicate/out-of-order delivery. Prices use exact integer minor units; the SQL domain rejects fractional/nonfinite/out-of-range inputs rather than rounding them. Rent corrections create new events rather than overwrite history.
 
+## Development rent contract
+
+The owner selected UGX 5,000 per 30 days, seven days’ grace and manual operator reconciliation, with live collection disabled. Immutable policy versions bind approved applications/invoices/contracts. Approval creates an obligation before a shop; only a scoped finance operator with fresh MFA can record a verified payment/waiver against its exact reference. Amounts are exact integer minor units. Partial credits cannot provision, overpayment/reference/currency mismatches have no effect, and a unique receipt cannot credit two invoices.
+
+Full first settlement finalizes coverage once and atomically provisions an unpublished shop and tenancy. Stable per-actor command keys and merchant serialization make repeated/concurrent attempts idempotent. Reversals append linked equal negative corrections; they never edit the original event or alter finalized dates. SQL workflow guards reject invalid/overpaid/negative payment events in addition to service checks. Current authority is checked again after locks, before applying even an idempotent retry.
+
+Only P8 contracts enter scheduling. Current worker time and canonical coverage/credits drive reminders, due/grace/closed transitions and reopening; stale payloads carry no paid-through authority. Renewal/correction cannot publish drafts or lift moderation. Fixed-day development policy, bounded private image evidence and operational limits are detailed in ADR-0006. Production policy/provider callbacks remain separate work.
+
 ## Interface progress
 
 - Implemented: current actor/session/action/shop permission resolver with explicit denial.
@@ -53,4 +61,4 @@ Canonical mutations require a database transaction, tenant-consistent references
 - Implemented: closed LSS schema 1 and prototype registry, owned references, immutable drafts, manual patches, private previews, version-checked publication and restoration as a new draft.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 
-R1 and the local X2/P5–P7 prototype are verified; see [X2 prototype evidence](evidence/X2-P6-P7.md). Continue **Sol 6.1 Extra High with P8**, extending lifecycle/provider/policy contracts before their dependent operations. Final system/release review remains **6 Astra Extra High R2**.
+R1, the local X2/P5–P7 prototype and [P8 local lifecycle](evidence/X2-P8.md) are verified; see [X2 prototype evidence](evidence/X2-P6-P7.md). Continue **Sol 6.1 Extra High with remaining P8 administration**, extending each command’s grant/scope/policy contract before implementation. Final system/release review remains **6 Astra Extra High R2**.

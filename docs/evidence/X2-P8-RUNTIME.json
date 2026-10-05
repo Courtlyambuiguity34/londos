@@ -1,0 +1,98 @@
+{
+  "recordedAt": "2026-10-05T15:19:15.873Z",
+  "source": "database",
+  "migration": "010_applications_and_local_rent.sql",
+  "developmentPolicy": {
+    "currency": "UGX",
+    "amountMinor": "5000",
+    "periodDays": 30,
+    "graceDays": 7,
+    "collection": "manual-operator",
+    "liveCollection": false
+  },
+  "observations": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "status": "preview",
+        "mode": "database-development",
+        "publicBrowsing": true,
+        "transactions": false,
+        "authentication": false,
+        "database": true,
+        "ai": false,
+        "coreConfigured": true,
+        "readiness": "/api/ready"
+      }
+    },
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true
+      }
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "bytes": 16971,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 17581,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 22815,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/workspace/applications",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/operator/applications",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/operator/rent-policies",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    }
+  ],
+  "limit": "Current local runtime only; no live financial/delivery capability, production capacity or fresh-task restoration claim."
+}

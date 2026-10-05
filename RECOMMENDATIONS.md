@@ -2,7 +2,7 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
-**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1 and X2’s P5–P7 local architecture prototype are complete and verified. Continue **X2 / P8 at Sol 6.1 Extra High**. No new switch is needed between these packets. Read [current X2 evidence](docs/evidence/X2-P6-P7.md), [P5 evidence](docs/evidence/X2-P5.md), [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md). This completes the prototype boundary, not the full build or production release.
+**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1, the P5–P7 prototype and the P8 local application/rent lifecycle packet are complete and verified. **149 tests pass.** Continue **remaining P8 administration at Sol 6.1 Extra High**; no new switch is needed. Read [P8 evidence](docs/evidence/X2-P8.md), [prototype evidence](docs/evidence/X2-P6-P7.md) and [X2-HANDOFF](docs/X2-HANDOFF.md). The owner selected development rent of UGX 5,000 per 30 days, seven days’ grace and manual reconciliation with live collection disabled. P8 administration, the full build and production release remain in progress.
 
 ## Model settings
 
@@ -17,7 +17,7 @@ The owner requested explicit model handoffs on 2026-10-04. Follow these stages w
 
 Model settings do not replace tests, acceptance gates, review or recovery. Use High for routine work and Extra High at the listed boundaries; Max/Ultra is not the default.
 
-R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication and canonical discovery prototype is now verified. P8 tenancy/rent/reconciliation and P10 AI contracts also require Extra High. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
+R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication and canonical discovery prototype is now verified. The verified P8 local lifecycle, remaining administration and P10 AI contracts also require Extra High. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
 
 ## Handoff and reminder procedure
 

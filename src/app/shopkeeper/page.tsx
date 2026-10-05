@@ -17,9 +17,9 @@ export default async function ShopkeeperPage() {
       <p className="eyebrow">Private development workspace</p>
       <h1>Your shops.</h1>
       <p>
-        These are fictional PostgreSQL records. Public browsing still uses the labeled fixtures. X1
-        enables identity, scoped access and ordinary profile edits; catalogue, rent and publication
-        workflows follow the Astra review.
+        Manage your catalogue, contacts and shop design here. Only explicitly published eligible
+        shops appear in database browsing. This development environment uses fictional businesses
+        and does not collect live rent payments.
       </p>
       <ul className="workspace-list">
         {shops.map((shop) => (
@@ -31,6 +31,9 @@ export default async function ShopkeeperPage() {
       </ul>
       {shops.length === 0 ? <p>No shops are available to your current membership.</p> : null}
       <div className="account-links">
+        <Link className="button" href="/shopkeeper/applications">
+          Your applications
+        </Link>
         <Link className="button" href="/security">
           Account security
         </Link>

@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { formatMinorMoney } from "../../src/modules/money";
+import { formatMinorMoney, formatSignedMinorMoney } from "../../src/modules/money";
 test.each(["UGX", "USD", "KES"])(
   "display preserves every digit of a 20-digit %s price",
   (currency) => {
@@ -12,4 +12,12 @@ test("zero, minor-unit cents and ask-for-price remain distinct", () => {
   expect(formatMinorMoney("0", "USD")).toContain("0.00");
   expect(formatMinorMoney(null, "UGX")).toBe("Ask for price");
   expect(() => formatMinorMoney("1.5", "UGX")).toThrow();
+});
+test("ledger reversals retain their sign and every minor-unit digit", () => {
+  expect(formatSignedMinorMoney("-7", "USD")).toContain("−");
+  expect(formatSignedMinorMoney("-7", "USD")).toContain("0.07");
+  expect(formatSignedMinorMoney("-99999999999999999999", "UGX").replace(/\D/g, "")).toBe(
+    "99999999999999999999",
+  );
+  expect(() => formatSignedMinorMoney("-1.5", "UGX")).toThrow();
 });
