@@ -1,0 +1,65 @@
+{
+  "recordedAt": "2026-10-05T22:01:59.201Z",
+  "migration": "015_local_privacy_governance.sql",
+  "localSetup": {
+    "explicitPrivacyGrantForVerifiedFictionalOperator": true,
+    "repeatabilityPassed": true,
+    "configurationAndPrivateAccountsPreserved": true,
+    "defaultSeedGrantsUnchanged": true,
+    "nativeFreshMfaAndSeparateCaseScopeRequired": true,
+    "mainErasureFlagDisabled": true
+  },
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true,
+        "localPrivacyErasure": false,
+        "liveErasure": false,
+        "localPilotAnalytics": true,
+        "liveAnalytics": false
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 23936,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 18494,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/workspace/merchants/20000000-0000-4000-8000-000000000001/privacy",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/privacy",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    }
+  ],
+  "limit": "Current matching local runtime; main erasure remains disabled and no main primary data was erased. No live legal, physical backup, fresh-task or production restoration claim."
+}

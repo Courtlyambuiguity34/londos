@@ -23,6 +23,7 @@ try {
   const url = new URL(connectionString);
   url.pathname = `/${name}`;
   process.env.DATABASE_URL = url.toString();
+  process.env.LONDOS_PRIVACY_ERASURE = "true";
   process.env.AUTH_BASE_URL = "http://127.0.0.1:3101";
   process.env.AUTH_SECRET = randomBytes(48).toString("hex");
   process.env.LONDOS_LOCAL_ADAPTERS = "true";

@@ -63,6 +63,12 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/trust`}>
             Trust decisions and appeals
           </Link>
+          <Link
+            className="button button--outline"
+            href={`/shopkeeper/merchants/${shop.merchant_id}/privacy`}
+          >
+            Business data and privacy
+          </Link>
           <h2>Shop address</h2>
           <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/address`}>
             Change shop address

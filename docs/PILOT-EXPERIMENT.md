@@ -125,3 +125,7 @@ Produce a decision report with:
 - architecture bottlenecks;
 - product changes;
 - pricing recommendation.
+
+## Local privacy governance boundary
+
+P9.8's [local privacy evidence](evidence/X2-P9-PRIVACY.md) verifies bounded owner business exports and manually governed fictional primary effects with default-off erasure, separate native-MFA privacy scopes, retention holds, explicit plan/version and current worker lease. Analytics erasure permanently excludes future shop capture while retaining platform/canonical history. This is not approved live privacy policy, full subject access or physical-backup erasure. Preserving minimal observation counts and testing privacy workflows do not prove merchant retention, causal discovery, sale conversion or pilot willingness to pay. P9.9 must label measured resource use separately from absent/estimated provider and staff costs.

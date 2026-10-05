@@ -50,6 +50,7 @@ type CustomerRequest = {
   kind: string;
   name: string;
   reply_to: string;
+  erased_at?: string | null;
   message: string;
   status: string;
   version: number;
@@ -669,6 +670,9 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
                 <h3>
                   {r.kind} from {r.name}
                 </h3>
+                {r.erased_at ? (
+                  <p>Personal content erased; minimal closed receipt retained.</p>
+                ) : null}
                 <p>{r.reply_to}</p>
                 <p className="request-message">{r.message}</p>
                 <p>{r.status}</p>

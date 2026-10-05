@@ -430,3 +430,29 @@ flowchart LR
 ```
 
 This cleanup governs minimal analytics tables only. Broader evidence/enquiry/incident/legal/backups export/deletion and measurable costs remain later P9 work. [Analytics evidence](evidence/X2-P9-ANALYTICS.md) records inspected [owner desktop](evidence/images/x2-p9-analytics-owner-desktop.png), [analytics-only operator desktop](evidence/images/x2-p9-analytics-operator-desktop.png) and [mobile window/keyboard focus](evidence/images/x2-p9-analytics-mobile.png). All pictured data is fictional; live analytics is disabled.
+
+## Implemented local privacy governance
+
+```mermaid
+flowchart TD
+  Owner[Fresh current merchant owner] --> Export[Bounded allowlisted section download; no bearer link]
+  Owner --> Request[Exact resource, immutable retry key, reason and confirmation]
+  Request --> Claim[Explicit privacy grant and native fresh MFA; separate assignment/scope]
+  Claim --> Decision{Manual current-version review}
+  Decision --> Hold[Exact-target retention hold; private reason and safe explanation]
+  Hold --> Release[Reasoned release; hold history retained]
+  Release --> Decision
+  Decision --> Retain[Protected history or ineligible resource retained]
+  Decision --> Approve[Explicit local flag; exact plan/session; five-minute approval]
+  Approve --> Worker[Independent current lease-fenced worker]
+  Worker --> Check{Current authority, scope, holds, age, plan and deadline?}
+  Check -->|No| Review[No primary effect; fresh review required]
+  Check -->|Yes| Atomic[(SQL effect plus immutable history/audit and job dedupe)]
+  Atomic --> Enquiry[Scrub three enquiry fields; keep minimal retry receipt]
+  Atomic --> Evidence[Delete eligible rejected nonfinancial evidence bytes only]
+  Atomic --> Analytics[Delete shop counts; permanent opt-out fences waiting capture]
+  Atomic --> Result[Primary SQL completion only]
+  Result --> Gates[Backups, WAL, snapshots, notifications, downloads and external copies remain obligations]
+```
+
+Erasure is default-off fictional loopback functionality. Financial/account/trust/incident/contact/audit history remains retained, and arrears closure never deletes data. Holds survive cancelled/denied/unassigned requests. These diagrams do not establish live legal erasure or physical backup handling. See [privacy evidence](evidence/X2-P9-PRIVACY.md) and the inspected fictional [owner desktop](evidence/images/x2-p9-privacy-owner-desktop.png), [scoped reviewer desktop](evidence/images/x2-p9-privacy-review-desktop.png) and [mobile accessible cancellation](evidence/images/x2-p9-privacy-mobile.png) captures.

@@ -12,6 +12,11 @@ export async function handle(
 ) {
   if (job.schema_version !== 1) throw new Error("unsupported_job");
   signal.throwIfAborted();
+  if (job.kind === "privacy.erase") {
+    const { handlePrivacyErasure } = await import("../privacy");
+    await handlePrivacyErasure(pool, job, signal);
+    return;
+  }
   if (job.kind === "rent.tick") {
     const { handleRentTick } = await import("./rent");
     await handleRentTick(pool, job, signal);

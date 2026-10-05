@@ -239,7 +239,7 @@ export async function listGuestRequests(pool: Pool, actor: Actor, shopId: string
   await catalogueAccess(pool, actor, shopId);
   return (
     await pool.query(
-      "SELECT id,kind,name,reply_to,message,status,version,created_at FROM guest_requests WHERE shop_id=$1 ORDER BY created_at DESC,id LIMIT 20 OFFSET $2",
+      "SELECT id,kind,name,reply_to,message,status,version,created_at,erased_at FROM guest_requests WHERE shop_id=$1 ORDER BY created_at DESC,id LIMIT 20 OFFSET $2",
       [shopId, z.number().int().min(0).max(10000).parse(offset)],
     )
   ).rows;

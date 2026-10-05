@@ -1,4 +1,5 @@
 import "server-only";
+import { privacyErasureEnabled } from "./privacy";
 import { pilotPolicy } from "./analytics";
 import { coreConfigured, coreConfig } from "./config";
 import { database } from "./db/pool";
@@ -14,6 +15,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: false,
+      localPrivacyErasure: false,
+      liveErasure: false,
       localPilotAnalytics: false,
       liveAnalytics: false,
     };
@@ -36,6 +39,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: true,
+      localPrivacyErasure: privacyErasureEnabled(),
+      liveErasure: false,
       localPilotAnalytics: pilotPolicy().enabled,
       liveAnalytics: false,
     };
@@ -49,6 +54,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: false,
+      localPrivacyErasure: false,
+      liveErasure: false,
       localPilotAnalytics: false,
       liveAnalytics: false,
     };

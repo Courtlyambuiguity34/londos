@@ -38,7 +38,8 @@
     "check:bundle-secrets": "node scripts/check-bundle-secrets.mjs",
     "db:trust": "tsx scripts/enable-local-trust.ts",
     "db:incidents": "tsx scripts/enable-local-incidents.ts",
-    "db:analytics": "tsx scripts/enable-local-analytics.ts"
+    "db:analytics": "tsx scripts/enable-local-analytics.ts",
+    "db:privacy": "tsx scripts/enable-local-privacy.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",

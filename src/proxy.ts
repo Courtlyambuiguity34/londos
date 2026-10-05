@@ -13,6 +13,7 @@ import { applicationAccess } from "./server/lifecycle-common";
 import { invoiceAccess } from "./server/rent";
 import { operationsAccess } from "./server/administration";
 import { trustAccess } from "./server/trust";
+import { privacyOwnerAccess, privacyOperatorAccess } from "./server/privacy";
 import { incidentAccess, incidentQueue } from "./server/incidents";
 import { requireMerchant } from "./server/security/authorization";
 import { AccessError } from "./server/security/errors";
@@ -95,6 +96,20 @@ export async function proxy(request: NextRequest) {
       const id = z.uuid().safeParse(operation[1]);
       if (!id.success) return unavailable(404);
       await operationsAccess(database(), actor, id.data);
+    }
+    if (path.startsWith("/landlord/privacy"))
+      await requireOperator(database(), actor, "privacy", true);
+    const privacyCase = /^\/landlord\/privacy\/([^/]+)$/.exec(path);
+    if (privacyCase) {
+      const id = z.uuid().safeParse(privacyCase[1]);
+      if (!id.success) return unavailable(404);
+      await privacyOperatorAccess(database(), actor, id.data);
+    }
+    const privacyOwner = /^\/shopkeeper\/merchants\/([^/]+)\/privacy$/.exec(path);
+    if (privacyOwner) {
+      const id = z.uuid().safeParse(privacyOwner[1]);
+      if (!id.success) return unavailable(404);
+      await privacyOwnerAccess(database(), actor, id.data);
     }
     const team = /^\/shopkeeper\/merchants\/([^/]+)\/team$/.exec(path);
     if (team) {

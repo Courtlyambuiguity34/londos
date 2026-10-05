@@ -167,6 +167,13 @@ export async function storePilotEvent(pool: Pool, headers: Headers, input: Captu
       );
       if (!shop.rowCount) return false;
       merchantId = shop.rows[0].merchant_id;
+      // Serialize with governed erasure; recheck the exclusion after any wait.
+      await db.query("SELECT id FROM merchants WHERE id=$1 FOR SHARE", [merchantId]);
+      if (
+        (await db.query("SELECT 1 FROM shop_privacy_exclusions WHERE shop_id=$1", [shopId]))
+          .rowCount
+      )
+        return false;
       if (c.shopId && (c.departmentId || c.productId)) {
         const resource = c.productId
           ? await db.query(
