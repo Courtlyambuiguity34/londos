@@ -2,7 +2,7 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
-**Current handoff (2026-10-05, Africa/Kampala):** H and X1 secure foundation work are complete and locally verified. Next: **6 Astra Extra High R1**. Confirm that setting and say **“Continue R1.”** See BUILD-STATUS and X1 evidence before continuing.
+**Current handoff (2026-10-05 UTC):** H, X1 and R1 review/fixes are complete and locally verified. Next: **Sol 6.1 Extra High X2**. Confirm that setting and say **“Continue X2.”** Read [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md) before continuing.
 
 ## Model settings
 
@@ -12,10 +12,12 @@ The owner requested explicit model handoffs on 2026-10-04. Follow these stages w
 | X1: secure infrastructure | Sol 6.1 / Extra High | P2–P4: PostgreSQL schema/migrations, identity, MFA, permissions, tenant isolation, durable jobs and transactions. |
 | R1: review the security boundary | 6 Astra / Extra High | Review state/permission/data contracts and X1 security evidence before private features depend on them. |
 | H2: ordinary feature implementation | Sol 6.1 / High | Routine pages, forms and component work using reviewed domain interfaces. Ask for a setting change when the next task crosses into an Extra High boundary. |
-| X2: sensitive feature implementation | Sol 6.1 / Extra High | LSS/reference safety and publication concurrency; media security; rent/provisioning/reconciliation; cache eligibility; sensitive changes; AI context and orchestration boundaries. |
+| X2: sensitive feature implementation | Sol 6.1 / Extra High | Begin P5 catalogue/contact/media: new permissions, concurrent edits/quotas and upload security. Continue sensitive LSS/publication, rent/provisioning/reconciliation, cache eligibility and AI boundaries as the plan reaches them. |
 | R2: final critical review | 6 Astra / Extra High | Full-system security, migration/rollback, recovery and release evidence; difficult unresolved architecture problems. |
 
 Model settings do not replace tests, acceptance gates, review or recovery. Use High for routine work and Extra High at the listed boundaries; Max/Ultra is not the default.
+
+R1 selects X2 next because the remaining P5 domain interfaces introduce new authorization, concurrency and media controls. H2 is a conditional stage for routine interface work once those contracts are stable, not a required detour before implementing them. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
 
 ## Handoff and reminder procedure
 

@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: initial state records and identity/permission/transaction contracts are backed by X1 PostgreSQL/authentication/worker code and local tests. Lifecycle transitions, public eligibility, publication/media and live financial commands remain later phases. Review the implemented boundary under R1; see [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
+Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). Lifecycle transitions, public eligibility, publication/media and live financial commands remain later phases. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -14,7 +14,9 @@ Status: initial state records and identity/permission/transaction contracts are 
 
 Public eligibility must combine current publication, tenancy, moderation and resource visibility. The fixture preview's open/closed/suspended flags are demonstration data, not the implemented policy engine. Grace visibility, notice periods, rent amount and retention remain owner policies to confirm before live operation.
 
-## Initial permission matrix to validate under X1
+## Permission matrix and implementation boundary
+
+This matrix includes planned capabilities. X1/R1 implement ordinary profile reads/edits, membership/invitation/ownership services and operator job metadata/replay; catalogue, design, finance, provisioning and private-evidence commands remain later phases. Each new action needs its own grant, scope and attack tests.
 
 | Action | Merchant owner | Staff | Operator |
 |---|---|---|---|
@@ -28,9 +30,19 @@ Public eligibility must combine current publication, tenancy, moderation and res
 
 Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. With core services disabled, demo portal pages show no private data/actions. With explicit local core configuration, protected profiles/security/operator job views enforce these policies. Staff additionally require a per-shop grant; operator support/review resources require an explicit shop scope.
 
+Operator job metadata/replay uses a separate explicit global job permission and fresh MFA for replay; it does not expose job payloads. That permission does not grant merchant support access.
+
+## Revocation and invitation contracts
+
+MFA proof requires the current session, factor identity and credential generation. Password changes/reset revoke preceding sessions and pending challenges atomically; factor removal does likewise. Requests verifying old credentials across a reset cannot establish fresh authority. Migration 007 clears old proofs, preserving users and sessions but requiring another MFA challenge where enrolled.
+
+An active owner may issue a bounded, email-bound, expiring one-use invitation. Removal, demotion or ownership transfer that ends that issuer's active-owner authority revokes their unaccepted invitations in the same transaction; restoring the role cannot revive them. Accepted memberships remain independent. Acceptance rechecks the recipient's session and step-up after acquiring the merchant lock, comparing expiry with current wall-clock time.
+
+Mutations recheck authority after serialization waits. Revocation before that final check denies the action; already-authorized commands are not promised retroactive cancellation. Preserve this boundary explicitly when implementing each new command.
+
 ## Persistence and side effects
 
-Canonical mutations require a database transaction, tenant-consistent references, conflict checks where relevant, and durable audit/event registration. Outbox/transactional queue processing must survive crashes and tolerate duplicate/out-of-order delivery. Prices use exact money representation. Rent corrections create new events rather than overwrite history.
+Canonical mutations require a database transaction, tenant-consistent references, conflict checks where relevant, and durable audit/event registration. Outbox/transactional queue processing must survive crashes and tolerate duplicate/out-of-order delivery. Prices use exact integer minor units; the SQL domain rejects fractional/nonfinite/out-of-range inputs rather than rounding them. Rent corrections create new events rather than overwrite history.
 
 ## Interface progress
 
@@ -41,4 +53,4 @@ Canonical mutations require a database transaction, tenant-consistent references
 - LSS structural/semantic/reference/policy validator and compare-and-swap publication.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 
-Review these decisions with 6 Astra Extra High after the X1 implementation and before widening protected functionality.
+R1 review of the implemented boundary is complete. Continue under owner-confirmed **Sol 6.1 Extra High X2**, extending contracts/tests as described in [the handoff](X2-HANDOFF.md). Final system/release review remains **6 Astra Extra High R2**.

@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** Sol 6.1 Extra High X1 security foundation implemented and locally verified; next is **6 Astra Extra High R1 review** before dependent protected features. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
+**Status:** R1 security review and fixes are complete; **75 tests pass**. Next: **Sol 6.1 Extra High X2** for catalogue, contact and media implementation. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
 
 ## Recommendations
 
@@ -25,7 +25,7 @@ Public browsing uses fictional, read-only shops and illustrated products. X1 add
 
 For the full local X1 setup, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
-The next handoff is **6 Astra Extra High**: confirm the switch and say **“Continue R1.”** [BUILD-STATUS](docs/BUILD-STATUS.md) and [X1 evidence](docs/evidence/X1-STAGE.md) distinguish stage completion from complete-build/production readiness.
+The next handoff is **Sol 6.1 Extra High**: confirm the switch and say **“Continue X2.”** Read the [R1 review](docs/evidence/R1-REVIEW.md) and [X2 work packet](docs/X2-HANDOFF.md). Stage completion is distinct from complete-build/production readiness.
 
 ## What Londos is
 
@@ -184,8 +184,10 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [System and journey illustrations](docs/ILLUSTRATIONS.md)
 - [Current Next.js / Node architecture ADR](docs/ADR/0002-nextjs-node-application-architecture.md)
 - [Identity and durable jobs ADR](docs/ADR/0003-identity-and-durable-jobs.md)
-- [X1 security and Astra review scope](docs/X1-SECURITY.md)
+- [Reviewed security contracts](docs/X1-SECURITY.md)
 - [X1 verification evidence](docs/evidence/X1-STAGE.md)
+- [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)
+- [X2 catalogue and media handoff](docs/X2-HANDOFF.md)
 - [Domain contracts for review](docs/CONTRACTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Product & UX](docs/PRODUCT.md)

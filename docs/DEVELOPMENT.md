@@ -38,11 +38,19 @@ The local DB role is privileged to create isolated test databases. It is **devel
 
 ## Accounts, MFA and recovery
 
+### Upgrading an existing X1 database to R1
+
+Stop the old web and worker processes before running `npm run db:migrate`, then build and restart both with the matching code. Migration `007_r1_security_contracts.sql` binds authentication to factor/credential generations, revokes outstanding invitations when their issuer loses owner authority, and rejects fractional minor units without rounding. Old MFA proofs are intentionally removed; users and otherwise valid sessions remain, but enrolled accounts must challenge again.
+
+The money type conversion can rewrite/lock tables. Existing local records and repeated migration/seed were preserved in [R1 migration evidence](evidence/R1-MIGRATION.json); this is not production backup restoration or a downtime guarantee. Never edit applied migrations or roll back only the code across a schema contract change. Use a new reviewed migration for further changes.
+
 Open the ignored `.local/development-accounts.json` locally in an editor to obtain one fictional account's email/password. Never paste its contents into logs, chat, issues or commits. The seed creates owner A, owner B, restricted staff, an operator and an invitee with **random passwords**, and preserves existing credentials/edits on repetition. There is no deployed default administrator. The explicit seed bypasses email verification only for these fictional development identities.
 
 Use the local browser sign-in page. Owners can access their private shop profiles; staff need both membership/action and per-shop grants. Public fixture shops do not change when a private PostgreSQL profile is edited. Operators are sent to account security until real MFA is enrolled and verified. Enter the setup key in a time-based authenticator (six digits, 30 seconds), save recovery codes offline and verify a code. A code can be used once; wait for the authenticator's next code when necessary. The next password login challenges for TOTP or one unused recovery code. Trusted-device bypass is unavailable; operator MFA cannot be disabled through the web adapter.
 
-Sensitive membership/invitation/ownership/replay changes require fresh authentication (five minutes). Verify a current MFA code, or sign out/sign in again for a password-only merchant account. No membership browser UI is claimed yet: the reviewed domain APIs are listed in [X1-SECURITY](X1-SECURITY.md); ordinary forms follow R1.
+Sensitive membership/invitation/ownership/replay changes require fresh authentication (five minutes). Verify a current MFA code, or sign out/sign in again for a password-only merchant account. No membership browser UI is claimed yet: the reviewed domain APIs are listed in [X1-SECURITY](X1-SECURITY.md); ordinary forms remain later work.
+
+Password change/reset and factor removal revoke preceding sessions and pending MFA challenges. Sign in again and complete MFA as required. Losing active-owner authority permanently revokes that owner's unaccepted invitations; another current owner must issue a new invitation if appropriate. Accepted memberships are unchanged by that invitation policy.
 
 Recovery and verification enqueue notifications. The running worker writes them under ignored `.local/notifications/` as private, complete, idempotent files. These are **local sinks**, not real email/SMS. An authorized local developer can open the appropriate file privately and use its link/token. Do not serve this directory through Next/public/object storage. Remote/live authentication and worker adapters fail explicitly until real providers and production configuration are implemented.
 
@@ -50,7 +58,7 @@ Recovery and verification enqueue notifications. The running worker writes them 
 
 `.env.example` lists names/placeholders only. `db:local` generates `.env.local` with `DATABASE_URL`, `AUTH_SECRET`, `AUTH_BASE_URL`, `LONDOS_LOCAL_ADAPTERS=true` and fixture public rendering. Never use `NEXT_PUBLIC_` for a secret. Run commands from the repository root so web/worker agree about the local configuration and sink paths.
 
-`GET /api/health` is liveness plus **public preview** capability; its `coreConfigured` and `readiness` fields point to the additional service check. `GET /api/ready` queries schema/configuration and reports actual local database/authentication capability and worker heartbeat. Worker offline is visible without failing public browsing. Live notifications and financial operations remain false. A database outage returns readiness 503 and private operations fail closed; public fixture browsing remains available.
+`GET /api/health` is liveness plus **public preview** capability; its `coreConfigured` and `readiness` fields point to the additional service check. `GET /api/ready` requires the named migration in `src/server/db/schema-contract.ts`, checks configuration, and reports local database/authentication capability and worker heartbeat. Worker offline is visible without failing public browsing. Live notifications and financial operations remain false. A database outage or missing required migration returns readiness 503; public fixture browsing remains available. Private operations fail closed on database errors.
 
 Changing the web port also requires the matching `AUTH_BASE_URL` origin. Mutation origins are checked exactly. Explicit test-runner variables override `.env.local`; do not change local credentials to make tests pass.
 
@@ -97,10 +105,10 @@ The generator is local-guarded, deterministic and idempotent. It distributes pro
 - `src/app`, `src/components`: server-rendered routes and small client authentication/profile controls.
 - `migrations`, `tests`: additive/checksummed schema plus unit, real PostgreSQL and production-browser evidence.
 
-Do not add a global streaming/loading boundary before resource validation. Private RSC denials are checked before rendering; both ordinary HTTP and Flight responses are tested. Keep private responses `private, no-store`, preserve public/account separation, and add every new protected endpoint to the attack fixture.
+Do not add a global streaming/loading boundary before resource validation. Private RSC denials are checked before rendering; both ordinary HTTP and Flight responses are tested. Keep private responses `private, no-store` and `no-referrer`, preserve public/account separation, and add every new protected endpoint to the attack fixture. Specific private header rules must follow global defaults. Library origin/CSRF checks stay enabled in tests as well as production.
 
 ESLint 10, TypeScript ESLint and React Hooks peers accept the pinned versions. Native rules require platform image components and prohibit raw scripts. The optional Next lint plugin was omitted after a High-stage unpatched dependency-chain advisory; no advisory/test was disabled. Reconsider it when repaired. X1 dependency additions were audited and frozen in the same lockfile.
 
 Cloud onboarding uses `bash scripts/cloud-install.sh`: frozen install, guarded local DB startup/migrations/seed, checks, integration tests, audit, web/worker build and artifact scan. It does not start persistent web/worker processes. Saved environment settings are a draft; publishing/restoring is a separate platform step and has not been verified in a new task.
 
-Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [X1 evidence](evidence/X1-STAGE.md) and [X1-SECURITY](X1-SECURITY.md) before the **6 Astra Extra High R1** review.
+Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. R1 is complete; next is owner-confirmed **Sol 6.1 Extra High X2**. R1 verified 15 unit, 39 integration, 16 public browser and 5 private browser tests.

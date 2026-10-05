@@ -36,7 +36,7 @@ X1 implements local PostgreSQL, the initial session/MFA/permission boundary and 
 flowchart TD
   Login[Password and verified email] --> Challenge{MFA enrolled?}
   Challenge -->|Yes| Factor[TOTP or unused recovery code]
-  Factor --> Proof[Server proof bound to current session]
+  Factor --> Proof[Proof bound to session, factor and credential generation]
   Challenge -->|No| Session[Password session]
   Proof --> Policy[Current session and explicit action permission]
   Session --> Policy
@@ -51,6 +51,27 @@ flowchart TD
 ```
 
 Private page policy also runs before HTML/Flight streaming. Domain/handler authorization remains required. Customers continue browsing without authentication.
+
+## R1 credential and invitation revocation
+
+```mermaid
+flowchart TD
+  Reset[Password changes or factor removed] --> Epoch[Rotate credential generation]
+  Epoch --> Revoke[Revoke sessions, proofs and pending challenges]
+  Attempt[In-flight password or MFA verification] --> Compare{Observed generation still current?}
+  Epoch --> Compare
+  Compare -->|No| Deny[Reject completion and suppress new cookies]
+  Compare -->|Yes| Verify[Complete native verification and current-session policy]
+  Owner[Issuer loses active-owner authority] --> Invites[Revoke unaccepted invitations in same transaction]
+  Accept[Recipient accepts invitation] --> Lock[Acquire merchant lock]
+  Lock --> Check[Recheck session, step-up and wall-clock expiry]
+  Invites --> Check
+  Check --> Decision{All current checks pass?}
+  Decision -->|Yes| Commit[Commit membership, audit and job]
+  Decision -->|No| Refuse[Deny without membership change]
+```
+
+Migration 007 invalidates old MFA proofs while preserving users and sessions. [R1 evidence](evidence/R1-REVIEW.md) records actual factor/reset races, lock-wait expiry/logout tests and database preservation. Ordinary operations already authorized at their final check are not promised retroactive cancellation.
 
 ## Implemented X1 job recovery
 
@@ -115,7 +136,10 @@ flowchart LR
   Reminder --> Confirm[Owner confirms Extra High setting]
   Confirm --> X1[Sol 6.1 Extra High security and persistence]
   X1 --> Astra[Owner switches to 6 Astra Extra High review]
-  Astra --> Next[Continue approved feature stages]
+  Astra --> R1[Save R1 findings, fixes and evidence]
+  R1 --> Switch[Owner confirms Sol 6.1 Extra High]
+  Switch --> X2[X2 catalogue, contact and media]
+  X2 --> Next[Continue plan gates and later Astra R2 review]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.

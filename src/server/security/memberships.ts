@@ -107,7 +107,6 @@ export async function invite(
 export async function acceptInvitation(pool: Pool, actor: Actor, token: string) {
   if (token.length < 32 || token.length > 128) throw new AccessError(404, "invitation_unavailable");
   return transaction(pool, async (client) => {
-    const session = await sessionState(client, actor);
     await requireStepUp(client, actor);
     const lookup = (
       await client.query("SELECT merchant_id FROM invitations WHERE token_hash=$1", [
@@ -116,9 +115,12 @@ export async function acceptInvitation(pool: Pool, actor: Actor, token: string) 
     ).rows[0];
     if (!lookup) throw new AccessError(404, "invitation_unavailable");
     await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [lookup.merchant_id]);
+    // The session may have expired or been revoked while this transaction waited.
+    const session = await sessionState(client, actor);
+    await requireStepUp(client, actor);
     const invitation = (
       await client.query(
-        "SELECT * FROM invitations WHERE token_hash=$1 AND email=$2 AND expires_at>now() AND accepted_at IS NULL AND revoked_at IS NULL FOR UPDATE",
+        "SELECT * FROM invitations WHERE token_hash=$1 AND email=$2 AND expires_at>clock_timestamp() AND accepted_at IS NULL AND revoked_at IS NULL FOR UPDATE",
         [tokenHash(token), session.email.toLowerCase()],
       )
     ).rows[0];

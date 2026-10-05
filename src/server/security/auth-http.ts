@@ -39,7 +39,10 @@ export async function authenticationRequest(
   readBody: (request: Request) => Promise<unknown>,
 ) {
   const path = new URL(request.url).pathname.replace(/^\/api\/auth/, "");
-  if (!allowed.has(path)) return response({ error: "endpoint_unavailable" }, 404);
+  const resetCallback = /^\/reset-password\/[A-Za-z0-9_-]{16,128}$/.test(path);
+  if (!allowed.has(path) && !resetCallback) return response({ error: "endpoint_unavailable" }, 404);
+  if (resetCallback && request.method !== "GET")
+    return response({ error: "method_unavailable" }, 405);
   try {
     const config = coreConfig();
     let body: Record<string, unknown> | undefined;
@@ -103,6 +106,9 @@ export async function authenticationRequest(
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     const result = await authentication.handler(forwarded);
+    // An after-hook can reject a session after the library prepared its cookies.
+    // Failed authentication must never deliver those credentials to the client.
+    if (result.status >= 400) result.headers.delete("Set-Cookie");
     result.headers.set("Cache-Control", "private, no-store, max-age=0");
     result.headers.set("Vary", "Cookie");
     result.headers.set("X-Request-ID", randomUUID());

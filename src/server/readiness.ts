@@ -1,6 +1,7 @@
 import "server-only";
 import { coreConfigured, coreConfig } from "./config";
 import { database } from "./db/pool";
+import { requiredMigration } from "./db/schema-contract";
 export async function readiness() {
   if (!coreConfigured())
     return {
@@ -15,9 +16,10 @@ export async function readiness() {
   try {
     const config = coreConfig();
     const db = database();
-    const migrations = await db.query("SELECT count(*)::int AS count FROM schema_migrations");
-    if (migrations.rows[0].count < 6 || !config.localAdapters)
-      throw new Error("Core is incomplete");
+    const migrations = await db.query("SELECT 1 FROM schema_migrations WHERE name=$1", [
+      requiredMigration,
+    ]);
+    if (!migrations.rowCount || !config.localAdapters) throw new Error("Core is incomplete");
     const worker = await db.query(
       "SELECT EXISTS(SELECT 1 FROM worker_heartbeats WHERE state='running' AND seen_at>now()-interval '30 seconds') AS ready",
     );

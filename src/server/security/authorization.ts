@@ -19,8 +19,9 @@ export async function resolveActor(authentication: Auth, headers: Headers): Prom
 export async function sessionState(db: Queryable, actor: Actor, allowUnverifiedMfa = false) {
   const result = await db.query(
     `SELECT s."createdAt" AS created_at,u.email,u."twoFactorEnabled" AS mfa_enabled,p.verified_at
-    FROM session s JOIN "user" u ON u.id=s."userId" LEFT JOIN mfa_proofs p ON p.session_id=s.id AND p.user_id=u.id
-    WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">now() AND u."emailVerified"=true`,
+    FROM session s JOIN "user" u ON u.id=s."userId"
+    LEFT JOIN mfa_proofs p ON p.session_id=s.id AND p.user_id=u.id AND p.auth_epoch=u.auth_epoch
+    WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">clock_timestamp() AND u."emailVerified"=true`,
     [actor.sessionId, actor.userId],
   );
   if (!result.rows[0]) throw new AccessError(401, "authentication_required");

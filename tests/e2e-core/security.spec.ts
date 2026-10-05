@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
 import { generate } from "otplib";
+import { Pool } from "pg";
+import { randomUUID } from "node:crypto";
+import { requiredMigration } from "../../src/server/db/schema-contract";
 import { seedIds, type SeedAccounts } from "../../src/server/db/seed";
 let accounts: SeedAccounts;
 test.beforeAll(async () => {
@@ -39,6 +42,79 @@ test("anonymous private APIs deny access and the sign-in surface remains accessi
     liveNotifications: false,
     financialOperations: false,
   });
+});
+test("notification reset links work in the browser, private referrers stay empty, and readiness requires the deployed migration", async ({
+  page,
+  request,
+}) => {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    await page.goto("/recover");
+    await page.getByLabel("Account email", { exact: true }).fill(accounts.invitee.email);
+    await page.getByRole("button", { name: "Request recovery", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("If this account can recover");
+    const url = (
+      await pool.query(
+        "SELECT payload->>'url' AS url FROM jobs WHERE payload->>'template'='password-reset' AND payload->>'to'=$1 ORDER BY created_at DESC LIMIT 1",
+        [accounts.invitee.email],
+      )
+    ).rows[0].url as string;
+    const response = await page.goto(url);
+    expect(response?.status()).toBe(200);
+    expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
+    await expect(
+      page.getByLabel("New password (at least 12 characters)", { exact: true }),
+    ).toBeVisible();
+    const outgoing = page.waitForRequest((request) =>
+      request.url().endsWith("/api/health?referrer-review"),
+    );
+    await page.evaluate(async () => {
+      await fetch("/api/health?referrer-review");
+    });
+    // Chromium's provisional event includes an empty Referer placeholder. Assert
+    // against the final headers actually sent on the network.
+    expect("referer" in (await (await outgoing).allHeaders())).toBe(false);
+    const changed = `Browser-review-${randomUUID()}`;
+    await page.getByLabel("New password (at least 12 characters)", { exact: true }).fill(changed);
+    await page.getByRole("button", { name: "Update password", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText(
+      "Password updated. Sign in with your new password.",
+    );
+    await page.getByRole("link", { name: "Return to sign-in", exact: true }).click();
+    expect(await page.evaluate(() => document.referrer)).toBe("");
+    await login(page, { ...accounts.invitee, password: changed });
+    await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
+    for (const path of [
+      "/shopkeeper",
+      "/security",
+      "/api/auth/get-session",
+      "/api/workspace/shops",
+    ]) {
+      const result = await page.request.get(path);
+      expect(result.headers()["referrer-policy"], path).toBe("no-referrer");
+      expect(result.headers()["cache-control"], path).toContain("no-store");
+    }
+    const forbidden = new URL(url);
+    forbidden.searchParams.set("callbackURL", "https://attacker.example/steal");
+    const denied = await request.get(forbidden.toString(), { maxRedirects: 0 });
+    expect(denied.status()).toBe(403);
+    expect(denied.headers().location).toBeUndefined();
+    await pool.query("UPDATE schema_migrations SET name=$2 WHERE name=$1", [
+      requiredMigration,
+      "review_missing_required.sql",
+    ]);
+    try {
+      expect((await request.get("/api/ready")).status()).toBe(503);
+    } finally {
+      await pool.query("UPDATE schema_migrations SET name=$1 WHERE name=$2", [
+        requiredMigration,
+        "review_missing_required.sql",
+      ]);
+    }
+    expect((await request.get("/api/ready")).status()).toBe(200);
+  } finally {
+    await pool.end();
+  }
 });
 test("real owner login, tenant A/B attacks across all protected domain handlers and no RSC leakage", async ({
   page,

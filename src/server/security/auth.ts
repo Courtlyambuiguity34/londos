@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { createAuthMiddleware, APIError } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { twoFactor } from "better-auth/plugins";
 import { randomUUID, createHash } from "node:crypto";
 import type { Pool } from "pg";
@@ -7,6 +7,11 @@ import { coreConfig } from "../config";
 import { database, transaction } from "../db/pool";
 import { enqueue } from "../jobs/enqueue";
 import { audit } from "./audit";
+
+const observationKey = Symbol("londosAuthenticationObservation");
+type AuthenticationObservation = { user_id: string; auth_epoch: string; factor_id: string | null };
+type ObservedContext = { [observationKey]?: AuthenticationObservation };
+const factorVerification = new Set(["/two-factor/verify-totp", "/two-factor/verify-backup-code"]);
 
 export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bootstrap = false) {
   if (!config.localAdapters)
@@ -22,6 +27,10 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
     telemetry: { enabled: false },
     logger: { disabled: true },
     advanced: {
+      // Better Auth otherwise skips origin validation when NODE_ENV=test.
+      // Security tests and the production handler must enforce the same policy.
+      disableOriginCheck: false,
+      disableCSRFCheck: false,
       useSecureCookies: config.secureCookies,
       cookiePrefix: "londos",
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", path: "/" },
@@ -77,37 +86,98 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
       }),
     ],
     hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        let userId: string | undefined;
+        if (factorVerification.has(ctx.path)) {
+          const session = await getSessionFromCtx(ctx);
+          userId = session?.user.id;
+          if (!userId) {
+            // Use the library's signed challenge cookie and verification adapter.
+            // This observes its identity; only the library can verify the factor.
+            const cookie = ctx.context.createAuthCookie("two_factor");
+            const identifier = await ctx.getSignedCookie(cookie.name, ctx.context.secret);
+            if (identifier)
+              userId = (await ctx.context.internalAdapter.findVerificationValue(identifier))?.value;
+          }
+        } else if (ctx.path !== "/sign-in/email") return;
+        const email =
+          ctx.path === "/sign-in/email" && typeof ctx.body?.email === "string"
+            ? ctx.body.email.toLowerCase()
+            : null;
+        if (!userId && !email) return;
+        const snapshot = (
+          await pool.query(
+            `SELECT u.id AS user_id,u.auth_epoch,f.id AS factor_id FROM "user" u
+           LEFT JOIN "twoFactor" f ON f."userId"=u.id
+           WHERE ($1::text IS NOT NULL AND u.id=$1) OR ($2::text IS NOT NULL AND u.email=$2)`,
+            [userId ?? null, email],
+          )
+        ).rows[0] as AuthenticationObservation | undefined;
+        if (snapshot) (ctx.context as ObservedContext)[observationKey] = snapshot;
+      }),
       after: createAuthMiddleware(async (ctx) => {
-        if (!["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path))
+        const snapshot = (ctx.context as ObservedContext)[observationKey];
+        const result = ctx.context.returned as
+          { token?: unknown; twoFactorRedirect?: unknown } | undefined;
+        if (
+          ctx.path === "/sign-in/email" &&
+          result &&
+          (typeof result.token === "string" || result.twoFactorRedirect === true)
+        ) {
+          const current =
+            snapshot &&
+            (await pool.query('SELECT 1 FROM "user" WHERE id=$1 AND auth_epoch=$2', [
+              snapshot.user_id,
+              snapshot.auth_epoch,
+            ]));
+          if (!current?.rowCount) {
+            if (ctx.context.newSession)
+              await pool.query("DELETE FROM session WHERE token=$1", [
+                ctx.context.newSession.session.token,
+              ]);
+            if (snapshot && result.twoFactorRedirect === true)
+              await pool.query(
+                "DELETE FROM verification WHERE value=$1 AND identifier LIKE '2fa-%'",
+                [snapshot.user_id],
+              );
+            throw new APIError("UNAUTHORIZED", {
+              code: "AUTHENTICATION_CHANGED",
+              message: "Authentication changed. Sign in again.",
+            });
+          }
           return;
+        }
+        if (!factorVerification.has(ctx.path)) return;
         // Only the library's successful, server-produced result can create a proof.
-        const result = ctx.context.returned as { token?: unknown } | undefined;
         if (!result || typeof result.token !== "string") return;
         // Enrollment rotates the cookie session while the endpoint result still names
         // its preceding session. Bind the proof to the library's rotated session.
         const token = ctx.context.newSession?.session.token ?? result.token;
         const method = ctx.path.endsWith("verify-totp") ? "totp" : "backup";
         const recorded = await transaction(pool, async (client) => {
+          if (!snapshot?.factor_id) return "changed";
           const verified = (
             await client.query(
-              `SELECT s.id,s."userId" AS user_id FROM session s JOIN "user" u ON u.id=s."userId" JOIN "twoFactor" f ON f."userId"=u.id WHERE s.token=$1 AND u."twoFactorEnabled"=true AND f.verified=true AND s."expiresAt">now()`,
-              [token],
+              `SELECT s.id,s."userId" AS user_id FROM session s JOIN "user" u ON u.id=s."userId" JOIN "twoFactor" f ON f."userId"=u.id
+               WHERE s.token=$1 AND u.id=$2 AND u.auth_epoch=$3 AND f.id=$4
+               AND u."twoFactorEnabled"=true AND f.verified=true AND s."expiresAt">clock_timestamp()`,
+              [token, snapshot.user_id, snapshot.auth_epoch, snapshot.factor_id],
             )
           ).rows[0] as { id: string; user_id: string } | undefined;
-          if (!verified) return false;
+          if (!verified) return "changed";
           if (method === "totp") {
             const code = ctx.body?.code;
-            if (typeof code !== "string") return false;
+            if (typeof code !== "string") return "changed";
             const hash = createHash("sha256").update(code).digest("hex");
             const receipt = await client.query(
               "INSERT INTO mfa_code_receipts(user_id,code_hash,expires_at) VALUES($1,$2,now()+interval '120 seconds') ON CONFLICT(user_id,code_hash) DO UPDATE SET expires_at=excluded.expires_at WHERE mfa_code_receipts.expires_at<now() RETURNING user_id",
               [verified.user_id, hash],
             );
-            if (!receipt.rowCount) return false;
+            if (!receipt.rowCount) return "replayed";
           }
           await client.query(
-            "INSERT INTO mfa_proofs(session_id,user_id,verified_at,method) VALUES($1,$2,now(),$3) ON CONFLICT(session_id) DO UPDATE SET verified_at=excluded.verified_at,method=excluded.method",
-            [verified.id, verified.user_id, method],
+            "INSERT INTO mfa_proofs(session_id,user_id,verified_at,method,factor_id,auth_epoch) VALUES($1,$2,clock_timestamp(),$3,$4,$5) ON CONFLICT(session_id) DO UPDATE SET verified_at=excluded.verified_at,method=excluded.method,factor_id=excluded.factor_id,auth_epoch=excluded.auth_epoch",
+            [verified.id, verified.user_id, method, snapshot.factor_id, snapshot.auth_epoch],
           );
           await audit(
             client,
@@ -117,15 +187,18 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
             undefined,
             { method },
           );
-          return true;
+          return "recorded";
         });
-        if (!recorded) {
+        if (recorded !== "recorded") {
           // A replay must not leave the newly issued session usable.
           if (ctx.context.newSession)
             await pool.query("DELETE FROM session WHERE token=$1", [token]);
           throw new APIError("UNAUTHORIZED", {
-            code: "MFA_CODE_REUSED",
-            message: "Use a new authenticator code.",
+            code: recorded === "replayed" ? "MFA_CODE_REUSED" : "AUTHENTICATION_CHANGED",
+            message:
+              recorded === "replayed"
+                ? "Use a new authenticator code."
+                : "Authentication changed. Sign in again.",
           });
         }
       }),

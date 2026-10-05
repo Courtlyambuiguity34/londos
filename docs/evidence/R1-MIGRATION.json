@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-10-04T23:38:48.539Z",
+  "sourceSchema": "006_security_receipts.sql",
+  "targetSchema": "007_r1_security_contracts.sql",
+  "migrationCount": 7,
+  "migrationMs": 1193,
+  "canonicalRecordsUnchanged": true,
+  "repeatedMigrationAndSeedPreservedRecords": true,
+  "localCredentialFileUnchanged": true,
+  "counts": {
+    "shops": 1506,
+    "products": 150004,
+    "invoices": 0,
+    "rent_events": 0
+  },
+  "limit": "Logical data preservation on the existing development volume; not backup or disaster restoration."
+}

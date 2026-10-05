@@ -19,6 +19,7 @@ import {
   requireOperator,
   requireOperatorShop,
   requireStepUp,
+  sessionState,
   type Actor,
 } from "../../src/server/security/authorization";
 import {
@@ -143,8 +144,24 @@ beforeAll(async () => {
   await pool.query(
     `INSERT INTO "user"(id,name,email,"emailVerified","updatedAt") VALUES('upgrade-fixture','Upgrade fixture','upgrade@londos.example',true,now())`,
   );
+  await migrate(pool, undefined, "006_security_receipts.sql");
+  // An X1 proof has no credential/factor generation. The upgrade must require a
+  // new challenge while preserving its user and session records.
+  await pool.query(`UPDATE "user" SET "twoFactorEnabled"=true WHERE id='upgrade-fixture'`);
+  await pool.query(
+    `INSERT INTO "twoFactor"(id,secret,"backupCodes","userId",verified) VALUES('upgrade-factor','fictional-encrypted-fixture','fictional-codes','upgrade-fixture',true)`,
+  );
+  await pool.query(
+    `INSERT INTO session(id,token,"expiresAt","updatedAt","userId") VALUES('upgrade-session','fictional-upgrade-token',now()+interval '1 hour',now(),'upgrade-fixture')`,
+  );
+  await pool.query(
+    `INSERT INTO mfa_proofs(session_id,user_id,verified_at,method) VALUES('upgrade-session','upgrade-fixture',now(),'totp')`,
+  );
   await Promise.all([migrate(pool), migrate(pool)]);
   expect((await pool.query("SELECT id FROM \"user\" WHERE id='upgrade-fixture'")).rowCount).toBe(1);
+  await expect(
+    sessionState(pool, { userId: "upgrade-fixture", sessionId: "upgrade-session" }),
+  ).rejects.toMatchObject({ code: "mfa_required" });
   accounts = await seed(pool, authentication, directory);
   await seed(pool, authentication, directory);
   // Public handler remains signup-disabled, even though explicit bootstrap seeded accounts.
@@ -167,7 +184,7 @@ describe("canonical persistence", () => {
   test("fresh/upgrade/repeated/concurrent migrations preserve data and verify checksums", async () => {
     expect(
       (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-    ).toBe(6);
+    ).toBe(7);
     await migrate(pool);
     expect((await pool.query("SELECT count(*)::int AS count FROM shops")).rows[0].count).toBe(6);
     const changed = join(directory, "changed-migrations");
@@ -714,6 +731,422 @@ describe("authentication and MFA", () => {
 async function sessionStateForTest(actor: Actor) {
   return requireShop(pool, actor, seedIds.shopB, "catalogue");
 }
+
+describe("R1 security regressions", () => {
+  async function fixture() {
+    // Independent accounts and endpoint-rate windows keep these scenarios isolated.
+    await pool.query('DELETE FROM "rateLimit"');
+    const email = `review-${randomUUID()}@londos.example`,
+      password = `Review-only-${randomUUID()}`;
+    const created = await createAuth(pool, coreConfig(), true).api.signUpEmail({
+      body: { email, password, name: "R1 fictional account" },
+    });
+    await pool.query('UPDATE "user" SET "emailVerified"=true WHERE id=$1', [created.user.id]);
+    const client = new Client(authentication, { id: created.user.id, email, password });
+    expect((await client.login()).status).toBe(200);
+    return client;
+  }
+  async function enroll(client: Client) {
+    const response = await client.request("two-factor/enable", {
+      password: client.account.password,
+      method: "totp",
+    });
+    expect(response.status).toBe(200);
+    const data = (await response.json()) as { totpURI: string; backupCodes: string[] };
+    const secret = new URL(data.totpURI).searchParams.get("secret")!;
+    expect(
+      (await client.request("two-factor/verify-totp", { code: await generate({ secret }) })).status,
+    ).toBe(200);
+    return data;
+  }
+  async function resetLink(client: Client) {
+    expect(
+      (
+        await client.request("request-password-reset", {
+          email: client.account.email,
+          redirectTo: `${coreConfig().baseURL}/recover`,
+        })
+      ).status,
+    ).toBe(200);
+    return new URL(
+      (
+        await pool.query(
+          "SELECT payload->>'url' AS url FROM jobs WHERE payload->>'template'='password-reset' AND payload->>'to'=$1 ORDER BY created_at DESC LIMIT 1",
+          [client.account.email],
+        )
+      ).rows[0].url,
+    );
+  }
+  test("the actual password-reset notification link reaches the recovery form safely", async () => {
+    const client = await fixture(),
+      url = await resetLink(client);
+    const result = await client.request(`${url.pathname.replace("/api/auth/", "")}${url.search}`);
+    expect(result.status).toBe(302);
+    const destination = new URL(result.headers.get("location")!);
+    expect(destination.origin).toBe(coreConfig().baseURL);
+    expect(destination.pathname).toBe("/recover");
+    expect(destination.searchParams.get("token")).toBe(url.pathname.split("/").at(-1));
+    url.searchParams.set("callbackURL", "https://attacker.example/steal");
+    const forged = await client.request(`${url.pathname.replace("/api/auth/", "")}${url.search}`);
+    expect(forged.status).toBe(403);
+    expect(forged.headers.get("location")).toBeNull();
+  });
+  test("replacing an MFA factor cannot retain another session's proof for the old factor", async () => {
+    const current = await fixture(),
+      first = await enroll(current);
+    const retained = new Client(authentication, current.account);
+    expect((await (await retained.login()).json()).twoFactorRedirect).toBe(true);
+    expect(
+      (await retained.request("two-factor/verify-backup-code", { code: first.backupCodes[0] }))
+        .status,
+    ).toBe(200);
+    const oldActor = await retained.actor();
+    await requireStepUp(pool, oldActor);
+    expect(
+      (await current.request("two-factor/disable", { password: current.account.password })).status,
+    ).toBe(200);
+    await enroll(current);
+    expect(await sessionState(pool, await current.actor())).toMatchObject({ mfa_enabled: true });
+    await expect(requireStepUp(pool, oldActor)).rejects.toMatchObject({ status: 401 });
+  });
+  test("password reset revokes a pending MFA challenge created with the previous password", async () => {
+    const current = await fixture(),
+      factor = await enroll(current);
+    const pending = new Client(authentication, current.account);
+    expect((await (await pending.login()).json()).twoFactorRedirect).toBe(true);
+    const link = await resetLink(current);
+    expect(
+      (
+        await current.request("reset-password", {
+          token: link.pathname.split("/").at(-1),
+          newPassword: `Changed-review-${randomUUID()}`,
+        })
+      ).status,
+    ).toBe(200);
+    const result = await pending.request("two-factor/verify-backup-code", {
+      code: factor.backupCodes[0],
+    });
+    expect(result.status).toBe(401);
+    await expect(pending.actor()).rejects.toMatchObject({ status: 401 });
+  });
+  test("password reset during password verification cannot issue a session from the old password", async () => {
+    const current = await fixture(),
+      link = await resetLink(current);
+    const racingAuth = createAuth(pool, coreConfig()),
+      racing = new Client(racingAuth, current.account);
+    const context = await racingAuth.$context,
+      original = context.password.verify;
+    const entered = Promise.withResolvers<void>(),
+      resume = Promise.withResolvers<void>();
+    context.password.verify = async (...args) => {
+      const valid = await original(...args); // Real password verification completes first.
+      entered.resolve();
+      await resume.promise;
+      return valid;
+    };
+    const attempt = racing.login();
+    try {
+      await withinDeadline(() => entered.promise, AbortSignal.timeout(5000));
+      expect(
+        (
+          await current.request("reset-password", {
+            token: link.pathname.split("/").at(-1),
+            newPassword: `Changed-review-${randomUUID()}`,
+          })
+        ).status,
+      ).toBe(200);
+      resume.resolve();
+      const response = await attempt;
+      expect(response.status).toBe(401);
+      expect(response.headers.getSetCookie().length).toBe(0);
+      await expect(racing.actor()).rejects.toMatchObject({ status: 401 });
+      expect(
+        (await pool.query('SELECT 1 FROM session WHERE "userId"=$1', [current.account.id]))
+          .rowCount,
+      ).toBe(0);
+    } finally {
+      resume.resolve();
+      await attempt;
+    }
+  });
+  test("password reset during successful MFA completion cannot restore the old credential's authority", async () => {
+    const current = await fixture(),
+      factor = await enroll(current),
+      link = await resetLink(current);
+    const racingAuth = createAuth(pool, coreConfig()),
+      racing = new Client(racingAuth, current.account);
+    expect((await (await racing.login()).json()).twoFactorRedirect).toBe(true);
+    const context = await racingAuth.$context,
+      original = context.internalAdapter.createSession;
+    const entered = Promise.withResolvers<void>(),
+      resume = Promise.withResolvers<void>();
+    context.internalAdapter.createSession = async (...args) => {
+      // The library has verified/consumed the backup code and login challenge.
+      // Suspend only session creation to deterministically reproduce this race.
+      entered.resolve();
+      await resume.promise;
+      return original(...args);
+    };
+    const attempt = racing.request("two-factor/verify-backup-code", {
+      code: factor.backupCodes[0],
+    });
+    try {
+      await withinDeadline(() => entered.promise, AbortSignal.timeout(5000));
+      expect(
+        (
+          await current.request("reset-password", {
+            token: link.pathname.split("/").at(-1),
+            newPassword: `Changed-review-${randomUUID()}`,
+          })
+        ).status,
+      ).toBe(200);
+      resume.resolve();
+      const response = await attempt;
+      expect(response.status).toBe(401);
+      expect(response.headers.getSetCookie().length).toBe(0);
+      await expect(racing.actor()).rejects.toMatchObject({ status: 401 });
+      expect(
+        (await pool.query("SELECT 1 FROM mfa_proofs WHERE user_id=$1", [current.account.id]))
+          .rowCount,
+      ).toBe(0);
+    } finally {
+      resume.resolve();
+      await attempt;
+    }
+  });
+  test("concurrent use consumes one backup code once and enrolled factor replacement requires removal", async () => {
+    const current = await fixture(),
+      factor = await enroll(current);
+    const one = new Client(authentication, current.account),
+      two = new Client(authentication, current.account);
+    await one.login();
+    await two.login();
+    const results = await Promise.all(
+      [one, two].map((client) =>
+        client.request("two-factor/verify-backup-code", { code: factor.backupCodes[0] }),
+      ),
+    );
+    expect(results.filter((result) => result.status === 200)).toHaveLength(1);
+    expect(results.filter((result) => [401, 409].includes(result.status))).toHaveLength(1);
+    await expect(
+      pool.query('UPDATE "twoFactor" SET verified=false,secret=$2 WHERE "userId"=$1', [
+        current.account.id,
+        "fictional-stale-enrollment",
+      ]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await requireStepUp(pool, await current.actor());
+  });
+  test("money columns reject fractional minor units instead of rounding them", async () => {
+    const invoice = randomUUID();
+    await pool.query(
+      "INSERT INTO invoices(id,merchant_id,shop_id,currency,amount_minor,period_start,period_end) VALUES($1,$2,$3,'UGX',100,now(),now()+interval '1 month')",
+      [invoice, seedIds.merchantA, seedIds.shopA],
+    );
+    const attempts = await Promise.allSettled([
+      pool.query("UPDATE products SET price_minor='100.5' WHERE id=$1", [
+        "50000000-0000-4000-8000-000000000001",
+      ]),
+      pool.query(
+        "INSERT INTO invoices(id,merchant_id,shop_id,currency,amount_minor,period_start,period_end) VALUES($1,$2,$3,'UGX','100.5',now(),now()+interval '1 month')",
+        [randomUUID(), seedIds.merchantA, seedIds.shopA],
+      ),
+      pool.query(
+        "INSERT INTO rent_events(id,invoice_id,merchant_id,currency,amount_minor,kind,source,source_reference,actor_id,reason) VALUES($1,$2,$3,'UGX','100.5','payment','review',$5,$4,'Fictional regression')",
+        [randomUUID(), invoice, seedIds.merchantA, accounts.ownerA.id, randomUUID()],
+      ),
+    ]);
+    expect(attempts.filter((result) => result.status === "fulfilled")).toHaveLength(0);
+    for (const result of attempts)
+      if (result.status === "rejected") expect(result.reason.code).toBe("23514");
+    for (const amount of ["NaN", "Infinity", "-Infinity", "100000000000000000000", "-0.5"])
+      await expect(
+        pool.query("UPDATE products SET price_minor=$1 WHERE id=$2", [
+          amount,
+          "50000000-0000-4000-8000-000000000001",
+        ]),
+      ).rejects.toMatchObject({ code: "23514" });
+  });
+  test.each(["revocation", "demotion", "transfer"] as const)(
+    "%s of an owner revokes their unaccepted invitations",
+    async (operation) => {
+      const owner = await fixture(),
+        other = await fixture(),
+        recipient = await fixture();
+      const merchantId = randomUUID(),
+        actor = await owner.actor();
+      await transaction(pool, async (client) => {
+        await client.query("INSERT INTO merchants(id,name) VALUES($1,'R1 fictional merchant')", [
+          merchantId,
+        ]);
+        await client.query(
+          "INSERT INTO memberships(merchant_id,user_id,role) VALUES($1,$2,'owner'),($1,$3,'owner')",
+          [merchantId, owner.account.id, other.account.id],
+        );
+      });
+      const invitation = await invite(pool, actor, merchantId, {
+        email: recipient.account.email,
+        role: "owner",
+        permissions: [],
+      });
+      const token = (
+        await pool.query("SELECT payload->>'token' AS token FROM jobs WHERE dedupe_key=$1", [
+          `invitation:${invitation.id}`,
+        ])
+      ).rows[0].token;
+      if (operation === "transfer")
+        await transferOwnership(pool, actor, merchantId, other.account.id);
+      else
+        await changeMembership(pool, actor, merchantId, owner.account.id, {
+          role: operation === "demotion" ? "staff" : "owner",
+          status: operation === "revocation" ? "revoked" : "active",
+          permissions: [],
+        });
+      await expect(acceptInvitation(pool, await recipient.actor(), token)).rejects.toMatchObject({
+        status: 404,
+      });
+      expect(
+        (
+          await pool.query(
+            "SELECT revoked_at IS NOT NULL AS revoked FROM invitations WHERE id=$1",
+            [invitation.id],
+          )
+        ).rows[0].revoked,
+      ).toBe(true);
+      expect(
+        (
+          await pool.query("SELECT 1 FROM memberships WHERE merchant_id=$1 AND user_id=$2", [
+            merchantId,
+            recipient.account.id,
+          ])
+        ).rowCount,
+      ).toBe(0);
+      await changeMembership(pool, await other.actor(), merchantId, owner.account.id, {
+        role: "owner",
+        status: "active",
+        permissions: [],
+      });
+      await expect(acceptInvitation(pool, await recipient.actor(), token)).rejects.toMatchObject({
+        status: 404,
+      });
+    },
+  );
+  test.each(["session", "invitation"] as const)(
+    "%s expiry is checked after the merchant lock, using current time",
+    async (kind) => {
+      const client = await fixture(),
+        actor = await client.actor();
+      const invitation = await invite(pool, actors.ownerA!, seedIds.merchantA, {
+        email: client.account.email,
+        role: "staff",
+        permissions: [],
+      });
+      const token = (
+        await pool.query("SELECT payload->>'token' AS token FROM jobs WHERE dedupe_key=$1", [
+          `invitation:${invitation.id}`,
+        ])
+      ).rows[0].token;
+      const blocker = await pool.connect();
+      let result: Promise<{ ok: true } | { ok: false; error: unknown }> | undefined;
+      try {
+        await blocker.query("BEGIN");
+        await blocker.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [seedIds.merchantA]);
+        result = acceptInvitation(pool, actor, token).then(
+          () => ({ ok: true as const }),
+          (error) => ({ ok: false as const, error }),
+        );
+        await expect
+          .poll(
+            async () =>
+              (
+                await pool.query(
+                  "SELECT count(*)::int AS count FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id FROM merchants%'",
+                )
+              ).rows[0].count,
+          )
+          .toBeGreaterThan(0);
+        if (kind === "session")
+          await pool.query(
+            "UPDATE session SET \"expiresAt\"=clock_timestamp()+interval '50 milliseconds' WHERE id=$1",
+            [actor.sessionId],
+          );
+        else
+          await pool.query(
+            "UPDATE invitations SET expires_at=clock_timestamp()+interval '50 milliseconds' WHERE id=$1",
+            [invitation.id],
+          );
+        await pool.query("SELECT pg_sleep(0.1)");
+        await blocker.query("COMMIT");
+        const completed = await result;
+        expect(completed.ok).toBe(false);
+        if (!completed.ok)
+          expect(completed.error).toMatchObject({ status: kind === "session" ? 401 : 404 });
+        expect(
+          (
+            await pool.query("SELECT 1 FROM memberships WHERE merchant_id=$1 AND user_id=$2", [
+              seedIds.merchantA,
+              client.account.id,
+            ])
+          ).rowCount,
+        ).toBe(0);
+      } finally {
+        await blocker.query("ROLLBACK");
+        blocker.release();
+        await result;
+      }
+    },
+  );
+  test("invitation acceptance rechecks the session after waiting for the merchant lock", async () => {
+    const client = await fixture(),
+      actor = await client.actor();
+    const invitation = await invite(pool, actors.ownerA!, seedIds.merchantA, {
+      email: client.account.email,
+      role: "staff",
+      permissions: [],
+    });
+    const token = (
+      await pool.query("SELECT payload->>'token' AS token FROM jobs WHERE dedupe_key=$1", [
+        `invitation:${invitation.id}`,
+      ])
+    ).rows[0].token;
+    const blocker = await pool.connect();
+    let result: Promise<{ ok: true } | { ok: false; error: unknown }> | undefined;
+    try {
+      await blocker.query("BEGIN");
+      await blocker.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [seedIds.merchantA]);
+      result = acceptInvitation(pool, actor, token).then(
+        () => ({ ok: true as const }),
+        (error) => ({ ok: false as const, error }),
+      );
+      await expect
+        .poll(
+          async () =>
+            (
+              await pool.query(
+                "SELECT count(*)::int AS count FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id FROM merchants%'",
+              )
+            ).rows[0].count,
+        )
+        .toBeGreaterThan(0);
+      expect((await client.request("sign-out", {})).status).toBe(200);
+      await blocker.query("COMMIT");
+      const completed = await result;
+      expect(completed.ok).toBe(false);
+      if (!completed.ok) expect(completed.error).toMatchObject({ status: 401 });
+      expect(
+        (
+          await pool.query("SELECT 1 FROM memberships WHERE merchant_id=$1 AND user_id=$2", [
+            seedIds.merchantA,
+            client.account.id,
+          ])
+        ).rowCount,
+      ).toBe(0);
+    } finally {
+      await blocker.query("ROLLBACK");
+      blocker.release();
+      await result;
+    }
+  });
+});
 
 describe("durable jobs and recovery", () => {
   test("job deadline rejects a stalled adapter, aborted work has no transactional effect", async () => {

@@ -2,6 +2,8 @@
 
 Status: implementation authorized; progress and model handoffs are tracked in [BUILD-STATUS](BUILD-STATUS.md) and [RECOMMENDATIONS](../RECOMMENDATIONS.md).
 
+Current progress (2026-10-05 UTC): H, X1 and **R1 review/fixes are complete** for the initial P2–P4 development boundary. [R1 evidence](evidence/R1-REVIEW.md) records 75 passing tests and preserved upgrade data. Next: owner-confirmed **Sol 6.1 Extra High X2**, starting the [P5 work packet](X2-HANDOFF.md). Future-feature contracts, live owner policies and production gates remain open.
+
 Prepared: 2026-10-04. Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
 
 ## 1. What this plan is based on
@@ -196,7 +198,7 @@ P5–P7 collectively close the architecture-prototype gate. Small UI research, p
 
 **Containment:** no real merchant data or credentials; generated data and caches are ignored, not committed.
 
-X1 validates the initial security foundation under P2–P4. Checked items apply to the implemented development surfaces; they do not certify future consumers or live providers. See [X1 evidence](evidence/X1-STAGE.md) and the required [R1 review](X1-SECURITY.md).
+X1 implements and R1 reviews/corrects the initial security foundation under P2–P4. Checked items apply to the implemented development surfaces; they do not certify future consumers or live providers. See [X1 evidence](evidence/X1-STAGE.md) and [completed R1 review](evidence/R1-REVIEW.md). R1 adds factor/credential-generation revocation, reset-race protection, invitation authority/lock-wait checks, fractional-money rejection and recovery/privacy regressions; every new handler must extend those contracts and attack fixtures.
 
 ### P2 — Canonical data, constraints and deterministic fixtures
 
