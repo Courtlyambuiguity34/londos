@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. P9 adds local anonymous reporting, scoped moderation, independent appeals and truthful development verification. Live providers, remaining recovery/privacy/analytics, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. P9 adds local reporting/moderation/appeals, truthful development verification, assigned incidents/owner-confirmed recovery and privacy-minimized analytics. Live providers, broader governed privacy/costs, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -144,7 +144,7 @@ flowchart LR
   P7 --> P8[P8 local applications and development rent]
   P8 --> Admin[P8 local teams, addresses and scoped operations]
   Admin --> Trust[P9 local reporting, moderation and independent appeals]
-  Trust --> Next[Remaining P9 recovery, privacy and analytics before later gates and Astra R2]
+  Trust --> Next[Remaining P9 governed privacy and costs before later gates and Astra R2]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.
@@ -393,3 +393,40 @@ flowchart TD
 Captured history starts at the current upgrade baseline. Containment/password changes invalidate confirmation; later contact edits require renewed confirmation. There is no lost-all-factor/email/ownership adjudication bypass or direct operator contact update.
 
 [Incident evidence](evidence/X2-P9-INCIDENTS.md) records the inspected [assigned reviewer](evidence/images/x2-p9-incident-review-desktop.png), [redacted owner history](evidence/images/x2-p9-incident-owner-desktop.png) and [mobile keyboard-focused form](evidence/images/x2-p9-incident-mobile.png). All pictured data is fictional; no authentication secrets are pictured.
+
+## Implemented P9 minimal pilot observations
+
+```mermaid
+flowchart TD
+  Public[Eligible canonical public page] --> Flag{Explicit fictional local database capture?}
+  Flag -->|No| Browse[Browsing and contact remain available]
+  Flag -->|Yes| Context[Signed rendered-page context; 30-minute expiry]
+  Context --> Browser[Bounded tab source: direct, discovery or unattributed]
+  Browser --> Async[Lossy asynchronous event; navigation never waits]
+  Async --> Filter[Exact origin, strict fields, privacy and practical bot/internal filters]
+  Filter --> Eligibility[Current canonical target and contact-channel checks]
+  Eligibility --> Atomic[(Atomic hashed receipt, minute budgets and daily count)]
+  Atomic --> Metrics[(Day, canonical scope, event, source, bounded detail and count)]
+  Async -->|Failure or limit| Browse
+  Writes[Successful canonical publish/catalogue transaction] --> Audit[(Existing committed tenant-consistent audit history)]
+  Audit --> Activity[Separate canonical merchant counts]
+  Metrics --> Owner[Fresh current owner; recheck after merchant lock]
+  Metrics --> Operator[Explicit analytics grant and native fresh MFA; final query recheck]
+  Activity --> Owner
+  Activity --> Operator
+  Operator --> Summary[Cohort, measured first publication, net-paid/waiver renewal and backlog counts]
+```
+
+No visitor identity, raw query/IP/referrer or private evidence enters metrics. Receipt identity belongs to a rendered context, not a person. Blocked storage remains unattributed; contact intent is not a completed sale. Analytics storage never participates in canonical merchant transactions. Operators receive aggregate summaries without private case/ledger viewers or decision authority.
+
+```mermaid
+flowchart LR
+  Policy[Development retention: 7–90 UTC days; default 30] --> Read[Immediate retained-day query cutoff]
+  Policy --> Worker[Existing lease-fenced maintenance]
+  Worker --> Receipts[Delete up to 1000 expired hashed receipts]
+  Worker --> Metrics[Delete up to 1000 expired daily groups]
+  Invalid[Invalid retention] --> Stop[Disable capture and aggregate deletion]
+  Offline[Worker offline] --> Pending[Physical cleanup pending; read cutoff still applies]
+```
+
+This cleanup governs minimal analytics tables only. Broader evidence/enquiry/incident/legal/backups export/deletion and measurable costs remain later P9 work. [Analytics evidence](evidence/X2-P9-ANALYTICS.md) records inspected [owner desktop](evidence/images/x2-p9-analytics-owner-desktop.png), [analytics-only operator desktop](evidence/images/x2-p9-analytics-operator-desktop.png) and [mobile window/keyboard focus](evidence/images/x2-p9-analytics-mobile.png). All pictured data is fictional; live analytics is disabled.

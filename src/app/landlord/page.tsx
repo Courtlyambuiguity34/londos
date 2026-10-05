@@ -59,6 +59,11 @@ export default async function LandlordPage() {
         </>
       ) : null}
       <div className="account-links">
+        {grants.some((g) => g.permission === "analytics") ? (
+          <Link className="button" href="/landlord/analytics">
+            Pilot analytics
+          </Link>
+        ) : null}
         {grants.some((g) =>
           ["recovery", "support", "moderation", "finance", "review"].includes(g.permission),
         ) ? (

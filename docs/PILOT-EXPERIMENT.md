@@ -111,6 +111,10 @@ The most important evidence is actual renewal/payment, not polite enthusiasm.
 
 ## Pilot output
 
+The local development implementation now instruments all eleven named events under [ADR-0010](ADR/0010-local-pilot-analytics.md); see [analytics evidence](evidence/X2-P9-ANALYTICS.md). Nine public observations use minimal daily counts and observed direct/discovery/unattributed source; publication/catalogue events derive separately from committed audit history. Zero/few/many result buckets avoid storing search queries. Receipt identity is an expiring rendered-page context, not a visitor. Counts do not establish unique customers, causal discovery or completed sales, and blocked storage/scripts, privacy filters and outages can undercount.
+
+Fresh owners receive their shop aggregates. Explicit native-fresh-MFA analytics operators receive application cohorts, measured first-publication duration, net-payment versus waiver-supported renewal and current case backlog counts/age. Unpublished applications are not zero-duration activations; reversed credits are deducted from renewal coverage. Backlog age is not measured staff working time. Resource/support/verification/rent cost attribution and broader governed privacy/export/deletion remain P9.8/P9.9 obligations. Capture is optional fictional loopback database functionality; live analytics remains disabled until the real privacy/legal/operational release gates are met. Local tests do not validate merchant willingness to pay or the business hypothesis.
+
 Produce a decision report with:
 - funnel;
 - cohort retention/renewal;

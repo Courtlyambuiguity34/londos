@@ -74,6 +74,8 @@ export async function handle(
       await client.query("DELETE FROM mfa_code_receipts WHERE expires_at<now()");
       const { cleanupMedia } = await import("../media");
       await cleanupMedia(client);
+      const { cleanupPilotMetrics } = await import("../analytics");
+      await cleanupPilotMetrics(client);
     }
     signal.throwIfAborted();
   });

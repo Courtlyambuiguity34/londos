@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-10-05T20:59:46.791Z",
+  "migration": "014_local_pilot_analytics.sql",
+  "localSetup": {
+    "explicitAnalyticsGrantForVerifiedFictionalOperator": true,
+    "repeatabilityPassed": true,
+    "configurationAndPrivateAccountsPreserved": true,
+    "defaultSeedGrantsUnchanged": true,
+    "nativeFreshMfaRequired": true
+  },
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true,
+        "localPilotAnalytics": true,
+        "liveAnalytics": false
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 23936,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 18494,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/analytics",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/analytics",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    }
+  ],
+  "limit": "Current local runtime and explicit fictional development capture only; no live analytics/provider or fresh-task/backup restoration claim."
+}

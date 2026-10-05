@@ -224,7 +224,7 @@ test("007 to 008 and repeat seed preserve existing catalogue and identity data",
   expect((await pool.query('SELECT id,email FROM "user" ORDER BY id')).rows).toEqual(before.rows);
   expect(
     (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-  ).toBe(13);
+  ).toBe(14);
 });
 test("catalogue checks tenant, nested references, staff action and explicit shop scope", async () => {
   await expect(readCatalogue(pool, actors.ownerB!, shop)).rejects.toMatchObject({ status: 404 });

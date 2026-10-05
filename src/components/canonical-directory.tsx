@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { renderPilotContext } from "@/server/analytics";
+import { PilotObserver } from "./pilot-observer";
 import { categories } from "@/modules/catalogue/fixtures";
 import { database } from "@/server/db/pool";
 import { PostgresSearch, type DiscoveryResult } from "@/server/discovery";
@@ -13,7 +15,7 @@ export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
           {categories.find((c) => c.slug === result.category)?.name ?? "Independent shop"}
         </p>
         <h3>
-          <Link prefetch={false} href={href}>
+          <Link prefetch={false} href={href} data-pilot-shop={result.id}>
             {result.name}
           </Link>
         </h3>
@@ -76,68 +78,81 @@ export async function CanonicalDirectory({
   if (shopId) next.set("shop", shopId);
   if (result.nextCursor) next.set("cursor", result.nextCursor);
   return (
-    <section className="shell page-section">
-      <div className="page-heading">
-        <p className="eyebrow">Independent shops, together</p>
-        <h1>
-          {entrance ? (
-            <>
-              Good shops.
-              <br />
-              All <em>together.</em>
-            </>
-          ) : query ? (
-            <>Shops for “{query.slice(0, 80)}”</>
-          ) : (
-            "Explore the mall"
-          )}
-        </h1>
-        <p>Discover a shop, then explore its departments and make a connection.</p>
-      </div>
-      <SearchForm
-        query={query}
-        maxLength={80}
-        {...(category ? { category } : {})}
-        {...(shopId ? { shopId } : {})}
-      />
-      <nav className="filter-chips" aria-label="Filter by category">
-        <Link prefetch={false} href={`/search?q=${encodeURIComponent(query)}`}>
-          All shops
-        </Link>
-        {categories.map((c) => (
-          <Link
-            prefetch={false}
-            key={c.slug}
-            href={`/search?category=${c.slug}&q=${encodeURIComponent(query)}`}
-            aria-current={category === c.slug ? "page" : undefined}
-          >
-            {c.name}
-          </Link>
-        ))}
-      </nav>
-      <p>{result.results.length} shops on this page</p>
-      {result.results.length ? (
-        <div className="shop-grid">
-          {result.results.map((row) => (
-            <CanonicalShopCard key={row.id} result={row} />
-          ))}
+    <PilotObserver
+      capture={renderPilotContext({
+        page: entrance ? "mall" : "search",
+        shopId: null,
+        departmentId: null,
+        productId: null,
+        shops: result.results.map((r) => r.id),
+        resultCount: result.results.length,
+        globalDiscovery: !shopId,
+        channels: [],
+      })}
+    >
+      <section className="shell page-section">
+        <div className="page-heading">
+          <p className="eyebrow">Independent shops, together</p>
+          <h1>
+            {entrance ? (
+              <>
+                Good shops.
+                <br />
+                All <em>together.</em>
+              </>
+            ) : query ? (
+              <>Shops for “{query.slice(0, 80)}”</>
+            ) : (
+              "Explore the mall"
+            )}
+          </h1>
+          <p>Discover a shop, then explore its departments and make a connection.</p>
         </div>
-      ) : (
-        <EmptyState
-          title="No shops matched this search."
-          description="Try a broader word or another category. Eligible shops appear when merchants publish them."
+        <SearchForm
+          query={query}
+          maxLength={80}
+          {...(category ? { category } : {})}
+          {...(shopId ? { shopId } : {})}
         />
-      )}
-      {result.nextCursor ? (
-        <Link prefetch={false} className="button button--outline" href={`/search?${next}`}>
-          Next shops
-        </Link>
-      ) : null}
-      {entrance ? (
-        <Link prefetch={false} href="/search">
-          Explore all shops
-        </Link>
-      ) : null}
-    </section>
+        <nav className="filter-chips" aria-label="Filter by category">
+          <Link prefetch={false} href={`/search?q=${encodeURIComponent(query)}`}>
+            All shops
+          </Link>
+          {categories.map((c) => (
+            <Link
+              prefetch={false}
+              key={c.slug}
+              href={`/search?category=${c.slug}&q=${encodeURIComponent(query)}`}
+              aria-current={category === c.slug ? "page" : undefined}
+            >
+              {c.name}
+            </Link>
+          ))}
+        </nav>
+        <p>{result.results.length} shops on this page</p>
+        {result.results.length ? (
+          <div className="shop-grid">
+            {result.results.map((row) => (
+              <CanonicalShopCard key={row.id} result={row} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No shops matched this search."
+            description="Try a broader word or another category. Eligible shops appear when merchants publish them."
+          />
+        )}
+        {result.nextCursor ? (
+          <Link prefetch={false} className="button button--outline" href={`/search?${next}`}>
+            Next shops
+          </Link>
+        ) : null}
+        {entrance ? (
+          <Link prefetch={false} href="/search">
+            Explore all shops
+          </Link>
+        ) : null}
+      </section>
+    </PilotObserver>
   );
 }

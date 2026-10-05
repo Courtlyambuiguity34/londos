@@ -54,6 +54,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       </Link>
       {setup.role === "owner" ? (
         <>
+          <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/analytics`}>
+            Shop analytics
+          </Link>
           <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/incidents`}>
             Report an incident or request recovery
           </Link>

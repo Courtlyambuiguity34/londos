@@ -1,6 +1,6 @@
 # Development setup and verification
 
-Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds catalogue/contact/media commands, guest requests, safe manual design/preview/publication and eligible PostgreSQL public browsing. P8 adds local applications, private evidence, scoped MFA review, development rent reconciliation/provisioning and scheduled tenancy. P9 adds local anonymous reporting, private trust review, redacted appeals and truthful development verification. The fixture preview remains supported; live collection/providers, remaining P9 recovery/analytics/privacy, AI and release remain later stages.
+Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds catalogue/contact/media commands, guest requests, safe manual design/preview/publication and eligible PostgreSQL public browsing. P8 adds local applications, private evidence, scoped MFA review, development rent reconciliation/provisioning and scheduled tenancy. P9 adds local reporting/trust/appeals, truthful development verification, assigned incidents/owner-confirmed recovery and privacy-minimized analytics. The fixture preview remains supported; live collection/providers, broader P9 governed privacy/costs, AI and release remain later stages.
 
 ## Public preview only
 
@@ -122,7 +122,7 @@ Run `npm run db:trust` explicitly after local migration/seed. This verifies the 
 5. Fresh owners open “Trust decisions and appeals” from their shop profile. They see only redacted decisions, never reporter text/image, capability, private notes or reviewer identity. A versioned appeal permits one pending request. A different scoped reviewer must dismiss/reinstate the last restricting reviewer’s case; the original reviewer cannot clear it.
 6. Restoration removes only that case’s restriction. Other trust cases, legacy moderation, rent, publication and operational holds remain authoritative. Conflicting external moderation changes fail closed. Both contact rendering and anonymous enquiry submission use shared eligibility, including operational holds. Notices go only to the ignored private local sink.
 
-An approved/provisioned P8 application with private reviewed evidence produces only “Development application reviewed” on its public shop, with fictional/local limits and no identity/product/payment guarantee. Unreviewed shops show no badge. Merchant profile/LSS cannot supply it. Read [ADR-0008](ADR/0008-local-reporting-and-trust-review.md), [180-test evidence](evidence/X2-P9.md) and [journey diagrams](ILLUSTRATIONS.md). The following incident packet adds authenticated-owner recovery. Analytics, approved retention/deletion/export and live policy remain P9 gates.
+An approved/provisioned P8 application with private reviewed evidence produces only “Development application reviewed” on its public shop, with fictional/local limits and no identity/product/payment guarantee. Unreviewed shops show no badge. Merchant profile/LSS cannot supply it. Read [ADR-0008](ADR/0008-local-reporting-and-trust-review.md), [180-test evidence](evidence/X2-P9.md) and [journey diagrams](ILLUSTRATIONS.md). The following packets add authenticated-owner recovery and local analytics. Broader governed retention/deletion/export, costs and live policy remain P9 gates.
 
 ## P9 local incidents and owner-confirmed recovery
 
@@ -139,6 +139,30 @@ Run `npm run db:incidents` explicitly after guarded local migration/seed. It ver
 7. The assigned recovery reviewer reloads and restores with native fresh MFA, reason and confirmation. The server rechecks assignment, scope, owner membership, generation and contact version after locks, validates the old snapshot with the current schema and appends a new canonical contact version. Competing restorations have one winner. All intervening contact history remains intact; rent, moderation, publication and operational holds are unchanged.
 
 Ordinary support and legacy shop recovery scopes cannot call contact updates or perform containment/restoration. Lost-all-factor/email/ownership adjudication has no bypass and remains unavailable until an approved proof policy exists. Private notes/report/contact history stay out of public pages, queue metadata and local notification payloads. The notice sink remains private/ignored. Read [ADR-0009](ADR/0009-local-incidents-and-owner-confirmed-recovery.md), [199-test evidence](evidence/X2-P9-INCIDENTS.md), [incident runbook](FAILURE-RECOVERY.md) and [diagrams/captures](ILLUSTRATIONS.md).
+
+## Local pilot analytics
+
+Current required migration is **014_local_pilot_analytics.sql**. Preserve applied migrations 001–014. Stop only your owned old web/worker before upgrades, apply checksummed migration, build and restart matching code. [Upgrade evidence](evidence/X2-P9-ANALYTICS-MIGRATION.json) preserves 40 original tables and the private configuration/accounts; it is not backup/restore proof.
+
+After guarded local migration/seed, `npm run db:analytics` verifies the existing fictional review operator and adds only the new analytics permission. Repeated execution preserves credentials and existing/default grants. Native fresh MFA is still required; analytics grants no private application, incident, evidence, contact-history or ledger access. Ordinary seed never implicitly enables it.
+
+Capture defaults off. For fictional canonical browsing, use `LONDOS_PILOT_ANALYTICS=true` with valid loopback/local adapters and `LONDOS_DATA_SOURCE=database`. `LONDOS_PILOT_RETENTION_DAYS` accepts an integer 7–90 (default 30 UTC calendar days including today). Process variables override `.env.local`; preserve user configuration rather than rewriting it. For an already configured database-mode local environment:
+
+```bash
+npm run db:analytics
+npm run build
+LONDOS_PILOT_ANALYTICS=true npm run start -- --port 3000
+# In a separate terminal:
+LONDOS_PILOT_ANALYTICS=true npm run worker
+```
+
+`/api/ready` reports `localPilotAnalytics` and `liveAnalytics=false`; current [runtime evidence](evidence/X2-P9-ANALYTICS-RUNTIME.json) verifies matching schema-014 web/worker. Fixture/private preview never emits public events. Bots, internal native session cookies, DNT/GPC and default headless-browser traffic are excluded. The analytics browser fixture intentionally uses a normal fictional browser user agent to test capture. Do not treat authenticated operator browsing as real customer traffic.
+
+Fresh owners open `/shopkeeper/shops/[shopId]/analytics`; staff/support cannot substitute for ownership. Native-fresh-MFA operators with the explicit analytics grant open `/landlord/analytics`. Window links are 7/30/90 days, clamped to retention. Owner authority is rechecked after merchant serialization; operator authority is rechecked after aggregate queries. These are bounded aggregate reads, not raw-event/private-record viewers.
+
+Nine public events use signed 30-minute rendered contexts with atomic retry dedupe, strict target/channel binding and current canonical eligibility. At most ten per-tab shop/source entries persist for 30 minutes and a discovery click marker for two minutes; blocked storage stays unattributed. Counts measure page observations/contact intent, not unique visitors, verified sales or causal discovery. Two merchant-event counts derive separately from committed audit history and do not depend on capture storage. Search detail stores only zero/few/many; no query/IP/referrer/visitor identity is collected.
+
+Capture uses a separate bounded pool and asynchronous 1.5-second browser requests; storage/rate failures return generic accepted receipts without blocking navigation or canonical writes. Reads immediately exclude expired metrics. The existing fenced maintenance job purges at most 1,000 expired receipts and 1,000 old metric groups per run. Invalid retention disables capture and aggregate deletion. A stopped worker leaves physical cleanup pending; do not claim expiry removed every row. Broader verification/enquiry/incident/legal/backups retention and governed export/deletion remain P9.8; resource/support costs remain P9.9. Live analytics remains disabled. Read [ADR-0010](ADR/0010-local-pilot-analytics.md), [222-test evidence](evidence/X2-P9-ANALYTICS.md) and [diagrams/captures](ILLUSTRATIONS.md).
 
 ## Configuration and readiness
 
@@ -197,4 +221,4 @@ ESLint 10, TypeScript ESLint and React Hooks peers accept the pinned versions. N
 
 Cloud onboarding uses `bash scripts/cloud-install.sh`: frozen install, guarded local DB startup/migrations/seed, checks, integration tests, audit, web/worker build and artifact scan. It does not start persistent web/worker processes. Saved environment settings are a draft; publishing/restoring is a separate platform step and has not been verified in a new task.
 
-Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. The P5–P8 local packets and P9 local trust/incident packets are complete; continue remaining P9 analytics/privacy/costs at **Sol 6.1 Extra High**. Current checks pass 23 unit, 136 integration, 16 fixture browser and 24 core browser tests. See [current incident evidence](evidence/X2-P9-INCIDENTS.md) and [historical trust evidence](evidence/X2-P9.md). See [administration evidence](evidence/X2-P8-ADMIN.md), [lifecycle evidence](evidence/X2-P8.md) and [historical prototype evidence](evidence/X2-P6-P7.md).
+Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. The P5–P8 local packets and P9 local trust/incident/analytics packets are complete; continue governed privacy/export/deletion and costs at **Sol 6.1 Extra High**. Current checks pass 23 unit, 155 integration, 16 fixture browser and 28 core browser tests. See [current analytics evidence](evidence/X2-P9-ANALYTICS.md), [incident evidence](evidence/X2-P9-INCIDENTS.md) and [historical trust evidence](evidence/X2-P9.md). See [administration evidence](evidence/X2-P8-ADMIN.md), [lifecycle evidence](evidence/X2-P8.md) and [historical prototype evidence](evidence/X2-P6-P7.md).

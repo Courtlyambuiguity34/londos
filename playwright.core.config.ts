@@ -26,6 +26,7 @@ export default defineConfig({
         "zz-admin.spec.ts",
         "zzz-trust.spec.ts",
         "zzzz-incidents.spec.ts",
+        "zzzzz-analytics.spec.ts",
       ],
       use: { ...devices["Desktop Chrome"] },
     },
@@ -39,6 +40,7 @@ export default defineConfig({
         "admin-mobile.spec.ts",
         "trust-mobile.spec.ts",
         "incidents-mobile.spec.ts",
+        "analytics-mobile.spec.ts",
       ],
       use: { ...devices["Pixel 7"] },
     },
@@ -53,6 +55,7 @@ export default defineConfig({
       AUTH_BASE_URL: "http://127.0.0.1:3101",
       LONDOS_DATA_SOURCE: "database",
       LONDOS_LOCAL_ADAPTERS: "true",
+      LONDOS_PILOT_ANALYTICS: "true",
     },
   },
 });

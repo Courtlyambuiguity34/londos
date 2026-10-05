@@ -1,4 +1,5 @@
 import "server-only";
+import { pilotPolicy } from "./analytics";
 import { coreConfigured, coreConfig } from "./config";
 import { database } from "./db/pool";
 import { requiredMigration } from "./db/schema-contract";
@@ -13,6 +14,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: false,
+      localPilotAnalytics: false,
+      liveAnalytics: false,
     };
   try {
     const config = coreConfig();
@@ -33,6 +36,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: true,
+      localPilotAnalytics: pilotPolicy().enabled,
+      liveAnalytics: false,
     };
   } catch {
     return {
@@ -44,6 +49,8 @@ export async function readiness() {
       financialOperations: false,
       liveNotifications: false,
       localRentWorkflow: false,
+      localPilotAnalytics: false,
+      liveAnalytics: false,
     };
   }
 }

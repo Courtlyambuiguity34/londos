@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      const permission = /\/(address|trust|incidents)(?:\/|$)/.test(path)
+      const permission = /\/(address|trust|incidents|analytics)(?:\/|$)/.test(path)
         ? "sensitive"
         : /\/rent(?:\/|$)/.test(path)
           ? "finance"
@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
             ? "design"
             : "catalogue";
       const currentShop = await requireShop(database(), actor, parsed.data, permission);
-      if (/\/(address|trust|incidents)(?:\/|$)/.test(path))
+      if (/\/(address|trust|incidents|analytics)(?:\/|$)/.test(path))
         await requireMerchant(database(), actor, currentShop.merchant_id, "membership");
     }
     if (path === "/landlord" || path.startsWith("/landlord/")) {
@@ -72,6 +72,8 @@ export async function proxy(request: NextRequest) {
     }
     if (path.startsWith("/landlord/operations"))
       await requireOperator(database(), actor, "operations");
+    if (path.startsWith("/landlord/analytics"))
+      await requireOperator(database(), actor, "analytics", true);
     if (path.startsWith("/landlord/trust")) await requireOperator(database(), actor, "moderation");
     if (path === "/landlord/incidents") await incidentQueue(database(), actor);
     const incident = /^\/landlord\/incidents\/([^/]+)$/.exec(path);
