@@ -13,6 +13,7 @@ import { applicationAccess } from "./server/lifecycle-common";
 import { invoiceAccess } from "./server/rent";
 import { operationsAccess } from "./server/administration";
 import { trustAccess } from "./server/trust";
+import { incidentAccess, incidentQueue } from "./server/incidents";
 import { requireMerchant } from "./server/security/authorization";
 import { AccessError } from "./server/security/errors";
 
@@ -41,7 +42,7 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      const permission = /\/(address|trust)(?:\/|$)/.test(path)
+      const permission = /\/(address|trust|incidents)(?:\/|$)/.test(path)
         ? "sensitive"
         : /\/rent(?:\/|$)/.test(path)
           ? "finance"
@@ -49,7 +50,7 @@ export async function proxy(request: NextRequest) {
             ? "design"
             : "catalogue";
       const currentShop = await requireShop(database(), actor, parsed.data, permission);
-      if (/\/(address|trust)(?:\/|$)/.test(path))
+      if (/\/(address|trust|incidents)(?:\/|$)/.test(path))
         await requireMerchant(database(), actor, currentShop.merchant_id, "membership");
     }
     if (path === "/landlord" || path.startsWith("/landlord/")) {
@@ -72,6 +73,13 @@ export async function proxy(request: NextRequest) {
     if (path.startsWith("/landlord/operations"))
       await requireOperator(database(), actor, "operations");
     if (path.startsWith("/landlord/trust")) await requireOperator(database(), actor, "moderation");
+    if (path === "/landlord/incidents") await incidentQueue(database(), actor);
+    const incident = /^\/landlord\/incidents\/([^/]+)$/.exec(path);
+    if (incident) {
+      const id = z.uuid().safeParse(incident[1]);
+      if (!id.success) return unavailable(404);
+      await incidentAccess(database(), actor, id.data);
+    }
     const trust = /^\/landlord\/trust\/([^/]+)$/.exec(path);
     if (trust) {
       const id = z.uuid().safeParse(trust[1]);

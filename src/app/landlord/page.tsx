@@ -59,6 +59,13 @@ export default async function LandlordPage() {
         </>
       ) : null}
       <div className="account-links">
+        {grants.some((g) =>
+          ["recovery", "support", "moderation", "finance", "review"].includes(g.permission),
+        ) ? (
+          <Link className="button" href="/landlord/incidents">
+            Incident assignments and recovery
+          </Link>
+        ) : null}
         {grants.some((g) => g.permission === "moderation") ? (
           <Link className="button" href="/landlord/trust">
             Review shop concerns and appeals

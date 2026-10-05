@@ -4,7 +4,7 @@ import type { Pool } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
 import { catalogueAccess, catalogueLock } from "./catalogue";
-import { type Actor, requireStepUp } from "./security/authorization";
+import { type Actor, requireStepUp, requireShop } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { audit } from "./security/audit";
 import { enqueue } from "./jobs/enqueue";
@@ -72,51 +72,62 @@ export async function saveContacts(
 ) {
   const v = contactInput.parse(input);
   return transaction(pool, async (client) => {
-    const shop = await catalogueAccess(client, actor, shopId, "sensitive", "recovery");
+    const shop = await requireShop(client, actor, shopId, "sensitive");
     await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [shop.merchant_id]);
-    await catalogueAccess(client, actor, shopId, "sensitive", "recovery");
+    await requireShop(client, actor, shopId, "sensitive");
     await requireStepUp(client, actor);
-    const old = (await client.query("SELECT version FROM shop_contacts WHERE shop_id=$1", [shopId]))
-      .rows[0];
-    if ((old?.version ?? 0) !== v.version) throw new AccessError(409, "stale_version");
-    const result = await client.query(
-      `INSERT INTO shop_contacts(shop_id,merchant_id,version,phone,whatsapp,website,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-    ON CONFLICT(shop_id) DO UPDATE SET version=excluded.version,phone=excluded.phone,whatsapp=excluded.whatsapp,website=excluded.website,fulfilment=excluded.fulfilment,payment_instructions=excluded.payment_instructions,delivery_instructions=excluded.delivery_instructions,enquiries_enabled=excluded.enquiries_enabled RETURNING version`,
-      [
-        shopId,
-        shop.merchant_id,
-        v.version + 1,
-        v.phone,
-        v.whatsapp,
-        v.website,
-        v.fulfilment,
-        v.paymentInstructions,
-        v.deliveryInstructions,
-        v.enquiriesEnabled,
-      ],
-    );
-    await audit(client, actor, "shop.contacts.changed", shopId, shop.merchant_id, {
-      version: v.version + 1,
-      reason: v.reason,
-    });
-    const owners = (
-      await client.query(
-        `SELECT u.email FROM memberships m JOIN "user" u ON u.id=m.user_id WHERE m.merchant_id=$1 AND m.role='owner' AND m.status='active' ORDER BY u.id LIMIT 11`,
-        [shop.merchant_id],
-      )
-    ).rows;
-    if (owners.length > 10) throw new AccessError(422, "notification_recipient_limit");
-    for (const owner of owners)
-      await enqueue(client, {
-        kind: "notification.local",
-        key: `contact-change:${shopId}:${v.version + 1}:${owner.email}`,
-        merchantId: shop.merchant_id,
-        shopId,
-        payload: { template: "contact-changed", to: owner.email, shopId, version: v.version + 1 },
-      });
-    return result.rows[0];
+    return commitContacts(client, actor, shopId, shop.merchant_id, v);
   });
 }
+// Internal transactional writer: callers establish authority and merchant serialization.
+export async function commitContacts(
+  client: import("pg").PoolClient,
+  actor: Actor,
+  shopId: string,
+  merchantId: string,
+  v: z.infer<typeof contactInput>,
+) {
+  const old = (await client.query("SELECT version FROM shop_contacts WHERE shop_id=$1", [shopId]))
+    .rows[0];
+  if ((old?.version ?? 0) !== v.version) throw new AccessError(409, "stale_version");
+  const result = await client.query(
+    `INSERT INTO shop_contacts(shop_id,merchant_id,version,phone,whatsapp,website,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    ON CONFLICT(shop_id) DO UPDATE SET version=excluded.version,phone=excluded.phone,whatsapp=excluded.whatsapp,website=excluded.website,fulfilment=excluded.fulfilment,payment_instructions=excluded.payment_instructions,delivery_instructions=excluded.delivery_instructions,enquiries_enabled=excluded.enquiries_enabled RETURNING version`,
+    [
+      shopId,
+      merchantId,
+      v.version + 1,
+      v.phone,
+      v.whatsapp,
+      v.website,
+      v.fulfilment,
+      v.paymentInstructions,
+      v.deliveryInstructions,
+      v.enquiriesEnabled,
+    ],
+  );
+  await audit(client, actor, "shop.contacts.changed", shopId, merchantId, {
+    version: v.version + 1,
+    reason: v.reason,
+  });
+  const owners = (
+    await client.query(
+      `SELECT u.email FROM memberships m JOIN "user" u ON u.id=m.user_id WHERE m.merchant_id=$1 AND m.role='owner' AND m.status='active' ORDER BY u.id LIMIT 11`,
+      [merchantId],
+    )
+  ).rows;
+  if (owners.length > 10) throw new AccessError(422, "notification_recipient_limit");
+  for (const owner of owners)
+    await enqueue(client, {
+      kind: "notification.local",
+      key: `contact-change:${shopId}:${v.version + 1}:${owner.email}`,
+      merchantId: merchantId,
+      shopId,
+      payload: { template: "contact-changed", to: owner.email, shopId, version: v.version + 1 },
+    });
+  return result.rows[0];
+}
+
 export async function publicContact(pool: Pool, shopId: string) {
   const row = (
     await pool.query(

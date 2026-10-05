@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** X2’s local P9 reporting, moderation, appeals and truthful development verification packet is verified with **180 passing tests**, preserving the completed P5–P8 work. Development rent is configurable: **UGX 5,000 per 30 days, seven days’ grace, manual operator reconciliation; live collection disabled**. Continue remaining P9 recovery, analytics and privacy work at **Sol 6.1 Extra High**. The build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). See [BUILD-STATUS](docs/BUILD-STATUS.md) for verified capabilities and remaining gates.
+**Status:** X2’s local P9 trust and incident ownership/recovery packets are verified with **199 passing tests**, preserving the completed P5–P8 work. Development rent is configurable: **UGX 5,000 per 30 days, seven days’ grace, manual operator reconciliation; live collection disabled**. Continue remaining P9 analytics, privacy and cost work at **Sol 6.1 Extra High**. The build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). See [BUILD-STATUS](docs/BUILD-STATUS.md) for verified capabilities and remaining gates.
 
 ## Recommendations
 
@@ -23,17 +23,18 @@ For production-mode validation, run `npm run build` then `npm run start`. Run `n
 
 Public browsing defaults to fictional fixtures. With the configured local core and `LONDOS_DATA_SOURCE=database`, X2 renders eligible published PostgreSQL shops, bounded shop-first search and processed ready images. Merchants can edit catalogues/contacts, upload private images, save safe manual designs, preview privately and explicitly publish immutable revisions. Opted-in guest enquiries have a scoped private inbox and local notifications. Owners can now apply with private evidence; scoped MFA operators review and manually reconcile development rent, provision shops and manage credit reversals. Scheduled reminders, grace/closure and verified renewal preserve moderation. Purchases, live rent/providers, AI and production release remain later gates.
 
-For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Run `npm run db:p8` for development reconciliation and `npm run db:operations` for local shop administration after migration/seed; these explicitly grant only the existing fictional operator. `npm run db:trust` explicitly enables local moderation and preserves a separate fictional reviewer in ignored `.local/trust-reviewer.json` for independent appeals. Ordinary seed grants remain unchanged; real MFA and separate scope claims are required. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
+For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Run `npm run db:p8` for development reconciliation and `npm run db:operations` for local shop administration after migration/seed; these explicitly grant only the existing fictional operator. `npm run db:trust` explicitly enables local moderation and preserves a separate fictional reviewer in ignored `.local/trust-reviewer.json` for independent appeals. `npm run db:incidents` explicitly adds recovery/support to the verified fictional operator for assigned incident triage. Ordinary seed grants remain unchanged; real MFA and separate scope claims are required. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
 Owners can manage teams, accept private invitations, grant staff access per shop and change shop addresses while retaining old links. Scoped MFA operators can view occupancy and finance exceptions, move shops between malls and pause/resume visibility with reasons and audit. Resume still requires valid tenancy, publication and moderation. Read [P8 administration evidence](docs/evidence/X2-P8-ADMIN.md) and [lifecycle evidence](docs/evidence/X2-P8.md).
 
-Customers can report fictional shop concerns without an account and attach one private normalized image. Separately scoped MFA reviewers investigate, suspend and independently reinstate; owners see redacted decisions and can appeal. Reports never automatically close shops, and restoration preserves other cases, rent, publication and administrative holds. A platform-derived “Development application reviewed” disclosure states its limited local meaning. Read [P9 evidence](docs/evidence/X2-P9.md), [trust ADR](docs/ADR/0008-local-reporting-and-trust-review.md) and [X2 handoff](docs/X2-HANDOFF.md). Continue remaining **P9 at Sol 6.1 Extra High**; no setting change is needed. Live policies/providers and full-build/release gates remain open.
+Customers can report fictional shop concerns without an account and attach one private normalized image. Separately scoped MFA reviewers investigate, suspend and independently reinstate; owners see redacted decisions and can appeal. Reports never automatically close shops, and restoration preserves other cases, rent, publication and administrative holds. A platform-derived “Development application reviewed” disclosure states its limited local meaning. Read [P9 evidence](docs/evidence/X2-P9.md), [trust ADR](docs/ADR/0008-local-reporting-and-trust-review.md) and [X2 handoff](docs/X2-HANDOFF.md). Fresh owners can also open incidents, and assigned MFA reviewers can investigate, escalate and revoke the reporting owner’s sessions. Contact/payment-instruction recovery requires that same owner’s fresh confirmation of an exact historical revision, then restores it as a new version. Ordinary support cannot perform sensitive recovery. Read [incident evidence](docs/evidence/X2-P9-INCIDENTS.md) and [recovery ADR](docs/ADR/0009-local-incidents-and-owner-confirmed-recovery.md). Lost-all-factor identity recovery remains unavailable pending an approved proof policy. Continue remaining **P9 analytics/privacy/costs at Sol 6.1 Extra High**; no setting change is needed. Live policies/providers and full-build/release gates remain open.
 
 ## What Londos is
 
 Londos applies the logic of commercial real estate to the internet. A merchant does not merely upload products into a giant anonymous catalogue. The merchant rents a **shop** in a digital mall, controls that shop's identity and commercial terms, and benefits from the mall's shared discovery traffic and infrastructure.
 
 A customer can:
+
 - enter Londos and discover shops through search/categories;
 - visit a shop directly from a merchant's shared link;
 - enter a relevant department when search matches a product;
@@ -41,6 +42,7 @@ A customer can:
 - contact or transact with the merchant using the methods that merchant enables.
 
 A merchant can:
+
 - apply to rent a shop;
 - design it using guided templates, conversational design, or an approved professional designer;
 - create departments and add products/services;
@@ -102,6 +104,7 @@ Search should preserve shop identity.
 Example: a customer searches **shoes**. Londos returns relevant shops that contain matching shoes. Selecting Annette's result can land at Annette's shoes department or matching product context. The customer is then inside **Annette's shop** and may browse dresses, handbags or anything else Annette sells.
 
 Search scopes:
+
 1. **Global** — across all public/eligible shops in Londos.
 2. **Department/category** — e.g. Fashion, Electronics, Restaurants.
 3. **Shop-local** — only the current shop.
@@ -113,6 +116,7 @@ Internal Mall 1 / Mall 2 / Mall 3 assignments should normally be invisible to cu
 A large database must not imply a large webpage.
 
 Londos should use:
+
 - indexed/scoped queries;
 - paginated/batched results (initial design target around 20, subject to testing);
 - lazy-loaded media;
@@ -157,6 +161,7 @@ The primary design experience should feel like talking to an interior designer:
 The system converts intent into a **safe structured shop specification**, not arbitrary production code.
 
 Merchants may also:
+
 - choose category-aware shop designs/templates;
 - iteratively redesign by conversation;
 - hire approved designers/developers.
@@ -166,6 +171,7 @@ Advanced designers can eventually use a constrained **Londos Shop SDK**: approve
 ## Commerce boundary
 
 Initially, Londos should allow merchants to configure methods such as:
+
 - Call Shop;
 - WhatsApp Shop;
 - in-shop enquiry/message;
@@ -191,6 +197,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)
 - [X2 implementation handoff](docs/X2-HANDOFF.md)
 - [P8 local lifecycle verification and screenshots](docs/evidence/X2-P8.md)
+- [P9 incident ownership and owner-confirmed recovery evidence](docs/evidence/X2-P9-INCIDENTS.md)
+- [Local incident and recovery ADR](docs/ADR/0009-local-incidents-and-owner-confirmed-recovery.md)
 - [P8 administration verification and screenshots](docs/evidence/X2-P8-ADMIN.md)
 - [Local administration and shop addresses ADR](docs/ADR/0007-local-administration-and-shop-addresses.md)
 - [Local applications and rent lifecycle ADR](docs/ADR/0006-local-applications-and-rent-lifecycle.md)

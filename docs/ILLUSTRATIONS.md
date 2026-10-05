@@ -161,7 +161,6 @@ Validated screenshots and their exact stage/environment are recorded in [the Hig
 
 The [X1 evidence report](evidence/X1-STAGE.md#visual-evidence) records inspected desktop shop-profile and mobile account-security screenshots from the local production build. All pictured identities and shops are fictional; no authentication secrets are pictured.
 
-
 ## Implemented X2 private-media path
 
 ```mermaid
@@ -200,7 +199,6 @@ flowchart LR
 A received or acknowledged request does not confirm an order, payment or stock reservation. Private customer details stay in the scoped inbox; notification payloads contain identifiers only. Live retention and delivery policies remain owner decisions.
 
 The [X2 evidence report](evidence/X2-P5.md) includes inspected production-browser screenshots of the [catalogue and inbox](evidence/images/x2-catalogue-desktop.png) and [anonymous contact page](evidence/images/x2-guest-contact.png). They contain fictional/sample data, without authentication secrets.
-
 
 ## Implemented X2 design and public eligibility
 
@@ -347,3 +345,51 @@ flowchart TD
 ```
 
 External moderation conflicts fail closed; clearing one case cannot clear another or a captured legacy restriction. [P9 evidence](evidence/X2-P9.md) records inspected [desktop report](evidence/images/x2-p9-report-desktop.png), [private review](evidence/images/x2-p9-review-desktop.png) and [mobile report](evidence/images/x2-p9-report-mobile.png) captures. All pictured content is fictional; no authentication secrets are pictured.
+
+## Implemented P9 accountable incident queues
+
+```mermaid
+flowchart TD
+  Owner[Fresh current owner] --> Intake[Seven bounded incident kinds; immutable reporter and retry key]
+  Intake --> Case[(Versioned case and append-only events)]
+  Operator[Explicit kind permission and native MFA] --> Queue[Minimal prioritized queue; escalated then priority and age]
+  Queue --> Claim[Reasoned versioned claim; reject self-membership]
+  Claim --> Assignment[(Exclusive reviewer and separate incident scope)]
+  Assignment --> Private[Fresh scoped private investigation]
+  Case --> Private
+  Private --> Note[Private notes and priority]
+  Private --> Escalate[Reasoned escalation with separate owner explanation]
+  Escalate --> Release[Release assignment and every incident scope]
+  Release --> Queue
+  Private --> Resolve[Reasoned resolution; retain history]
+  Private --> Existing[Separate trust, finance or application authority for those decisions]
+```
+
+Kind grants do not confer other workflow scopes. Ordinary support cannot contain accounts or restore sensitive contacts. Escalation supports qualified reassignment; live response targets and staff ownership remain a policy gate.
+
+## Implemented P9 original-owner confirmed restoration
+
+```mermaid
+flowchart TD
+  Original[Original fresh reporting owner] --> Target[Select exact earlier immutable contact revision]
+  Target --> Incident[Contact-change incident; target fixed]
+  Incident --> Assigned[Assigned recovery reviewer with native fresh MFA]
+  Assigned --> Contain[Optional once-per-case reporting-owner session containment]
+  Contain --> Rotate[(Rotate credential generation; revoke sessions, proofs, challenges and old reset tokens)]
+  Rotate --> Native[Owner uses native password and MFA or existing recovery code]
+  Native --> Confirm[Original still-active owner confirms exact snapshot and current versions]
+  Original --> Confirm
+  Confirm --> Approval[(30-minute approval bound to owner credential generation)]
+  Assigned --> Restore[Reasoned confirmed restoration request]
+  Approval --> Restore
+  Restore --> Locks[Merchant and reporter-user locks; recheck both authorities]
+  Locks --> Valid{Current versions, owner membership, generation and unexpired approval?}
+  Valid -->|No| Refuse[Conflict or denial; no canonical correction]
+  Valid -->|Yes| Commit[(Validate old snapshot; append new contacts, event, audit and minimal notice)]
+  Commit --> History[Retain baseline and every intervening revision]
+  Commit --> Independent[Rent, ledger, publication, moderation and operational holds unchanged]
+```
+
+Captured history starts at the current upgrade baseline. Containment/password changes invalidate confirmation; later contact edits require renewed confirmation. There is no lost-all-factor/email/ownership adjudication bypass or direct operator contact update.
+
+[Incident evidence](evidence/X2-P9-INCIDENTS.md) records the inspected [assigned reviewer](evidence/images/x2-p9-incident-review-desktop.png), [redacted owner history](evidence/images/x2-p9-incident-owner-desktop.png) and [mobile keyboard-focused form](evidence/images/x2-p9-incident-mobile.png). All pictured data is fictional; no authentication secrets are pictured.

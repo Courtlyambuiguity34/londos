@@ -224,7 +224,7 @@ test("007 to 008 and repeat seed preserve existing catalogue and identity data",
   expect((await pool.query('SELECT id,email FROM "user" ORDER BY id')).rows).toEqual(before.rows);
   expect(
     (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-  ).toBe(12);
+  ).toBe(13);
 });
 test("catalogue checks tenant, nested references, staff action and explicit shop scope", async () => {
   await expect(readCatalogue(pool, actors.ownerB!, shop)).rejects.toMatchObject({ status: 404 });
@@ -622,7 +622,7 @@ test("dead-letter media reports failure and an audited retry fences the old vers
   await acknowledge(pool, retry);
   expect((await listMedia(pool, actors.ownerA!, shop))[0].state).toBe("ready");
 });
-test("operator support/recovery requires real MFA, an explicit grant, shop scope and freshness", async () => {
+test("operator support requires real MFA/grant/shop scope; legacy recovery cannot bypass incident confirmation", async () => {
   const operator = clients.operator!;
   const enabled = await operator.request("two-factor/enable", {
     password: accounts.operator.password,
@@ -652,14 +652,16 @@ test("operator support/recovery requires real MFA, an explicit grant, shop scope
   await expect(saveProduct(pool, actors.operator!, shop, null, product())).rejects.toMatchObject({
     status: 404,
   });
-  await saveContacts(pool, actors.operator!, shop, contacts());
+  await expect(saveContacts(pool, actors.operator!, shop, contacts())).rejects.toMatchObject({
+    status: 404,
+  });
   await pool.query(
     "UPDATE mfa_proofs SET verified_at=now()-interval '6 minutes' WHERE session_id=$1",
     [actors.operator!.sessionId],
   );
   await expect(
     saveContacts(pool, actors.operator!, shop, { ...contacts(), version: 1 }),
-  ).rejects.toMatchObject({ status: 403 });
+  ).rejects.toMatchObject({ status: 404 });
 });
 test("a foreign ready image is denied by both the product command and composite SQL reference", async () => {
   const bytes = await image(),

@@ -1,0 +1,65 @@
+{
+  "recordedAt": "2026-10-05T20:14:39.953Z",
+  "source": "database",
+  "migration": "013_local_incidents_and_contact_history.sql",
+  "localSetup": {
+    "explicitRecoveryAndSupportForVerifiedFictionalOperator": true,
+    "repeatabilityPassed": true,
+    "configurationAndPrivateAccountsPreserved": true,
+    "defaultSeedGrantsUnchanged": true,
+    "nativeMfaAndDistinctIncidentAssignmentRequired": true
+  },
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "cacheControl": "no-store",
+      "referrerPolicy": "strict-origin-when-cross-origin",
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 23125,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/report/30000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 14801,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/incidents",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/incidents",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "body": {
+        "error": "authentication_required"
+      }
+    }
+  ],
+  "limit": "Current local runtime only; live identity adjudication/providers/support, production recovery and fresh-task persistence remain unverified."
+}

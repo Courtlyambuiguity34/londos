@@ -36,7 +36,8 @@
     "benchmark:x2": "tsx scripts/benchmark-x2.ts",
     "worker:dev": "tsx src/worker/main.ts",
     "check:bundle-secrets": "node scripts/check-bundle-secrets.mjs",
-    "db:trust": "tsx scripts/enable-local-trust.ts"
+    "db:trust": "tsx scripts/enable-local-trust.ts",
+    "db:incidents": "tsx scripts/enable-local-incidents.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",

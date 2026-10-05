@@ -2,7 +2,7 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
-**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1, the P5–P8 local packets and P9’s local reporting/moderation/appeals/development verification packet are complete and verified. **180 tests pass.** Continue **remaining P9 recovery, analytics and privacy work at Sol 6.1 Extra High**; no new switch is needed. Read [P9 evidence](docs/evidence/X2-P9.md), [trust ADR](docs/ADR/0008-local-reporting-and-trust-review.md) and [X2-HANDOFF](docs/X2-HANDOFF.md). The owner selected development rent of UGX 5,000 per 30 days, seven days’ grace and manual reconciliation with live collection disabled. Live accounting/arrangement policies, providers, the full build and production release remain open.
+**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1, the P5–P8 local packets and P9’s local trust and assigned incident/owner-confirmed recovery packets are complete and verified. **199 tests pass.** Continue **remaining P9 analytics, privacy and costs at Sol 6.1 Extra High**; no new switch is needed. Read [incident evidence](docs/evidence/X2-P9-INCIDENTS.md), [recovery ADR](docs/ADR/0009-local-incidents-and-owner-confirmed-recovery.md), [P9 trust evidence](docs/evidence/X2-P9.md), [trust ADR](docs/ADR/0008-local-reporting-and-trust-review.md) and [X2-HANDOFF](docs/X2-HANDOFF.md). The owner selected development rent of UGX 5,000 per 30 days, seven days’ grace and manual reconciliation with live collection disabled. Live accounting/arrangement policies, providers, the full build and production release remain open.
 
 ## Model settings
 
@@ -17,7 +17,7 @@ The owner requested explicit model handoffs on 2026-10-04. Follow these stages w
 
 Model settings do not replace tests, acceptance gates, review or recovery. Use High for routine work and Extra High at the listed boundaries; Max/Ultra is not the default.
 
-R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication, discovery, P8 lifecycle/administration and P9 trust packet are now verified. Remaining P9 recovery/privacy/analytics and P10 AI contracts also require Extra High. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
+R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication, discovery, P8 lifecycle/administration and P9 trust/incident packets are now verified. Remaining P9 privacy/analytics/costs and P10 AI contracts also require Extra High. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
 
 ## Handoff and reminder procedure
 
