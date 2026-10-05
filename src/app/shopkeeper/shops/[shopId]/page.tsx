@@ -22,8 +22,8 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       <p className="eyebrow">Private shop profile</p>
       <h1>{shop.name}</h1>
       <p>
-        Changes save to the canonical database with an audit record and durable job. They do not
-        change the public fixture preview.
+        Changes save to your shop. They appear in database browsing when your shop is published; the
+        fictional fixture preview is separate.
       </p>
       <ProfileForm shop={shop} />
       <Link className="button" href={`/shopkeeper/shops/${shop.id}/catalogue`}>
@@ -31,6 +31,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       </Link>
       <Link className="text-button" href="/shopkeeper">
         All your shops
+      </Link>
+      <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/design`}>
+        Design and publish your shop
       </Link>
     </section>
   );

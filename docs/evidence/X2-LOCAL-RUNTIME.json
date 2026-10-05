@@ -1,0 +1,65 @@
+{
+  "recordedAt": "2026-10-05T09:15:52.145Z",
+  "source": "database",
+  "migration": "009_shop_design_and_public_reads.sql",
+  "observations": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "status": "preview",
+        "mode": "database-development",
+        "publicBrowsing": true,
+        "transactions": false,
+        "authentication": false,
+        "database": true,
+        "ai": false,
+        "coreConfigured": true,
+        "readiness": "/api/ready"
+      }
+    },
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false
+      }
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "bytes": 16971,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 17581,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 22815,
+      "developmentMall": true,
+      "annette": true,
+      "containsPrivateAccountEmail": false
+    }
+  ],
+  "limit": "Current local runtime only; no live delivery/financial capability or fresh-task restoration claim."
+}

@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** X2’s first catalogue/contact/private-media packet is complete; **105 tests pass**. Next within **Sol 6.1 Extra High X2**: safe shop design, preview and publication (P6). The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
+**Status:** X2’s P5–P7 local architecture prototype is complete; **130 tests pass** and the 1,506-shop / 150,004-product experiment passed its declared budgets. Next within **Sol 6.1 Extra High X2**: P8 merchant/landlord and tenancy/rent workflows. The current build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). Track verified capabilities, remaining scope and the next model setting in [BUILD-STATUS](docs/BUILD-STATUS.md).
 
 ## Recommendations
 
@@ -21,11 +21,11 @@ npm run dev
 
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
-Public browsing uses fictional, read-only shops and illustrated products. X1 adds local PostgreSQL accounts, real MFA, tenant-scoped private profiles and durable jobs. X2 adds catalogue/contact forms, private image uploads and bounded anonymous requests through an enabled canonical contact page. Purchases, live rent, public image delivery, LSS publication and AI remain later gates.
+Public browsing defaults to fictional fixtures. With the configured local core and `LONDOS_DATA_SOURCE=database`, X2 renders eligible published PostgreSQL shops, bounded shop-first search and processed ready images. Merchants can edit catalogues/contacts, upload private images, save safe manual designs, preview privately and explicitly publish immutable revisions. Opted-in guest enquiries have a scoped private inbox and local notifications. Purchases, live rent/providers, AI and production release remain later gates.
 
 For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
-Continue **X2 / P6 at Sol 6.1 Extra High**; no new setting change is needed between packets. Read [X2 evidence](docs/evidence/X2-P5.md), the [R1 review](docs/evidence/R1-REVIEW.md) and [X2 handoff](docs/X2-HANDOFF.md). Stage completion is distinct from complete-build/production readiness.
+Continue **X2 / P8 at Sol 6.1 Extra High**; no new setting change is needed between packets. Read [current X2 evidence](docs/evidence/X2-P6-P7.md), [P5 evidence](docs/evidence/X2-P5.md), the [R1 review](docs/evidence/R1-REVIEW.md) and [X2 handoff](docs/X2-HANDOFF.md). The prototype is complete; the full build and production gates remain open.
 
 ## What Londos is
 
@@ -189,6 +189,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)
 - [X2 catalogue and media handoff](docs/X2-HANDOFF.md)
 - [X2 P5 verification and screenshots](docs/evidence/X2-P5.md)
+- [X2 P6–P7 verification, scale measurements and screenshots](docs/evidence/X2-P6-P7.md)
+- [Safe design and canonical public reads ADR](docs/ADR/0005-safe-design-and-canonical-public-reads.md)
 - [Catalogue/contact/private-media ADR](docs/ADR/0004-catalogue-contact-and-private-media.md)
 - [Domain contracts for review](docs/CONTRACTS.md)
 - [Architecture](docs/ARCHITECTURE.md)

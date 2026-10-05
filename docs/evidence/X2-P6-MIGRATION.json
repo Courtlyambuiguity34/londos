@@ -1,0 +1,21 @@
+{
+  "recordedAt": "2026-10-05T05:59:50.765Z",
+  "sourceSchema": "008_p5_catalogue_and_media.sql",
+  "targetSchema": "009_shop_design_and_public_reads.sql",
+  "migrationMs": 1407,
+  "existingCanonicalFieldsUnchanged": true,
+  "repeatedMigrationAndSeedPreservedExistingRecords": true,
+  "applicationCredentialFileUnchanged": true,
+  "counts": {
+    "shops": 1506,
+    "products": 150004,
+    "departments": 1504,
+    "media_assets": 0,
+    "shop_revisions": 0,
+    "shop_contacts": 0,
+    "guest_requests": 0,
+    "invoices": 0,
+    "rent_events": 0
+  },
+  "limit": "Local logical upgrade preservation, not production backup/restore or a downtime guarantee"
+}

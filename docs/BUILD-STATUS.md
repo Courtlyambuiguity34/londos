@@ -1,43 +1,39 @@
-# Londos build status and model handoff
+# Build status and next model setting
 
-Updated: **2026-10-05 (Africa/Kampala)**. Branch: `codex/londos-x2-2026-10-05`.
+Updated 2026-10-05, Africa/Kampala. Branch: `codex/londos-x2-2026-10-05`.
 
-## Current stage
+**X2 P5–P7 local architecture prototype: COMPLETE and verified.** The owner confirmed **Sol 6.1 Extra High**, authorized committing/pushing finished work to a new branch and instructed “Continue X2.” The assistant records that requested setting; it cannot inspect/change the selector. H (`e65748e`), X1 (`c93261f`) and R1 (`cc0aafc`) were preserved and pushed unchanged; P5 was pushed separately as `c19a26a`.
 
-**X2 / first P5 local work packet: COMPLETE and verified.** The owner authorized pushing finished work to a new branch, then instructed “Continue X2” for the recorded **Sol 6.1 Extra High** workflow. The assistant cannot inspect/change the model-selector UI.
+The prototype supports tenant-owned catalogue/contact/private uploads and guest requests, safe manual LSS drafts/patches/private preview, immutable revisions with explicitly confirmed publication/restore, canonical PostgreSQL public shops/ready images and bounded shop-first search. Both fixture and configured local database modes are supported. Read [current evidence](evidence/X2-P6-P7.md), [P5 evidence](evidence/X2-P5.md) and [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md).
 
-H (`e65748e`), X1 (`c93261f`) and R1 (`cc0aafc`) were pushed unchanged first. X2 adds tenant-scoped catalogue editing, exact-price display, sensitive contact settings, scoped operator support/recovery, anonymous bounded requests and a private inbox, owned image uploads, concurrent quotas, worker processing/variants, retries and cleanup. See [X2 evidence](evidence/X2-P5.md) and [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md).
+## Verification
 
-This completes the first local P5 packet. Public Mall/Shop rendering remains a fictional fixture preview. The enabled canonical contact page accepts requests separately. Public image delivery, LSS design/publication and PostgreSQL discovery remain P6/P7; live providers, financial operations, AI and production release remain later gates.
+- **130 passing tests:** 22 unit, 81 real PostgreSQL integration, 16 fixture public browser and 11 core browser tests. Original identity/MFA/security/crash and P5 tests remain passing. Six new protected design methods join the HTTP tenant-attack registry.
+- Lint, strict types, formatting, documentation links, standalone web/independent worker build and configured-secret artifact scan passed. Dependency audit: **0 vulnerabilities**. Artifact scan: **657 files / 8 candidate values**, with no values printed.
+- [Migration 008→009](evidence/X2-P6-MIGRATION.json) preserved existing canonical fields for 1,506 shops / 150,004 products / 1,504 departments, repeated migration/seed and application credentials. Local elapsed time: 1,407 ms; backup restore/production downtime are unverified.
+- [Architecture experiment](evidence/X2-BENCHMARK.json): 1,506 shops / 150,004 products / 9,004 departments; four CPUs / 32 GiB cgroup limit. All six slices and declared budgets passed: search p95 **89.54 ms**, 20-client/200-request read burst p95 **524.40 ms**, zero errors, worker-ready **259.17 ms**. These are short loopback measurements, not sustained capacity/mobile-network/production guarantees.
+- Matching main web/worker run against schema 009 with canonical local public browsing. See [runtime evidence](evidence/X2-LOCAL-RUNTIME.json). Live delivery and financial capabilities remain false. Private configuration, credentials and notification files stay ignored.
 
 ## Next work and model
 
-Continue **X2 at Sol 6.1 Extra High** with P6: strict safe shop specifications, manual templates/design, private preview and concurrent publication. Then P7 supplies eligible public PostgreSQL discovery, revocation/invalidation and the architecture benchmark. Use [X2-HANDOFF](X2-HANDOFF.md) and the master [implementation plan](IMPLEMENTATION-PLAN.md).
+Continue **X2 / P8 at Sol 6.1 Extra High** using [X2-HANDOFF](X2-HANDOFF.md) and the [master plan](IMPLEMENTATION-PLAN.md). Keep the already confirmed setting for tenancy/rent/provisioning/reconciliation and later AI boundaries. No new switch is required now. Use **6 Astra Extra High** for R2's final system/release review, or an earlier concrete unresolved critical architecture issue.
 
-No new model switch is required between these packets. H2 is available for bounded routine UI against stable interfaces. **6 Astra Extra High R2** remains the system/release review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
+G2's local six-slice experiment is accepted within its explicit limits. Full-build gates remain open: wider LSS components/public catalogue pagination; applications/operator workflows; live rent/providers; trust/reporting/analytics; AI; sustained mixed-load/recovery/release evidence. Current public department views initially return 20 products and entrances at most 32 cards. English search does not claim advanced typo/multilingual relevance. Production deployment remains separate.
 
-## Current evidence
+## Environment and persistence
 
-- **105 passing tests:** 19 unit, 62 real PostgreSQL integration, 16 public browser and 8 core browser tests. Original R1 security/crash tests remain passing; 23 new domain cases and three new browser flows cover the P5 boundary.
-- Lint, strict types, formatting, documentation links, production Next/worker build and configured-secret artifact scan passed. Full dependency audit: **0 vulnerabilities**. Artifact scan: **564 files / 8 candidate values**, no values printed.
-- [Migration 007→008](evidence/X2-MIGRATION.json) preserved existing canonical fields for **1,506 shops, 150,004 products and 1,504 departments**, repeated migrations/seed and application credentials. Local elapsed time: **566 ms**; this is not backup restoration or a production downtime guarantee.
-- Production desktop/mobile flows and visual evidence: [X2-P5](evidence/X2-P5.md). A real compiled worker processes valid images, rejects unsafe replacements, and preserves the prior attached image.
-- Earlier evidence remains in [R1-REVIEW](evidence/R1-REVIEW.md), [X1-STAGE](evidence/X1-STAGE.md), [X1 runtime](evidence/X1-RUNTIME.json) and the High report. Dataset generation is not a load benchmark.
-- PostgreSQL **18.6**, pg **8.23.1**, Better Auth **1.7.7**, Sharp **0.35.5** are pinned. Migration checksums remain enforced; startup never auto-migrates.
-- Local notification/private storage behavior is verified. Live notifications and financial operations remain false; remote guest operation is also blocked pending verified providers/configuration.
-- Changes are committed/pushed to the new branch. Remote CI outcomes and production deployment remain unverified; no deployment occurred.
-- Reusable startup instructions are saved as a cloud configuration draft. Review/save in environment settings and publish to activate. Fresh-task/volume restoration remains unverified.
+The new branch preserves finished changes and their tests, evidence and documentation. The P6/P7 packet is committed/pushed after final checks; inspect Git for the exact current SHA. No force push or production deployment is part of this task.
 
-## Plan coverage
+Reusable installation/startup instructions and repository membership are saved through the onboarding draft workflow. Review/save settings and publish the environment to activate that configuration. A draft does not execute scripts, restart processes or prove fresh-task restoration/Docker volume persistence. Current runtime and remote Git availability are separate evidence.
 
-| Phase | Status |
+## Remaining gates
+
+| Boundary | State |
 |---|---|
-| P0–P4 | Initial local foundation implemented, reviewed and tested; extend contracts for each new domain and production control. |
-| P5 | Local catalogue/contact/request/private-media packet implemented and tested. Public media delivery/responsive rendering, operator browser recovery, live providers and policies remain assigned later. |
-| P6–P7 | Next: safe manual LSS/preview/publication, eligible public PostgreSQL discovery/cache revocation and architecture benchmark. G2 remains open. |
-| P8–P12 | Rent/provisioning/trust/analytics/AI, production controls/providers, performance/backup restoration and release remain planned. |
-| P13 | Requires an authorized release and real merchant cohort. |
+| H / X1 / R1 | Completed foundation and reviewed local security boundary; historical evidence retained. |
+| P5 | Local catalogue/contact/request/media complete; eligible responsive ready-media delivery now verified through P6/P7. Operator browser recovery and live policies/providers remain later work. |
+| P6/P7 / G2 | Local safe-design/public-discovery prototype and six-slice experiment complete within recorded limits. Wider registry/pagination/deployment-specific cache evidence remain full-build obligations. |
+| P8–P10 | Next: complete merchant/landlord lifecycle, rent/reconciliation, trust/analytics and scoped provider-neutral AI. |
+| P11/P12 / R2 | Full-load, production roles/deployment, backup/restore, release dossier and Astra Extra High review remain open. |
 
-## Reminder
-
-**The X2 P5 packet is done. Continue X2/P6 using Sol 6.1 Extra High; keep that setting for sensitive design/publication and eligibility work.** Stage evidence does not establish complete-build or production readiness.
+**The X2 P5–P7 prototype is done at Sol 6.1 Extra High. Next is P8 at the same setting; the complete application and production release are still in progress.**

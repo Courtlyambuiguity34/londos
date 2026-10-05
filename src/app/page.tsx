@@ -1,3 +1,5 @@
+import { databaseBrowsing } from "@/server/preview";
+import { CanonicalDirectory } from "@/components/canonical-directory";
 import Link from "next/link";
 import Image from "next/image";
 import { categories } from "@/modules/catalogue/fixtures";
@@ -7,6 +9,7 @@ import { ShopCard } from "@/components/shop-card";
 import { Icon } from "@/components/icon";
 
 export default function MallEntrance() {
+  if (databaseBrowsing()) return <CanonicalDirectory entrance />;
   const results = searchPreviewShops({ limit: 4 }).results;
   return (
     <>

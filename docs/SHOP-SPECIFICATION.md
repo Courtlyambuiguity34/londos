@@ -1,6 +1,6 @@
 # Londos Shop Specification (LSS) v0.1
 
-**Status:** Draft architecture contract.
+**Status:** The illustrative v0.1 design below is historical architecture context. The executable X2 contract is **integer schema version 1**, with a deliberately bounded prototype registry; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md) and [the runtime validator](../src/modules/shop-design/specification.ts). Draft/public pointers, immutable revisions, manual patches and canonical rendering are implemented locally. The wider component SDK/registry and production compatibility/release policy remain planned.
 
 ## 1. Purpose
 

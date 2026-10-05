@@ -1,6 +1,6 @@
 # Development setup and verification
 
-Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds private catalogue/contact/media work and anonymous requests through a separately enabled canonical contact page. Public Mall/Shop rendering still uses fictional fixtures; purchases, public media delivery/discovery, rent, LSS publication and AI remain later stages.
+Use Node **24.19.0**, npm **11.9.0** and the checked-in lockfile. Commands below run from the repository root. X1 provides real local PostgreSQL sessions, MFA, permissions and durable jobs. X2 adds catalogue/contact/media commands, guest requests, safe manual design/preview/publication and eligible PostgreSQL public browsing. The fixture preview remains separately supported; real rent, providers, AI and release remain later stages.
 
 ## Public preview only
 
@@ -9,7 +9,7 @@ npm ci --no-fund
 LONDOS_CORE_ENABLED=false npm run dev
 ```
 
-`LONDOS_DATA_SOURCE=fixtures` remains the only public data source. It does not select the source of private records. `LONDOS_CORE_ENABLED=false` explicitly disables account/domain APIs, even if local database variables exist.
+`LONDOS_DATA_SOURCE=fixtures` selects the original public demonstration. `LONDOS_DATA_SOURCE=database` explicitly selects eligible canonical shops/search/media in the configured local core. It does not select the source of private records. `LONDOS_CORE_ENABLED=false` explicitly disables account/domain APIs, even if local database variables exist.
 
 ## Full local environment
 
@@ -56,11 +56,27 @@ Recovery and verification enqueue notifications. The running worker writes them 
 
 ## X2 catalogue, contact and images
 
-Open “Manage catalogue and contacts” from an authorized shop profile. Catalogue edits are private and versioned; reload after a conflict. Contact changes need sensitive permission and recent authentication. The enabled contact page works only for active publication/tenancy with clear moderation, and does not change the public fixture mall. Customer requests appear in the private inbox; no receipt confirms a sale or payment.
+Open “Manage catalogue and contacts” from an authorized shop profile. Catalogue editing remains private and versioned; approved catalogue data becomes visible in database browsing only when the shop publishes a design; reload after a conflict. Contact changes need sensitive permission and recent authentication. The enabled contact page works only for active publication, active/due/grace tenancy and clear moderation, and does not change the public fixture mall. Customer requests appear in the private inbox; no receipt confirms a sale or payment.
 
-Uploads accept non-animated JPEG/PNG/WebP up to 4 MiB, 16 million pixels and 8192 pixels per side. The creating user uploads within 15 minutes. Quota is reserved atomically (128 MiB / 100 nondeleted assets per shop; 20 MiB per pending upload). Keep the worker running for processing, expiry cleanup and local notifications. Failed processing can be retried after its job reaches dead-letter state; rejected files require a new upload. Detach product references before deleting a ready image. Only authenticated ready display variants are readable; quarantine/source are private PostgreSQL blobs. See [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md) for budgets and live-provider obligations.
+Uploads accept non-animated JPEG/PNG/WebP up to 4 MiB, 16 million pixels and 8192 pixels per side. The creating user uploads within 15 minutes. Quota is reserved atomically (128 MiB / 100 nondeleted assets per shop; 20 MiB per pending upload). Keep the worker running for processing, expiry cleanup and local notifications. Failed processing can be retried after its job reaches dead-letter state; rejected files require a new upload. Detach product references before deleting a ready image. Private preview variants require current catalogue/design scope. Public thumbnail/card/display variants additionally require a ready attached image, unarchived product/department and eligible published shop; quarantine/source are private PostgreSQL blobs. See [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md) for budgets and live-provider obligations.
 
 Upgrade existing R1 databases by stopping old web/worker processes, applying migration 008, rebuilding and restarting matching code. Existing fields and application credentials were preserved in [X2 migration evidence](evidence/X2-MIGRATION.json). Original migration files remain immutable.
+
+## X2 shop design and public database browsing
+
+Apply migration 009 after stopping old web/worker code, then build/restart matching processes. [Upgrade evidence](evidence/X2-P6-MIGRATION.json) preserves existing canonical fields, repeat seed and application credentials. The generated search vectors/indexes may lock/rewrite tables during upgrade; the local time is not a production downtime guarantee.
+
+Select `LONDOS_DATA_SOURCE=database` in the private local configuration, or set it explicitly for the web process. Existing/new fixture setups are not forced into database mode by the installer. Open “Design and publish your shop” from its profile: choose a fixed theme, up to four entrance departments, approved contact action visibility and a plain-text announcement. Save a draft, arrange sections, inspect its private preview, then explicitly confirm publication with current publish permission and recent authentication. A restore creates a new draft and keeps current catalogue/contact data. Reload after conflicts. Only the original fictional seed shop may be prepared as a local demonstration; do not mass-publish or change unknown shops.
+
+Database mode serves `/`, `/search`, categories and shop/department/product routes from canonical data. Search shows at most 20 shops per page, one best context per shop, English stemming, validated cursor/category/shop scope and explicit failure states. Initial department views show up to 20 products; entrance shelves are bounded by the 32-card specification. Broader catalogue pagination and multilingual/relevance work remain full-build/P11 obligations. Stable UUID URLs redirect to current eligible slugs. Drafts and quarantine/source images never become public through these routes. No live report delivery or payment collection is claimed.
+
+To reproduce the measured architecture experiment after building:
+
+```bash
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run benchmark:x2
+```
+
+This guarded tool creates/removes its own random test database, generates 1,500 shops/150,000 products, adds five collections per synthetic shop, prepares marked synthetic designs, and exercises the compiled server/worker on port 3102. It does not modify the existing development volume. It writes [benchmark measurements](evidence/X2-BENCHMARK.json), [the actual search plan](evidence/X2-SEARCH-PLAN.json) and a fictional search screenshot. Run it without concurrent test/load suites. Budgets are predeclared in [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md); a failed budget causes a nonzero exit and must be investigated. The fixed read burst is not production capacity, sustained mixed-write load, mobile network or recovery proof.
 
 ## Configuration and readiness
 
@@ -91,7 +107,7 @@ npm run test:e2e
 npm run test:e2e:core
 ```
 
-The cloud machine already has system Chromium; use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` before either browser command here. The public suite launches port 3100 with core disabled; the private suite creates/migrates/seeds a separate random database, supplies random server credentials, launches port 3101 and deletes that database afterward. Each runner stops its own web server. Output directories are separate under ignored `test-results/{public,core}` and `playwright-report/{public,core}`. Traces contain fictional test credentials; do not publish them as production evidence.
+The cloud machine already has system Chromium; use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` before either browser command here. The public suite launches port 3100 with core disabled; the core suite enables database browsing, creates/migrates/seeds a separate random database, supplies random server credentials, launches port 3101 and deletes that database afterward. Each runner stops its own web server. Output directories are separate under ignored `test-results/{public,core}` and `playwright-report/{public,core}`. Traces contain fictional test credentials; do not publish them as production evidence.
 
 The bundle scan checks exact configured local secret/password values in built client/server/worker files and rejects packaged environment files. It prints counts only. It does not replace full repository/production secret scanning. CI defines frozen checks, dependency audit, public browsers and a PostgreSQL security/browser job. Local success does not prove GitHub Actions has executed.
 
@@ -101,7 +117,7 @@ The bundle scan checks exact configured local secret/password values in built cl
 npm run db:generate -- --shops=1500 --products=150000 --seed=londos-x1-scale-v1
 ```
 
-The generator is local-guarded, deterministic and idempotent. It distributes products/services with hot shops, repeated-like content, prices, unavailable records and separate lifecycle states. Reusing a seed preserves existing rows; another seed creates a separate dataset. It does not delete data. The 1,500-shop/150,000-product target was generated twice and counted; this proves generator capability, not the planned architecture/load benchmark. Generated records remain in ignored local database storage.
+The generator is local-guarded, deterministic and idempotent. It distributes products/services with hot shops, repeated-like content, prices, unavailable records and separate lifecycle states. Reusing a seed preserves existing rows; another seed creates a separate dataset. It does not delete data. The 1,500-shop/150,000-product target was generated twice and counted; this proves generator capability; use the separate X2 benchmark for measured hierarchical rendering/search evidence. Generated records remain in ignored local database storage.
 
 ## Boundaries and tooling
 
@@ -119,4 +135,4 @@ ESLint 10, TypeScript ESLint and React Hooks peers accept the pinned versions. N
 
 Cloud onboarding uses `bash scripts/cloud-install.sh`: frozen install, guarded local DB startup/migrations/seed, checks, integration tests, audit, web/worker build and artifact scan. It does not start persistent web/worker processes. Saved environment settings are a draft; publishing/restoring is a separate platform step and has not been verified in a new task.
 
-Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. X2’s P5 packet is complete; continue P6 within **Sol 6.1 Extra High X2**. Current checks pass 19 unit, 62 integration, 16 public browser and 8 core browser tests. See [X2 evidence](evidence/X2-P5.md).
+Read [BUILD-STATUS](BUILD-STATUS.md), [RECOMMENDATIONS](../RECOMMENDATIONS.md), [R1 review](evidence/R1-REVIEW.md) and [X2-HANDOFF](X2-HANDOFF.md) before continuing. X2’s P5–P7 local prototype is complete; continue P8 within **Sol 6.1 Extra High X2**. Current checks pass 22 unit, 81 integration, 16 fixture public browser and 11 core browser tests. See [current X2 evidence](evidence/X2-P6-P7.md) and [historical P5 evidence](evidence/X2-P5.md).

@@ -5,10 +5,14 @@ export function SearchForm({
   query = "",
   large = false,
   category,
+  shopId,
+  maxLength = MAX_QUERY_LENGTH,
 }: {
   query?: string;
   large?: boolean;
   category?: string;
+  shopId?: string;
+  maxLength?: number;
 }) {
   return (
     <form
@@ -27,9 +31,10 @@ export function SearchForm({
         name="q"
         placeholder="Try shoes, homeware, a favourite shop…"
         defaultValue={query}
-        maxLength={MAX_QUERY_LENGTH}
+        maxLength={maxLength}
       />
       {category ? <input type="hidden" name="category" value={category} /> : null}
+      {shopId ? <input type="hidden" name="shop" value={shopId} /> : null}
       <button type="submit" aria-label="Search the mall">
         <span>Search</span>
         <Icon name="arrow" />

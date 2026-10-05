@@ -1,3 +1,5 @@
+import { databaseBrowsing } from "@/server/preview";
+import { PublicShopPage, publicShopTitle } from "@/components/public-shop-page";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +18,8 @@ type RouteParams = Promise<{ slug: string; product: string }>;
 
 export async function generateMetadata({ params }: { params: RouteParams }): Promise<Metadata> {
   const route = await params;
+  if (databaseBrowsing())
+    return { title: await publicShopTitle(route.slug, undefined, route.product) };
   const shop = findShop(route.slug);
   return {
     title: shop
@@ -26,6 +30,7 @@ export async function generateMetadata({ params }: { params: RouteParams }): Pro
 
 export default async function ProductPage({ params }: { params: RouteParams }) {
   const route = await params;
+  if (databaseBrowsing()) return <PublicShopPage slug={route.slug} product={route.product} />;
   const shop = findShop(route.slug);
   if (!shop) notFound();
   const product = findPublicProduct(shop, route.product);

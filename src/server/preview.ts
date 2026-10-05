@@ -1,22 +1,26 @@
 import "server-only";
+import { coreConfigured, coreConfig } from "./config";
+
+export function databaseBrowsing() {
+  const source = process.env.LONDOS_DATA_SOURCE ?? "fixtures";
+  if (!["fixtures", "database"].includes(source)) throw new Error("Unsupported data source.");
+  if (source === "database" && (!coreConfigured() || !coreConfig().localAdapters))
+    throw new Error("Database public browsing requires the configured local development core.");
+  return source === "database";
+}
 
 export function assertPreviewConfiguration(): void {
-  const source = process.env.LONDOS_DATA_SOURCE ?? "fixtures";
-  if (source !== "fixtures") {
-    throw new Error(
-      "This build only supports the labeled fixture preview. Database mode is not implemented yet.",
-    );
-  }
+  databaseBrowsing();
 }
 
 export function previewCapabilities() {
   assertPreviewConfiguration();
   return {
-    mode: "fixture-preview" as const,
+    mode: databaseBrowsing() ? "database-development" : "fixture-preview",
     publicBrowsing: true,
     transactions: false,
     authentication: false,
-    database: false,
+    database: databaseBrowsing(),
     ai: false,
   };
 }

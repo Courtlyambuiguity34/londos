@@ -5,9 +5,15 @@ import { enqueue } from "./jobs/enqueue";
 import { audit } from "./security/audit";
 import { requireShop, sessionState, type Actor } from "./security/authorization";
 import { AccessError } from "./security/errors";
+import { categorySlug } from "./discovery";
 
 export const profileChange = z
-  .object({ name: z.string().trim().min(1).max(120), version: z.number().int().positive() })
+  .object({
+    name: z.string().trim().min(1).max(120),
+    version: z.number().int().positive(),
+    category: categorySlug.optional(),
+    tagline: z.string().trim().max(160).optional(),
+  })
   .strict();
 export async function listShops(pool: Pool, actor: Actor) {
   await sessionState(pool, actor);
@@ -36,8 +42,15 @@ export async function changeProfile(
     await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [shop.merchant_id]);
     await requireShop(client, actor, shopId, "catalogue");
     const result = await client.query(
-      "UPDATE shops SET name=$3,version=version+1,updated_at=now() WHERE id=$1 AND merchant_id=$2 AND version=$4 RETURNING id,name,version",
-      [shopId, shop.merchant_id, value.name, value.version],
+      "UPDATE shops SET name=$3,version=version+1,updated_at=now(),category=coalesce($5,category),tagline=coalesce($6,tagline) WHERE id=$1 AND merchant_id=$2 AND version=$4 RETURNING id,name,version",
+      [
+        shopId,
+        shop.merchant_id,
+        value.name,
+        value.version,
+        value.category ?? null,
+        value.tagline ?? null,
+      ],
     );
     if (!result.rowCount) throw new AccessError(409, "stale_version");
     const updated = result.rows[0] as { id: string; name: string; version: number };

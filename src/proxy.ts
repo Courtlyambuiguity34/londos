@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      await requireShop(database(), actor, parsed.data, "catalogue");
+      const permission = /\/(design|preview)(?:\/|$)/.test(path) ? "design" : "catalogue";
+      await requireShop(database(), actor, parsed.data, permission);
     }
     if (path === "/landlord") {
       const state = await sessionState(database(), actor, true);

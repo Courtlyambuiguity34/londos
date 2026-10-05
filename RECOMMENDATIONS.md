@@ -2,7 +2,7 @@
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
-**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1 and X2’s first P5 local packet are complete and verified. Continue **X2 / P6 at Sol 6.1 Extra High**. No new switch is needed between these packets. Read [X2 evidence](docs/evidence/X2-P5.md), [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md).
+**Current progress (2026-10-05, Africa/Kampala):** H, X1, R1 and X2’s P5–P7 local architecture prototype are complete and verified. Continue **X2 / P8 at Sol 6.1 Extra High**. No new switch is needed between these packets. Read [current X2 evidence](docs/evidence/X2-P6-P7.md), [P5 evidence](docs/evidence/X2-P5.md), [R1 evidence](docs/evidence/R1-REVIEW.md) and [X2-HANDOFF](docs/X2-HANDOFF.md). This completes the prototype boundary, not the full build or production release.
 
 ## Model settings
 
@@ -17,7 +17,7 @@ The owner requested explicit model handoffs on 2026-10-04. Follow these stages w
 
 Model settings do not replace tests, acceptance gates, review or recovery. Use High for routine work and Extra High at the listed boundaries; Max/Ultra is not the default.
 
-R1 selected X2 for P5’s new authorization, concurrency and media controls. That local packet is now verified; P6 design/reference/publication contracts also require Extra High. H2 is a conditional stage for routine interface work once those contracts are stable, not a required detour before implementing them. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
+R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication and canonical discovery prototype is now verified. P8 tenancy/rent/reconciliation and P10 AI contracts also require Extra High. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. R2 remains the final Astra Extra High review; request an earlier Astra handoff if a critical architecture decision remains unresolved.
 
 ## Handoff and reminder procedure
 

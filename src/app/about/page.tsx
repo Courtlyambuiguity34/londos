@@ -59,10 +59,18 @@ export default function AboutPage() {
       <div className="notice">
         <strong>About this preview</strong>
         <p>
-          The shops, illustrated products and prices are fictional. No accounts, applications,
-          purchases or enquiries are accepted here.
+          This development mall uses fictional shops, products and prices. Londos does not collect
+          payments here. Where a shop enables enquiries, a receipt does not confirm a purchase.
         </p>
       </div>
+      <section id="report" className="notice">
+        <h2>Report a concern</h2>
+        <p>
+          Public support and moderation reporting are being prepared. Do not send sensitive
+          information to a merchant enquiry when reporting a platform problem. No live report
+          delivery is available in this development mall.
+        </p>
+      </section>
     </div>
   );
 }

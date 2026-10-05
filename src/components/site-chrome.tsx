@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Icon } from "./icon";
+import { databaseBrowsing } from "@/server/preview";
 
 export function SiteHeader() {
   return (
     <>
       <div className="preview-notice" role="region" aria-label="Preview status">
-        Preview mall <span aria-hidden="true">·</span> Fictional shops and illustrated products.
-        Purchases are unavailable in this preview.
+        {databaseBrowsing()
+          ? "Development mall · Fictional merchants and sample catalogues. No payments are collected by Londos."
+          : "Preview mall · Fictional shops and illustrated products. Purchases are unavailable in this preview."}
       </div>
       <header className="site-header shell">
         <Link href="/" className="wordmark" aria-label="Londos home">
@@ -54,7 +56,11 @@ export function SiteFooter() {
           <br />
           Built around the shop.
           <br />
-          <span>Read-only product preview.</span>
+          <span>
+            {databaseBrowsing()
+              ? "Development mall with fictional merchants."
+              : "Read-only product preview."}
+          </span>
         </p>
       </div>
       <div className="shell footer-bottom">

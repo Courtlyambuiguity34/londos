@@ -15,7 +15,7 @@ test("mobile owner can sign in, edit its profile and access account security wit
   await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Merchant B Studio", exact: true }).click();
   await page.getByLabel("Shop name", { exact: true }).fill("Mobile fixture shop B");
-  await page.getByRole("button", { name: "Save shop name", exact: true }).click();
+  await page.getByRole("button", { name: "Save shop profile", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved. Background processing is queued.");
   for (const path of ["/shopkeeper", "/security"]) {
     await page.goto(path);

@@ -1,3 +1,5 @@
+import { databaseBrowsing } from "@/server/preview";
+import { CanonicalDirectory } from "@/components/canonical-directory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -19,6 +21,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const category = findCategory(slug);
   if (!category) notFound();
+  if (databaseBrowsing()) return <CanonicalDirectory category={category.slug} />;
   const results = searchPreviewShops({ category: category.slug }).results;
   return (
     <section className="shell page-section">

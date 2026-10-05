@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Prove the proposed Django/PostgreSQL architecture against Londos's hardest requirements before building the complete product.
+Prove the accepted Next.js/Node/PostgreSQL architecture against Londos's hardest requirements before building the complete product. X2 now records the local six-slice experiment in [prototype evidence](evidence/X2-P6-P7.md), [measurements](evidence/X2-BENCHMARK.json) and [the actual query plan](evidence/X2-SEARCH-PLAN.json). The guarded reproduction command is `npm run benchmark:x2`; live capacity/recovery and the complete build remain separate gates.
 
 ## Dataset
 

@@ -1,3 +1,5 @@
+import { databaseBrowsing } from "@/server/preview";
+import { CanonicalDirectory } from "@/components/canonical-directory";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
@@ -11,11 +13,25 @@ export const metadata: Metadata = { title: "Explore the mall" };
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string | string[]; category?: string | string[] }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    category?: string | string[];
+    cursor?: string | string[];
+    shop?: string | string[];
+  }>;
 }) {
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q : "";
   const category = typeof params.category === "string" ? params.category : undefined;
+  if (databaseBrowsing())
+    return (
+      <CanonicalDirectory
+        query={query}
+        category={category}
+        cursor={typeof params.cursor === "string" ? params.cursor : undefined}
+        shopId={typeof params.shop === "string" ? params.shop : undefined}
+      />
+    );
   const result = searchPreviewShops({ query, ...(category ? { category } : {}) });
   return (
     <section className="shell page-section">

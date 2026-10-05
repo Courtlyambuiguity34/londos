@@ -1,3 +1,5 @@
+import { databaseBrowsing } from "@/server/preview";
+import { PublicShopPage, publicShopTitle } from "@/components/public-shop-page";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findShop, publicPreviewProducts } from "@/modules/discovery/preview-directory";
@@ -10,6 +12,8 @@ type RouteParams = Promise<{ slug: string; department: string }>;
 
 export async function generateMetadata({ params }: { params: RouteParams }): Promise<Metadata> {
   const route = await params;
+  if (databaseBrowsing())
+    return { title: await publicShopTitle(route.slug, route.department, undefined) };
   const shop = findShop(route.slug);
   const department =
     shop?.previewState === "open"
@@ -22,6 +26,7 @@ export async function generateMetadata({ params }: { params: RouteParams }): Pro
 
 export default async function DepartmentPage({ params }: { params: RouteParams }) {
   const route = await params;
+  if (databaseBrowsing()) return <PublicShopPage slug={route.slug} department={route.department} />;
   const shop = findShop(route.slug);
   if (!shop || shop.previewState !== "open") notFound();
   const department = shop.departments.find((d) => d.slug === route.department);

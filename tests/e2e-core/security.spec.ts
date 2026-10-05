@@ -127,7 +127,7 @@ test("real owner login, tenant A/B attacks across all protected domain handlers 
   expect(response.status()).toBe(200);
   expect(response.headers()["cache-control"]).toContain("no-store");
   await page.getByLabel("Shop name", { exact: true }).fill("Browser fixture shop A");
-  await page.getByRole("button", { name: "Save shop name", exact: true }).click();
+  await page.getByRole("button", { name: "Save shop profile", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved. Background processing is queued.");
   const other = await browser.newContext();
   const otherPage = await other.newPage();

@@ -3,7 +3,7 @@ import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
 import { catalogueAccess, catalogueLock } from "./catalogue";
-import { type Actor } from "./security/authorization";
+import { requireShop, type Actor } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { audit } from "./security/audit";
 import { enqueue } from "./jobs/enqueue";
@@ -206,7 +206,12 @@ export async function readVariant(
   id: string,
   variant: z.infer<typeof displayVariant>,
 ) {
-  await catalogueAccess(pool, actor, shopId, "catalogue", "support");
+  try {
+    await catalogueAccess(pool, actor, shopId, "catalogue", "support");
+  } catch (error) {
+    if (!(error instanceof AccessError) || error.status !== 404) throw error;
+    await requireShop(pool, actor, shopId, "design");
+  }
   const row = (
     await pool.query(
       "SELECT b.bytes FROM media_blobs b JOIN media_assets a ON a.id=b.asset_id WHERE a.id=$1 AND a.shop_id=$2 AND a.state='ready' AND b.variant=$3",

@@ -67,11 +67,21 @@ export async function requireShop(
   permission: MerchantPermission,
 ) {
   await sessionState(db, actor);
-  const result = await db.query("SELECT id,merchant_id,name,slug,version FROM shops WHERE id=$1", [
-    shopId,
-  ]);
+  const result = await db.query(
+    "SELECT id,merchant_id,name,slug,version,category,tagline FROM shops WHERE id=$1",
+    [shopId],
+  );
   const shop = result.rows[0] as
-    { id: string; merchant_id: string; name: string; slug: string; version: number } | undefined;
+    | {
+        id: string;
+        merchant_id: string;
+        name: string;
+        slug: string;
+        version: number;
+        category: string;
+        tagline: string;
+      }
+    | undefined;
   if (!shop) throw new AccessError(404, "resource_unavailable");
   await requireMerchant(db, actor, shop.merchant_id, permission);
   const membership = (

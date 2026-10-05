@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. Public PostgreSQL search, public media delivery, rent workflows, LSS publication and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. The P6/P7 prototype adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. Rent, live providers, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -174,7 +174,7 @@ flowchart TD
   Encode --> Fence[Recheck lease, asset version and canonical state]
   Fence --> Ready[(Private ready variants and effect receipt)]
   Ready --> Read[Current scoped authenticated thumbnail, card or display read]
-  Ready -.-> Future[P6/P7 eligible public delivery remains to implement]
+  Ready --> Public[Public read rechecks eligible published shop and active product attachment]
 ```
 
 Raw quarantine and the normalized rebuild source have no public or workspace download route. A pending replacement leaves the product's prior ready image attached. Referenced assets cannot be deleted; expiry cleanup and tombstones prevent delayed jobs from resurrecting deleted media.
@@ -197,3 +197,27 @@ flowchart LR
 A received or acknowledged request does not confirm an order, payment or stock reservation. Private customer details stay in the scoped inbox; notification payloads contain identifiers only. Live retention and delivery policies remain owner decisions.
 
 The [X2 evidence report](evidence/X2-P5.md) includes inspected production-browser screenshots of the [catalogue and inbox](evidence/images/x2-catalogue-desktop.png) and [anonymous contact page](evidence/images/x2-guest-contact.png). They contain fictional/sample data, without authentication secrets.
+
+
+## Implemented X2 design and public eligibility
+
+```mermaid
+flowchart TD
+  Editor[Current design and shop grant] --> Validate[Closed LSS schema, budgets and owned references]
+  Validate --> Draft[(Immutable draft revision and audit)]
+  Draft --> Preview[Authorized private preview]
+  Draft --> Patch[Version-checked manual patch or restoration]
+  Patch --> Draft
+  Preview --> Confirm[Explicit merchant confirmation and fresh publish authority]
+  Confirm --> Publish[(Atomic published pointer and audit)]
+  Publish --> Read[Current canonical catalogue and contacts]
+  Read --> Eligibility{Publication active, tenancy active/due/grace, moderation clear}
+  Eligibility -->|Eligible| Public[Dynamic no-store shop, search and ready-image responses]
+  Eligibility -->|Unavailable| Deny[Platform unavailable state without restricted contents]
+  Publish --> Index[PostgreSQL generated search vectors in canonical transactions]
+  Index --> Public
+```
+
+Restoring a layout never restores an old price/contact/payment setting. The renderer uses a read-only snapshot and current canonical resources; request-local memoization avoids duplicate metadata/page reads without a shared response cache. Future remote browser/CDN revocation and live financial/provider policies require separate evidence.
+
+Inspected X2 prototype captures: [merchant design](evidence/images/x2-design-desktop.png), [public product with a synthetic ready image](evidence/images/x2-public-product.png) and [mobile search on the isolated 1,500-shop dataset](evidence/images/x2-architecture-search.png). See [the complete experiment and limits](evidence/X2-P6-P7.md).

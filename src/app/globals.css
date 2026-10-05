@@ -1946,3 +1946,64 @@ button:disabled {
 .catalogue-workspace .workspace-list li {
   overflow-wrap: anywhere;
 }
+:root {
+  --shop-accent: #8d3d24;
+}
+.canonical-shop.theme-plum {
+  --shop-accent: #603950;
+}
+.canonical-shop.theme-blue {
+  --shop-accent: #285467;
+}
+.canonical-heading {
+  padding: 3rem 0;
+  border-bottom: 2px solid var(--shop-accent);
+}
+.canonical-heading h1 {
+  color: var(--shop-accent);
+}
+.canonical-image {
+  width: 100%;
+  height: auto;
+  max-height: 36rem;
+  object-fit: contain;
+}
+.canonical-product .canonical-image {
+  max-height: 25rem;
+}
+.image-placeholder {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: #e8e5dc;
+  color: #4b4e43;
+}
+.canonical-product {
+  padding-bottom: 1rem;
+  overflow-wrap: anywhere;
+}
+.canonical-contacts {
+  margin-top: 1.5rem;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.design-workspace fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 16px;
+}
+.design-workspace legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+.design-workspace .check-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}

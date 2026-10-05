@@ -1,0 +1,185 @@
+{
+  "recordedAt": "2026-10-05T06:33:04.215Z",
+  "method": "Isolated generated database; 20 sequential service samples; 10 warm loopback SSR samples; fixed 20-client/200-request burst; system Chromium at 390x844. No other test suite runs during measurement.",
+  "counts": {
+    "shops": 1506,
+    "products": 150004,
+    "departments": 9004,
+    "designs": 1501
+  },
+  "hardware": {
+    "node": "24.19.0",
+    "os": "linux",
+    "kernel": "6.18.44",
+    "availableParallelism": 4,
+    "cgroupCpuMax": "400000 100000",
+    "cgroupMemoryMax": "34359738368"
+  },
+  "budgets": {
+    "searchP95Ms": 250,
+    "ssrP95Ms": 500,
+    "burstP95Ms": 1500,
+    "gzipHtmlBytes": 81920,
+    "initialJavaScriptBytes": 204800,
+    "initialImageBytes": 358400,
+    "uploadMs": 1000,
+    "workerReadyMs": 5000
+  },
+  "result": "passed",
+  "search": {
+    "samples": 20,
+    "p50Ms": 80.79,
+    "p95Ms": 89.54,
+    "maxMs": 89.54,
+    "commandsPerCall": 4,
+    "selectsPerCall": 1
+  },
+  "shopService": {
+    "samples": 20,
+    "p50Ms": 7.97,
+    "p95Ms": 13.39,
+    "maxMs": 13.39,
+    "commandsPerCall": 7,
+    "selectsPerCall": 4
+  },
+  "http": {
+    "/": {
+      "samples": 10,
+      "p50Ms": 16.62,
+      "p95Ms": 36.64,
+      "maxMs": 36.64,
+      "rawHtmlBytes": 22584,
+      "estimatedGzipHtmlBytes": 4535
+    },
+    "/search?q=shoes": {
+      "samples": 10,
+      "p50Ms": 90.44,
+      "p95Ms": 101.74,
+      "maxMs": 101.74,
+      "rawHtmlBytes": 36003,
+      "estimatedGzipHtmlBytes": 5527
+    },
+    "/shops/annette-fashion-house": {
+      "samples": 10,
+      "p50Ms": 19.98,
+      "p95Ms": 23.57,
+      "maxMs": 23.57,
+      "rawHtmlBytes": 24186,
+      "estimatedGzipHtmlBytes": 4734
+    },
+    "/shops/annette-fashion-house/departments/shoes": {
+      "samples": 10,
+      "p50Ms": 15.91,
+      "p95Ms": 18.36,
+      "maxMs": 18.36,
+      "rawHtmlBytes": 21364,
+      "estimatedGzipHtmlBytes": 4443
+    },
+    "/shops/annette-fashion-house/products/sample-2": {
+      "samples": 10,
+      "p50Ms": 15.93,
+      "p95Ms": 21.97,
+      "maxMs": 21.97,
+      "rawHtmlBytes": 20442,
+      "estimatedGzipHtmlBytes": 4307
+    }
+  },
+  "burst": {
+    "samples": 200,
+    "p50Ms": 151.61,
+    "p95Ms": 524.4,
+    "maxMs": 648.85,
+    "clients": 20,
+    "requests": 200,
+    "errors": 0,
+    "durationMs": 2201.61,
+    "observedRequestsPerSecond": 90.84
+  },
+  "processObservations": {
+    "webBefore": {
+      "rssBytes": 210571264,
+      "cpuSeconds": 1.65
+    },
+    "webAfter": {
+      "rssBytes": 322920448,
+      "cpuSeconds": 3.48
+    },
+    "workerBefore": {
+      "rssBytes": 108822528,
+      "cpuSeconds": 0.42
+    },
+    "workerAfter": {
+      "rssBytes": 109346816,
+      "cpuSeconds": 0.43
+    },
+    "cpuDuringBurstSeconds": 1.84,
+    "limit": "RSS observations before/after burst, not measured peak; process CPU excludes PostgreSQL/browser and is not whole-host utilization."
+  },
+  "transfers": {
+    "/search?q=shoes": {
+      "javascriptEncodedBytes": 141734,
+      "imageEncodedBytes": 0,
+      "horizontalOverflow": false
+    },
+    "/shops/annette-fashion-house/products/sample-2": {
+      "javascriptEncodedBytes": 142107,
+      "imageEncodedBytes": 326,
+      "horizontalOverflow": false
+    }
+  },
+  "media": {
+    "inputWidth": 6000,
+    "inputHeight": 2000,
+    "inputBytes": 162878,
+    "uploadMs": 9.62,
+    "workerReadyMs": 259.17,
+    "variants": [
+      {
+        "variant": "card",
+        "width": 640,
+        "height": 213,
+        "bytes": 326
+      },
+      {
+        "variant": "display",
+        "width": 1280,
+        "height": 427,
+        "bytes": 1054
+      },
+      {
+        "variant": "source",
+        "width": 2048,
+        "height": 683,
+        "bytes": 2580
+      },
+      {
+        "variant": "thumbnail",
+        "width": 320,
+        "height": 107,
+        "bytes": 134
+      }
+    ]
+  },
+  "freshness": {
+    "canonicalWriteAndReadMs": 17.54,
+    "semantics": "Immediate indexed canonical reads; not asynchronous projection or CDN freshness."
+  },
+  "slices": {
+    "validatedRendering": true,
+    "boundedDiscovery": true,
+    "canonicalUpdate": true,
+    "foreignTenantDenied": true,
+    "asynchronousMedia": true,
+    "versionedManualPatch": true
+  },
+  "worker": {
+    "pending": 0,
+    "oldestpendingseconds": null
+  },
+  "limits": [
+    "Synthetic content and solid-color photo; no photographic-quality claim.",
+    "Loopback burst is not capacity, mobile-network or production SLA proof.",
+    "English stemming only; typo/multilingual judgments remain future work.",
+    "No live providers/CDN, production backup restore or approved retention policies."
+  ]
+}

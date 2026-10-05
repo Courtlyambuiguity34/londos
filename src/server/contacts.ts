@@ -1,3 +1,4 @@
+import { eligibleStates, eligibilityJoins } from "./public-eligibility";
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { z } from "zod";
@@ -120,8 +121,8 @@ export async function publicContact(pool: Pool, shopId: string) {
   const row = (
     await pool.query(
       `SELECT s.id,s.merchant_id,s.name,c.phone,c.whatsapp,c.website,c.fulfilment,c.delivery_instructions,c.payment_instructions FROM shops s
-  JOIN shop_contacts c ON c.shop_id=s.id JOIN shop_publication p ON p.shop_id=s.id JOIN tenancies t ON t.shop_id=s.id JOIN shop_moderation m ON m.shop_id=s.id
-  WHERE s.id=$1 AND c.enquiries_enabled AND p.state='active' AND t.state='active' AND m.state='clear'`,
+  JOIN shop_contacts c ON c.shop_id=s.id ${eligibilityJoins}
+  WHERE s.id=$1 AND c.enquiries_enabled AND ${eligibleStates}`,
       [shopId],
     )
   ).rows[0];

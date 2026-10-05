@@ -1,14 +1,14 @@
-# X2: catalogue, contact and media implementation handoff
+# X2: prototype completion and implementation handoff
 
-Current progress: the first local P5 packet is complete; see [X2 evidence](evidence/X2-P5.md). Next within the same X2 setting is P6 safe manual design/preview/publication, then P7 eligible public discovery and the architecture benchmark.
+Current progress: the P5–P7 local architecture prototype is complete: catalogue/contact/private media, strict manual design/private preview/explicit publication, canonical public rendering and eligible PostgreSQL discovery. All 130 tests and the isolated scale experiment passed; see [current evidence](evidence/X2-P6-P7.md) and [P5 evidence](evidence/X2-P5.md). Next is P8 merchant/landlord and tenancy/rent workflows within the same X2 setting. Preserve finished work; do not repeat the historical packet below.
 
-Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2–P4 foundation. Next setting: **Sol 6.1 Extra High**. The owner authorized this stage by instructing **“Continue X2.”** No new setting change is required for P6/P7; model-selector UI remains outside the assistant’s control. This file is a work packet within the [implementation plan](IMPLEMENTATION-PLAN.md), not a replacement or a claim that P5 is complete.
+Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2–P4 foundation. Continuing setting: **Sol 6.1 Extra High**, already confirmed by the owner. No new setting change is required for P8; model-selector UI remains outside the assistant’s control. This file records packets within the [implementation plan](IMPLEMENTATION-PLAN.md); broader feature, provider and release gates remain open.
 
-## Why Extra High next
+## Why keep Extra High
 
-The next dependency is P5's tenant-owned catalogue, sensitive contact settings and media pipeline. These introduce new permission checks, SQL constraints, concurrent edits/quotas and untrusted-file processing. They require the X2 setting. H2 remains useful for routine pages/components after these contracts exist; no separate High stage is needed merely to change models.
+P8 introduces merchant applications, operator decisions, provisioning, rent policy, reconciliation and lifecycle transitions. Continue Extra High for these authorization, financial and concurrency boundaries. Resolve policy/provider decisions through the master plan before enabling live operations. H2 remains useful for routine pages/components after contracts exist; no separate High stage is needed merely to change models.
 
-## Execute in this order
+## Completed first P5 packet: historical execution order
 
 1. **Resume and establish the baseline.** Read BUILD-STATUS, R1-REVIEW, CONTRACTS, DEVELOPMENT and P5–P7. Inspect the current branch and pending changes. Preserve the database volume, credentials and original migrations. Confirm schema 007 and current core readiness; run affected checks when changes begin. Public fixtures remain the current anonymous preview.
 2. **Define the first P5 command contracts.** Specify department/product/service create, read, update, reorder and archive; version conflicts; availability; currency/minor units; limits and role/action permissions. Distinguish ordinary profile fields from sensitive contact/payment instructions. Define merchant and staff grants, scoped support, consistent missing-resource denials and audit payloads. Do not accept client-supplied actors or trusted tenant identifiers.
@@ -21,14 +21,14 @@ The next dependency is P5's tenant-owned catalogue, sensitive contact settings a
 
 ## Acceptance and containment
 
-- The R1 foundation stays passing; the current X2 baseline is 105 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
-- Upload/raw/draft assets stay private. Only validated ready variants may enter a later authorized public rendering path. Tenant identifiers and guessable URLs do not grant object access.
-- Preserve the existing anonymous fictional preview until P6/P7 supply public eligibility and cache-revocation contracts. Catalogue persistence alone does not complete public discovery or publication.
+- The R1 foundation stays passing; the current X2 baseline is 130 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
+- Upload/raw/draft assets stay private. Public ready variants require current canonical eligibility, a published design and an unarchived owned attachment on every request. Tenant identifiers and guessable URLs do not grant private object access.
+- Preserve both tested public modes. `fixtures` supplies the fictional preview; configured local `database` mode renders explicitly published eligible shops. Catalogue persistence alone never publishes a shop. ADR-0005 records canonical indexed reads and no shared response cache; deployment-specific CDN revocation remains unverified.
 - Provider outages create bounded, visible retry/failure states without corrupting canonical data or quotas. Add no unverified live-provider claims.
-- Review any new dependency and lockfile change. Use migrations with upgrade evidence; production publication, remote pushes and live financial operations are not implied by this local work packet.
+- Review any new dependency and lockfile change. Use migrations with upgrade evidence. The owner separately authorized commits/pushes to the new implementation branch; production deployment and live financial operations remain outside this local packet.
 
 ## Remaining sequence
 
-After P5, continue the Annette vertical slice through P6 (safe LSS/manual design, preview, publication) and P7 (eligible public PostgreSQL discovery, targeted invalidation and the architecture benchmark), then close G2. Those boundaries also warrant Sol 6.1 Extra High. P8 rent/provisioning/reconciliation and P10 AI require their own sensitive contracts and policy/provider gates; P9 trust/analytics and P11/P12 performance/recovery/release remain in the master plan. R2 uses **6 Astra Extra High** to review the completed system and release evidence before a separately authorized deployment.
+G2's local six-slice architecture experiment is accepted within the recorded dataset, hardware and load limits. Continue P8 rent/provisioning/reconciliation, then P9 trust/analytics, P10 AI and P11/P12 performance/recovery/release. Complete the wider LSS registry and public catalogue pagination before the full-build gate: current department views initially return 20 products and entrance shelves at most 32 cards. English search does not provide advanced typo or multilingual relevance. R2 uses **6 Astra Extra High** to review the completed system and release evidence before a separately authorized deployment.
 
 If a critical architecture issue remains unresolved, record the concrete decision and evidence, then request the Astra Extra High handoff. Do not switch models invisibly or claim the complete build is finished after one work packet.

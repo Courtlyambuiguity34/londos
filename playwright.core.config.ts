@@ -18,12 +18,12 @@ export default defineConfig({
   projects: [
     {
       name: "core-desktop",
-      testMatch: ["security.spec.ts", "p5.spec.ts"],
+      testMatch: ["security.spec.ts", "p5.spec.ts", "x2.spec.ts"],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "core-mobile",
-      testMatch: ["mobile.spec.ts", "p5-mobile.spec.ts"],
+      testMatch: ["mobile.spec.ts", "p5-mobile.spec.ts", "x2-mobile.spec.ts"],
       use: { ...devices["Pixel 7"] },
     },
   ],
@@ -35,7 +35,7 @@ export default defineConfig({
     env: {
       LONDOS_CORE_ENABLED: "true",
       AUTH_BASE_URL: "http://127.0.0.1:3101",
-      LONDOS_DATA_SOURCE: "fixtures",
+      LONDOS_DATA_SOURCE: "database",
       LONDOS_LOCAL_ADAPTERS: "true",
     },
   },
