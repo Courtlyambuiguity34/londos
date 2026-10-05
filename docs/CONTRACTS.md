@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). P8 implements local application/private-evidence review and development rent/provisioning under [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md), plus local teams/addresses/scoped operations under [ADR-0007](ADR/0007-local-administration-and-shop-addresses.md). Live financial/provider commands and trust policies remain later work. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
+Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). P8 implements local application/private-evidence review and development rent/provisioning under [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md), plus local teams/addresses/scoped operations under [ADR-0007](ADR/0007-local-administration-and-shop-addresses.md). P9 implements local reporting/moderation/appeals and development verification under [ADR-0008](ADR/0008-local-reporting-and-trust-review.md). Live financial/provider commands and production trust policies remain later work. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -11,13 +11,15 @@ Status: initial state records and identity/permission/transaction contracts are 
 | Tenancy | pending, active, due, grace, closed | Verified obligations/events drive state; development timers follow the selected immutable policy; live timing remains unapproved. |
 | Moderation | clear, under_review, suspended | Renewal cannot lift suspension. Only an authorized moderation decision can. |
 | Shop operations | running, paused | Resume removes only the operational hold; it never changes rent, publication or moderation. |
+| Trust case | open, reviewing, suspended, dismissed, reinstated | Reports never auto-hide; versioned decisions aggregate strongest case restriction plus immutable legacy baseline. |
+| Trust appeal | pending, resolved | Fresh owner may appeal a restriction; an independent scoped reviewer clears it without erasing events. |
 | Media | uploaded, validating, processing, ready, rejected, failed, deleted | Quarantined/raw assets are not public ready media. |
 
 Public eligibility must combine current publication, tenancy, moderation, absence of an operational hold and resource visibility. The fixture preview's open/closed/suspended flags are demonstration data, not the implemented policy engine. The local shared eligibility rule permits active/due/grace tenancy only with active publication, clear moderation and no hold; rendered shops/search require a published design. Old-slug/immutable-ID resolution uses the same eligibility before any redirect. Live grace/notice/rent/retention policies still require owner approval.
 
 ## Permission matrix and implementation boundary
 
-This matrix includes planned capabilities. X1/R1 implement profile/membership/invitation/ownership and job metadata/replay. X2 adds catalogue, contact/request and private media commands, scoped operator support reads and audited contact recovery. Design/preview/publish commands now use separate grants, immutable scoped revisions and fresh publication authentication. P8 adds owner applications/private evidence and separately scoped review/finance commands with native MFA, fresh authority and anti-self-review rules. Live reports/verification and broader administration remain later work. Each new action needs its own grant, scope and attack tests.
+This matrix includes planned capabilities. X1/R1 implement profile/membership/invitation/ownership and job metadata/replay. X2 adds catalogue, contact/request and private media commands, scoped operator support reads and audited contact recovery. Design/preview/publish commands now use separate grants, immutable scoped revisions and fresh publication authentication. P8 adds owner applications/private evidence and separately scoped review/finance commands with native MFA, fresh authority and anti-self-review rules. Local owner teams/addresses, scoped operations and reporting/moderation/appeals are now implemented. Broader recovery, analytics/privacy and live reports/verification remain later work. Each new action needs its own grant, scope and attack tests.
 
 | Action | Merchant owner | Staff | Operator |
 |---|---|---|---|
@@ -29,7 +31,9 @@ This matrix includes planned capabilities. X1/R1 implement profile/membership/in
 | Change shop address | Owner plus step-up, version, reason and confirmation | No | No implicit operations/support authority |
 | Move mall or pause/resume | No | No | Operations permission, separate shop scope, native fresh MFA, version, reason, confirmation; no self-administration |
 | Approve/provision/suspend/reinstate | No | No | Specific operator permission, MFA, reason and audit |
-| Read private evidence/reports | Only policy-approved own records | No implicit permission | Least-privilege verification/trust permission |
+| Read private application evidence | Own application, fresh authority | No | Separate application-review permission/claim and fresh MFA |
+| Read report/image/notes and decide | No | No | Moderation permission, distinct case scope, native fresh MFA and no merchant self-membership |
+| Read redacted trust decisions / appeal | Own shop, fresh owner authority | No | No implicit owner access; separate case authority for review |
 
 Every server read/action validates actor, permission and actual resource ownership. The browser does not supply trusted roles. Operator access is separated from ordinary merchant membership. With core services disabled, demo portal pages show no private data/actions. With explicit local core configuration, protected profiles/security/operator job views enforce these policies. Staff additionally require a per-shop grant; operator support requires a shop scope; P8 review/finance requires a distinct claimed application scope, also before a shop exists.
 
@@ -63,6 +67,16 @@ Full first settlement finalizes coverage once and atomically provisions an unpub
 
 Only P8 contracts enter scheduling. Current worker time and canonical coverage/credits drive reminders, due/grace/closed transitions and reopening; stale payloads carry no paid-through authority. Renewal/correction cannot publish drafts or lift moderation. Fixed-day development policy, bounded private image evidence and operational limits are detailed in ADR-0006. Production policy/provider callbacks remain separate work.
 
+## Local reporting and trust review contract
+
+[ADR-0008](ADR/0008-local-reporting-and-trust-review.md) defines the P9 local boundary. Anonymous intake uses exact origin, bounded JSON, atomic budgets, retry keys and a hashed private attachment capability. It returns a generic receipt for known/unknown shop IDs without private target metadata. Reports do not automatically hide shops. One bounded normalized image can be uploaded before claim within 30 minutes; it is immutable and readable only by a scoped reviewer with fresh native MFA.
+
+The `moderation` permission requires a distinct claimed `operator_trust_scopes` case. It grants no application evidence, finance, recovery or operations authority. Cases keep private report/notes separate from merchant-facing decision reasons. Current authorization is rechecked after merchant-lock waits. Decisions compare case and canonical moderation versions and commit state, append-only history/audit and private owner notice jobs atomically.
+
+Each case contributes its own restriction. Strongest restriction wins together with an immutable captured legacy baseline; clearing one case cannot lift another. External moderation changes conflicting with computed state fail closed. Fresh owners receive redacted own-shop decisions and may submit a versioned appeal; a different reviewer must clear the last reviewer’s restriction. Restoration changes no rent, publication or operational hold. Guest enquiry intake uses the shared canonical eligibility rule.
+
+Public verification is derived only from an approved P8 application, its provisioned shop and private reviewed evidence. The displayed claim is “Development application reviewed”, with explicit fictional/local limits and no identity/product/payment guarantee. It exposes no application fields or evidence and cannot be supplied by merchant LSS/profile content. Production verification/moderation/retention policies remain separate gates.
+
 ## Interface progress
 
 - Implemented: current actor/session/action/shop permission resolver with explicit denial.
@@ -72,4 +86,4 @@ Only P8 contracts enter scheduling. Current worker time and canonical coverage/c
 - Implemented: closed LSS schema 1 and prototype registry, owned references, immutable drafts, manual patches, private previews, version-checked publication and restoration as a new draft.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 
-R1, the local X2/P5–P7 prototype, [P8 local lifecycle](evidence/X2-P8.md) and [administration](evidence/X2-P8-ADMIN.md) are verified. Continue **Sol 6.1 Extra High with P9**, extending each command’s grant/scope/policy contract before implementation. Final system/release review remains **6 Astra Extra High R2**.
+R1, the local X2/P5–P7 prototype, [P8 local lifecycle](evidence/X2-P8.md), [administration](evidence/X2-P8-ADMIN.md) and [local P9 trust](evidence/X2-P9.md) are verified. Continue **Sol 6.1 Extra High with remaining P9**, extending each command’s grant/scope/policy contract before implementation. Final system/release review remains **6 Astra Extra High R2**.

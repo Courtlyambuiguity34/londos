@@ -1,0 +1,68 @@
+{
+  "recordedAt": "2026-10-05T19:36:12.563Z",
+  "source": "database",
+  "migration": "012_local_reporting_and_trust.sql",
+  "moderationGrant": "Explicit guarded setup for the existing fictional operator and a preserved independent fictional reviewer; ordinary seed permissions unchanged.",
+  "independentReviewerSetup": {
+    "repeatabilityPassed": true,
+    "existingPrivateFilesPreserved": true,
+    "reviewerGrants": [
+      "moderation"
+    ],
+    "merchantMemberships": 0,
+    "nativeMfaRequired": true
+  },
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "cacheControl": "no-store",
+      "referrerPolicy": "strict-origin-when-cross-origin",
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 23125,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/report/30000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 14801,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/trust",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/trust",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "body": {
+        "error": "authentication_required"
+      }
+    }
+  ],
+  "limit": "Current local runtime only; no live moderation/support/collection, production recovery or future task persistence claim."
+}

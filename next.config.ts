@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
         "/landlord/:path*",
         "/security",
         "/contact/:path*",
+        "/report/:path*",
         "/api/guest/:path*",
         "/api/public/:path*",
         "/shops/:path*",

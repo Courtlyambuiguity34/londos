@@ -56,8 +56,26 @@ test("manual templates, private preview, publication, canonical rollback and ano
     spaces.find((s) => departments.find((d) => d.id === s.departmentId)?.name === name)!.id;
   await page.getByLabel("Move section", { exact: true }).selectOption(section("Shoes"));
   await page.getByLabel("Before section", { exact: true }).selectOption(section("Handbags"));
+  let releasePatch!: () => void;
+  const patchPending = new Promise<void>((resolve) => {
+    releasePatch = resolve;
+  });
+  await page.route(`**${root}/patch`, async (route) => {
+    await patchPending;
+    await route.continue();
+  });
   await page.getByRole("button", { name: "Move section in draft", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Saving draft…");
+  await expect(
+    page.getByRole("button", { name: "Preview saved draft", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Preview saved draft", exact: true })).toHaveCount(0);
+  releasePatch();
   await expect(page.getByRole("status")).toHaveText("Draft saved. Preview before publishing.");
+  await page.unroute(`**${root}/patch`);
+  await expect(
+    page.getByRole("link", { name: "Preview saved draft", exact: true }),
+  ).toHaveAttribute("href", `/shopkeeper/shops/${seedIds.shopA}/preview?revision=2`);
   await page.getByRole("link", { name: "Preview saved draft", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Annette Fashion House", exact: true }),

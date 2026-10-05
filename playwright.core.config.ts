@@ -18,7 +18,14 @@ export default defineConfig({
   projects: [
     {
       name: "core-desktop",
-      testMatch: ["security.spec.ts", "p5.spec.ts", "x2.spec.ts", "p8.spec.ts", "zz-admin.spec.ts"],
+      testMatch: [
+        "security.spec.ts",
+        "p5.spec.ts",
+        "x2.spec.ts",
+        "p8.spec.ts",
+        "zz-admin.spec.ts",
+        "zzz-trust.spec.ts",
+      ],
       use: { ...devices["Desktop Chrome"] },
     },
     {
@@ -29,6 +36,7 @@ export default defineConfig({
         "x2-mobile.spec.ts",
         "p8-mobile.spec.ts",
         "admin-mobile.spec.ts",
+        "trust-mobile.spec.ts",
       ],
       use: { ...devices["Pixel 7"] },
     },

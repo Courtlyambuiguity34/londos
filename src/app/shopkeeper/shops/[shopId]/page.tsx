@@ -54,6 +54,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       </Link>
       {setup.role === "owner" ? (
         <>
+          <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/trust`}>
+            Trust decisions and appeals
+          </Link>
           <h2>Shop address</h2>
           <Link className="button button--outline" href={`/shopkeeper/shops/${shop.id}/address`}>
             Change shop address

@@ -2,7 +2,7 @@
 
 Status: implementation authorized; progress and model handoffs are tracked in [BUILD-STATUS](BUILD-STATUS.md) and [RECOMMENDATIONS](../RECOMMENDATIONS.md).
 
-Current progress (2026-10-05, Africa/Kampala): H, X1 and R1 are complete. The **P5–P7 prototype and P8 local lifecycle/administration packets are verified**, now with [160 passing tests and preserved migration data](evidence/X2-P8-ADMIN.md). G2 remains accepted within its historical experiment limits. Continue **P9 at the already confirmed Sol 6.1 Extra High** setting. Wider LSS/public pagination, trust/AI features, partial accounting/arrangement obligations, live policies/providers and release gates remain open.
+Current progress (2026-10-05, Africa/Kampala): H, X1 and R1 are complete. **P5–P8 local packets and P9’s local reporting/moderation/appeals/development verification packet are verified**, with [180 passing tests and preserved migration data](evidence/X2-P9.md). G2 remains accepted within its historical experiment limits. Continue **remaining P9 at the already confirmed Sol 6.1 Extra High** setting. Broader incidents/recovery, analytics/retention/export/costs, wider LSS/public pagination, AI, partial accounting/arrangement obligations, live policies/providers and release gates remain open.
 
 Prepared: 2026-10-04. Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
 
@@ -270,7 +270,7 @@ X1 implements and R1 reviews/corrects the initial security foundation under P2�
 
 **Depends on:** P3–P5. **Produces:** the first coherent merchant-to-customer rendering path.
 
-**Local prototype verified:** [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md) and [P6–P7 evidence](evidence/X2-P6-P7.md). Checked items certify only the bounded local registry/read paths. P6.3 remains partial: department/product shelves, stories and contacts are implemented; the wider approved registry is required before G4. P6.7 remains partial: platform navigation, safe legacy/closed fallback and explicit unavailable-report disclosure work; real report delivery/verification/moderation remains P9. P6.8 uses current no-store canonical reads without shared response/CDN cache; remote CDN/router persistence needs deployment-specific P12 evidence. Public department views initially return 20 products and entrance shelves at most 32 cards; complete wider catalogue pagination before G4/P11.
+**Local prototype verified:** [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md) and [P6–P7 evidence](evidence/X2-P6-P7.md). Checked items certify only the bounded local registry/read paths. P6.3 remains partial: department/product shelves, stories and contacts are implemented; the wider approved registry is required before G4. P6.7 remains partial. Platform navigation, safe legacy/closed fallback, public reporting/scoped moderation and truthful development verification now have local [P9 evidence](evidence/X2-P9.md). The wider registry and complete closure/fallback acceptance remain open, along with live trust policy. P6.8 uses current no-store canonical reads without shared response/CDN cache; remote CDN/router persistence needs deployment-specific P12 evidence. Public department views initially return 20 products and entrance shelves at most 32 cards; complete wider catalogue pagination before G4/P11.
 
 - [x] P6.1 Turn the illustrative schema into a versioned runtime contract with matching TypeScript types and component-specific discriminated properties. Close unrestricted fields deliberately. Constrain themes, URLs, rich text, SEO and extensions; reject unsupported schema/component versions.
 - [x] P6.2 Add semantic validation: unique space IDs, valid navigation destinations, tenant-owned eligible references, required per-component properties, bounded queries and total complexity limits. Fifty spaces each containing thirty components is not automatically an acceptable page budget.
@@ -332,8 +332,11 @@ X1 implements and R1 reviews/corrects the initial security foundation under P2�
 
 **Depends on:** P8. **Produces:** a trustworthy and measurable pilot product.
 
-- [ ] P9.1 Implement public reporting, abuse protection, scoped moderation cases, investigation, suspension, appeal/review and reasoned reinstatement. Verify report attachments and identity evidence remain private.
-- [ ] P9.2 Keep verification badges platform-controlled and truthful about what was verified. Present merchant commerce responsibilities accurately and make safety/report controls accessible.
+- [x] P9.1 Implement public reporting, abuse protection, scoped moderation cases, investigation, suspension, appeal/review and reasoned reinstatement. Verify report attachments and identity evidence remain private.
+- [x] P9.2 Keep verification badges platform-controlled and truthful about what was verified. Present merchant commerce responsibilities accurately and make safety/report controls accessible.
+
+Local P9.1/P9.2 acceptance is recorded in [ADR-0008](ADR/0008-local-reporting-and-trust-review.md) and [P9 evidence](evidence/X2-P9.md): fictional loopback workflows only, separate scopes/native MFA, private immutable image/report history, redacted owner appeals, independent reinstatement and a truthful development application-review disclosure. Production moderation/verification/legal retention/support policy remains open; these checked items do not authorize a live service. P9.3 is partial: prioritized trust/appeal queue exists; broader queue ownership/escalation is still required.
+
 - [ ] P9.3 Implement prioritized operator queues for security, fraud, account recovery, payment exceptions, verification, moderation and support. Define escalation, response ownership and safe overrides.
 - [ ] P9.4 Implement account recovery and contact/payment-change incident procedures, with session revocation and audit. Do not let ordinary support access bypass sensitive-change controls.
 - [ ] P9.5 Instrument the eleven pilot events: `mall_visit`, `search_submitted`, `search_results_viewed`, `shop_result_clicked`, `shop_viewed`, `department_viewed`, `product_viewed`, `contact_action_clicked`, `direct_link_entry`, `merchant_publish`, `merchant_catalogue_update`.
@@ -639,6 +642,6 @@ This matrix prevents less visible requirements from disappearing as implementati
 
 P0 decision reconciliation and P1–P4 foundation/review are complete at their documented local scope; preserve those decisions and finished work. The P5–P7 local prototype now has passing functional/security evidence and measured G2 results.
 
-Continue P8 at Sol 6.1 Extra High, resolving D04/D07/D08 policy contracts before dependent live operations. Complete P8–P12, the wider component registry and public catalogue pagination before declaring the requested build/release dossier complete; use P13 for subsequent investment decisions.
+Continue remaining P9 at Sol 6.1 Extra High, preserving completed local P5–P9 trust work and resolving D04/D07/D08 policy contracts before dependent live operations. Complete remaining P8 policy/accounting obligations and P9–P12, the wider component registry and public catalogue pagination before declaring the requested build/release dossier complete; use P13 for subsequent investment decisions.
 
 At each checkpoint, report what is now demonstrably possible, the exact evidence, remaining limitations and the next dependency. Update this plan as requirements change, retaining the reason for each material scope or architecture decision.

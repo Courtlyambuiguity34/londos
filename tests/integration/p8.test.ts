@@ -1001,6 +1001,7 @@ test("administrative pause gates shop, alias, discovery, contact and ready image
     });
   await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true });
   const slug = (await readPublicShop(pool, shop)).shop.slug;
+  expect((await readPublicShop(pool, shop)).applicationReviewed).toBe(true);
   expect(await readPublicVariant(pool, shop, asset, "display")).toEqual(display);
   await claimOperations(pool, actors.operator!, shop, {
     reason: "Private investigation fixture",

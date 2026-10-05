@@ -48,6 +48,7 @@ export type ShopView = {
   products: PublicProduct[];
   contact: PublicContact | null;
   privatePreview: boolean;
+  applicationReviewed: boolean;
   selectedDepartment: PublicDepartment | null;
   selectedProduct: PublicProduct | null;
   missingDestination: boolean;
@@ -155,6 +156,14 @@ async function assemble(
     products,
     contact,
     privatePreview,
+    applicationReviewed: Boolean(
+      (
+        await client.query(
+          "SELECT 1 FROM applications a WHERE a.provisioned_shop_id=$1 AND a.state='approved' AND EXISTS(SELECT 1 FROM application_evidence e WHERE e.application_id=a.id)",
+          [row.id],
+        )
+      ).rowCount,
+    ),
     selectedDepartment,
     selectedProduct: destination.product ? (products[0] ?? null) : null,
     missingDestination: Boolean(

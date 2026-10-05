@@ -157,7 +157,7 @@ export async function submitGuestRequest(
     if (!lookup) throw new AccessError(404, "resource_unavailable");
     await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [lookup.merchant_id]);
     const eligible = await client.query(
-      `SELECT 1 FROM shop_contacts c JOIN shop_publication p ON p.shop_id=c.shop_id JOIN tenancies t ON t.shop_id=c.shop_id JOIN shop_moderation m ON m.shop_id=c.shop_id WHERE c.shop_id=$1 AND c.enquiries_enabled AND p.state='active' AND t.state='active' AND m.state='clear'`,
+      `SELECT 1 FROM shops s JOIN shop_contacts c ON c.shop_id=s.id ${eligibilityJoins} WHERE s.id=$1 AND c.enquiries_enabled AND ${eligibleStates}`,
       [shopId],
     );
     if (!eligible.rowCount) throw new AccessError(404, "resource_unavailable");

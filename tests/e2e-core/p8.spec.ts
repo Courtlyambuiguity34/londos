@@ -221,6 +221,9 @@ test("owner application, native MFA review, partial settlement, publication, rev
     const shop = await (await page.request.get(`/api/workspace/shops/${shopId}`)).json();
     await publicPage.goto(`/shops/${shop.slug}`);
     await expect(
+      publicPage.getByText("Development application reviewed.", { exact: false }),
+    ).toBeVisible();
+    await expect(
       publicPage.getByRole("heading", { name: businessName, exact: true }),
     ).toBeVisible();
     await publicPage.goto("/search?q=shoes");

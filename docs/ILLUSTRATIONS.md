@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. Live providers, trust moderation, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. P9 adds local anonymous reporting, scoped moderation, independent appeals and truthful development verification. Live providers, remaining recovery/privacy/analytics, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -143,7 +143,8 @@ flowchart LR
   P6 --> P7[P7 eligible public discovery and benchmark]
   P7 --> P8[P8 local applications and development rent]
   P8 --> Admin[P8 local teams, addresses and scoped operations]
-  Admin --> Next[P9 trust and analytics, then later gates before Astra R2 review]
+  Admin --> Trust[P9 local reporting, moderation and independent appeals]
+  Trust --> Next[Remaining P9 recovery, privacy and analytics before later gates and Astra R2]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.
@@ -302,3 +303,47 @@ flowchart TD
 ```
 
 Resume removes only the hold. It cannot credit an invoice, renew rent, publish a draft or clear moderation. Capacity moves preserve identity, address, ownership, catalogue and financial history. [Administration evidence](evidence/X2-P8-ADMIN.md) records races, scoped HTTP/Flight denial, upgrade preservation and inspected [desktop team](evidence/images/x2-p8-team-desktop.png), [desktop operations](evidence/images/x2-p8-operations-desktop.png) and [mobile team](evidence/images/x2-p8-team-mobile.png) captures. All pictured data is fictional.
+
+## Implemented P9 private reporting and review
+
+```mermaid
+flowchart TD
+  Customer[Anonymous fictional concern] --> Intake[Exact origin, bounded body, atomic budgets and UUID retry key]
+  Intake --> Receipt[Generic received receipt without private target or case metadata]
+  Intake --> Report[(Immutable report and case; no automatic restriction)]
+  Customer --> Capability[Private browser-memory capability; only hash stored]
+  Capability --> Image[One image within 30 minutes before any claim]
+  Image --> Decode[Secure bounded decode and metadata-free WebP]
+  Decode --> Private[(Immutable private image; raw bytes discarded)]
+  Reviewer[Native fresh MFA and moderation permission] --> Claim[Reasoned case claim; reject merchant self-membership]
+  Claim --> Scope[(Distinct trust-case scope; freeze upload)]
+  Scope --> Read[Private report, image, notes and bounded history]
+  Report --> Read
+  Private --> Read
+  Read --> Decide[Confirmed current case and moderation versions; recheck after merchant lock]
+  Decide --> Commit[(Atomic case, moderation, audit, events and private owner notice)]
+```
+
+Report/capability text never enters public rendering or local notice payloads. Finance/support/operations grants and scopes do not substitute for a trust case. Public badge state is derived separately from approved P8 application review and disclosed only as a fictional development review.
+
+## Implemented P9 appeals and independent eligibility
+
+```mermaid
+flowchart TD
+  Owner[Fresh own-shop owner] --> Redacted[Merchant-facing decisions; private report and notes omitted]
+  Redacted --> Appeal[Confirmed versioned appeal; one pending]
+  Appeal --> Second[Different reviewer with native fresh MFA and claimed case]
+  Second --> Clear[Reasoned reinstatement removes only this case restriction]
+  Clear --> Strongest{Strongest remaining case plus immutable legacy baseline}
+  Other[Other case restrictions] --> Strongest
+  Legacy[Captured legacy moderation] --> Strongest
+  Strongest --> Moderation[Canonical shop moderation]
+  Moderation --> Eligibility{Published design, eligible tenancy, clear moderation and no hold?}
+  Rent[Unchanged canonical tenancy and financial history] --> Eligibility
+  Publication[Unchanged explicit publication] --> Eligibility
+  Hold[Independent operational hold] --> Eligibility
+  Eligibility -->|Yes| Public[Shop, aliases, search, contact, guest intake and ready media]
+  Eligibility -->|No| Hidden[Public disclosure or intake denied]
+```
+
+External moderation conflicts fail closed; clearing one case cannot clear another or a captured legacy restriction. [P9 evidence](evidence/X2-P9.md) records inspected [desktop report](evidence/images/x2-p9-report-desktop.png), [private review](evidence/images/x2-p9-review-desktop.png) and [mobile report](evidence/images/x2-p9-report-mobile.png) captures. All pictured content is fictional; no authentication secrets are pictured.

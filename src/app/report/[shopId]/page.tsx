@@ -1,0 +1,23 @@
+import { notFound } from "next/navigation";
+import { z } from "zod";
+import { coreConfigured, coreConfig } from "@/server/config";
+import { PublicReportForm } from "@/components/trust-controls";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Report a shop concern" };
+export default async function Page({ params }: { params: Promise<{ shopId: string }> }) {
+  if (!coreConfigured() || !coreConfig().localAdapters) notFound();
+  const shopId = z.uuid().safeParse((await params).shopId);
+  if (!shopId.success) notFound();
+  return (
+    <section className="shell page-section account-page">
+      <p className="eyebrow">Londos customer safety</p>
+      <h1>Report a shop concern</h1>
+      <p>
+        Describe a concern for private platform review. Reporting does not automatically close a
+        shop. This local development service cannot provide emergency assistance or live dispute
+        resolution.
+      </p>
+      <PublicReportForm shopId={shopId.data} />
+    </section>
+  );
+}

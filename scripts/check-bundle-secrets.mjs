@@ -9,6 +9,8 @@ if (existsSync(".local/development-accounts.json")) {
   ))
     values.push(account.password);
 }
+if (existsSync(".local/trust-reviewer.json"))
+  values.push(JSON.parse(readFileSync(".local/trust-reviewer.json", "utf8")).password);
 const needles = values
   .filter((value) => typeof value === "string" && value.length >= 12)
   .map((value) => Buffer.from(value));

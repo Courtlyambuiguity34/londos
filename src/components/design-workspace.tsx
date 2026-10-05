@@ -46,6 +46,13 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
   }, [refresh]);
   async function command(path: string, body: unknown, method = "POST") {
     setBusy(true);
+    setStatus(
+      path === "/publish"
+        ? "Publishing shop…"
+        : path === "/unpublish"
+          ? "Unpublishing shop…"
+          : "Saving draft…",
+    );
     try {
       const response = await fetch(`${root}${path}`, {
         method,
@@ -274,12 +281,19 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
               Move section in draft
             </button>
           </form>
-          <Link
-            className="button button--outline"
-            href={`/shopkeeper/shops/${shopId}/preview?revision=${state.revision}`}
-          >
-            Preview saved draft
-          </Link>
+          {busy ? (
+            <button className="button button--outline" disabled>
+              Preview saved draft
+            </button>
+          ) : (
+            <Link
+              className="button button--outline"
+              href={`/shopkeeper/shops/${shopId}/preview?revision=${state.revision}`}
+              prefetch={false}
+            >
+              Preview saved draft
+            </Link>
+          )}
           <h2>Publish</h2>
           <p>
             Publishing makes the shop's approved catalogue and contact details visible. Preview the

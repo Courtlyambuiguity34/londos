@@ -66,10 +66,12 @@ export default function AboutPage() {
       <section id="report" className="notice">
         <h2>Report a concern</h2>
         <p>
-          Public support and moderation reporting are being prepared. Do not send sensitive
-          information to a merchant enquiry when reporting a platform problem. No live report
-          delivery is available in this development mall.
+          Configured local shops provide a private “Report a concern” form for scoped platform
+          review. Do not send a platform concern through a merchant enquiry. Use fictional
+          information; live support, emergency assistance and dispute resolution are unavailable
+          here.
         </p>
+        <Link href="/report">How to report a shop concern</Link>
       </section>
     </div>
   );

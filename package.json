@@ -35,7 +35,8 @@
     "test:e2e:core": "tsx scripts/e2e-core.ts",
     "benchmark:x2": "tsx scripts/benchmark-x2.ts",
     "worker:dev": "tsx src/worker/main.ts",
-    "check:bundle-secrets": "node scripts/check-bundle-secrets.mjs"
+    "check:bundle-secrets": "node scripts/check-bundle-secrets.mjs",
+    "db:trust": "tsx scripts/enable-local-trust.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",

@@ -129,6 +129,12 @@ export function CanonicalShop({ view }: { view: ShopView }) {
         </header>
       ) : null}
       {!view.privatePreview ? <SearchForm shopId={view.shop.id} maxLength={80} /> : null}
+      {view.applicationReviewed ? (
+        <p className="notice">
+          Development application reviewed. This fictional local review does not guarantee identity,
+          products or payments.
+        </p>
+      ) : null}
       {view.missingDestination ? (
         <EmptyState
           title="This item has moved or is unavailable."
@@ -200,7 +206,15 @@ export function CanonicalShop({ view }: { view: ShopView }) {
       ) : null}
       <aside className="shop-contact-note">
         <p>This development mall uses fictional merchants. No payment is collected by Londos.</p>
-        <Link href="/about#report">Report a concern or contact Londos</Link>
+        <p>
+          Merchant terms apply to purchases and fulfilment. A contact action is not a confirmed
+          sale.
+        </p>
+        {!view.privatePreview ? (
+          <Link prefetch={false} href={`/report/${view.shop.id}`}>
+            Report a concern about this shop
+          </Link>
+        ) : null}
       </aside>
     </div>
   );

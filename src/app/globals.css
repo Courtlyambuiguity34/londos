@@ -2075,3 +2075,8 @@ button:disabled {
 .workspace-list li {
   overflow-wrap: anywhere;
 }
+
+.trust-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
