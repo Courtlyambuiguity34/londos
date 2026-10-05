@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** X2’s local application/rent lifecycle is verified with **149 passing tests**, building on the completed P5–P7 prototype. Development rent is configurable: **UGX 5,000 per 30 days, seven days’ grace, manual operator reconciliation; live collection disabled**. Continue remaining P8 administration at **Sol 6.1 Extra High**. The build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). See [BUILD-STATUS](docs/BUILD-STATUS.md) for verified capabilities and remaining gates.
+**Status:** X2’s local P8 lifecycle and administration packets are verified with **160 passing tests**, building on the completed P5–P7 prototype. Development rent is configurable: **UGX 5,000 per 30 days, seven days’ grace, manual operator reconciliation; live collection disabled**. Next is P9 trust and analytics at **Sol 6.1 Extra High**. The build follows the Next.js / TypeScript / Node.js / PostgreSQL instruction in [prompt.txt](prompt.txt). See [BUILD-STATUS](docs/BUILD-STATUS.md) for verified capabilities and remaining gates.
 
 ## Recommendations
 
@@ -23,9 +23,9 @@ For production-mode validation, run `npm run build` then `npm run start`. Run `n
 
 Public browsing defaults to fictional fixtures. With the configured local core and `LONDOS_DATA_SOURCE=database`, X2 renders eligible published PostgreSQL shops, bounded shop-first search and processed ready images. Merchants can edit catalogues/contacts, upload private images, save safe manual designs, preview privately and explicitly publish immutable revisions. Opted-in guest enquiries have a scoped private inbox and local notifications. Owners can now apply with private evidence; scoped MFA operators review and manually reconcile development rent, provision shops and manage credit reversals. Scheduled reminders, grace/closure and verified renewal preserve moderation. Purchases, live rent/providers, AI and production release remain later gates.
 
-For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Run `npm run db:p8` after migration/seed to grant development reconciliation to the existing fictional operator; real MFA is still required. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
+For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Run `npm run db:p8` for development reconciliation and `npm run db:operations` for local shop administration after migration/seed; these explicitly grant only the existing fictional operator, and real MFA is still required. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
-Continue **X2 / remaining P8 at Sol 6.1 Extra High**; no setting change is needed. Read [P8 lifecycle evidence](docs/evidence/X2-P8.md), [prototype evidence](docs/evidence/X2-P6-P7.md) and [X2 handoff](docs/X2-HANDOFF.md). Guided administration, occupancy/exception tools, slug changes and mall reassignment are next; the full build and production gates remain open.
+Owners can manage teams, accept private invitations, grant staff access per shop and change shop addresses while retaining old links. Scoped MFA operators can view occupancy and finance exceptions, move shops between malls and pause/resume visibility with reasons and audit. Resume still requires valid tenancy, publication and moderation. Read [P8 administration evidence](docs/evidence/X2-P8-ADMIN.md), [lifecycle evidence](docs/evidence/X2-P8.md) and [X2 handoff](docs/X2-HANDOFF.md). Continue **P9 at Sol 6.1 Extra High**; no setting change is needed. Live policies/providers and full-build/release gates remain open.
 
 ## What Londos is
 
@@ -189,6 +189,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)
 - [X2 implementation handoff](docs/X2-HANDOFF.md)
 - [P8 local lifecycle verification and screenshots](docs/evidence/X2-P8.md)
+- [P8 administration verification and screenshots](docs/evidence/X2-P8-ADMIN.md)
+- [Local administration and shop addresses ADR](docs/ADR/0007-local-administration-and-shop-addresses.md)
 - [Local applications and rent lifecycle ADR](docs/ADR/0006-local-applications-and-rent-lifecycle.md)
 - [X2 P5 verification and screenshots](docs/evidence/X2-P5.md)
 - [X2 P6–P7 verification, scale measurements and screenshots](docs/evidence/X2-P6-P7.md)

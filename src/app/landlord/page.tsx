@@ -72,6 +72,16 @@ export default async function LandlordPage() {
         <Link className="button" href="/security">
           Account security
         </Link>
+        {grants.some((g) => g.permission === "operations") ? (
+          <Link className="button" href="/landlord/operations">
+            Mall and shop operations
+          </Link>
+        ) : null}
+        {grants.some((g) => g.permission === "finance") ? (
+          <Link className="button button--outline" href="/landlord/rent-exceptions">
+            Outstanding rent and corrections
+          </Link>
+        ) : null}
         <SignOutButton />
       </div>
     </section>

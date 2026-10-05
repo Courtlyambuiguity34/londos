@@ -176,7 +176,7 @@ export async function readPublicShop(
     await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
     const row = (
       await client.query(
-        `SELECT s.id,s.name,s.slug,s.tagline,s.version,s.category,r.design,r.revision FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id JOIN shop_revisions r ON r.id=sd.published_id AND r.shop_id=s.id WHERE (s.slug=$1 OR s.id::text=$1) AND ${eligibleStates} LIMIT 1`,
+        `SELECT s.id,s.name,s.slug,s.tagline,s.version,s.category,r.design,r.revision FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id JOIN shop_revisions r ON r.id=sd.published_id AND r.shop_id=s.id WHERE (s.slug=$1 OR s.id::text=$1 OR EXISTS(SELECT 1 FROM shop_addresses sa WHERE sa.slug=$1 AND sa.shop_id=s.id)) AND ${eligibleStates} LIMIT 1`,
         [key],
       )
     ).rows[0];

@@ -37,6 +37,12 @@ export default async function ShopkeeperPage() {
         <Link className="button" href="/security">
           Account security
         </Link>
+        <Link className="button button--outline" href="/shopkeeper/team">
+          Manage your teams
+        </Link>
+        <Link className="text-button" href="/shopkeeper/invitations">
+          Accept an invitation
+        </Link>
         <SignOutButton />
       </div>
     </section>

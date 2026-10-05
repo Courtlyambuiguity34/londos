@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-05T16:05:54.699Z",
+  "source": "database",
+  "migration": "011_local_administration_and_addresses.sql",
+  "operationsGrant": "Explicit guarded grant to the existing fictional operator; no default seed change.",
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 22815,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "bytes": 17581,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/workspace/merchants",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/operator/malls",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/operator/shops",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    },
+    {
+      "path": "/api/operator/rent-exceptions",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "body": {
+        "error": "authentication_required"
+      }
+    }
+  ],
+  "limit": "Current local runtime only; no live-provider, production capacity, restore drill or future task persistence claim."
+}

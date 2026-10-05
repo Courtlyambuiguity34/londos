@@ -7,7 +7,7 @@ export type Actor = Readonly<{ userId: string; sessionId: string }>;
 export type MerchantPermission =
   "catalogue" | "design" | "publish" | "finance" | "sensitive" | "membership";
 export type OperatorPermission =
-  "support" | "review" | "finance" | "moderation" | "recovery" | "jobs";
+  "support" | "review" | "finance" | "moderation" | "recovery" | "jobs" | "operations";
 export async function resolveActor(authentication: Auth, headers: Headers): Promise<Actor> {
   const result = await authentication.api.getSession({
     headers,

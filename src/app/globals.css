@@ -2062,3 +2062,16 @@ button:disabled {
     margin-bottom: 12px;
   }
 }
+
+.account-form fieldset {
+  min-width: 0;
+  max-width: 100%;
+  padding: 16px;
+}
+.account-form legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+.workspace-list li {
+  overflow-wrap: anywhere;
+}

@@ -1,6 +1,6 @@
 # Domain contracts for the next implementation stage
 
-Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). P8 implements local application/private-evidence review and development rent/provisioning under [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md). Administrative completion and live financial/provider commands remain later work. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
+Status: initial state records and identity/permission/transaction contracts are backed by X1 code and corrected/verified in [R1](evidence/R1-REVIEW.md). X2 adds reviewed local catalogue/contact/request/private-media commands; see [ADR-0004](ADR/0004-catalogue-contact-and-private-media.md). X2 also implements the local LSS/publication, canonical PostgreSQL discovery and eligible ready-image paths; see [ADR-0005](ADR/0005-safe-design-and-canonical-public-reads.md). P8 implements local application/private-evidence review and development rent/provisioning under [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md), plus local teams/addresses/scoped operations under [ADR-0007](ADR/0007-local-administration-and-shop-addresses.md). Live financial/provider commands and trust policies remain later work. See [ADR-0003](ADR/0003-identity-and-durable-jobs.md) and [X1-SECURITY](X1-SECURITY.md).
 
 ## State separation
 
@@ -10,9 +10,10 @@ Status: initial state records and identity/permission/transaction contracts are 
 | Shop publication | provisioning, unpublished, active, temporarily_closed, archived | Immutable shop identity is independent of slug and internal mall placement. |
 | Tenancy | pending, active, due, grace, closed | Verified obligations/events drive state; development timers follow the selected immutable policy; live timing remains unapproved. |
 | Moderation | clear, under_review, suspended | Renewal cannot lift suspension. Only an authorized moderation decision can. |
+| Shop operations | running, paused | Resume removes only the operational hold; it never changes rent, publication or moderation. |
 | Media | uploaded, validating, processing, ready, rejected, failed, deleted | Quarantined/raw assets are not public ready media. |
 
-Public eligibility must combine current publication, tenancy, moderation and resource visibility. The fixture preview's open/closed/suspended flags are demonstration data, not the implemented policy engine. The local shared eligibility rule permits active/due/grace tenancy only with active publication and clear moderation; rendered shops/search require a published design. Live grace/notice/rent/retention policies still require owner approval.
+Public eligibility must combine current publication, tenancy, moderation, absence of an operational hold and resource visibility. The fixture preview's open/closed/suspended flags are demonstration data, not the implemented policy engine. The local shared eligibility rule permits active/due/grace tenancy only with active publication, clear moderation and no hold; rendered shops/search require a published design. Old-slug/immutable-ID resolution uses the same eligibility before any redirect. Live grace/notice/rent/retention policies still require owner approval.
 
 ## Permission matrix and implementation boundary
 
@@ -25,6 +26,8 @@ This matrix includes planned capabilities. X1/R1 implement profile/membership/in
 | Change contact/payment details | Own shops plus step-up | Separate sensitive grant plus step-up | Authorized investigated recovery plus step-up |
 | View rent and payment records | Own shops | Separate finance grant | Finance/reconciliation permission |
 | Change membership/ownership | Owner plus step-up and last-owner rules | No implicit permission | Explicit recovery authority and audit |
+| Change shop address | Owner plus step-up, version, reason and confirmation | No | No implicit operations/support authority |
+| Move mall or pause/resume | No | No | Operations permission, separate shop scope, native fresh MFA, version, reason, confirmation; no self-administration |
 | Approve/provision/suspend/reinstate | No | No | Specific operator permission, MFA, reason and audit |
 | Read private evidence/reports | Only policy-approved own records | No implicit permission | Least-privilege verification/trust permission |
 
@@ -44,6 +47,14 @@ Mutations recheck authority after serialization waits. Revocation before that fi
 
 Canonical mutations require a database transaction, tenant-consistent references, conflict checks where relevant, and durable audit/event registration. Outbox/transactional queue processing must survive crashes and tolerate duplicate/out-of-order delivery. Prices use exact integer minor units; the SQL domain rejects fractional/nonfinite/out-of-range inputs rather than rounding them. Rent corrections create new events rather than overwrite history.
 
+## Local administrative contract
+
+Owner team reads are bounded/private; new team commands compare a merchant revision after locking. Legacy membership commands and invitation acceptance also advance that revision, so they invalidate stale UI commands. Tokens are excluded from team metadata and entered only privately; issuer-revocation and last-owner constraints still apply.
+
+Every current and former slug is permanently reserved to its immutable shop through append-only `shop_addresses`; tenant-consistent registration triggers cover direct SQL and future provisioning. Sensitive owner commands version-check changes. Ineligible shops never disclose aliases through public redirects.
+
+The explicit operations grant permits minimal queues/aggregate occupancy; private details and commands additionally require `operator_operations_scopes`. It is distinct from support scopes and application review/finance claims. Active merchant self-membership denies administration. Claim/actions recheck current authority after merchant-lock waits. Mall moves also use the provisioning capacity lock and reject a full target. Pause/resume changes only `shop_operations` plus shop version and audit; it cannot rewrite financial history, publish, extend grace or lift moderation. Finance exceptions require separately claimed application-finance scope. See ADR-0007 and [administration tests](evidence/X2-P8-ADMIN.md).
+
 ## Development rent contract
 
 The owner selected UGX 5,000 per 30 days, seven days’ grace and manual operator reconciliation, with live collection disabled. Immutable policy versions bind approved applications/invoices/contracts. Approval creates an obligation before a shop; only a scoped finance operator with fresh MFA can record a verified payment/waiver against its exact reference. Amounts are exact integer minor units. Partial credits cannot provision, overpayment/reference/currency mismatches have no effect, and a unique receipt cannot credit two invoices.
@@ -61,4 +72,4 @@ Only P8 contracts enter scheduling. Current worker time and canonical coverage/c
 - Implemented: closed LSS schema 1 and prototype registry, owned references, immutable drafts, manual patches, private previews, version-checked publication and restoration as a new draft.
 - Provider adapters for storage, notification, payment and AI; fakes labeled separately from verified live capability.
 
-R1, the local X2/P5–P7 prototype and [P8 local lifecycle](evidence/X2-P8.md) are verified; see [X2 prototype evidence](evidence/X2-P6-P7.md). Continue **Sol 6.1 Extra High with remaining P8 administration**, extending each command’s grant/scope/policy contract before implementation. Final system/release review remains **6 Astra Extra High R2**.
+R1, the local X2/P5–P7 prototype, [P8 local lifecycle](evidence/X2-P8.md) and [administration](evidence/X2-P8-ADMIN.md) are verified. Continue **Sol 6.1 Extra High with P9**, extending each command’s grant/scope/policy contract before implementation. Final system/release review remains **6 Astra Extra High R2**.

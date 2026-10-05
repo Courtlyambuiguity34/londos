@@ -11,6 +11,8 @@ import {
 } from "./server/security/authorization";
 import { applicationAccess } from "./server/lifecycle-common";
 import { invoiceAccess } from "./server/rent";
+import { operationsAccess } from "./server/administration";
+import { requireMerchant } from "./server/security/authorization";
 import { AccessError } from "./server/security/errors";
 
 function unavailable(status: number) {
@@ -38,12 +40,16 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      const permission = /\/rent(?:\/|$)/.test(path)
-        ? "finance"
-        : /\/(design|preview)(?:\/|$)/.test(path)
-          ? "design"
-          : "catalogue";
-      await requireShop(database(), actor, parsed.data, permission);
+      const permission = /\/address(?:\/|$)/.test(path)
+        ? "sensitive"
+        : /\/rent(?:\/|$)/.test(path)
+          ? "finance"
+          : /\/(design|preview)(?:\/|$)/.test(path)
+            ? "design"
+            : "catalogue";
+      const currentShop = await requireShop(database(), actor, parsed.data, permission);
+      if (/\/address(?:\/|$)/.test(path))
+        await requireMerchant(database(), actor, currentShop.merchant_id, "membership");
     }
     if (path === "/landlord" || path.startsWith("/landlord/")) {
       const state = await sessionState(database(), actor, true);
@@ -61,6 +67,22 @@ export async function proxy(request: NextRequest) {
         await requireOperator(database(), actor, "review");
       if (path.startsWith("/landlord/rent") || path.startsWith("/landlord/invoices"))
         await requireOperator(database(), actor, "finance");
+    }
+    if (path.startsWith("/landlord/operations"))
+      await requireOperator(database(), actor, "operations");
+    if (path.startsWith("/landlord/rent-exceptions"))
+      await requireOperator(database(), actor, "finance");
+    const operation = /^\/landlord\/operations\/([^/]+)$/.exec(path);
+    if (operation) {
+      const id = z.uuid().safeParse(operation[1]);
+      if (!id.success) return unavailable(404);
+      await operationsAccess(database(), actor, id.data);
+    }
+    const team = /^\/shopkeeper\/merchants\/([^/]+)\/team$/.exec(path);
+    if (team) {
+      const id = z.uuid().safeParse(team[1]);
+      if (!id.success) return unavailable(404);
+      await requireMerchant(database(), actor, id.data, "membership");
     }
     const application =
       /^\/(shopkeeper\/applications|landlord\/applications|landlord\/rent)\/([^/]+)$/.exec(path);

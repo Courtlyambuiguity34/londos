@@ -41,9 +41,22 @@ import {
 import { schedule } from "../../src/server/jobs/scheduler";
 import { acknowledge } from "../../src/server/jobs/queue";
 import { handleRentTick } from "../../src/server/jobs/rent";
-import { readPublicShop } from "../../src/server/public-shop";
+import { readPublicShop, readPublicVariant } from "../../src/server/public-shop";
 import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-design";
 
+import { ownedMerchants, readTeam, teamCommand } from "../../src/server/team";
+import { acceptInvitation } from "../../src/server/security/memberships";
+import {
+  changeAddress,
+  claimOperations,
+  readOperations,
+  commandOperations,
+  operationsQueue,
+  mallOccupancy,
+  rentExceptions,
+} from "../../src/server/administration";
+import { PostgresSearch } from "../../src/server/discovery";
+import { saveContacts, publicContact } from "../../src/server/contacts";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -675,4 +688,415 @@ test("database workflow ledger rejects direct over-credit and invalid reversal w
     ).rejects.toMatchObject({ code: "23514" });
   }
   expect((await readInvoice(pool, actors.ownerA!, invoice.id)).events).toHaveLength(0);
+});
+
+test("administration upgrade reserves all addresses and operations grants remain explicit", async () => {
+  expect((await pool.query("SELECT count(*)::int AS n FROM shop_addresses")).rows[0].n).toBe(
+    (await pool.query("SELECT count(*)::int AS n FROM shops")).rows[0].n,
+  );
+  await expect(operationsQueue(pool, actors.operator!)).rejects.toMatchObject({
+    code: "permission_denied",
+  });
+  await pool.query("INSERT INTO operator_grants(user_id,permission) VALUES($1,'operations')", [
+    actors.operator!.userId,
+  ]);
+  expect((await ownedMerchants(pool, actors.ownerA!)).some((m) => m.id === seedIds.merchantA)).toBe(
+    true,
+  );
+  expect(await ownedMerchants(pool, actors.staff!)).toEqual([]);
+});
+test("owner team lists are private and racing versioned invitations cannot overwrite access", async () => {
+  await expect(readTeam(pool, actors.ownerB!, seedIds.merchantA)).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(readTeam(pool, actors.staff!, seedIds.merchantA)).rejects.toMatchObject({
+    status: 404,
+  });
+  const team = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  const command = {
+    action: "invite" as const,
+    version: team.merchant.version,
+    confirm: true as const,
+    value: {
+      email: `team-${randomUUID()}@londos.example`,
+      role: "staff" as const,
+      permissions: ["catalogue" as const],
+    },
+  };
+  const results = await Promise.allSettled([
+    teamCommand(pool, actors.ownerA!, seedIds.merchantA, command),
+    teamCommand(pool, actors.ownerA!, seedIds.merchantA, command),
+  ]);
+  expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  expect(results.find((r) => r.status === "rejected")).toMatchObject({
+    reason: { code: "stale_version" },
+  });
+  const current = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  expect(current.merchant.version).toBe(team.merchant.version + 1);
+  expect(current.invitations.filter((i) => i.email === command.value.email)).toHaveLength(1);
+  expect(JSON.stringify(current)).not.toMatch(/token_hash|"token"/);
+  await teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+    action: "revoke_invitation",
+    version: current.merchant.version,
+    confirm: true,
+    invitationId: current.invitations.find((i) => i.email === command.value.email)!.id,
+  });
+});
+test("invitation acceptance advances the team version and a revoked issuer cannot revive an invitation", async () => {
+  const team = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  const result = await teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+    action: "invite",
+    version: team.merchant.version,
+    confirm: true,
+    value: { email: accounts.invitee.email, role: "staff", permissions: ["catalogue"] },
+  });
+  const id = (result as { id: string }).id;
+  const token = (
+    await pool.query("SELECT payload->>'token' AS token FROM jobs WHERE dedupe_key=$1", [
+      `invitation:${id}`,
+    ])
+  ).rows[0].token;
+  const client = new Client();
+  expect(
+    (
+      await client.request("sign-in/email", {
+        email: accounts.invitee.email,
+        password: accounts.invitee.password,
+      })
+    ).status,
+  ).toBe(200);
+  const actor = await resolveActor(auth, client.headers());
+  await acceptInvitation(pool, actor, token);
+  expect((await readTeam(pool, actors.ownerA!, seedIds.merchantA)).merchant.version).toBe(
+    team.merchant.version + 2,
+  );
+  await expect(acceptInvitation(pool, actor, token)).rejects.toMatchObject({
+    code: "invitation_unavailable",
+  });
+  const before = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  const pending = await teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+    action: "invite",
+    version: before.merchant.version,
+    confirm: true,
+    value: { email: `revoked-${randomUUID()}@londos.example`, role: "staff", permissions: [] },
+  });
+  const latest = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  await teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+    action: "transfer",
+    version: latest.merchant.version,
+    confirm: true,
+    userId: actor.userId,
+  });
+  await expect(readTeam(pool, actors.ownerA!, seedIds.merchantA)).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(
+    (
+      await pool.query("SELECT revoked_at FROM invitations WHERE id=$1", [
+        (pending as { id: string }).id,
+      ])
+    ).rows[0].revoked_at,
+  ).not.toBeNull();
+  // Restore only this isolated fixture for subsequent tests; the invitation remains revoked.
+  await pool.query("UPDATE memberships SET role='owner' WHERE merchant_id=$1 AND user_id=$2", [
+    seedIds.merchantA,
+    actors.ownerA!.userId,
+  ]);
+  await pool.query("UPDATE memberships SET role='staff' WHERE merchant_id=$1 AND user_id=$2", [
+    seedIds.merchantA,
+    actor.userId,
+  ]);
+  expect(
+    (
+      await pool.query("SELECT revoked_at FROM invitations WHERE id=$1", [
+        (pending as { id: string }).id,
+      ])
+    ).rows[0].revoked_at,
+  ).not.toBeNull();
+});
+test("team revisions preserve last-owner safety and restrict staff shop grants", async () => {
+  let view = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  await expect(
+    teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+      action: "membership",
+      version: view.merchant.version,
+      confirm: true,
+      userId: actors.ownerA!.userId,
+      value: { role: "staff", status: "active", permissions: [] },
+    }),
+  ).rejects.toMatchObject({ code: "last_owner_required" });
+  expect((await readTeam(pool, actors.ownerA!, seedIds.merchantA)).merchant.version).toBe(
+    view.merchant.version,
+  );
+  await expect(
+    teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+      action: "staff_shop",
+      version: view.merchant.version,
+      confirm: true,
+      value: { userId: actors.staff!.userId, shopId: seedIds.shopA, permissions: ["finance"] },
+    }),
+  ).rejects.toMatchObject({ code: "grant_exceeds_membership" });
+  await teamCommand(pool, actors.ownerA!, seedIds.merchantA, {
+    action: "staff_shop",
+    version: view.merchant.version,
+    confirm: true,
+    value: { userId: actors.staff!.userId, shopId: seedIds.shopA, permissions: ["catalogue"] },
+  });
+  view = await readTeam(pool, actors.ownerA!, seedIds.merchantA);
+  expect(
+    view.grants.some(
+      (g) => g.user_id === actors.staff!.userId && g.permissions.includes("catalogue"),
+    ),
+  ).toBe(true);
+});
+test("versioned owner address changes preserve aliases and reject SQL alias takeover", async () => {
+  const row = (await pool.query("SELECT version,slug FROM shops WHERE id=$1", [seedIds.shopA]))
+      .rows[0],
+    slug = `admin-${randomUUID()}`;
+  const input = {
+    version: row.version,
+    slug,
+    reason: "Fictional shop address update",
+    confirm: true as const,
+  };
+  await expect(changeAddress(pool, actors.staff!, seedIds.shopA, input)).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(changeAddress(pool, actors.ownerB!, seedIds.shopA, input)).rejects.toMatchObject({
+    status: 404,
+  });
+  const updated = await changeAddress(pool, actors.ownerA!, seedIds.shopA, input);
+  await expect(changeAddress(pool, actors.ownerA!, seedIds.shopA, input)).rejects.toMatchObject({
+    code: "stale_version",
+  });
+  expect(updated.version).toBe(row.version + 1);
+  await expect(
+    pool.query("UPDATE shops SET slug=$2 WHERE id=$1", [seedIds.shopB, row.slug]),
+  ).rejects.toMatchObject({ code: "23505" });
+  await expect(
+    pool.query("DELETE FROM shop_addresses WHERE slug=$1", [row.slug]),
+  ).rejects.toMatchObject({ code: "P0001" });
+  await expect(
+    changeAddress(pool, actors.ownerA!, seedIds.shopA, {
+      ...input,
+      version: updated.version,
+      slug: randomUUID(),
+    }),
+  ).rejects.toHaveProperty("issues");
+  const draft = await readDesign(pool, actors.ownerA!, seedIds.shopA),
+    saved = await saveDesign(pool, actors.ownerA!, seedIds.shopA, {
+      version: 0,
+      summary: "Alias fixture",
+      specification: draft.specification,
+    });
+  await publishDesign(pool, actors.ownerA!, seedIds.shopA, { ...saved, confirm: true });
+  expect((await readPublicShop(pool, row.slug)).shop.slug).toBe(slug);
+  expect((await readPublicShop(pool, seedIds.shopA)).shop.id).toBe(seedIds.shopA);
+});
+test("scoped operations block self-claim and a revoked scope cannot change a waiting command", async () => {
+  await expect(readOperations(pool, actors.operator!, seedIds.shopA)).rejects.toMatchObject({
+    status: 404,
+  });
+  await claimOperations(pool, actors.operator!, seedIds.shopA, {
+    reason: "Fictional scoped investigation",
+    confirm: true,
+  });
+  await pool.query(
+    "INSERT INTO memberships(merchant_id,user_id,role,permissions) VALUES($1,$2,'staff','{}')",
+    [seedIds.merchantB, actors.operator!.userId],
+  );
+  await expect(
+    claimOperations(pool, actors.operator!, seedIds.shopB, {
+      reason: "Self investigation is prohibited",
+      confirm: true,
+    }),
+  ).rejects.toMatchObject({ code: "conflict_of_interest" });
+  await pool.query("DELETE FROM memberships WHERE merchant_id=$1 AND user_id=$2", [
+    seedIds.merchantB,
+    actors.operator!.userId,
+  ]);
+  const view = await readOperations(pool, actors.operator!, seedIds.shopA),
+    locker = await pool.connect();
+  let pending: Promise<unknown> | undefined;
+  try {
+    await locker.query("BEGIN");
+    await locker.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [seedIds.merchantA]);
+    pending = commandOperations(pool, actors.operator!, seedIds.shopA, {
+      action: "pause",
+      version: view.shop.version,
+      reason: "Waiting command must recheck scope",
+      confirm: true,
+    }).catch((e) => e);
+    let blocked = false;
+    for (let n = 0; n < 100; n++) {
+      blocked = Boolean(
+        (
+          await pool.query(
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id FROM merchants%' ",
+          )
+        ).rowCount,
+      );
+      if (blocked) break;
+      await setTimeout(10);
+    }
+    expect(blocked).toBe(true);
+    await pool.query("DELETE FROM operator_operations_scopes WHERE user_id=$1 AND shop_id=$2", [
+      actors.operator!.userId,
+      seedIds.shopA,
+    ]);
+    await locker.query("COMMIT");
+    expect(await pending).toMatchObject({ status: 404 });
+    expect(
+      (await pool.query("SELECT 1 FROM shop_operations WHERE shop_id=$1", [seedIds.shopA]))
+        .rowCount,
+    ).toBe(0);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+    await pending;
+  }
+});
+test("administrative pause gates shop, alias, discovery, contact and ready images despite publication or renewal", async () => {
+  const { shop, invoice } = await paid(),
+    department = randomUUID(),
+    product = randomUUID(),
+    asset = randomUUID();
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Admin shoes','admin-shoes',0)",
+    [department, shop, seedIds.merchantA],
+  );
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability) VALUES($1,$2,$3,$4,'product','Admin shoes','admin-shoes','UGX','available')",
+    [product, shop, seedIds.merchantA, department],
+  );
+  await pool.query(
+    "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,alt) VALUES($1,$2,$3,'ready',$4,'Fictional ready image')",
+    [asset, shop, seedIds.merchantA, `admin:${asset}`],
+  );
+  const display = await sharp(image).webp().toBuffer();
+  await pool.query(
+    "INSERT INTO media_blobs(asset_id,variant,bytes,width,height) VALUES($1,'display',$2,80,60)",
+    [asset, display],
+  );
+  await pool.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [product, asset, shop, seedIds.merchantA],
+  );
+  await saveContacts(pool, actors.ownerA!, shop, {
+    version: 0,
+    phone: "+256700000001",
+    whatsapp: "",
+    website: "",
+    fulfilment: "contact",
+    paymentInstructions: "",
+    deliveryInstructions: "",
+    enquiriesEnabled: true,
+    reason: "Fictional contacts",
+  });
+  const draft = await readDesign(pool, actors.ownerA!, shop),
+    saved = await saveDesign(pool, actors.ownerA!, shop, {
+      version: 0,
+      summary: "Admin eligibility fixture",
+      specification: draft.specification,
+    });
+  await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true });
+  const slug = (await readPublicShop(pool, shop)).shop.slug;
+  expect(await readPublicVariant(pool, shop, asset, "display")).toEqual(display);
+  await claimOperations(pool, actors.operator!, shop, {
+    reason: "Private investigation fixture",
+    confirm: true,
+  });
+  let view = await readOperations(pool, actors.operator!, shop);
+  await commandOperations(pool, actors.operator!, shop, {
+    action: "pause",
+    version: view.shop.version,
+    reason: "Temporary administrative pause",
+    confirm: true,
+  });
+  const designAtPause = await readDesign(pool, actors.ownerA!, shop);
+  await publishDesign(pool, actors.ownerA!, shop, {
+    version: designAtPause.version,
+    revision: saved.revision,
+    confirm: true,
+  });
+  await synchronize(shop, new Date());
+  await expect(readPublicShop(pool, slug)).rejects.toMatchObject({ status: 404 });
+  await expect(publicContact(pool, shop)).rejects.toMatchObject({ status: 404 });
+  await expect(readPublicVariant(pool, shop, asset, "display")).rejects.toMatchObject({
+    status: 404,
+  });
+  expect((await new PostgresSearch(pool).search({ query: "", shopId: shop })).results).toEqual([]);
+  view = await readOperations(pool, actors.operator!, shop);
+  await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shop]);
+  await commandOperations(pool, actors.operator!, shop, {
+    action: "resume",
+    version: view.shop.version,
+    reason: "Administrative review completed",
+    confirm: true,
+  });
+  await expect(readPublicShop(pool, slug)).rejects.toMatchObject({ status: 404 });
+  expect((await readInvoice(pool, actors.ownerA!, invoice.id)).invoice.credited_minor).toBe("5000");
+  await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [shop]);
+  expect((await readPublicShop(pool, slug)).shop.id).toBe(shop);
+  const current = (await readInvoice(pool, actors.operator!, invoice.id, "finance")).invoice,
+    event = (await readInvoice(pool, actors.operator!, invoice.id, "finance")).events[0]!;
+  await reverseCredit(pool, actors.operator!, invoice.id, {
+    key: randomUUID(),
+    version: current.version,
+    eventId: event.id,
+    reason: "Fictional exception fixture",
+    confirm: true,
+  });
+  expect(
+    (await rentExceptions(pool, actors.operator!)).some((i) => i.id === invoice.id && i.finalized),
+  ).toBe(true);
+  await pool.query(
+    "DELETE FROM operator_application_scopes WHERE user_id=$1 AND application_id=$2 AND permission='finance'",
+    [actors.operator!.userId, invoice.application_id],
+  );
+  expect((await rentExceptions(pool, actors.operator!)).some((i) => i.id === invoice.id)).toBe(
+    false,
+  );
+});
+test("racing mall reassignment respects capacity and leaves shop identity and history intact", async () => {
+  const mall = randomUUID();
+  await pool.query(
+    "INSERT INTO malls(id,name,planning_capacity) VALUES($1,'Admin capacity target',1)",
+    [mall],
+  );
+  for (const shopId of [seedIds.shopA, seedIds.shopB])
+    await claimOperations(pool, actors.operator!, shopId, {
+      reason: "Capacity assignment fixture",
+      confirm: true,
+    });
+  const views = await Promise.all(
+    [seedIds.shopA, seedIds.shopB].map((id) => readOperations(pool, actors.operator!, id)),
+  );
+  const results = await Promise.allSettled(
+    views.map((v) =>
+      commandOperations(pool, actors.operator!, v.shop.id, {
+        action: "move",
+        mallId: mall,
+        version: v.shop.version,
+        reason: "Rebalance fictional logical mall",
+        confirm: true,
+      }),
+    ),
+  );
+  expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  expect(results.find((r) => r.status === "rejected")).toMatchObject({
+    reason: { code: "mall_at_capacity" },
+  });
+  expect(
+    (await pool.query("SELECT count(*)::int AS n FROM shops WHERE mall_id=$1", [mall])).rows[0].n,
+  ).toBe(1);
+  for (const before of views) {
+    const after = await readOperations(pool, actors.operator!, before.shop.id);
+    expect(after.shop.id).toBe(before.shop.id);
+    expect(after.shop.slug).toBe(before.shop.slug);
+    expect(after.shop.merchant_id).toBe(before.shop.merchant_id);
+  }
+  expect(
+    (await mallOccupancy(pool, actors.operator!)).some((m) => m.id === mall && m.occupied === 1),
+  ).toBe(true);
 });

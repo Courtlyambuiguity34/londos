@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID, createHash } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "../db/pool";
 import { enqueue } from "../jobs/enqueue";
@@ -29,17 +29,31 @@ function tokenHash(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+async function lockOwner(
+  client: PoolClient,
+  actor: Actor,
+  merchantId: string,
+  expectedVersion?: number,
+) {
+  const merchant = (
+    await client.query("SELECT version FROM merchants WHERE id=$1 FOR UPDATE", [merchantId])
+  ).rows[0];
+  await requireMerchant(client, actor, merchantId, "membership");
+  if (expectedVersion !== undefined && merchant?.version !== expectedVersion)
+    throw new AccessError(409, "stale_version");
+  await client.query("UPDATE merchants SET version=version+1 WHERE id=$1", [merchantId]);
+}
 export async function changeMembership(
   pool: Pool,
   actor: Actor,
   merchantId: string,
   userId: string,
   input: z.infer<typeof membershipChange>,
+  expectedVersion?: number,
 ) {
   const value = membershipChange.parse(input);
   return transaction(pool, async (client) => {
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchantId]);
-    await requireMerchant(client, actor, merchantId, "membership");
+    await lockOwner(client, actor, merchantId, expectedVersion);
     const target = (
       await client.query(
         "SELECT role,status FROM memberships WHERE merchant_id=$1 AND user_id=$2",
@@ -80,13 +94,13 @@ export async function invite(
   actor: Actor,
   merchantId: string,
   input: z.infer<typeof invitationInput>,
+  expectedVersion?: number,
 ) {
   const value = invitationInput.parse(input);
   const token = randomBytes(32).toString("base64url");
   const id = randomUUID();
   await transaction(pool, async (client) => {
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchantId]);
-    await requireMerchant(client, actor, merchantId, "membership");
+    await lockOwner(client, actor, merchantId, expectedVersion);
     await client.query(
       "INSERT INTO invitations(id,merchant_id,email,token_hash,role,permissions,expires_at,invited_by) VALUES($1,$2,$3,$4,$5,$6,now()+interval '48 hours',$7)",
       [id, merchantId, value.email, tokenHash(token), value.role, value.permissions, actor.userId],
@@ -135,6 +149,9 @@ export async function acceptInvitation(pool: Pool, actor: Actor, token: string) 
       [invitation.merchant_id, actor.userId, invitation.role, invitation.permissions],
     );
     await client.query("UPDATE invitations SET accepted_at=now() WHERE id=$1", [invitation.id]);
+    await client.query("UPDATE merchants SET version=version+1 WHERE id=$1", [
+      invitation.merchant_id,
+    ]);
     await audit(
       client,
       actor,
@@ -155,10 +172,10 @@ export async function revokeInvitation(
   actor: Actor,
   merchantId: string,
   invitationId: string,
+  expectedVersion?: number,
 ) {
   return transaction(pool, async (client) => {
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchantId]);
-    await requireMerchant(client, actor, merchantId, "membership");
+    await lockOwner(client, actor, merchantId, expectedVersion);
     const result = await client.query(
       "UPDATE invitations SET revoked_at=now() WHERE id=$1 AND merchant_id=$2 AND accepted_at IS NULL AND revoked_at IS NULL RETURNING id",
       [invitationId, merchantId],
@@ -172,10 +189,10 @@ export async function transferOwnership(
   actor: Actor,
   merchantId: string,
   targetUserId: string,
+  expectedVersion?: number,
 ) {
   return transaction(pool, async (client) => {
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchantId]);
-    await requireMerchant(client, actor, merchantId, "membership");
+    await lockOwner(client, actor, merchantId, expectedVersion);
     if (targetUserId === actor.userId) throw new AccessError(422, "different_owner_required");
     const target = await client.query(
       "SELECT 1 FROM memberships WHERE merchant_id=$1 AND user_id=$2 AND status='active'",
@@ -203,11 +220,11 @@ export async function grantStaffShop(
   actor: Actor,
   merchantId: string,
   input: z.infer<typeof staffShopInput>,
+  expectedVersion?: number,
 ) {
   const value = staffShopInput.parse(input);
   return transaction(pool, async (client) => {
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchantId]);
-    await requireMerchant(client, actor, merchantId, "membership");
+    await lockOwner(client, actor, merchantId, expectedVersion);
     const target = (
       await client.query(
         "SELECT permissions FROM memberships WHERE merchant_id=$1 AND user_id=$2 AND status='active' AND role='staff'",

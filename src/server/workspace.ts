@@ -67,3 +67,27 @@ export async function changeProfile(
     return updated;
   });
 }
+
+export async function readSetup(pool: Pool, actor: Actor, shopId: string) {
+  return transaction(pool, async (client) => {
+    await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
+    const shop = await requireShop(client, actor, shopId, "catalogue");
+    const row = (
+      await client.query(
+        "SELECT g.role,p.state AS publication,t.state AS tenancy,m.state AS moderation,coalesce(o.paused,false) AS paused,EXISTS(SELECT 1 FROM departments d WHERE d.shop_id=s.id AND d.archived=false) AS departments,EXISTS(SELECT 1 FROM products q WHERE q.shop_id=s.id AND q.availability<>'archived') AS products,EXISTS(SELECT 1 FROM shop_contacts c WHERE c.shop_id=s.id) AS contacts,EXISTS(SELECT 1 FROM shop_designs sd WHERE sd.shop_id=s.id AND sd.draft_id IS NOT NULL) AS design FROM shops s JOIN memberships g ON g.merchant_id=s.merchant_id AND g.user_id=$2 AND g.status='active' JOIN shop_publication p ON p.shop_id=s.id JOIN tenancies t ON t.shop_id=s.id JOIN shop_moderation m ON m.shop_id=s.id LEFT JOIN shop_operations o ON o.shop_id=s.id WHERE s.id=$1",
+        [shopId, actor.userId],
+      )
+    ).rows[0] as {
+      role: string;
+      publication: string;
+      tenancy: string;
+      moderation: string;
+      paused: boolean;
+      departments: boolean;
+      products: boolean;
+      contacts: boolean;
+      design: boolean;
+    };
+    return { ...row, shop };
+  });
+}

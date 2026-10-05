@@ -1,6 +1,6 @@
 # X2: prototype completion and implementation handoff
 
-Current progress: the P5–P7 prototype and P8 local application/rent lifecycle packet are complete. **149 tests pass**; see [P8 evidence](evidence/X2-P8.md), [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md) and [prototype evidence](evidence/X2-P6-P7.md). Preserve finished work and historical evidence. Continue P8 administration within the same confirmed setting.
+Current progress: the P5–P7 prototype and both P8 local lifecycle/administration packets are complete. **160 tests pass**; see [administration evidence](evidence/X2-P8-ADMIN.md), [ADR-0007](ADR/0007-local-administration-and-shop-addresses.md), [lifecycle evidence](evidence/X2-P8.md) and [prototype evidence](evidence/X2-P6-P7.md). Preserve finished work and historical evidence. Continue P9 within the same confirmed setting.
 
 Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2–P4 foundation. Continuing setting: **Sol 6.1 Extra High**, already confirmed by the owner. No new setting change is required for P8; model-selector UI remains outside the assistant’s control. This file records packets within the [implementation plan](IMPLEMENTATION-PLAN.md); broader feature, provider and release gates remain open.
 
@@ -8,13 +8,15 @@ Prerequisite: [R1 review](evidence/R1-REVIEW.md) is complete for the existing P2
 
 P8 now implements local merchant applications, scoped operator decisions, provisioning, immutable policy versions, reconciliation and lifecycle transitions. Continue Extra High for these authorization, financial and concurrency boundaries. Resolve policy/provider decisions through the master plan before enabling live operations. H2 remains useful for routine pages/components after contracts exist; no separate High stage is needed merely to change models.
 
-## Next P8 packet
+## Next P9 packet
 
-1. Preserve schema 010, credentials, completed tests and this branch. Read the local policy and remaining limits in ADR-0006; do not edit applied migrations or convert historical fixture tenancies automatically.
-2. Complete merchant onboarding and membership/staff controls against the reviewed X1 APIs; retain owner/last-owner and fresh-auth rules. Improve status/history navigation and larger invoice history without unbounded responses.
-3. Add scoped Landlord occupancy/capacity and rent exception views. Define and test any manual closure/reopening or arrangement commands before exposing controls; require fresh MFA, reason, version and audit. Never use a UI override to rewrite financial history or lift moderation implicitly.
-4. Implement audited slug changes and mall reassignment with current ownership/scope, uniqueness/concurrency checks and stable immutable-ID routing. Preserve multi-shop isolation and canonical eligibility.
-5. Extend every new handler’s HTTP/RSC attack registry, test lock-wait revocation and conflicts, and verify desktop/mobile workflows. Record migration/runtime evidence if schemas change, then update this handoff and push verified work.
+1. Preserve schema 011, credentials, completed tests and this branch. Read ADR-0006/0007 and their limits; do not edit applied migrations, reuse operations scope for trust/finance or convert historical fixture tenancies automatically.
+2. Define local public-report and scoped trust-case contracts before implementation: bounded anonymous intake, abuse controls, private attachments, separate operator permission/scope, anti-self-review, reasoned decisions and review/appeal history. Administrative pause and moderation remain independent records.
+3. Implement and attack the reporting/investigation/suspension/reinstatement journey. A moderation decision cannot credit rent, remove an operational hold or publish a draft. Define truthful platform verification and accessible safety controls without implying identity or payment guarantees.
+4. Continue P9 incident recovery and pilot analytics under explicit privacy contracts. Minimize context and anonymous identifiers, exclude private evidence/raw queries, deduplicate retries, isolate tenant aggregates and let analytics fail without failing shop requests. Production retention/legal policy and live providers require their own decisions.
+5. Extend every new handler’s HTTP/RSC attack registry, test lock-wait revocation and conflicts, and verify desktop/mobile workflows. Record additive migration/runtime evidence, update the handoff and push verified packets. Follow the remaining P9 checklist rather than claiming a single reporting packet completes P9.
+
+P8’s local administration is complete: guided setup, team/staff controls, invitation acceptance, address history, occupancy, scoped finance exceptions and audited move/pause/resume. Partial master-plan P8 gates remain explicit: richer accounting/mismatch investigations, unapproved financial arrangements, larger invoice/audit navigation and live callback/provider work. The implemented override is an independent operational hold, not a grace extension or financial correction.
 
 The selected development policy is UGX 5,000 per 30 fixed days, seven days’ grace and manual reconciliation. Live collection remains disabled. Production pricing, taxation, retention, provider integration and public signup are not silently approved by this local choice. Continue useful local work without another policy question unless a new decision is actually required.
 
@@ -31,7 +33,7 @@ The selected development policy is UGX 5,000 per 30 fixed days, seven days’ gr
 
 ## Acceptance and containment
 
-- The R1 foundation stays passing; the current X2 baseline is 149 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
+- The R1 foundation stays passing; the current X2 baseline is 160 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
 - Upload/raw/draft assets stay private. Public ready variants require current canonical eligibility, a published design and an unarchived owned attachment on every request. Tenant identifiers and guessable URLs do not grant private object access.
 - Preserve both tested public modes. `fixtures` supplies the fictional preview; configured local `database` mode renders explicitly published eligible shops. Catalogue persistence alone never publishes a shop. ADR-0005 records canonical indexed reads and no shared response cache; deployment-specific CDN revocation remains unverified.
 - Provider outages create bounded, visible retry/failure states without corrupting canonical data or quotas. Add no unverified live-provider claims.
@@ -39,6 +41,6 @@ The selected development policy is UGX 5,000 per 30 fixed days, seven days’ gr
 
 ## Remaining sequence
 
-G2's local six-slice architecture experiment is accepted within the recorded dataset, hardware and load limits. Finish P8 administrative interfaces and recovery, then P9 trust/analytics, P10 AI and P11/P12 performance/recovery/release. Complete the wider LSS registry and public catalogue pagination before the full-build gate: current department views initially return 20 products and entrance shelves at most 32 cards. English search does not provide advanced typo or multilingual relevance. R2 uses **6 Astra Extra High** to review the completed system and release evidence before a separately authorized deployment.
+G2's local six-slice architecture experiment is accepted within the recorded dataset, hardware and load limits. Continue P9 trust/analytics, P10 AI and P11/P12 performance/recovery/release, retaining the partial P8 policy/accounting obligations above. Complete the wider LSS registry and public catalogue pagination before the full-build gate: current department views initially return 20 products and entrance shelves at most 32 cards. English search does not provide advanced typo or multilingual relevance. R2 uses **6 Astra Extra High** to review the completed system and release evidence before a separately authorized deployment.
 
 If a critical architecture issue remains unresolved, record the concrete decision and evidence, then request the Astra Extra High handoff. Do not switch models invisibly or claim the complete build is finished after one work packet.

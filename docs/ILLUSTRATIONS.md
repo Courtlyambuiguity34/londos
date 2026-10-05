@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning and scheduled tenancy. Live providers, broader administration, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. Live providers, trust moderation, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -142,7 +142,8 @@ flowchart LR
   X2 --> P6[P6 safe manual design and publication]
   P6 --> P7[P7 eligible public discovery and benchmark]
   P7 --> P8[P8 local applications and development rent]
-  P8 --> Next[Finish administration and later gates before Astra R2 review]
+  P8 --> Admin[P8 local teams, addresses and scoped operations]
+  Admin --> Next[P9 trust and analytics, then later gates before Astra R2 review]
 ```
 
 The assistant records the next setting in BUILD-STATUS. The owner operates the model selector; the assistant does not switch it automatically.
@@ -212,7 +213,7 @@ flowchart TD
   Preview --> Confirm[Explicit merchant confirmation and fresh publish authority]
   Confirm --> Publish[(Atomic published pointer and audit)]
   Publish --> Read[Current canonical catalogue and contacts]
-  Read --> Eligibility{Publication active, tenancy active/due/grace, moderation clear}
+  Read --> Eligibility{Publication active, tenancy active/due/grace, moderation clear, no operations hold}
   Eligibility -->|Eligible| Public[Dynamic no-store shop, search and ready-image responses]
   Eligibility -->|Unavailable| Deny[Platform unavailable state without restricted contents]
   Publish --> Index[PostgreSQL generated search vectors in canonical transactions]
@@ -251,3 +252,53 @@ flowchart TD
 ```
 
 This is a development workflow: **UGX 5,000 per 30 days, seven days’ grace and manual operator reconciliation; live collection disabled**. Stable command keys, append-only financial events and merchant locks prevent duplicate credit/provisioning. An old job cannot carry an authoritative payment date. Only new P8 contracts enter the scheduler; previous fixtures remain unchanged. See [ADR-0006](ADR/0006-local-applications-and-rent-lifecycle.md) and [P8 verification/screenshots](evidence/X2-P8.md).
+
+## Implemented P8 team and address continuity
+
+```mermaid
+flowchart TD
+  Owner[Fresh current owner] --> Team[Bounded private team and current merchant revision]
+  Team --> Command[Explicit confirmed command with expected revision]
+  Command --> Lock[Merchant lock and rechecked owner authority]
+  Lock --> Compare{Revision still current?}
+  Compare -->|No| Conflict[Reload and review conflicting change]
+  Compare -->|Yes| Commit[(Membership change, next revision and audit)]
+  Commit --> Invite[Private email-bound one-use invitation]
+  Invite --> Recipient[Verified recipient enters token privately]
+  Recipient --> Accept[Recheck session, expiry and issuer under merchant lock]
+  Accept --> Joined[Membership and next merchant revision]
+  Joined --> Grant[Owner separately grants staff shop access]
+  Owner --> Address[Versioned address command with reason]
+  Address --> Registry[(Permanent current and former slug reservations)]
+  Registry --> Resolve[Old address or immutable shop ID]
+  Resolve --> Eligible{Current public eligibility?}
+  Eligible -->|Yes| Redirect[Redirect to current canonical address]
+  Eligible -->|No| Hidden[Unavailable without private shop disclosure]
+```
+
+Last-owner protection and issuer-invitation revocation remain active. A token is not a URL, and membership alone does not give staff shop access. The address registry is append-only; direct SQL cannot transfer an old address to another shop.
+
+## Implemented P8 scoped operations and independent holds
+
+```mermaid
+flowchart TD
+  Operator[Explicit operations grant and native MFA] --> Queue[Minimal shop queue and aggregate mall occupancy]
+  Queue --> Claim[Fresh claim with reason and no merchant self-membership]
+  Claim --> Scope[(Distinct operations shop scope)]
+  Scope --> Command[Confirmed versioned command with reason]
+  Command --> Lock[Merchant lock and current authority recheck]
+  Lock --> Move[Mall move also acquires shared provisioning capacity lock]
+  Move --> Capacity{Target has capacity?}
+  Capacity -->|Yes| Assign[Change only mall assignment plus version and audit]
+  Capacity -->|No| Refuse[Conflict without moving shop]
+  Lock --> Hold[(Pause or remove independent operational hold; retain audit)]
+  Hold --> Eligibility{Published design, eligible tenancy, clear moderation, no hold?}
+  Rent[Canonical rent and scheduled tenancy] --> Eligibility
+  Moderation[Separate trust decisions] --> Eligibility
+  Publish[Explicit merchant publication] --> Eligibility
+  Eligibility -->|Yes| Public[Shop, search, contact and ready media]
+  Eligibility -->|No| Hidden[Public disclosure denied]
+  Finance[Finance grant and claimed application-finance scope] --> Exceptions[Scoped unsettled invoice exceptions]
+```
+
+Resume removes only the hold. It cannot credit an invoice, renew rent, publish a draft or clear moderation. Capacity moves preserve identity, address, ownership, catalogue and financial history. [Administration evidence](evidence/X2-P8-ADMIN.md) records races, scoped HTTP/Flight denial, upgrade preservation and inspected [desktop team](evidence/images/x2-p8-team-desktop.png), [desktop operations](evidence/images/x2-p8-operations-desktop.png) and [mobile team](evidence/images/x2-p8-team-mobile.png) captures. All pictured data is fictional.
