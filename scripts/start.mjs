@@ -24,7 +24,14 @@ if (!existsSync(".next/standalone/server.js")) {
 }
 const child = spawn(process.execPath, [".next/standalone/server.js"], {
   stdio: "inherit",
-  env: { ...process.env, PORT: port, HOSTNAME: "0.0.0.0" },
+  env: {
+    ...process.env,
+    PORT: port,
+    HOSTNAME: "0.0.0.0",
+    NODE_USE_ENV_PROXY:
+      process.env.NODE_USE_ENV_PROXY ??
+      (process.env.HTTPS_PROXY || process.env.HTTP_PROXY ? "1" : "0"),
+  },
 });
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => child.kill(signal));

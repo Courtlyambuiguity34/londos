@@ -492,3 +492,13 @@ The following fictional captures were inspected for readable labels, limits, pri
 ![Scoped native-MFA operator reporting and exact-correction controls](evidence/images/x2-p9-costs-journal-desktop.png)
 
 ![Mobile owner summary with UTC windows and explicit missing measurements](evidence/images/x2-p9-costs-mobile.png)
+
+## P10 native proposal workflow
+
+| Illustration | Source and meaning |
+|---|---|
+| [Desktop assistant](evidence/images/x2-p10-assistant-desktop.png) | Production-build native owner workflow in a disposable fictional database; validated deterministic blue-theme proposal, no provider calls, separate preview/confirmation. |
+| [Canonical candidate preview](evidence/images/x2-p10-proposal-preview.png) | Unsaved private candidate rendered by the existing canonical LSS renderer; no draft/publication/analytics effects, with explicit return to review. |
+| [Mobile assistant](evidence/images/x2-p10-assistant-mobile.png) | Native keyboard-triggered deterministic contact-action proposal, labelled confirmation, unavailable live providers and separate reported-usage explanations; no overflow/axe violations in the recorded viewport. |
+
+These three captures were visually inspected. They are fictional local workflow evidence, not live Gemini/OpenAI demonstrations or manual screen-reader certification. Prior packet illustrations remain preserved. [P10 evidence](evidence/X2-P10.md) records security/verification/preservation limits; the [design pipeline](SHOP-DESIGN-PIPELINE.md) diagrams the implemented boundary.

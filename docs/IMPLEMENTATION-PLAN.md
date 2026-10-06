@@ -2,7 +2,7 @@
 
 Status: implementation authorized; progress and model handoffs are tracked in [BUILD-STATUS](BUILD-STATUS.md) and [RECOMMENDATIONS](../RECOMMENDATIONS.md).
 
-Current progress (2026-10-06, UTC): H, X1 and R1 are complete. **P5–P8 local packets and P9 local trust, incidents/owner-confirmed recovery, analytics, governed privacy and measurable resource-cost reporting are verified**; [cost evidence](evidence/X2-P9-COSTS.md) records 285 passing tests and schema-016 preservation. G2 remains accepted within its historical limits. P9.7/P9.9 are complete at their recorded local scope. Continue **P10 provider-neutral AI contracts at the owner-confirmed Sol 6.1 Extra High**. P9.8 remains partial at live legal/full subject-access/physical-backup boundaries. Wider LSS/public pagination, AI, partial accounting/arrangement obligations, live policies/providers and release gates remain open.
+Current progress (2026-10-06, Africa/Kampala): H, X1, R1, local P5–P8 and P9 packets are preserved. **P10 implementation/local gate is complete**; [P10 evidence](evidence/X2-P10.md) records 344 passing tests and schema-017/51-table preservation. P10.11 records unavailable Gemini/OpenAI accounts as an external gap, not live proof. Continue **P11 at Sol 6.1 Extra High**. P9.8 live legal/full subject-access/physical-backup, partial P8 accounting/arrangements, wider LSS/public pagination, actual providers/model quality and release gates remain open.
 
 Prepared: 2026-10-04. Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
 
@@ -355,19 +355,21 @@ Local P9.5/P9.6 acceptance is recorded in [ADR-0010](ADR/0010-local-pilot-analyt
 
 **Depends on:** validated LSS and permissions from P3/P6; usage accounting and operations from P9. **Produces:** the AI workflow required by `prompt.txt`.
 
-- [ ] P10.1 Define `AIProvider`, `GeminiProvider`, `OpenAIProvider` and `LondosDesignOrchestrator` contracts. Planner/designer/merchandising/inspector are logical roles, not a requirement for four model calls.
-- [ ] P10.2 Implement a deterministic path for supported simple edits. Ambiguous natural language uses the configured initial provider; schema-constrained output is treated as untrusted data.
-- [ ] P10.3 Assemble only minimal authorized shop context after checking access. Delimit merchant/catalogue text as data; exclude secrets, unrelated shops, private evidence and unrestricted tools. Recheck authorization before saving or applying a proposal.
-- [ ] P10.4 Compile approved structured intent into bounded patches. Run the complete deterministic validator before preview and again at publication. Detect stale base revisions and changes in referenced resources.
-- [ ] P10.5 Use Gemini initially when configured. Use OpenAI selectively for complex/ambiguous redesign, low confidence, repeated bounded repair, explicit quality review or allowed fallback. Revalidate reviewer recommendations identically.
-- [ ] P10.6 Add timeout, bounded context/request/repair sizes, backoff, cancellation, per-shop/concurrency/cost limits and usage accounting. Obey provider retry/rate-limit signals. Credential failover must not cycle through free keys to evade quota or billing.
-- [ ] P10.7 Store credentials only server-side through the actual deployment secret facility. Validate configuration without printing values. Support the named credential pool in `prompt.txt` where allowed; if a cloud platform reserves a requested variable name, use a supported binding/name mapping rather than embedding secrets or weakening controls.
-- [ ] P10.8 Show understandable unavailable/quota/conflict/review states. Templates, manual editing and existing published shops remain usable. AI cannot publish; merchant confirmation is a separate authorized action.
-- [ ] P10.9 Test malformed/oversized JSON, unknown operations, script/SQL/JS-like payloads, hostile descriptions, cross-shop IDs, stale permissions, provider timeout/outage/rate-limit, reviewer disagreement and failed repair. Assert a simple deterministic edit has no paid-review call and public rendering has zero provider calls.
-- [ ] P10.10 Add redacted provider/model/outcome/latency/token/cost metadata and limited prompt retention policy. Scan browser output, logs, analytics and error responses for credential leakage using safe test sentinels.
-- [ ] P10.11 Run live provider contract checks with authorized configured accounts when available. Keep fake-provider contract tests deterministic in CI. Record unavailable providers as external validation gaps; never claim a fake proves live access or model quality.
+- [x] P10.1 Define `AIProvider`, `GeminiProvider`, `OpenAIProvider` and `LondosDesignOrchestrator` contracts. Planner/designer/merchandising/inspector are logical roles, not a requirement for four model calls.
+- [x] P10.2 Implement a deterministic path for supported simple edits. Ambiguous natural language uses the configured initial provider; schema-constrained output is treated as untrusted data.
+- [x] P10.3 Assemble only minimal authorized shop context after checking access. Delimit merchant/catalogue text as data; exclude secrets, unrelated shops, private evidence and unrestricted tools. Recheck authorization before saving or applying a proposal.
+- [x] P10.4 Compile approved structured intent into bounded patches. Run the complete deterministic validator before preview and again at publication. Detect stale base revisions and changes in referenced resources.
+- [x] P10.5 Use Gemini initially when configured. Use OpenAI selectively for complex/ambiguous redesign, low confidence, repeated bounded repair, explicit quality review or allowed fallback. Revalidate reviewer recommendations identically.
+- [x] P10.6 Add timeout, bounded context/request/repair sizes, backoff, cancellation, per-shop/concurrency/cost limits and usage accounting. Obey provider retry/rate-limit signals. Credential failover must not cycle through free keys to evade quota or billing.
+- [x] P10.7 Store credentials only server-side through the actual deployment secret facility. Validate configuration without printing values. Support the named credential pool in `prompt.txt` where allowed; if a cloud platform reserves a requested variable name, use a supported binding/name mapping rather than embedding secrets or weakening controls.
+- [x] P10.8 Show understandable unavailable/quota/conflict/review states. Templates, manual editing and existing published shops remain usable. AI cannot publish; merchant confirmation is a separate authorized action.
+- [x] P10.9 Test malformed/oversized JSON, unknown operations, script/SQL/JS-like payloads, hostile descriptions, cross-shop IDs, stale permissions, provider timeout/outage/rate-limit, reviewer disagreement and failed repair. Assert a simple deterministic edit has no paid-review call and public rendering has zero provider calls.
+- [x] P10.10 Add redacted provider/model/outcome/latency/token/cost metadata and limited prompt retention policy. Scan browser output, logs, analytics and error responses for credential leakage using safe test sentinels.
+- [x] P10.11 Run live provider contract checks with authorized configured accounts when available. Keep fake-provider contract tests deterministic in CI. Record unavailable providers as external validation gaps; never claim a fake proves live access or model quality.
 
 **Gate:** ordinary merchant language can reach a validated, previewed, explicitly published revision; malicious/provider failures remain within the design boundary; real-provider status is documented separately.
+
+**Recorded acceptance (2026-10-06):** [P10 local gate](evidence/X2-P10.md) passes the native language → validated private preview → confirmed draft → separate confirmed publication journey. All eleven implementation/recording items are complete at that scope. P10.11 is conditional: [both live providers are unavailable](evidence/X2-P10-PROVIDERS.json); no live access/model-quality/billing claim is made. G4/full build and production release remain open.
 
 **Containment:** disable a provider or the entire AI feature without a deployment-wide outage; retain manual design and prior published revisions. No arbitrary code generation/execution path is introduced.
 

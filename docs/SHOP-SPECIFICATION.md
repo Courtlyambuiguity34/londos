@@ -517,3 +517,7 @@ The renderer decides the safe responsive implementation.
 **Merchants own the arrangement and identity of their premises; Londos owns the building code and renderer.**
 
 That boundary gives Londos both customization and platform safety.
+
+## P10 implemented proposal compiler
+
+P10 uses this existing closed schema-1 registry: department, products, story and contact spaces; earth/plum/blue themes; bounded call/WhatsApp/enquiry actions. Provider-neutral intent compiles only theme/actions/move/announcement and add/replace/remove of those spaces through the same full deterministic validator and active canonical owned references. Private proposal preview is unsaved; fresh original-requester confirmation creates an immutable draft and existing publication remains separate. No arbitrary HTML/code/tool output exists. [P10 evidence](evidence/X2-P10.md) records the gate and unavailable live providers. Wider planned registry/public catalogue pagination belongs to the next P11/full-build gate and is not silently claimed by P10.

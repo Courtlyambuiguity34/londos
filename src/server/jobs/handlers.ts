@@ -81,6 +81,8 @@ export async function handle(
       await cleanupMedia(client);
       const { cleanupPilotMetrics } = await import("../analytics");
       await cleanupPilotMetrics(client);
+      const { cleanupAssistantRequests } = await import("../ai-design/service");
+      await cleanupAssistantRequests(client);
     }
     signal.throwIfAborted();
   });

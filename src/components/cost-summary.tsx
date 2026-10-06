@@ -1,16 +1,18 @@
-import type { ReportedTotals, ResourceSnapshot } from "@/server/costs";
+import type { ReportedTotals, ResourceSnapshot, AIUsageTotals } from "@/server/costs";
 export function CostSummary({
   days,
   resource,
   reported,
   limits,
   unavailable,
+  aiUsage = [],
 }: {
   days: number;
   resource?: ResourceSnapshot;
   reported: ReportedTotals;
   limits: { media: string; jobs: string; reported: string };
   unavailable: { source: string; reason: string }[];
+  aiUsage?: AIUsageTotals;
 }) {
   return (
     <>
@@ -99,6 +101,25 @@ export function CostSummary({
           No operating work has been reported in this window. Actual time and expenses are
           unmeasured.
         </p>
+      )}
+      <h2>Provider-reported AI use</h2>
+      <p>
+        Reported tokens and configured USD estimates are separate from UGX operating work. Estimates
+        are not reconciled bills or merchant charges; fixture attempts are labelled separately.
+      </p>
+      {aiUsage.length ? (
+        <ul>
+          {aiUsage.map((u) => (
+            <li key={`${u.provider}-${u.verification}-${u.outcome}`}>
+              {u.provider} · {u.verification} · {u.outcome}: {u.attempts} attempts,{" "}
+              {u.reported_input_tokens} reported input tokens, {u.reported_output_tokens} reported
+              output tokens, {u.unmeasured_attempts} attempts with missing usage,{" "}
+              {u.estimated_cost_microusd ?? "unavailable"} estimated USD micro units.
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No recorded AI attempts in this window. Actual provider costs are unmeasured.</p>
       )}
       <h2>Unavailable measurements</h2>
       <ul className="team-list">

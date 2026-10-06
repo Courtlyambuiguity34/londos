@@ -15,7 +15,13 @@ try {
   url.pathname = `/${name}`;
   const child = spawn(
     process.execPath,
-    ["node_modules/vitest/vitest.mjs", "run", "--config", "vitest.integration.config.ts"],
+    [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      ...process.argv.slice(2),
+    ],
     {
       stdio: "inherit",
       env: {

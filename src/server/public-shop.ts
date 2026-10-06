@@ -68,7 +68,7 @@ const routeKey = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
   .max(80);
-async function assemble(
+export async function assemble(
   client: PoolClient,
   row: ShopView["shop"] & { design: unknown; revision: number },
   privatePreview: boolean,

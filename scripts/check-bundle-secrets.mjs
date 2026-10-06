@@ -1,7 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
-const values = [process.env.AUTH_SECRET, process.env.DATABASE_URL];
+const values = [
+  process.env.AUTH_SECRET,
+  process.env.DATABASE_URL,
+  process.env.OPENAI_API_KEY,
+  process.env.LONDOS_OPENAI_API_KEY,
+  ...Array.from({ length: 5 }, (_, i) => process.env[`GEMINI_API_KEY_${i + 1}`]),
+];
 if (process.env.DATABASE_URL) values.push(new URL(process.env.DATABASE_URL).password);
 if (existsSync(".local/development-accounts.json")) {
   for (const account of Object.values(

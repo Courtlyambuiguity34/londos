@@ -75,7 +75,8 @@ const unavailable = [
   },
   {
     source: "AI usage and charges",
-    reason: "AI/provider integration is not implemented; absence is not a zero-cost measurement.",
+    reason:
+      "Provider-reported usage and configured estimates are shown separately when present. Reconciled provider bills and actual AI charges remain unavailable; absence is not free operation.",
   },
   {
     source: "compute and storage charges",
@@ -99,6 +100,24 @@ export type ResourceSnapshot = {
   quota: { stored_bytes: string; reserved_bytes: string; asset_count: number } | null;
   jobs: { state: string; count: string; attempt_counter_sum: string }[];
 };
+export type AIUsageTotals = {
+  provider: string;
+  verification: string;
+  outcome: string;
+  attempts: string;
+  reported_input_tokens: string;
+  reported_output_tokens: string;
+  unmeasured_attempts: string;
+  estimated_cost_microusd: string | null;
+}[];
+async function aiUsage(db: PoolClient, days: number, id: string | null): Promise<AIUsageTotals> {
+  return (
+    await db.query(
+      "SELECT provider,verification,outcome,count(*)::text AS attempts,coalesce(sum(input_tokens),0)::text AS reported_input_tokens,coalesce(sum(output_tokens),0)::text AS reported_output_tokens,count(*) FILTER(WHERE input_tokens IS NULL OR output_tokens IS NULL)::text AS unmeasured_attempts,sum(estimated_cost_microusd)::text AS estimated_cost_microusd FROM ai_provider_attempts WHERE created_at>=(((clock_timestamp() AT TIME ZONE 'UTC')::date-($1::integer-1))::timestamp AT TIME ZONE 'UTC') AND ($2::uuid IS NULL OR shop_id=$2) GROUP BY provider,verification,outcome ORDER BY provider,verification,outcome",
+      [days, id],
+    )
+  ).rows;
+}
 async function resourceSnapshot(
   db: PoolClient,
   id: string,
@@ -153,6 +172,7 @@ async function snapshot(db: PoolClient, id: string, merchant: string, days: numb
     currency: "UGX" as const,
     resource: await resourceSnapshot(db, id, merchant),
     reported: await reported(db, days, id),
+    aiUsage: await aiUsage(db, days, id),
     limits,
     unavailable,
   };
@@ -205,6 +225,7 @@ export async function readOperatorCosts(
       )
     ).rows as { id: string; name: string; shop_version: number; scoped: boolean }[];
     const totals = await reported(db, days, null);
+    const usage = await aiUsage(db, days, null);
     await requireOperator(db, actor, "costs", true);
     return {
       asOf: new Date().toISOString(),
@@ -215,6 +236,7 @@ export async function readOperatorCosts(
       quota,
       jobs,
       reported: totals,
+      aiUsage: usage,
       shops: rows.slice(0, 20),
       nextAfter: rows.length > 20 ? rows[19]!.id : null,
       limits,

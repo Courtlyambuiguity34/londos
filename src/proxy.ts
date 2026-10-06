@@ -6,6 +6,7 @@ import { auth } from "./server/security/auth";
 import {
   resolveActor,
   requireShop,
+  requireStepUp,
   requireOperator,
   sessionState,
 } from "./server/security/authorization";
@@ -52,6 +53,7 @@ export async function proxy(request: NextRequest) {
             ? "design"
             : "catalogue";
       const currentShop = await requireShop(database(), actor, parsed.data, permission);
+      if (/\/design\/assistant(?:\/|$)/.test(path)) await requireStepUp(database(), actor);
       if (/\/(address|trust|incidents|analytics|costs)(?:\/|$)/.test(path))
         await requireMerchant(database(), actor, currentShop.merchant_id, "membership");
     }

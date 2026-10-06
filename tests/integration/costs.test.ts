@@ -222,7 +222,7 @@ test("015 to 016 is additive, repeatable and creates no historical measurements 
       ])
     ).rows,
   ).toEqual((baseline as unknown[]).slice(0, 6));
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(16);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(17);
   expect((await pool.query("SELECT count(*)::int AS n FROM resource_cost_entries")).rows[0].n).toBe(
     0,
   );

@@ -40,7 +40,7 @@ export const unpublishDesignInput = z
   .object({ version: z.number().int().positive(), confirm: z.literal(true) })
   .strict();
 
-async function designLock(
+export async function designLock(
   client: PoolClient,
   actor: Actor,
   shopId: string,
@@ -52,7 +52,11 @@ async function designLock(
   if (permission === "publish") await requireStepUp(client, actor);
   return shop;
 }
-async function validateReferences(client: PoolClient, shopId: string, spec: ShopSpecification) {
+export async function validateReferences(
+  client: PoolClient,
+  shopId: string,
+  spec: ShopSpecification,
+) {
   const departments = spec.spaces.flatMap((space) =>
     space.type === "department" ? [space.departmentId] : [],
   );
@@ -77,7 +81,7 @@ async function validateReferences(client: PoolClient, shopId: string, spec: Shop
   )
     throw new AccessError(404, "resource_unavailable");
 }
-async function state(client: PoolClient, shopId: string, merchantId: string) {
+export async function state(client: PoolClient, shopId: string, merchantId: string) {
   await client.query(
     "INSERT INTO shop_designs(shop_id,merchant_id,last_revision) SELECT $1,$2,coalesce(max(revision),0) FROM shop_revisions WHERE shop_id=$1 ON CONFLICT DO NOTHING",
     [shopId, merchantId],
@@ -89,7 +93,7 @@ async function state(client: PoolClient, shopId: string, merchantId: string) {
     published_id: string | null;
   };
 }
-async function insertRevision(
+export async function insertRevision(
   client: PoolClient,
   actor: Actor,
   shopId: string,
@@ -125,7 +129,7 @@ async function insertRevision(
   });
   return { version: current.version + 1, revision };
 }
-export async function readDesign(pool: Pool, actor: Actor, shopId: string) {
+export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: string) {
   await requireShop(pool, actor, shopId, "design");
   const pointer = (
     await pool.query(

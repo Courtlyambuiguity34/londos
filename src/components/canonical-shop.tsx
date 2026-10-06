@@ -108,7 +108,7 @@ function Contacts({ view }: { view: ShopView }) {
     </div>
   );
 }
-export function CanonicalShop({ view }: { view: ShopView }) {
+export function CanonicalShop({ view, proposal = false }: { view: ShopView; proposal?: boolean }) {
   const c = view.contact,
     actions = view.specification.actions;
   const channels: NonNullable<CaptureInput["channel"]>[] = [];
@@ -140,8 +140,14 @@ export function CanonicalShop({ view }: { view: ShopView }) {
       <div className={`shell shop-page canonical-shop theme-${view.specification.theme}`}>
         {view.privatePreview ? (
           <aside className="notice" aria-label="Private preview">
-            Private design preview · Revision {view.revision}. Publication requires a separate
-            confirmation.
+            {proposal ? (
+              "Private proposal preview · Not saved. Applying creates a draft; publication requires a separate confirmation."
+            ) : (
+              <>
+                Private design preview · Revision {view.revision}. Publication requires a separate
+                confirmation.
+              </>
+            )}
           </aside>
         ) : null}
         <nav aria-label="Shop navigation" className="filter-chips">

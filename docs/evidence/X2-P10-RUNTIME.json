@@ -1,0 +1,99 @@
+{
+  "recordedAt": "2026-10-06T06:09:42.965Z",
+  "requiredMigration": "017_conversational_design.sql",
+  "compiledAppAndIndependentWorker": true,
+  "readiness": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "ready",
+    "financialOperations": false,
+    "liveNotifications": false,
+    "localRentWorkflow": true,
+    "localPrivacyErasure": false,
+    "liveErasure": false,
+    "localPilotAnalytics": false,
+    "liveAnalytics": false
+  },
+  "health": {
+    "status": "preview",
+    "mode": "database-development",
+    "publicBrowsing": true,
+    "transactions": false,
+    "authentication": false,
+    "database": true,
+    "ai": false,
+    "coreConfigured": true,
+    "readiness": "/api/ready"
+  },
+  "publicChecks": [
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "privateCredentialLeak": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "privateCredentialLeak": false
+    }
+  ],
+  "anonymousAssistantDenials": [
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    }
+  ],
+  "mainAssistantCounts": {
+    "ai_design_requests": 0,
+    "ai_provider_attempts": 0,
+    "ai_daily_budgets": 0,
+    "ai_provider_cooldowns": 0
+  },
+  "remoteEnabled": false,
+  "providerCapabilities": {
+    "gemini": "remote_disabled",
+    "openai": "remote_disabled"
+  },
+  "providerConfigurationPresence": {
+    "GEMINI_API_KEY_1": false,
+    "GEMINI_API_KEY_2": false,
+    "GEMINI_API_KEY_3": false,
+    "GEMINI_API_KEY_4": false,
+    "GEMINI_API_KEY_5": false,
+    "OPENAI_API_KEY": false,
+    "LONDOS_OPENAI_API_KEY": false,
+    "LONDOS_AI_GEMINI_MODEL": false,
+    "LONDOS_AI_OPENAI_MODEL": false,
+    "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION": false,
+    "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION": false,
+    "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION": false,
+    "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION": false
+  },
+  "limits": "Local matching-runtime evidence. No live provider calls; no fresh-task persistence, production backup restoration or SLA claim."
+}

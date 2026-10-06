@@ -102,6 +102,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
         {state.revision ?? "None"}.
       </p>
       <Link href="/security">Verify account security</Link>
+      <Link prefetch={false} href={`/shopkeeper/shops/${shopId}/design/assistant`}>
+        Describe a change with the design assistant
+      </Link>
       <Link href="/sign-in">Sign in again</Link>
       <form
         className="account-form"

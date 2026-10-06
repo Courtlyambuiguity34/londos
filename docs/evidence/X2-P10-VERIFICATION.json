@@ -1,0 +1,76 @@
+{
+  "recordedAt": "2026-10-06T06:14:24.740Z",
+  "clientTimezone": "Africa/Kampala",
+  "branch": "codex/londos-x2-2026-10-05",
+  "baseCommit": "f13af3c74437b493d626e3595d8c2b875b1c58ba",
+  "tests": {
+    "unit": 52,
+    "integration": 238,
+    "fixtureBrowser": 16,
+    "coreBrowser": 38,
+    "total": 344,
+    "integrationRuns": {
+      "fullRegression": 237,
+      "finalFocusedSentinel": 1
+    },
+    "p10Added": {
+      "unit": 29,
+      "integration": 26,
+      "browser": 4
+    }
+  },
+  "checks": {
+    "lint": "passed",
+    "strictTypes": "passed",
+    "format": "passed",
+    "documentationLinks": {
+      "markdownFiles": 57,
+      "resolvedLinks": 484
+    },
+    "optimizedStandaloneAndIndependentWorkerBuild": "passed",
+    "dependencyAudit": {
+      "vulnerabilities": 0
+    },
+    "artifactSecretScan": {
+      "files": 1628,
+      "candidateValues": 9,
+      "result": "passed"
+    },
+    "stagedAndTaskLogScan": {
+      "files": 60,
+      "taskLogs": 10,
+      "candidateValues": 9,
+      "result": "passed"
+    },
+    "previousMigrationsAndLockfile": "unchanged"
+  },
+  "logs": [
+    {
+      "kind": "p10-integration.log",
+      "sha256": "fcc0a4bdb5a849aa4ddb8cc24fb25dee44577fe08e39fa587c44acd1ab5a65db",
+      "contents": "Private ignored logs; no raw log content committed."
+    },
+    {
+      "kind": "p10-sentinel-integration.log",
+      "sha256": "bdab9ffe6cc66e77c9f1ef621f9db589198e379e92349e1669a3a0051654d7ba",
+      "contents": "Private ignored logs; no raw log content committed."
+    },
+    {
+      "kind": "p10-fixture-browser.log",
+      "sha256": "bf4bf20888c2f56cb07d4e2cec285ed7c44fdc47d2e011800d6b0b838f059636",
+      "contents": "Private ignored logs; no raw log content committed."
+    },
+    {
+      "kind": "p10-core-browser.log",
+      "sha256": "b4219e8789cbce5be8f74849d2f08a3e6a23225bcb45cf180d673921c00f9783",
+      "contents": "Private ignored logs; no raw log content committed."
+    }
+  ],
+  "providerContracts": {
+    "gemini": "unavailable",
+    "openai": "unavailable",
+    "liveCalls": 0,
+    "fixturesProveLiveAccess": false
+  },
+  "gate": "P10 implementation/local gate complete; unavailable live provider contracts recorded as conditional external gaps. Full-build G4 and production release remain open."
+}

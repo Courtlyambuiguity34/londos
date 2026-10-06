@@ -90,3 +90,9 @@ Perform:
 - incident-response plan;
 - privacy/data-retention review;
 - legal/regulatory review appropriate to operating markets.
+
+## Implemented P10 design boundary
+
+[P10 evidence](evidence/X2-P10.md) and [ADR-0013](ADR/0013-provider-neutral-conversational-design.md) record private assistant isolation. Fresh native design authority precedes minimal context assembly and is rechecked after network/lock waits and before storage/preview/application. Original requester, immutable retry identity, current proposal/base/context/catalogue versions and confirmation guard atomic draft application. Publication is a separate existing authorized command. Provider credentials remain server-side secure bindings; fixed HTTPS endpoints, normal proxy/CA/TLS, no redirects/tools and bounded readers/deadlines constrain transport. Closed untrusted intent passes full deterministic LSS/owned-reference budgets. No provider calls enter public rendering. Malicious/provider failures, stale authority, expiry and actual SQL rollback cannot publish.
+
+No raw instruction/prompt/invalid output/provider error body is retained. Validated candidates are scrubbed at terminal action/expiry; minimal immutable receipts/redacted attempt metadata remain, with production retention/backups still release obligations. Durable request/token/configured-estimate/concurrency limits and shared cooldowns stop retry/credential quota cycling. Safe sentinels, all four protected HTTP methods, both HTML/Flight pages, real serialization waits and configured-value artifact/staged scans pass locally. Both live AI accounts remain unavailable; fake contracts do not establish real provider access/model quality or a production security certification.

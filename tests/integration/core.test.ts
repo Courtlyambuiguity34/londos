@@ -184,7 +184,7 @@ describe("canonical persistence", () => {
   test("fresh/upgrade/repeated/concurrent migrations preserve data and verify checksums", async () => {
     expect(
       (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-    ).toBe(16);
+    ).toBe(17);
     await migrate(pool);
     expect((await pool.query("SELECT count(*)::int AS count FROM shops")).rows[0].count).toBe(6);
     const changed = join(directory, "changed-migrations");
