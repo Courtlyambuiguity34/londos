@@ -15,7 +15,8 @@ export type OperatorPermission =
   | "jobs"
   | "operations"
   | "analytics"
-  | "privacy";
+  | "privacy"
+  | "costs";
 export async function resolveActor(authentication: Auth, headers: Headers): Promise<Actor> {
   const result = await authentication.api.getSession({
     headers,

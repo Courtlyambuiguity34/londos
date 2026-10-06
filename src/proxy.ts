@@ -13,6 +13,7 @@ import { applicationAccess } from "./server/lifecycle-common";
 import { invoiceAccess } from "./server/rent";
 import { operationsAccess } from "./server/administration";
 import { trustAccess } from "./server/trust";
+import { operatorCostAccess } from "./server/costs";
 import { privacyOwnerAccess, privacyOperatorAccess } from "./server/privacy";
 import { incidentAccess, incidentQueue } from "./server/incidents";
 import { requireMerchant } from "./server/security/authorization";
@@ -43,7 +44,7 @@ export async function proxy(request: NextRequest) {
     if (shop) {
       const parsed = z.uuid().safeParse(shop[1]);
       if (!parsed.success) return unavailable(404);
-      const permission = /\/(address|trust|incidents|analytics)(?:\/|$)/.test(path)
+      const permission = /\/(address|trust|incidents|analytics|costs)(?:\/|$)/.test(path)
         ? "sensitive"
         : /\/rent(?:\/|$)/.test(path)
           ? "finance"
@@ -51,7 +52,7 @@ export async function proxy(request: NextRequest) {
             ? "design"
             : "catalogue";
       const currentShop = await requireShop(database(), actor, parsed.data, permission);
-      if (/\/(address|trust|incidents|analytics)(?:\/|$)/.test(path))
+      if (/\/(address|trust|incidents|analytics|costs)(?:\/|$)/.test(path))
         await requireMerchant(database(), actor, currentShop.merchant_id, "membership");
     }
     if (path === "/landlord" || path.startsWith("/landlord/")) {
@@ -96,6 +97,13 @@ export async function proxy(request: NextRequest) {
       const id = z.uuid().safeParse(operation[1]);
       if (!id.success) return unavailable(404);
       await operationsAccess(database(), actor, id.data);
+    }
+    if (path.startsWith("/landlord/costs")) await requireOperator(database(), actor, "costs", true);
+    const costShop = /^\/landlord\/costs\/([^/]+)$/.exec(path);
+    if (costShop) {
+      const id = z.uuid().safeParse(costShop[1]);
+      if (!id.success) return unavailable(404);
+      await operatorCostAccess(database(), actor, id.data);
     }
     if (path.startsWith("/landlord/privacy"))
       await requireOperator(database(), actor, "privacy", true);

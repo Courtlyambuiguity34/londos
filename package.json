@@ -39,7 +39,8 @@
     "db:trust": "tsx scripts/enable-local-trust.ts",
     "db:incidents": "tsx scripts/enable-local-incidents.ts",
     "db:analytics": "tsx scripts/enable-local-analytics.ts",
-    "db:privacy": "tsx scripts/enable-local-privacy.ts"
+    "db:privacy": "tsx scripts/enable-local-privacy.ts",
+    "db:costs": "tsx scripts/enable-local-costs.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",

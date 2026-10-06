@@ -1,0 +1,73 @@
+{
+  "recordedAt": "2026-10-06T04:04:48.227Z",
+  "migration": "016_local_resource_costs.sql",
+  "localSetup": {
+    "explicitCostsGrantForVerifiedFictionalOperator": true,
+    "repeatabilityPassed": true,
+    "configurationAndPrivateAccountsPreserved": true,
+    "defaultSeedGrantsUnchanged": true,
+    "nativeFreshMfaAndSeparateShopScopeRequired": true,
+    "mainReportingJournalRemainsEmpty": true
+  },
+  "observations": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "body": {
+        "ready": true,
+        "mode": "development-core",
+        "database": true,
+        "authentication": true,
+        "worker": "ready",
+        "financialOperations": false,
+        "liveNotifications": false,
+        "localRentWorkflow": true,
+        "localPrivacyErasure": false,
+        "liveErasure": false,
+        "localPilotAnalytics": true,
+        "liveAnalytics": false
+      }
+    },
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 23936,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 18494,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/costs",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/costs",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    },
+    {
+      "path": "/api/operator/costs/shops/30000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "cacheControl": "private, no-store, max-age=0",
+      "referrerPolicy": "no-referrer",
+      "bytes": 35,
+      "containsPrivateAccountEmail": false
+    }
+  ],
+  "limit": "Current matching local web/worker and explicit costs grant. Main reported journal remains empty. Bytes/counters do not measure monetary charges. Live collection, analytics, notifications and main/live privacy erasure remain disabled. No production/fresh-task/physical-backup restoration claim."
+}

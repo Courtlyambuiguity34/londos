@@ -456,3 +456,39 @@ flowchart TD
 ```
 
 Erasure is default-off fictional loopback functionality. Financial/account/trust/incident/contact/audit history remains retained, and arrears closure never deletes data. Holds survive cancelled/denied/unassigned requests. These diagrams do not establish live legal erasure or physical backup handling. See [privacy evidence](evidence/X2-P9-PRIVACY.md) and the inspected fictional [owner desktop](evidence/images/x2-p9-privacy-owner-desktop.png), [scoped reviewer desktop](evidence/images/x2-p9-privacy-review-desktop.png) and [mobile accessible cancellation](evidence/images/x2-p9-privacy-mobile.png) captures.
+
+
+## P9 measured resources and reported operating costs
+
+[ADR-0012](ADR/0012-local-resource-cost-reporting.md) and [cost evidence](evidence/X2-P9-COSTS.md) distinguish current logical snapshots, manual reporting and missing measurements. No path creates a merchant charge or changes existing jobs.
+
+```mermaid
+flowchart TD
+  Blobs[Canonical managed SQL blob lengths] --> Snapshot[Current logical media and queue snapshots]
+  Quota[Recorded quota and reserved headroom] --> Snapshot
+  Jobs[Tenant-consistent current job state and counters] --> Snapshot
+  Snapshot --> Owner[Fresh current owner: safe own-shop aggregates]
+  Snapshot --> Platform[Explicit costs grant and native fresh MFA]
+  Shared[Separate platform and merchant shared jobs] --> Platform
+  Evidence[Coarse application and trust evidence volume] --> Platform
+  Platform --> Claim[Reasoned current-version shop scope claim]
+  Claim --> Journal[Private shop journal: native grant and scope rechecks]
+  Journal --> Original[Reported integer minutes and UGX expenses]
+  Original --> Correction[One exact linked negative correction]
+  Original --> Totals[Net totals by original UTC work day]
+  Correction --> Totals
+  Totals --> Owner
+  Missing[Unavailable bandwidth, AI, prices and independent staff time] --> Disclosure[Unknown actual costs and reporting coverage]
+  Disclosure --> Owner
+  Disclosure --> Platform
+```
+
+Shared jobs and pre-shop evidence are not allocated by invented estimates. Reserved bytes are headroom; missing quota is unavailable. Authorized replay can reset current attempt counters. Manual amounts keep minutes/money separate, with no hourly rate or provider-billing claim. Immutable original/correction history and UTC windows preserve interpretation.
+
+The following fictional captures were inspected for readable labels, limits, private-owner redaction and bounded layout; native tests cover keyboard/accessibility and overflow. Operator journal reasons are private fictional fixture text, without credentials or real personal information.
+
+![Fresh owner desktop resource and reporting summary](evidence/images/x2-p9-costs-owner-desktop.png)
+
+![Scoped native-MFA operator reporting and exact-correction controls](evidence/images/x2-p9-costs-journal-desktop.png)
+
+![Mobile owner summary with UTC windows and explicit missing measurements](evidence/images/x2-p9-costs-mobile.png)
