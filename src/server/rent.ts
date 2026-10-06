@@ -542,6 +542,10 @@ export async function reconcileInvoice(
       invoiceId: id,
       eventId,
     });
+    // Provisioning may wait on shared mall capacity after the merchant lock.
+    // Revocation during that wait must roll back the entire financial command.
+    await invoiceAccess(client, actor, id, "finance");
+    await requireOperator(client, actor, "finance", true);
     return recordCommand(client, actor, v.key, hash, id, {
       eventId,
       shopId,

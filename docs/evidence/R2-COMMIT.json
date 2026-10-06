@@ -1,0 +1,7 @@
+{
+  "recordedAt": "2026-10-06T12:02:37.349998+00:00",
+  "baselineCommit": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
+  "testedSourceInventorySha256": "ad8be557af779262fc74f71463cac0bc243fe14fbe984966e9c0304dd11d5bf4",
+  "sourceFiles": 334,
+  "identity": "Tested implementation identified by the source inventory in R2-VERIFICATION.json; an evidence-only follow-up records its exact Git commit."
+}

@@ -1,0 +1,186 @@
+{
+  "check": "live-ai-provider-contracts",
+  "recordedAt": "2026-10-06T11:58:12.916Z",
+  "observations": [
+    {
+      "provider": "gemini",
+      "outcome": "unavailable",
+      "reason": "credentials_unavailable",
+      "liveRequest": false
+    },
+    {
+      "provider": "openai",
+      "outcome": "unavailable",
+      "reason": "credentials_unavailable",
+      "liveRequest": false
+    }
+  ],
+  "limit": "Unavailable is not a passing live contract. This bounded fictional theme check does not establish general design quality, price accuracy or provider billing. No credentials, prompts or provider error bodies printed. Saved suggestions do not overwrite existing values or activate bindings. Official public prices do not establish account availability, endpoint service tier, data terms, design quality or actual billing.",
+  "requiredLiveExitCode": 1,
+  "liveRequests": 0,
+  "environment": {
+    "recordedAt": "2026-10-06T11:58:12.897Z",
+    "revision": "25",
+    "observationsCurrent": true,
+    "networkObservation": "unknown",
+    "runtimeVariableMetadata": [
+      {
+        "environment_variable": "LONDOS_AI_REMOTE",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_SLOT",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_DAILY_COST_MICROUSD",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_AUTH_FAILOVER",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_ALLOW_OPENAI_FALLBACK",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "NODE_USE_ENV_PROXY",
+        "optional": false,
+        "state": "unknown"
+      }
+    ],
+    "activeProviderSecretBindings": 0,
+    "savedSecretBindings": [
+      {
+        "name": "GEMINI_API_KEY_1",
+        "hasSavedBinding": false
+      },
+      {
+        "name": "GEMINI_API_KEY_2",
+        "hasSavedBinding": false
+      },
+      {
+        "name": "GEMINI_API_KEY_3",
+        "hasSavedBinding": false
+      },
+      {
+        "name": "GEMINI_API_KEY_4",
+        "hasSavedBinding": false
+      },
+      {
+        "name": "GEMINI_API_KEY_5",
+        "hasSavedBinding": false
+      },
+      {
+        "name": "LONDOS_OPENAI_API_KEY",
+        "hasSavedBinding": false
+      }
+    ],
+    "note": "Readiness metadata reports unknown for direct variables; actual process injection and successful official HTTPS requests are recorded separately. No secrets printed."
+  },
+  "injectedNonsecretValues": {
+    "LONDOS_AI_REMOTE": "false",
+    "LONDOS_AI_GEMINI_SLOT": "1",
+    "LONDOS_AI_GEMINI_MODEL": "gemini-2.5-flash",
+    "LONDOS_AI_OPENAI_MODEL": "gpt-5-mini",
+    "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION": "300000",
+    "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION": "2500000",
+    "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION": "750000",
+    "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION": "4500000",
+    "LONDOS_AI_DAILY_COST_MICROUSD": "1000000",
+    "LONDOS_AI_AUTH_FAILOVER": "false",
+    "LONDOS_AI_ALLOW_OPENAI_FALLBACK": "false",
+    "NODE_USE_ENV_PROXY": "1"
+  },
+  "remoteMainApplicationEnabled": false,
+  "modelAccountsLiveVerified": false,
+  "publishedPricing": {
+    "currency": "USD",
+    "basis": "Standard noncached text input and complete output per 1M tokens; no batch/flex/priority, regional uplift, caching, tools, taxes or actual billing claim",
+    "gemini": {
+      "model": "gemini-2.5-flash",
+      "input": 0.3,
+      "outputIncludingThinking": 2.5,
+      "inputMicroUsd": 300000,
+      "outputMicroUsd": 2500000,
+      "matchesInjectedRates": true
+    },
+    "openaiCurrent": {
+      "model": "gpt-5-mini",
+      "input": 0.25,
+      "output": 2,
+      "inputMicroUsd": 250000,
+      "outputMicroUsd": 2000000,
+      "matchesInjectedRates": false
+    },
+    "openaiRecommended": {
+      "model": "gpt-5.4-mini",
+      "input": 0.75,
+      "output": 4.5,
+      "inputMicroUsd": 750000,
+      "outputMicroUsd": 4500000,
+      "matchesInjectedRates": true,
+      "responsesAndStructuredOutputsDocumented": true,
+      "existingSavedModelOverwritten": false
+    },
+    "sources": [
+      {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "retrievedAt": "2026-10-06T11:55:19.170Z",
+        "sha256": "61d037972a578c7e232e30aacf0ead65f81abfd575412ddd11c08a8ca8efffa7"
+      },
+      {
+        "url": "https://developers.openai.com/api/docs/pricing.md",
+        "retrievedAt": "2026-10-06T11:55:17.390Z",
+        "sha256": "0d9fb6b240209bb7b5a05d1d6ce0b8a796e0924b7e34c5ab183a3f1f890febe6"
+      },
+      {
+        "url": "https://developers.openai.com/api/docs/models/gpt-5-mini.md",
+        "retrievedAt": "2026-10-06T11:55:18.212Z",
+        "sha256": "3f3228b22ff8f4d6235158bb70ce1206a521724beb2b0dd814f0f38d0d897800"
+      },
+      {
+        "url": "https://developers.openai.com/api/docs/models/gpt-5.4-mini.md",
+        "retrievedAt": "2026-10-06T11:55:17.749Z",
+        "sha256": "97dbda29af4009ed275112e92037a5b46f313caf0d1232ff9b54b899b4fb65a7"
+      }
+    ]
+  },
+  "requiredAction": "Bind genuine GEMINI_API_KEY_1 and LONDOS_OPENAI_API_KEY securely in environment settings, change the saved OpenAI model to gpt-5.4-mini or explicitly reconcile another model/rate selection, save/publish/reconnect, and pass bounded live checks before remote use."
+}

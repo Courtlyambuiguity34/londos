@@ -89,7 +89,7 @@ async function context(db: PoolClient, actor: Actor, id: string) {
   ).rows as DesignContext["departments"];
   const products = (
     await db.query(
-      "SELECT p.id,p.name,p.version FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.merchant_id=p.merchant_id WHERE p.shop_id=$1 AND p.merchant_id=$2 AND p.availability<>'archived' AND d.archived=false AND (p.id IN(SELECT id FROM products WHERE shop_id=$1 AND availability<>'archived' ORDER BY position,id LIMIT 32) OR p.id=ANY($3::uuid[])) ORDER BY p.position,p.id",
+      "SELECT p.id,p.name,p.version FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.merchant_id=p.merchant_id WHERE p.shop_id=$1 AND p.merchant_id=$2 AND p.availability<>'archived' AND d.archived=false AND (p.id IN(SELECT chosen.id FROM products chosen JOIN departments current_department ON current_department.id=chosen.department_id AND current_department.shop_id=chosen.shop_id AND current_department.merchant_id=chosen.merchant_id AND current_department.archived=false WHERE chosen.shop_id=$1 AND chosen.availability<>'archived' ORDER BY chosen.position,chosen.id LIMIT 32) OR p.id=ANY($3::uuid[])) ORDER BY p.position,p.id",
       [id, shop.merchant_id, referencedProducts],
     )
   ).rows as DesignContext["products"];

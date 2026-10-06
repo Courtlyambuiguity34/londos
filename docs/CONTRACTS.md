@@ -52,7 +52,7 @@ MFA proof requires the current session, factor identity and credential generatio
 
 An active owner may issue a bounded, email-bound, expiring one-use invitation. Removal, demotion or ownership transfer that ends that issuer's active-owner authority revokes their unaccepted invitations in the same transaction; restoring the role cannot revive them. Accepted memberships remain independent. Acceptance rechecks the recipient's session and step-up after acquiring the merchant lock, comparing expiry with current wall-clock time.
 
-Mutations recheck authority after serialization waits. Revocation before that final check denies the action; already-authorized commands are not promised retroactive cancellation. Preserve this boundary explicitly when implementing each new command.
+Mutations recheck authority after serialization waits, including secondary job, shared capacity, target mall and moderation-row locks (see [R2 review](evidence/R2-REVIEW.md)). Revocation before that final check denies the action; already-authorized commands are not promised retroactive cancellation. Preserve this boundary explicitly when implementing each new command.
 
 ## Persistence and side effects
 
@@ -158,7 +158,7 @@ Read [ADR-0013](ADR/0013-provider-neutral-conversational-design.md) and [P10 evi
 | Publish | Existing independent fresh publish permission, draft/revision confirmation, full LSS/references/current eligibility | Separate publication; AI has no publication command or public-render provider path |
 | Cleanup | Existing current worker lease/fenced maintenance transaction | Up to 1,000 expired/dead-lease candidates scrubbed; immediate read/apply expiry remains enforced if cleanup stops |
 
-Only closed bounded patches and existing safe LSS types compile. Merchant/catalogue text is untrusted data. Credentials, contact/evidence/member data, unrestricted tools and code execution never enter model context. No raw instruction/prompt/invalid response/error body is persisted. Candidate lifetime is 15 minutes; minimal immutable retry/attempt metadata remains. Provider-reported tokens/configured USD estimates are separated from actual bills and UGX operating work, including fixture/unmeasured labels. No guessed rate/allocation exists. [Current live provider gap](evidence/X2-P10-PROVIDERS.json) remains separate from local passing contracts; P11 follows at Sol 6.1 Extra High.
+Only closed bounded patches and existing safe LSS types compile. Merchant/catalogue text is untrusted data. Credentials, contact/evidence/member data, unrestricted tools and code execution never enter model context. No raw instruction/prompt/invalid response/error body is persisted. Candidate lifetime is 15 minutes; minimal immutable retry/attempt metadata remains. Provider-reported tokens/configured USD estimates are separated from actual bills and UGX operating work, including fixture/unmeasured labels. No guessed rate/allocation exists. [Current live provider gap](evidence/R2-PROVIDERS.json) remains separate from local passing contracts; P11/R2 are complete and P12 release preparation follows at Sol 6.1 Extra High.
 
 ## P11 registry and catalogue continuation
 
@@ -167,3 +167,7 @@ Only closed bounded patches and existing safe LSS types compile. Merchant/catalo
 Public GET `/shops/[slug]/departments/[department]?after=<cursor>` has 20 rows plus one lookahead. The cursor is at most 400 canonical base64url characters, versioned and scoped to shop/department/generation. Wrong/malformed scope is 422; changed generation is 409 in the service, rendered as a clear department restart. Current eligibility runs before cursor interpretation. Repeatable-read pages preserve tuple/generation coherence. Migration 018 records conservative per-shop generations for product/department/attachment/media SQL statements; no global cache reset, old-row rewrite or backfill. Separate shops keep separate counters. AI context fingerprints include the current generation even for resources beyond its bounded prompt context.
 
 Public responses remain no-store and providers never participate in public reads. Request-local metadata/content reuse includes identical cursor arguments; there is no cross-request response cache. Prepared app models and absent live capability are recorded in [AI-ENVIRONMENT](AI-ENVIRONMENT.md), with price estimates separate from invoices/bills.
+
+## Request body deadlines
+
+JSON accepts the exact case-insensitive `application/json` media type with parameters and remains capped at 8,192 streamed bytes. JSON and binary upload readers stop after 15 seconds or request cancellation, cancel unfinished input and release their reader. HTTP 408 uses `request_body_timeout` or `request_body_cancelled`; oversized input remains 422 `request_too_large`, malformed JSON 422 `invalid_json`, and unsupported JSON media type 422 `json_required`. No partial JSON reaches a domain command. Transport headers/connection limits at a production ingress remain P12 configuration work.

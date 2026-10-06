@@ -1,18 +1,19 @@
 # X2: implementation and review handoff
 
-**Current: P11 implementation/local gate complete, G4 accepted with external conditions; 372 tests pass, schema 018.** Read [P11 evidence](evidence/X2-P11.md), [ADR-0014](ADR/0014-bounded-semantic-spaces-and-catalogue-pagination.md), [runtime](evidence/X2-P11-RUNTIME.json), [scale](evidence/X2-P11-BENCHMARK.json) and [provider preparation](AI-ENVIRONMENT.md). Historical P5–P10 work remains preserved.
+**Current: R2 complete at owner-confirmed 6 Astra Extra High; six defects fixed, 390 tests pass, schema 018 unchanged.** Read [R2 review](evidence/R2-REVIEW.md), [verification](evidence/R2-VERIFICATION.json), [runtime](evidence/R2-RUNTIME.json), [commit manifest](evidence/R2-COMMIT.json) and [provider preparation](AI-ENVIRONMENT.md). Historical P5–P11 work is preserved; P11 local G4 remains accepted with external conditions and G5 is open.
 
-Owner-confirmed **Sol 6.1 Extra High** completed P11. **Remind the owner to switch to 6 Astra Extra High for R2 and wait for their reported switch before that review.** The assistant does not control or inspect the selector.
+**Next model reminder: Sol 6.1 Extra High for P12 release preparation; wait for the owner's reported switch.** The owner already confirmed Astra Extra High for the completed R2 review. The assistant does not control or inspect the selector.
 
 ## Resume safely
 
-1. Inspect Git/current branch and final P11 commit manifest. Preserve applied **001–018**, private credentials/accounts, canonical database and all finished evidence. Do not rerun completed suites unless new changes/failures justify it.
-2. Read BUILD-STATUS, P11 evidence/acceptance matrix and remaining condition owners. Bounded semantic forms/gallery/collection/current references and full department continuation are implemented; metadata/content reuse uses identical four arguments. Twenty-row keysets require restart after a per-shop catalogue change. Old LSS shapes stay valid.
-3. Full required suites pass 61 unit + 251 PostgreSQL + 16 fixture + 44 core browser tests. Final clean setup, 55-table logical upgrade, two-replica mixed load and seven separate outage/recovery cases pass. Twenty-client p95 is 705.48 ms; 40-client overload saturates, not an increased capacity promise. Keep benchmarks distinct from historical X2/P10 artifacts.
-4. Provider candidates/defaults and secure cloud draft requirements are prepared. Active runtime still has no provider key bindings; required-live check records unavailable/zero calls. Official rates/model availability remain unverified. Review/save/publish/reconnect genuine `GEMINI_API_KEY_1` and mapped `LONDOS_OPENAI_API_KEY`, verify rates and bounded contracts before enabling remote processing; fixtures cannot substitute. Saved drafts do not activate automatically.
-5. Preserve native MFA/recovery, immutable finance/audit/history, independent scopes, privacy fences/exclusions and P10's private-only AI boundary. Main remote AI/default erasure/live collection/analytics/notifications/erasure remain off. Development rent remains UGX 5,000/30 days, seven-day grace/manual reconciliation.
-6. R2 should review all exercised security paths, additive/mixed-version compatibility and rollback limits, saturation, actual external gates and operator runbooks. Actual handset/Ugandan network/screen-reader user tasks, production roles/CDN/storage/secret scans and encrypted restore/RPO/RTO are outstanding release work. P9.8 legal/full subject-access/account deletion/lost-factor proof and partial P8 accounting remain explicit.
-7. Continue P12 reviewable release preparation after the model review. Authorization already covers implementation commits/pushes to this branch; production deployment is separate.
+1. Inspect Git/current branch and R2's commit manifest. Preserve applied **001–018**, private credentials/accounts, canonical database and all finished evidence. Do not rerun completed suites unless changes/failures justify it.
+2. Read BUILD-STATUS and R2's findings/condition owners. Preserve final authority rechecks after job, capacity, mall and moderation locks; JSON/upload deadlines return explicit 408 and release readers; manual/AI first-32 choices exclude archived departments before limiting. All six fixes have failing-before/passing-after evidence.
+3. R2 passes **69 unit + 260 PostgreSQL + 16 fixture + 45 core HTTP/browser tests**. P11's clean setup, 55-table logical upgrade, two-replica load/outages and emulated templates remain historical evidence at their recorded commit. Do not rerun/relabel them as R2 load or physical backup recovery. Main schema-018 compiled app/worker readiness and canonical counts are newly recorded.
+4. All 12 intended nonsecret provider settings are injected; secure provider keys are absent. Required-live check exits 1 with zero live calls. Official standard Gemini rates match; OpenAI's active `gpt-5-mini` does not match the saved 750000/4500000 rates. Recommend `gpt-5.4-mini` (published Responses/structured-output support), save the correction and genuine secure `GEMINI_API_KEY_1`/mapped `LONDOS_OPENAI_API_KEY`, then publish/reconnect and test. A saved draft suggestion cannot overwrite an existing value or activate configuration. Keep remote AI off pending actual live evidence.
+5. Preserve native MFA/recovery, immutable finance/audit/history, independent scopes, privacy fences/exclusions and private-only AI. Main/default erasure and all live collection/analytics/notifications/erasure remain off. Development rent stays UGX 5,000/30 days, seven-day grace/manual reconciliation.
+6. P12 should prepare a concrete release candidate: process/role/ingress/storage definitions, monitoring ownership, encrypted physical backup/restore with RPO/RTO, erasure-aware replay, rollback/forward-fix and the release dossier. Actual handset/Ugandan-network/screen-reader tasks, production secret scans, P9.8 governance/full subject access/account deletion/lost-factor proof and partial P8 accounting remain explicit.
+7. Authorization covers implementation commits/pushes to this branch. Production deployment is separate. Astra Extra High can review the final G5 recovery/security dossier if required after P12 implementation.
+
 
 ## Boundaries already implemented
 
@@ -41,7 +42,7 @@ P8’s local administration/lifecycle remain complete within their recorded scop
 
 ## Acceptance and containment
 
-- The R1 foundation stays passing; the current verified P11 baseline is 372 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
+- The R1 foundation stays passing; the current verified R2 baseline is 390 tests; new security/concurrency tests exercise actual PostgreSQL and real handlers. A UI-hidden control is never the authorization mechanism.
 - Upload/raw/draft assets stay private. Public ready variants require current canonical eligibility, a published design and an unarchived owned attachment on every request. Tenant identifiers and guessable URLs do not grant private object access.
 - Preserve both tested public modes. `fixtures` supplies the fictional preview; configured local `database` mode renders explicitly published eligible shops. Catalogue persistence alone never publishes a shop. ADR-0005 records canonical indexed reads and no shared response cache; deployment-specific CDN revocation remains unverified.
 - Provider outages create bounded, visible retry/failure states without corrupting canonical data or quotas. Add no unverified live-provider claims.
@@ -49,4 +50,4 @@ P8’s local administration/lifecycle remain complete within their recorded scop
 
 ## Remaining sequence
 
-P11's local G4 is accepted with the explicitly recorded external conditions. R2 is the next model boundary: **6 Astra Extra High** reviews the finished local system, security, compatibility and release evidence after the owner reports the switch. P12 prepares a reviewable release candidate; production deployment is separately authorized. T25 physical restore, external provider/device/assistive-technology checks, P9.8 governance and partial P8 obligations remain open. Do not represent this packet as G5 acceptance or redo finished work.
+P11's local G4 remains accepted with recorded external conditions; R2 is complete at owner-confirmed **6 Astra Extra High**. Switch to **Sol 6.1 Extra High** and report the setting before P12 implementation. P12 prepares a reviewable release candidate; deployment requires separate authorization. T25 physical restore, external provider/device/assistive-technology checks, P9.8 governance and partial P8 obligations remain open. Do not represent R2 as G5 acceptance or redo finished work.

@@ -78,6 +78,8 @@ export async function replay(pool: Pool, actor: Actor, jobId: string) {
       )
     ).rows[0];
     if (!job) throw new AccessError(409, "only_dead_jobs_can_replay");
+    // The job lock can outlive the operator's permission, session or fresh MFA.
+    await requireOperator(client, actor, "jobs", true);
     await client.query(
       "UPDATE jobs SET state='pending',attempts=0,available_at=now(),last_error=NULL WHERE id=$1",
       [jobId],

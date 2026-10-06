@@ -1,0 +1,112 @@
+{
+  "canonicalCounts": {
+    "shops": 1506,
+    "products": 150004,
+    "departments": 1504,
+    "shop_revisions": 1,
+    "shop_catalogue_versions": 0
+  },
+  "sourceBaseline": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
+  "recordedAt": "2026-10-06T11:58:13.094Z",
+  "requiredMigration": "018_catalogue_pagination.sql",
+  "compiledAppAndIndependentWorker": true,
+  "readiness": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "ready",
+    "financialOperations": false,
+    "liveNotifications": false,
+    "localRentWorkflow": true,
+    "localPrivacyErasure": false,
+    "liveErasure": false,
+    "localPilotAnalytics": false,
+    "liveAnalytics": false
+  },
+  "health": {
+    "status": "preview",
+    "mode": "database-development",
+    "publicBrowsing": true,
+    "transactions": false,
+    "authentication": false,
+    "database": true,
+    "ai": false,
+    "coreConfigured": true,
+    "readiness": "/api/ready"
+  },
+  "publicChecks": [
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "privateCredentialLeak": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "privateCredentialLeak": false
+    }
+  ],
+  "anonymousAssistantDenials": [
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    }
+  ],
+  "mainAssistantCounts": {
+    "ai_design_requests": 0,
+    "ai_provider_attempts": 0,
+    "ai_daily_budgets": 0,
+    "ai_provider_cooldowns": 0
+  },
+  "remoteEnabled": false,
+  "providerCapabilities": {
+    "gemini": "remote_disabled",
+    "openai": "remote_disabled"
+  },
+  "providerConfigurationPresence": {
+    "GEMINI_API_KEY_1": false,
+    "GEMINI_API_KEY_2": false,
+    "GEMINI_API_KEY_3": false,
+    "GEMINI_API_KEY_4": false,
+    "GEMINI_API_KEY_5": false,
+    "OPENAI_API_KEY": false,
+    "LONDOS_OPENAI_API_KEY": false,
+    "LONDOS_AI_GEMINI_MODEL": true,
+    "LONDOS_AI_OPENAI_MODEL": true,
+    "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION": true
+  },
+  "limits": "R2 local matching-runtime evidence after restoring this existing workspace. No live provider calls; no general fresh-task persistence, production backup restoration or SLA claim.",
+  "appliedMigrationChecksumVerification": {
+    "count": 18,
+    "allMatchFrozenFiles": true,
+    "readOnly": true
+  }
+}

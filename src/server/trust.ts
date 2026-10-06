@@ -443,6 +443,9 @@ export async function decideTrustCase(
       shopId: row.shop_id,
       state,
     });
+    // A secondary moderation-row lock can outlast the actor's grant or case scope.
+    // Recheck before committing all state, history and notification changes.
+    await trustAccess(client, actor, id);
     return { version: row.version + 1, moderationVersion: moderation.version + 1 };
   });
 }

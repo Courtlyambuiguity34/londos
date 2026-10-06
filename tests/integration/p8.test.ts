@@ -1101,3 +1101,130 @@ test("racing mall reassignment respects capacity and leaves shop identity and hi
     (await mallOccupancy(pool, actors.operator!)).some((m) => m.id === mall && m.occupied === 1),
   ).toBe(true);
 });
+
+test("R2 finance scope revoked during shared mall allocation rolls back settlement and provisioning", async () => {
+  const invoice = await approved(),
+    locker = await pool.connect();
+  let pending: Promise<unknown> | undefined;
+  try {
+    await locker.query("BEGIN");
+    await locker.query("SELECT pg_advisory_xact_lock(hashtextextended('londos:mall-capacity',0))");
+    pending = reconcileInvoice(pool, actors.operator!, invoice.id, credit(invoice)).then(
+      () => ({ accepted: true }),
+      (error: unknown) => error,
+    );
+    let blocked = false;
+    for (let n = 0; n < 100; n++) {
+      blocked = Boolean(
+        (
+          await pool.query(
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%londos:mall-capacity%' ",
+          )
+        ).rowCount,
+      );
+      if (blocked) break;
+      await setTimeout(10);
+    }
+    expect(blocked).toBe(true);
+    await pool.query(
+      "DELETE FROM operator_application_scopes WHERE user_id=$1 AND application_id=$2 AND permission='finance'",
+      [actors.operator!.userId, invoice.application_id],
+    );
+    await locker.query("COMMIT");
+    expect(await pending).toMatchObject({ status: 404, code: "resource_unavailable" });
+    expect(
+      (await pool.query("SELECT 1 FROM rent_events WHERE invoice_id=$1", [invoice.id])).rowCount,
+    ).toBe(0);
+    expect(
+      (await pool.query("SELECT 1 FROM rent_command_receipts WHERE invoice_id=$1", [invoice.id]))
+        .rowCount,
+    ).toBe(0);
+    expect(
+      (
+        await pool.query("SELECT provisioned_shop_id FROM applications WHERE id=$1", [
+          invoice.application_id,
+        ])
+      ).rows[0].provisioned_shop_id,
+    ).toBeNull();
+    expect((await readInvoice(pool, actors.ownerA!, invoice.id)).invoice.credited_minor).toBe("0");
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+    await pending;
+  }
+});
+
+test("R2 operations grant revoked during the target mall lock cannot move a shop", async () => {
+  await pool.query(
+    "INSERT INTO operator_grants(user_id,permission)VALUES($1,'operations') ON CONFLICT DO NOTHING",
+    [actors.operator!.userId],
+  );
+  await claimOperations(pool, actors.operator!, seedIds.shopA, {
+    reason: "R2 fictional mall move review",
+    confirm: true,
+  });
+  const before = (await readOperations(pool, actors.operator!, seedIds.shopA)).shop,
+    mall = randomUUID(),
+    locker = await pool.connect();
+  await pool.query("INSERT INTO malls(id,name,planning_capacity)VALUES($1,'R2 target mall',100)", [
+    mall,
+  ]);
+  const auditBefore = (
+    await pool.query(
+      "SELECT count(*)::int AS n FROM audit_events WHERE action='shop.operations.move' AND resource_id=$1",
+      [seedIds.shopA],
+    )
+  ).rows[0].n;
+  let pending: Promise<unknown> | undefined;
+  try {
+    await locker.query("BEGIN");
+    await locker.query("SELECT id FROM malls WHERE id=$1 FOR UPDATE", [mall]);
+    pending = commandOperations(pool, actors.operator!, seedIds.shopA, {
+      action: "move",
+      version: before.version,
+      mallId: mall,
+      reason: "R2 move waits for target capacity",
+      confirm: true,
+    }).then(
+      () => ({ accepted: true }),
+      (error: unknown) => error,
+    );
+    let blocked = false;
+    for (let n = 0; n < 100; n++) {
+      blocked = Boolean(
+        (
+          await pool.query(
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id,planning_capacity FROM malls%' ",
+          )
+        ).rowCount,
+      );
+      if (blocked) break;
+      await setTimeout(10);
+    }
+    expect(blocked).toBe(true);
+    await pool.query("DELETE FROM operator_grants WHERE user_id=$1 AND permission='operations'", [
+      actors.operator!.userId,
+    ]);
+    await locker.query("COMMIT");
+    expect(await pending).toMatchObject({ status: 403, code: "permission_denied" });
+    expect(
+      (await pool.query("SELECT version,mall_id FROM shops WHERE id=$1", [seedIds.shopA])).rows[0],
+    ).toEqual({ version: before.version, mall_id: before.mall_id });
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int AS n FROM audit_events WHERE action='shop.operations.move' AND resource_id=$1",
+          [seedIds.shopA],
+        )
+      ).rows[0].n,
+    ).toBe(auditBefore);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+    await pending;
+    await pool.query(
+      "INSERT INTO operator_grants(user_id,permission)VALUES($1,'operations') ON CONFLICT DO NOTHING",
+      [actors.operator!.userId],
+    );
+  }
+});

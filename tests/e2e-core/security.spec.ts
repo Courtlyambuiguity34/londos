@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { generate } from "otplib";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
+import { request as httpRequest } from "node:http";
 import { requiredMigration } from "../../src/server/db/schema-contract";
 import { seedIds, type SeedAccounts } from "../../src/server/db/seed";
 let accounts: SeedAccounts;
@@ -22,6 +23,55 @@ async function login(
   await page.getByLabel("Password", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
+test("R2 stalled JSON receives a bounded 408 from the compiled authentication endpoint", async ({
+  baseURL,
+  request,
+}) => {
+  const started = Date.now();
+  let outgoing: ReturnType<typeof httpRequest> | undefined;
+  try {
+    const result = await new Promise<{ status: number; body: string; cache: string }>(
+      (resolve, reject) => {
+        outgoing = httpRequest(
+          `${baseURL}/api/auth/sign-in/email`,
+          {
+            method: "POST",
+            headers: {
+              Origin: baseURL!,
+              "Content-Type": "Application/JSON; charset=utf-8",
+              "Transfer-Encoding": "chunked",
+            },
+          },
+          (response) => {
+            let body = "";
+            response.setEncoding("utf8");
+            response.on("data", (chunk: string) => (body += chunk));
+            response.on("error", reject);
+            response.on("end", () =>
+              resolve({
+                status: response.statusCode!,
+                body,
+                cache: response.headers["cache-control"] ?? "",
+              }),
+            );
+          },
+        );
+        outgoing.on("error", reject);
+        outgoing.setTimeout(22_000, () => outgoing?.destroy(new Error("body deadline missed")));
+        outgoing.write('{"email":');
+        // Deliberately leave the chunked body unfinished. No auth operation may begin.
+      },
+    );
+    expect(result.status).toBe(408);
+    expect(JSON.parse(result.body)).toEqual({ error: "request_body_timeout" });
+    expect(result.cache).toContain("no-store");
+    expect(Date.now() - started).toBeGreaterThanOrEqual(14_000);
+    expect(Date.now() - started).toBeLessThan(22_000);
+    expect((await request.get("/api/ready")).status()).toBe(200);
+  } finally {
+    outgoing?.destroy();
+  }
+});
 test("anonymous private APIs deny access and the sign-in surface remains accessible", async ({
   page,
   request,

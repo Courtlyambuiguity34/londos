@@ -181,7 +181,7 @@ export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: 
   const specification = shopSpecification.safeParse(pointer?.design).data ?? fallback;
   const products = (
     await pool.query(
-      "SELECT p.id,p.name,(a.id IS NOT NULL) AS has_image FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.archived=false LEFT JOIN product_media pm ON pm.product_id=p.id LEFT JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=p.shop_id AND a.state='ready' AND a.alt<>'' WHERE p.shop_id=$1 AND p.availability<>'archived' AND (p.id IN(SELECT id FROM products WHERE shop_id=$1 AND availability<>'archived' ORDER BY position,id LIMIT 32) OR p.id=ANY($2::uuid[])) ORDER BY p.position,p.id LIMIT 64",
+      "SELECT p.id,p.name,(a.id IS NOT NULL) AS has_image FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.archived=false LEFT JOIN product_media pm ON pm.product_id=p.id LEFT JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=p.shop_id AND a.state='ready' AND a.alt<>'' WHERE p.shop_id=$1 AND p.availability<>'archived' AND (p.id IN(SELECT chosen.id FROM products chosen JOIN departments current_department ON current_department.id=chosen.department_id AND current_department.shop_id=chosen.shop_id AND current_department.merchant_id=chosen.merchant_id AND current_department.archived=false WHERE chosen.shop_id=$1 AND chosen.availability<>'archived' ORDER BY chosen.position,chosen.id LIMIT 32) OR p.id=ANY($2::uuid[])) ORDER BY p.position,p.id LIMIT 64",
       [shopId, productReferences(specification)],
     )
   ).rows as { id: string; name: string; has_image: boolean }[];

@@ -260,6 +260,8 @@ export async function commandOperations(
       reason: v.reason,
       ...(v.action === "move" ? { from: shop.mall_id, to: v.mallId } : {}),
     });
+    // A target mall lock can wait after the earlier merchant/capacity checks.
+    await operationsAccess(client, actor, shopId, true);
     return { version: row.version as number };
   });
 }

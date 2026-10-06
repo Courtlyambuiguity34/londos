@@ -31,26 +31,16 @@ export function checkOrigin(request: Request) {
 export async function boundedBody(request: Request) {
   const declared = Number(request.headers.get("content-length") ?? 0);
   if (declared > 8192) throw new AccessError(422, "request_too_large");
-  if (!(request.headers.get("content-type") ?? "").startsWith("application/json"))
+  if (
+    (request.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase() !==
+    "application/json"
+  )
     throw new AccessError(422, "json_required");
-  const reader = request.body?.getReader();
-  if (!reader) throw new AccessError(422, "json_required");
-  const chunks: Uint8Array[] = [];
-  let length = 0;
+  if (!request.body) throw new AccessError(422, "json_required");
+  const bytes = await boundedBytes(request, 8192);
   try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      length += value.byteLength;
-      if (length > 8192) {
-        await reader.cancel();
-        throw new AccessError(422, "request_too_large");
-      }
-      chunks.push(value);
-    }
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-  } catch (error) {
-    if (error instanceof AccessError) throw error;
+    return JSON.parse(bytes.toString("utf8")) as unknown;
+  } catch {
     throw new AccessError(422, "invalid_json");
   }
 }
@@ -92,6 +82,7 @@ export async function boundedBytes(request: Request, limit: number) {
   const chunks: Uint8Array[] = [];
   let size = 0;
   try {
+    if (signal.aborted) abort();
     while (true) {
       signal.throwIfAborted();
       const { done, value } = await reader.read();
@@ -105,6 +96,13 @@ export async function boundedBytes(request: Request, limit: number) {
     }
     signal.throwIfAborted();
     return Buffer.concat(chunks);
+  } catch (error) {
+    if (signal.aborted)
+      throw new AccessError(
+        408,
+        request.signal.aborted ? "request_body_cancelled" : "request_body_timeout",
+      );
+    throw error;
   } finally {
     signal.removeEventListener("abort", abort);
     reader.releaseLock();

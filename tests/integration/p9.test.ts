@@ -720,3 +720,64 @@ test("private notes set bounded queue priority without changing moderation and l
     AbortSignal.timeout(2000),
   );
 });
+
+test("R2 moderation scope revoked during the moderation-row lock prevents suspension and history", async () => {
+  const { id } = await shop(),
+    item = await newCase(id);
+  await claim(item.id);
+  const before = await readTrustCase(pool, actors.operator!, item.id),
+    locker = await pool.connect();
+  let pending: Promise<unknown> | undefined;
+  try {
+    await locker.query("BEGIN");
+    await locker.query("SELECT shop_id FROM shop_moderation WHERE shop_id=$1 FOR UPDATE", [id]);
+    pending = decideTrustCase(pool, actors.operator!, item.id, {
+      action: "suspend",
+      version: before.case.version,
+      moderationVersion: before.moderation.version,
+      reason: "R2 private fictional review",
+      publicReason: "Fictional shop review is pending",
+      confirm: true,
+    }).then(
+      () => ({ accepted: true }),
+      (error: unknown) => error,
+    );
+    let blocked = false;
+    for (let n = 0; n < 100; n++) {
+      blocked = Boolean(
+        (
+          await pool.query(
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT state,version FROM shop_moderation%' ",
+          )
+        ).rowCount,
+      );
+      if (blocked) break;
+      await setTimeout(10);
+    }
+    expect(blocked).toBe(true);
+    await pool.query("DELETE FROM operator_trust_scopes WHERE user_id=$1 AND case_id=$2", [
+      actors.operator!.userId,
+      item.id,
+    ]);
+    await locker.query("COMMIT");
+    expect(await pending).toMatchObject({ status: 404, code: "resource_unavailable" });
+    expect(
+      (await pool.query("SELECT state,version FROM shop_moderation WHERE shop_id=$1", [id]))
+        .rows[0],
+    ).toEqual(before.moderation);
+    expect(
+      (
+        await pool.query("SELECT 1 FROM trust_events WHERE case_id=$1 AND kind='suspend'", [
+          item.id,
+        ])
+      ).rowCount,
+    ).toBe(0);
+    expect(
+      (await pool.query("SELECT version FROM trust_cases WHERE id=$1", [item.id])).rows[0].version,
+    ).toBe(before.case.version);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+    await pending;
+  }
+});
