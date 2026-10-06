@@ -25,6 +25,8 @@ Bind genuine keys securely as **`GEMINI_API_KEY_1`** (destination `generativelan
 
 The cloud metadata's latest direct-variable/network readiness is `unknown`; actual process inspection confirms all 12 values, and the official HTTPS requests succeeded. The currently declared restricted policy includes API and pricing hosts. Do not infer global unrestricted egress from those requests.
 
+The cloud draft service returned `INVALID_ARGUMENT` for full, repository-only and startup-only updates; readback retained the previous P11 configuration. **Draft persistence is unconfirmed.** The proposed [startup instructions](CLOUD-STARTUP.md) and [failure evidence](evidence/R2-CLOUD-CONFIG.json) are saved in Git. No existing saved model value changed.
+
 Save the model correction and secure keys in environment settings, then publish/reconnect. **A successfully saved draft does not apply or publish configuration.** Saved startup instructions and a repository pin also need activation; a connected workspace restore does not establish general Docker-volume durability or physical disaster recovery.
 
 Run `LONDOS_AI_REMOTE=true npm run ai:verify -- --require-live` after the effective keys/model/rates are ready. This command enables only its own bounded verification process, not the main app. It uses fictional data, one call per provider, fixed HTTPS endpoints and normal proxy/CA trust; it sends no database merchant records. The current check exits **1**, reports `credentials_unavailable` for both providers, and makes **zero live requests**. Both observations must be `passed` before claiming live contract verification; representative design quality, billing and privacy terms need separate assessment. Fixtures are labelled and cannot substitute for live evidence.

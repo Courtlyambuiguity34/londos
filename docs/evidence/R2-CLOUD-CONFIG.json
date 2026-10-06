@@ -1,0 +1,61 @@
+{
+  "recordedAt": "2026-10-06T12:09:38.362Z",
+  "check": "cloud-environment-onboarding-draft-persistence",
+  "result": "unconfirmed",
+  "errorCode": "INVALID_ARGUMENT",
+  "message": "Setup could not be completed; saving the draft could not be confirmed.",
+  "attempts": [
+    {
+      "fields": [
+        "repositories",
+        "start_skill",
+        "environment_variables"
+      ],
+      "result": "unconfirmed"
+    },
+    {
+      "fields": [
+        "repositories"
+      ],
+      "result": "unconfirmed"
+    },
+    {
+      "fields": [
+        "start_skill"
+      ],
+      "result": "unconfirmed"
+    }
+  ],
+  "readback": {
+    "draftId": null,
+    "revision": null,
+    "repositories": [
+      {
+        "repository_id": "Courtlyambuiguity34/londos",
+        "ref": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
+        "mount_path": "londos",
+        "depth": null
+      }
+    ],
+    "r2StartupSaved": false
+  },
+  "proposedStartup": "../CLOUD-STARTUP.md",
+  "proposedModelCorrection": {
+    "name": "LONDOS_AI_OPENAI_MODEL",
+    "suggestedValue": "gpt-5.4-mini",
+    "existingSavedValue": "gpt-5-mini",
+    "existingValueOverwritten": false
+  },
+  "attemptedRepositoryPin": [
+    {
+      "name": "Courtlyambuiguity34/londos",
+      "host": "github.com",
+      "commit": "e5a0da8b81c7847165cc73576158d3c8fd4ae45d",
+      "mount_path": "londos"
+    }
+  ],
+  "retainedInstallationScript": true,
+  "networkAndSecretRequirementsUnchanged": true,
+  "workaround": "R2 implementation, tests, evidence and proposed startup/model settings are committed to the authorized branch. Use its actual current full HEAD when a future cloud save succeeds. Secure keys still need real bindings in environment settings; no key values are stored here.",
+  "limits": "No confirmed draft persistence, publication, activation, secret binding or runtime model correction is claimed. This is a configuration-service error, not an automatic approval-review rejection."
+}
