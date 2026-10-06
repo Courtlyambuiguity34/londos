@@ -1,7 +1,80 @@
 {
-  "recordedAt": "2026-10-06T12:02:37.349998+00:00",
+  "recordedAt": "2026-10-06T12:04:56.216371+00:00",
+  "implementationCommit": "5aea92350c5c5f03bdefd8225e516f10c25b50ec",
+  "implementationTree": "2d0b7917f757140268be29db40539674fc6afabc",
   "baselineCommit": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
+  "branch": "codex/londos-x2-2026-10-05",
   "testedSourceInventorySha256": "ad8be557af779262fc74f71463cac0bc243fe14fbe984966e9c0304dd11d5bf4",
   "sourceFiles": 334,
-  "identity": "Tested implementation identified by the source inventory in R2-VERIFICATION.json; an evidence-only follow-up records its exact Git commit."
+  "sourceFilesMatchImplementationCommit": true,
+  "tests": {
+    "unit": 69,
+    "postgresqlIntegration": 260,
+    "fixtureBrowser": 16,
+    "coreHttpAndBrowser": 45,
+    "uniqueTotal": 390,
+    "addedUniqueCases": 18
+  },
+  "evidenceAndHandoffDigests": [
+    {
+      "path": "README.md",
+      "sha256": "21d3ce52e17bedb6e7aa471142d1c803a6a95ba2234207f1afd3ddad7d129a70"
+    },
+    {
+      "path": "RECOMMENDATIONS.md",
+      "sha256": "e595e721b193a73acd6651dfc2a21df2626a4859f587d4babe6c449443d17a42"
+    },
+    {
+      "path": "docs/BUILD-STATUS.md",
+      "sha256": "6e72e610f0563eb79c894865c80f96a9224c99d46d17097bfcd6a6ff6f578e1f"
+    },
+    {
+      "path": "docs/X2-HANDOFF.md",
+      "sha256": "c92a6d24fdf196d0d9353bb49fa0c6b9794128b3582c8048b5ef0a265473ff9a"
+    },
+    {
+      "path": "docs/AI-ENVIRONMENT.md",
+      "sha256": "a2308fa0dcdec26e89d164eb40ebd78ae17d5da4ba6cc13eabd8635439c7adcc"
+    },
+    {
+      "path": "docs/evidence/R2-REVIEW.md",
+      "sha256": "1b6213f811e00cb9a41be240a274ee884e2d974be53c574ae04a6619e81447dc"
+    },
+    {
+      "path": "docs/evidence/R2-VERIFICATION.json",
+      "sha256": "612cda7a074a188e262592fde064004b13dcecad6318a7dcf8bce4f19a375ec9"
+    },
+    {
+      "path": "docs/evidence/R2-PROVIDERS.json",
+      "sha256": "4e0d7b09c3cd2e20bdbcae5df48041df1eefa643cc9d74f4176dacb78d67efec"
+    },
+    {
+      "path": "docs/evidence/R2-RUNTIME.json",
+      "sha256": "d595ff556545c6dcde8b940c108ab9352219be29b7c5b9e50061b909ff26221f"
+    }
+  ],
+  "compiledArtifacts": [
+    {
+      "path": ".next/BUILD_ID",
+      "sha256": "1e639a386b775a364814b5920984aaa898fe07da9a9a7ab7bf7a28ed4bdf398c"
+    },
+    {
+      "path": ".next/routes-manifest.json",
+      "sha256": "a60a55c7327e9af185a511004d61423986d9574f12230532d478eb1e5e8ba59c"
+    },
+    {
+      "path": ".next/server/app-paths-manifest.json",
+      "sha256": "3eafc8bde43d55f7eb158d42160320e128619d8df2dce60f0b40b3511bfdfa58"
+    },
+    {
+      "path": ".next/standalone/server.js",
+      "sha256": "24a6907313005ad8e609bce9bcca7278b4ab411c0d62499d965049e68f0eab4d"
+    },
+    {
+      "path": "dist/worker.mjs",
+      "sha256": "201b58283e7724539223ad7ee94cf781e722074c8d8312abbcfad797119b4d1d"
+    }
+  ],
+  "verification": "R2-VERIFICATION.json records commands, exact worktree inventory, redacted log digests and checks. Both implementation and this evidence-only follow-up are pushed to the authorized branch; remote tip is verified separately.",
+  "identityLimit": "This evidence-only follow-up identifies the preceding tested implementation. It does not claim a self-referential final commit hash, production deployment, working live provider keys or physical restoration."
 }
