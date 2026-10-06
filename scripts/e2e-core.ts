@@ -28,12 +28,19 @@ try {
   process.env.AUTH_SECRET = randomBytes(48).toString("hex");
   process.env.LONDOS_LOCAL_ADAPTERS = "true";
   process.env.LONDOS_CORE_ENABLED = "true";
+  process.env.LONDOS_AI_REMOTE = "false";
   db = new Pool({ connectionString: process.env.DATABASE_URL });
   await migrate(db);
   await seed(db, createAuth(db, coreConfig(), true), directory);
   const child = spawn(
     process.execPath,
-    ["node_modules/@playwright/test/cli.js", "test", "--config", "playwright.core.config.ts"],
+    [
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--config",
+      "playwright.core.config.ts",
+      ...process.argv.slice(2),
+    ],
     {
       stdio: "inherit",
       env: {

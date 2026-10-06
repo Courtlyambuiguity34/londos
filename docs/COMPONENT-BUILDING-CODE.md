@@ -1,5 +1,7 @@
 # Londos Component Building Code
 
+The implemented bounded registry is described in [ADR-0014](ADR/0014-bounded-semantic-spaces-and-catalogue-pagination.md); broader SDK examples below remain design policy.
+
 ## Purpose
 
 Every public shop component must obey common building standards. Merchants control the interior design; Londos prevents one tenant from creating a dangerous or unusable building.

@@ -10,10 +10,29 @@ import { EmptyState } from "@/components/empty-state";
 
 type RouteParams = Promise<{ slug: string; department: string }>;
 
-export async function generateMetadata({ params }: { params: RouteParams }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: RouteParams;
+  searchParams: Promise<{ after?: string | string[] }>;
+}): Promise<Metadata> {
   const route = await params;
-  if (databaseBrowsing())
-    return { title: await publicShopTitle(route.slug, route.department, undefined) };
+  if (databaseBrowsing()) {
+    const query = await searchParams;
+    return {
+      title: await publicShopTitle(
+        route.slug,
+        route.department,
+        undefined,
+        query.after === undefined
+          ? undefined
+          : typeof query.after === "string"
+            ? query.after
+            : "invalid",
+      ),
+    };
+  }
   const shop = findShop(route.slug);
   const department =
     shop?.previewState === "open"
@@ -24,9 +43,26 @@ export async function generateMetadata({ params }: { params: RouteParams }): Pro
   };
 }
 
-export default async function DepartmentPage({ params }: { params: RouteParams }) {
+export default async function DepartmentPage({
+  params,
+  searchParams,
+}: {
+  params: RouteParams;
+  searchParams: Promise<{ after?: string | string[] }>;
+}) {
   const route = await params;
-  if (databaseBrowsing()) return <PublicShopPage slug={route.slug} department={route.department} />;
+  if (databaseBrowsing()) {
+    const query = await searchParams;
+    return (
+      <PublicShopPage
+        slug={route.slug}
+        department={route.department}
+        {...(query.after !== undefined
+          ? { after: typeof query.after === "string" ? query.after : "invalid" }
+          : {})}
+      />
+    );
+  }
   const shop = findShop(route.slug);
   if (!shop || shop.previewState !== "open") notFound();
   const department = shop.departments.find((d) => d.slug === route.department);

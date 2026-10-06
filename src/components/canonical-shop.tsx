@@ -7,6 +7,7 @@ import { formatMinorMoney } from "@/modules/money";
 import { ReadyImage } from "./ready-image";
 import { EmptyState } from "./empty-state";
 import { SearchForm } from "./search-form";
+import { spaceProducts } from "@/modules/shop-design/specification";
 
 export function CanonicalProduct({
   product,
@@ -157,7 +158,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           <Link prefetch={false} href={`/shops/${view.shop.slug}`}>
             Whole shop
           </Link>
-          {view.departments.slice(0, 20).map((d) => (
+          {view.departments.map((d) => (
             <Link
               prefetch={false}
               key={d.id}
@@ -204,14 +205,33 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
               ))}
             </div>
             {!view.products.length ? <p>New pieces will appear here soon.</p> : null}
+            <nav aria-label="Catalogue pages" className="button-row">
+              {view.paginated ? (
+                <Link
+                  prefetch={false}
+                  href={`/shops/${view.shop.slug}/departments/${view.selectedDepartment.slug}`}
+                >
+                  First page
+                </Link>
+              ) : null}
+              {view.nextCursor ? (
+                <Link
+                  prefetch={false}
+                  href={`/shops/${view.shop.slug}/departments/${view.selectedDepartment.slug}?after=${view.nextCursor}`}
+                >
+                  Next products
+                </Link>
+              ) : null}
+            </nav>
           </section>
         ) : (
           view.specification.spaces.map((space) => {
-            if (space.type === "story")
+            if ("body" in space)
               return (
                 <section key={space.id} id={space.id} className="shop-content-section">
                   <h2>{space.title}</h2>
                   <p>{space.body}</p>
+                  {space.type === "service_desk" ? <Contacts view={view} /> : null}
                 </section>
               );
             if (space.type === "contact")
@@ -222,23 +242,43 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
                 </section>
               );
             const department =
-              space.type === "department"
+              "departmentId" in space
                 ? view.departments.find((d) => d.id === space.departmentId)
                 : null;
-            const products =
-              space.type === "department"
-                ? view.products
-                    .filter((p) => p.department_id === space.departmentId)
-                    .slice(0, space.limit)
-                : space.productIds.flatMap((id) => view.products.filter((p) => p.id === id));
-            if (space.type === "department" && !department) return null;
+            const products = spaceProducts(space, view.products);
+            if ("departmentId" in space && !department) return null;
             return (
               <section key={space.id} id={space.id} className="shop-content-section">
-                <h2>{department?.name ?? (space.type === "products" ? space.title : "")}</h2>
+                <h2>{"title" in space ? space.title : department?.name}</h2>
                 <div className="product-grid">
-                  {products.map((product) => (
-                    <CanonicalProduct key={product.id} product={product} view={view} />
-                  ))}
+                  {products.map((product) =>
+                    space.type === "gallery" ? (
+                      <figure key={product.id}>
+                        {product.media_id && product.alt && product.width && product.height ? (
+                          <ReadyImage
+                            shopId={view.shop.id}
+                            assetId={product.media_id}
+                            alt={product.alt}
+                            width={product.width}
+                            height={product.height}
+                            privatePreview={view.privatePreview}
+                          />
+                        ) : (
+                          <p>Image currently unavailable</p>
+                        )}
+                        <figcaption>
+                          <Link
+                            prefetch={false}
+                            href={`/shops/${view.shop.slug}/products/${product.slug}`}
+                          >
+                            {product.name}
+                          </Link>
+                        </figcaption>
+                      </figure>
+                    ) : (
+                      <CanonicalProduct key={product.id} product={product} view={view} />
+                    ),
+                  )}
                 </div>
                 {!products.length ? <p>New pieces will appear here soon.</p> : null}
               </section>

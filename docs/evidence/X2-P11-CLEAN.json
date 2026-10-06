@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-10-06T07:28:35.680Z",
+  "result": "passed",
+  "files": 484,
+  "sourceSnapshotSha256": "922675e05b14f0b554ec506d1af88081e15cd041716ddbdc72f95ba34295d9c2",
+  "commands": [
+    {
+      "command": "npm ci --no-fund",
+      "exitCode": 0,
+      "durationMs": 18358
+    },
+    {
+      "command": "npm run db:migrate",
+      "exitCode": 0,
+      "durationMs": 1102
+    },
+    {
+      "command": "npm run db:seed",
+      "exitCode": 0,
+      "durationMs": 2134
+    },
+    {
+      "command": "npm run db:migrate",
+      "exitCode": 0,
+      "durationMs": 486
+    },
+    {
+      "command": "npm run db:seed",
+      "exitCode": 0,
+      "durationMs": 1413
+    },
+    {
+      "command": "npm run check",
+      "exitCode": 0,
+      "durationMs": 31219
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "durationMs": 50239
+    },
+    {
+      "command": "npm run check:bundle-secrets",
+      "exitCode": 0,
+      "durationMs": 443
+    }
+  ],
+  "migrations": 18,
+  "existingMainDatabaseTouched": false,
+  "privateFilesCopied": false,
+  "providerCredentialsPassedToChild": false,
+  "cleanup": "Only the created guarded database and temporary source checkout",
+  "limits": [
+    "Uses this environment Node/PostgreSQL/proxy/system libraries; not a separate-machine/fresh-task or container-volume restoration proof.",
+    "Main Docker database bootstrap is already configured and preserved; the clean copy uses its own isolated database."
+  ]
+}

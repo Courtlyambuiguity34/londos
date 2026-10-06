@@ -229,7 +229,7 @@ test("016 to 017 preserves seeded rows, repeat migration is idempotent, no grant
   expect(
     (await pool.query("SELECT * FROM shops WHERE slug NOT LIKE 'ai-%' ORDER BY id")).rows,
   ).toEqual(baseline);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(17);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(18);
   expect((await pool.query("SELECT count(*)::int AS n FROM ai_provider_attempts")).rows[0].n).toBe(
     0,
   );

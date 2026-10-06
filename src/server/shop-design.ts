@@ -6,6 +6,8 @@ import {
   patchSpecification,
   specificationPatch,
   type ShopSpecification,
+  departmentReferences,
+  productReferences,
 } from "../modules/shop-design/specification";
 import { transaction } from "./db/pool";
 import { requireShop, requireStepUp, type Actor } from "./security/authorization";
@@ -57,12 +59,8 @@ export async function validateReferences(
   shopId: string,
   spec: ShopSpecification,
 ) {
-  const departments = spec.spaces.flatMap((space) =>
-    space.type === "department" ? [space.departmentId] : [],
-  );
-  const products = spec.spaces.flatMap((space) =>
-    space.type === "products" ? space.productIds : [],
-  );
+  const departments = departmentReferences(spec),
+    products = productReferences(spec);
   const validDepartments = (
     await client.query(
       "SELECT id FROM departments WHERE shop_id=$1 AND archived=false AND id=ANY($2::uuid[])",
@@ -78,6 +76,17 @@ export async function validateReferences(
   if (
     validDepartments.length !== new Set(departments).size ||
     validProducts.length !== new Set(products).size
+  )
+    throw new AccessError(404, "resource_unavailable");
+  const gallery = spec.spaces.flatMap((s) => (s.type === "gallery" ? s.productIds : []));
+  if (
+    gallery.length &&
+    (
+      await client.query(
+        "SELECT DISTINCT p.id FROM products p JOIN product_media pm ON pm.product_id=p.id JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=p.shop_id AND a.merchant_id=p.merchant_id AND a.state='ready' AND a.alt<>'' WHERE p.shop_id=$1 AND p.id=ANY($2::uuid[])",
+        [shopId, gallery],
+      )
+    ).rowCount !== new Set(gallery).size
   )
     throw new AccessError(404, "resource_unavailable");
 }
@@ -169,13 +178,21 @@ export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: 
     })),
     actions: ["call", "whatsapp", "enquiry"],
   };
+  const specification = shopSpecification.safeParse(pointer?.design).data ?? fallback;
+  const products = (
+    await pool.query(
+      "SELECT p.id,p.name,(a.id IS NOT NULL) AS has_image FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.archived=false LEFT JOIN product_media pm ON pm.product_id=p.id LEFT JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=p.shop_id AND a.state='ready' AND a.alt<>'' WHERE p.shop_id=$1 AND p.availability<>'archived' AND (p.id IN(SELECT id FROM products WHERE shop_id=$1 AND availability<>'archived' ORDER BY position,id LIMIT 32) OR p.id=ANY($2::uuid[])) ORDER BY p.position,p.id LIMIT 64",
+      [shopId, productReferences(specification)],
+    )
+  ).rows as { id: string; name: string; has_image: boolean }[];
   return {
     version: pointer?.version ?? 0,
     revision: pointer?.revision ?? null,
     publishedRevision: pointer?.published_revision ?? null,
-    specification: shopSpecification.safeParse(pointer?.design).data ?? fallback,
+    specification,
     history,
     departments,
+    products,
   };
 }
 export async function saveDesign(

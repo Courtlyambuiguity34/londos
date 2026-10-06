@@ -4,6 +4,8 @@ import {
   specificationPatch,
   patchSpecification,
   type ShopSpecification,
+  departmentReferences,
+  productReferences,
 } from "../shop-design/specification";
 
 const space = shopSpecification.shape.spaces.element;
@@ -70,16 +72,15 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
   }
   const departments = new Set(context.departments.map((d) => d.id)),
     products = new Set(context.products.map((p) => p.id));
-  for (const s of next.spaces) {
-    if (s.type === "department" && !departments.has(s.departmentId))
-      throw Error("unavailable_reference");
-    if (s.type === "products" && s.productIds.some((id) => !products.has(id)))
-      throw Error("unavailable_reference");
-  }
+  if (
+    departmentReferences(next).some((id) => !departments.has(id)) ||
+    productReferences(next).some((id) => !products.has(id))
+  )
+    throw Error("unavailable_reference");
   const texts = [
     next.announcement,
     ...next.spaces.flatMap((s) =>
-      s.type === "story" ? [s.title, s.body] : s.type === "products" ? [s.title] : [],
+      "body" in s ? [s.title, s.body] : "title" in s ? [s.title] : [],
     ),
   ];
   if (

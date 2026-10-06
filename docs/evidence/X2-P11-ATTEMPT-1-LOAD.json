@@ -1,0 +1,8507 @@
+{
+  "recordedAt": "2026-10-06T07:35:30.373Z",
+  "result": "partial",
+  "mixed": [
+    {
+      "clients": 1,
+      "samples": 344,
+      "p50Ms": 46.63,
+      "p95Ms": 107.85,
+      "p99Ms": 247.84,
+      "maxMs": 344.13,
+      "errors": 0,
+      "durationMs": 20585.77,
+      "observedRequestsPerSecond": 16.71,
+      "writes": {
+        "samples": 32,
+        "p50Ms": 80.75,
+        "p95Ms": 350.43,
+        "p99Ms": 361.42,
+        "maxMs": 361.42
+      },
+      "diagnosticOverload": false
+    },
+    {
+      "clients": 5,
+      "samples": 1144,
+      "p50Ms": 77.66,
+      "p95Ms": 148.47,
+      "p99Ms": 323.5,
+      "maxMs": 543.76,
+      "errors": 0,
+      "durationMs": 20557.2,
+      "observedRequestsPerSecond": 55.65,
+      "writes": {
+        "samples": 31,
+        "p50Ms": 127.58,
+        "p95Ms": 312.33,
+        "p99Ms": 468.07,
+        "maxMs": 468.07
+      },
+      "diagnosticOverload": false
+    },
+    {
+      "clients": 20,
+      "samples": 1251,
+      "p50Ms": 292.04,
+      "p95Ms": 631.69,
+      "p99Ms": 882.51,
+      "maxMs": 1107.04,
+      "errors": 0,
+      "durationMs": 20796.95,
+      "observedRequestsPerSecond": 60.15,
+      "writes": {
+        "samples": 20,
+        "p50Ms": 464.32,
+        "p95Ms": 705.58,
+        "p99Ms": 932.08,
+        "maxMs": 932.08
+      },
+      "diagnosticOverload": false
+    },
+    {
+      "clients": 40,
+      "samples": 1296,
+      "p50Ms": 585.42,
+      "p95Ms": 1261.57,
+      "p99Ms": 1543.8,
+      "maxMs": 1853.67,
+      "errors": 0,
+      "durationMs": 21209.4,
+      "observedRequestsPerSecond": 61.1,
+      "writes": {
+        "samples": 14,
+        "p50Ms": 954.99,
+        "p95Ms": 1408.89,
+        "p99Ms": 1408.89,
+        "maxMs": 1408.89
+      },
+      "diagnosticOverload": true
+    }
+  ],
+  "writes": 97,
+  "writeFailures": 0,
+  "freshnessFailures": 0,
+  "observations": [
+    {
+      "at": "2026-10-06T07:34:07.237Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 12
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 18.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 332107776,
+          "cpuPercentSinceStart": 30.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 5.8
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 136916992,
+          "cpuPercentSinceStart": 112
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:07.854Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 18.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 332226560,
+          "cpuPercentSinceStart": 30.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 149577728,
+          "cpuPercentSinceStart": 102
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:08.429Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 18.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 332275712,
+          "cpuPercentSinceStart": 30.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 3.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 151916544,
+          "cpuPercentSinceStart": 89.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:08.967Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 18.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 332292096,
+          "cpuPercentSinceStart": 30.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 2.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 157360128,
+          "cpuPercentSinceStart": 77
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:09.491Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 18
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 182640640,
+          "cpuPercentSinceStart": 31.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 2.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 164564992,
+          "cpuPercentSinceStart": 70.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:10.012Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 183754752,
+          "cpuPercentSinceStart": 31.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.9
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 165109760,
+          "cpuPercentSinceStart": 64.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:10.590Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 186290176,
+          "cpuPercentSinceStart": 31
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.6
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 172187648,
+          "cpuPercentSinceStart": 58.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:11.127Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 187150336,
+          "cpuPercentSinceStart": 31
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 183218176,
+          "cpuPercentSinceStart": 56.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:11.702Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 189001728,
+          "cpuPercentSinceStart": 31.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 185585664,
+          "cpuPercentSinceStart": 54.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:12.236Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 189231104,
+          "cpuPercentSinceStart": 31.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 186204160,
+          "cpuPercentSinceStart": 52
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:12.764Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112840704,
+          "cpuPercentSinceStart": 17
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 192024576,
+          "cpuPercentSinceStart": 31.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 187633664,
+          "cpuPercentSinceStart": 50.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:13.289Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112848896,
+          "cpuPercentSinceStart": 16.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 195645440,
+          "cpuPercentSinceStart": 31.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 190070784,
+          "cpuPercentSinceStart": 48.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:13.807Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112848896,
+          "cpuPercentSinceStart": 16.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 196726784,
+          "cpuPercentSinceStart": 31.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39514112,
+          "cpuPercentSinceStart": 1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 190423040,
+          "cpuPercentSinceStart": 46.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:14.326Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 16.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 196812800,
+          "cpuPercentSinceStart": 31.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.9
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 193814528,
+          "cpuPercentSinceStart": 44.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:14.849Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 12
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 16.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 198049792,
+          "cpuPercentSinceStart": 31.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.8
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 194138112,
+          "cpuPercentSinceStart": 43.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:15.363Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 16.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 202899456,
+          "cpuPercentSinceStart": 31.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.8
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 195661824,
+          "cpuPercentSinceStart": 42.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:15.878Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 16.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 207941632,
+          "cpuPercentSinceStart": 31.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.8
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 198168576,
+          "cpuPercentSinceStart": 41.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:16.412Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 16.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 211075072,
+          "cpuPercentSinceStart": 31
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.7
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 199139328,
+          "cpuPercentSinceStart": 40
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:16.929Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112873472,
+          "cpuPercentSinceStart": 15.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 211140608,
+          "cpuPercentSinceStart": 30.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.7
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 202919936,
+          "cpuPercentSinceStart": 39.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:17.450Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112922624,
+          "cpuPercentSinceStart": 15.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 211456000,
+          "cpuPercentSinceStart": 30.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.6
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 204541952,
+          "cpuPercentSinceStart": 38.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:17.965Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 211640320,
+          "cpuPercentSinceStart": 30.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.6
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 207552512,
+          "cpuPercentSinceStart": 37.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:18.489Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 14
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 212877312,
+          "cpuPercentSinceStart": 30.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.6
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 220979200,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:19.005Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 213983232,
+          "cpuPercentSinceStart": 30.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.6
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 234274816,
+          "cpuPercentSinceStart": 36.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:19.522Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 214147072,
+          "cpuPercentSinceStart": 30.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 237875200,
+          "cpuPercentSinceStart": 35.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:20.043Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 11
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 216502272,
+          "cpuPercentSinceStart": 29.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 238096384,
+          "cpuPercentSinceStart": 35.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:20.562Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 223354880,
+          "cpuPercentSinceStart": 29.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 248446976,
+          "cpuPercentSinceStart": 34.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:21.080Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 15
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 230543360,
+          "cpuPercentSinceStart": 29.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 265228288,
+          "cpuPercentSinceStart": 34.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:21.597Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 14.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 237510656,
+          "cpuPercentSinceStart": 29.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.5
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 274509824,
+          "cpuPercentSinceStart": 34.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:22.118Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 12
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 14.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 246210560,
+          "cpuPercentSinceStart": 29.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 274710528,
+          "cpuPercentSinceStart": 33.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:22.636Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 14.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 246468608,
+          "cpuPercentSinceStart": 29.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 275705856,
+          "cpuPercentSinceStart": 33.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:23.152Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112926720,
+          "cpuPercentSinceStart": 14.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 248983552,
+          "cpuPercentSinceStart": 29.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 276832256,
+          "cpuPercentSinceStart": 32.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:23.671Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 12
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 14.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 248373248,
+          "cpuPercentSinceStart": 29.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 282607616,
+          "cpuPercentSinceStart": 32.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:24.184Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 13
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 14.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 250855424,
+          "cpuPercentSinceStart": 29
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 282828800,
+          "cpuPercentSinceStart": 32
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:24.711Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 14.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 251011072,
+          "cpuPercentSinceStart": 28.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 283648000,
+          "cpuPercentSinceStart": 31.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:25.229Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 14.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 251179008,
+          "cpuPercentSinceStart": 28.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 284631040,
+          "cpuPercentSinceStart": 31.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:25.748Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 14
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 253587456,
+          "cpuPercentSinceStart": 28.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.4
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 286375936,
+          "cpuPercentSinceStart": 30.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:26.264Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 9
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 253808640,
+          "cpuPercentSinceStart": 28.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 291508224,
+          "cpuPercentSinceStart": 30.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:26.784Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 9
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 256200704,
+          "cpuPercentSinceStart": 28.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 291987456,
+          "cpuPercentSinceStart": 30.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:27.298Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 256393216,
+          "cpuPercentSinceStart": 28.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 292745216,
+          "cpuPercentSinceStart": 29.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:27.831Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 9
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 256434176,
+          "cpuPercentSinceStart": 28
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 292786176,
+          "cpuPercentSinceStart": 29.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:28.349Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 9
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 259645440,
+          "cpuPercentSinceStart": 28.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 299491328,
+          "cpuPercentSinceStart": 29.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:28.873Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 263155712,
+          "cpuPercentSinceStart": 28.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 302039040,
+          "cpuPercentSinceStart": 30
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:29.394Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 287944704,
+          "cpuPercentSinceStart": 29.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 308330496,
+          "cpuPercentSinceStart": 30.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:29.915Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 9
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 297312256,
+          "cpuPercentSinceStart": 29.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 311975936,
+          "cpuPercentSinceStart": 30.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:30.440Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 5
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 316530688,
+          "cpuPercentSinceStart": 29.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 318234624,
+          "cpuPercentSinceStart": 31.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:30.968Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 315056128,
+          "cpuPercentSinceStart": 29.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 325193728,
+          "cpuPercentSinceStart": 31.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:31.484Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112934912,
+          "cpuPercentSinceStart": 13
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 315240448,
+          "cpuPercentSinceStart": 30.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 327360512,
+          "cpuPercentSinceStart": 31.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:32.001Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 315813888,
+          "cpuPercentSinceStart": 30.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 333430784,
+          "cpuPercentSinceStart": 31.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:32.522Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 315912192,
+          "cpuPercentSinceStart": 30.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 340873216,
+          "cpuPercentSinceStart": 32.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:33.038Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 316043264,
+          "cpuPercentSinceStart": 30.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 342798336,
+          "cpuPercentSinceStart": 33.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:33.564Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 6
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.3
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 316174336,
+          "cpuPercentSinceStart": 30.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 342994944,
+          "cpuPercentSinceStart": 33.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:34.102Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 5
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 316227584,
+          "cpuPercentSinceStart": 30.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 343023616,
+          "cpuPercentSinceStart": 33.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:34.626Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 318169088,
+          "cpuPercentSinceStart": 31
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 343224320,
+          "cpuPercentSinceStart": 34.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:35.159Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 5
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 318701568,
+          "cpuPercentSinceStart": 31
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 341131264,
+          "cpuPercentSinceStart": 34.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:35.706Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 323723264,
+          "cpuPercentSinceStart": 31.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 341245952,
+          "cpuPercentSinceStart": 34.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:36.229Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 6
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 328704000,
+          "cpuPercentSinceStart": 31.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 341704704,
+          "cpuPercentSinceStart": 34.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:36.763Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 329433088,
+          "cpuPercentSinceStart": 31.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 343683072,
+          "cpuPercentSinceStart": 35.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:37.292Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 6
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112939008,
+          "cpuPercentSinceStart": 12.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 334340096,
+          "cpuPercentSinceStart": 31.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 344059904,
+          "cpuPercentSinceStart": 35.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:37.820Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112959488,
+          "cpuPercentSinceStart": 12
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 338313216,
+          "cpuPercentSinceStart": 31.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 358223872,
+          "cpuPercentSinceStart": 35.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:38.345Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112959488,
+          "cpuPercentSinceStart": 11.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 344649728,
+          "cpuPercentSinceStart": 31.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39518208,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 358490112,
+          "cpuPercentSinceStart": 36.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:38.867Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 351604736,
+          "cpuPercentSinceStart": 32
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359288832,
+          "cpuPercentSinceStart": 36.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:39.415Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 354422784,
+          "cpuPercentSinceStart": 32.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359346176,
+          "cpuPercentSinceStart": 36.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:39.937Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 7
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 360685568,
+          "cpuPercentSinceStart": 32.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359432192,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:40.456Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 5
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 367714304,
+          "cpuPercentSinceStart": 32.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359559168,
+          "cpuPercentSinceStart": 36.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:40.978Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 369053696,
+          "cpuPercentSinceStart": 32.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359743488,
+          "cpuPercentSinceStart": 36.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:41.504Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 6
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 375037952,
+          "cpuPercentSinceStart": 32.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 359899136,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:42.021Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 378191872,
+          "cpuPercentSinceStart": 33
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 360136704,
+          "cpuPercentSinceStart": 36.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:42.589Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 384028672,
+          "cpuPercentSinceStart": 33.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 360243200,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:43.146Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 385990656,
+          "cpuPercentSinceStart": 33.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 360423424,
+          "cpuPercentSinceStart": 37
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:43.670Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 391168000,
+          "cpuPercentSinceStart": 33.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 361406464,
+          "cpuPercentSinceStart": 37.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:44.185Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 2
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 391536640,
+          "cpuPercentSinceStart": 33.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 361922560,
+          "cpuPercentSinceStart": 36.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:44.707Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 392019968,
+          "cpuPercentSinceStart": 34.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 362401792,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:45.245Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 399228928,
+          "cpuPercentSinceStart": 34.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 367112192,
+          "cpuPercentSinceStart": 36.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:45.769Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 11
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 402927616,
+          "cpuPercentSinceStart": 34.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 369623040,
+          "cpuPercentSinceStart": 36.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:46.286Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 408936448,
+          "cpuPercentSinceStart": 34.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 375603200,
+          "cpuPercentSinceStart": 36.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:46.814Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "Timeout",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 411705344,
+          "cpuPercentSinceStart": 34.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 382390272,
+          "cpuPercentSinceStart": 37.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:47.334Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 4
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 417751040,
+          "cpuPercentSinceStart": 34.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 384651264,
+          "cpuPercentSinceStart": 37
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:47.859Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 424132608,
+          "cpuPercentSinceStart": 34.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 391041024,
+          "cpuPercentSinceStart": 37
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:48.391Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 424206336,
+          "cpuPercentSinceStart": 34.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 391159808,
+          "cpuPercentSinceStart": 36.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:48.928Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 426573824,
+          "cpuPercentSinceStart": 34.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 393011200,
+          "cpuPercentSinceStart": 36.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:49.541Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 431783936,
+          "cpuPercentSinceStart": 35.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 398966784,
+          "cpuPercentSinceStart": 36.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:50.089Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 431816704,
+          "cpuPercentSinceStart": 35.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 406134784,
+          "cpuPercentSinceStart": 37
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:50.608Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 431816704,
+          "cpuPercentSinceStart": 35.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 408088576,
+          "cpuPercentSinceStart": 37.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:51.161Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 431865856,
+          "cpuPercentSinceStart": 35.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 414334976,
+          "cpuPercentSinceStart": 37.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:51.717Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "IO",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 431865856,
+          "cpuPercentSinceStart": 35.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 416141312,
+          "cpuPercentSinceStart": 37.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:52.241Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432271360,
+          "cpuPercentSinceStart": 35.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 423059456,
+          "cpuPercentSinceStart": 37.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:52.811Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 13
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432283648,
+          "cpuPercentSinceStart": 36.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 430104576,
+          "cpuPercentSinceStart": 37.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:53.349Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 11
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 112963584,
+          "cpuPercentSinceStart": 10.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432320512,
+          "cpuPercentSinceStart": 36.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 432930816,
+          "cpuPercentSinceStart": 38.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:54.006Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 13
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 10.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432345088,
+          "cpuPercentSinceStart": 36.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 433213440,
+          "cpuPercentSinceStart": 38.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:54.613Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 5
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 15
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 10.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432590848,
+          "cpuPercentSinceStart": 36.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 433229824,
+          "cpuPercentSinceStart": 38.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:55.312Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 11
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 10
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432631808,
+          "cpuPercentSinceStart": 37
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 433246208,
+          "cpuPercentSinceStart": 39.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:55.850Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432635904,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435200000,
+          "cpuPercentSinceStart": 39.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:56.410Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432644096,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434057216,
+          "cpuPercentSinceStart": 39.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:56.939Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 11
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 434417664,
+          "cpuPercentSinceStart": 37.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434069504,
+          "cpuPercentSinceStart": 39.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:57.506Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 432414720,
+          "cpuPercentSinceStart": 37.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434094080,
+          "cpuPercentSinceStart": 39.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:58.069Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 18
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433307648,
+          "cpuPercentSinceStart": 37.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434135040,
+          "cpuPercentSinceStart": 40.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:58.701Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433377280,
+          "cpuPercentSinceStart": 37.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434155520,
+          "cpuPercentSinceStart": 40.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:59.250Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433426432,
+          "cpuPercentSinceStart": 37.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434176000,
+          "cpuPercentSinceStart": 40.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:34:59.835Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 12
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.2
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433451008,
+          "cpuPercentSinceStart": 37.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434233344,
+          "cpuPercentSinceStart": 40.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:00.402Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "IO",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433451008,
+          "cpuPercentSinceStart": 37.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434298880,
+          "cpuPercentSinceStart": 40.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:00.945Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 12
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433500160,
+          "cpuPercentSinceStart": 37.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 434868224,
+          "cpuPercentSinceStart": 40.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:01.525Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433528832,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435331072,
+          "cpuPercentSinceStart": 40.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:02.068Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "IO",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 433586176,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435400704,
+          "cpuPercentSinceStart": 41
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:02.636Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 18
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113045504,
+          "cpuPercentSinceStart": 9.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 435458048,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435441664,
+          "cpuPercentSinceStart": 41.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:03.192Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113049600,
+          "cpuPercentSinceStart": 9.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 435515392,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435535872,
+          "cpuPercentSinceStart": 41.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:03.720Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113049600,
+          "cpuPercentSinceStart": 9.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 435863552,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435580928,
+          "cpuPercentSinceStart": 41.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:04.240Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113049600,
+          "cpuPercentSinceStart": 9.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 435904512,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435695616,
+          "cpuPercentSinceStart": 41.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:04.826Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 12
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 9.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 435957760,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435810304,
+          "cpuPercentSinceStart": 41.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:05.353Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 18
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 9.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436015104,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 435892224,
+          "cpuPercentSinceStart": 41.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:05.904Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 13
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 7
+        },
+        {
+          "state": "idle",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 9.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436121600,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436015104,
+          "cpuPercentSinceStart": 41.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:06.490Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436248576,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436154368,
+          "cpuPercentSinceStart": 41.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:07.021Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436293632,
+          "cpuPercentSinceStart": 37
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436224000,
+          "cpuPercentSinceStart": 41.6
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:07.602Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436420608,
+          "cpuPercentSinceStart": 37
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436391936,
+          "cpuPercentSinceStart": 41.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:08.144Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 5
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436502528,
+          "cpuPercentSinceStart": 37
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436502528,
+          "cpuPercentSinceStart": 42.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:08.658Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 22
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436649984,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436531200,
+          "cpuPercentSinceStart": 42.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:09.186Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 22
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436649984,
+          "cpuPercentSinceStart": 36.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436531200,
+          "cpuPercentSinceStart": 41.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:09.735Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 21
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436740096,
+          "cpuPercentSinceStart": 36.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436531200,
+          "cpuPercentSinceStart": 41.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:10.304Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 436850688,
+          "cpuPercentSinceStart": 36.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436547584,
+          "cpuPercentSinceStart": 41.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:10.840Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 437506048,
+          "cpuPercentSinceStart": 36.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 438243328,
+          "cpuPercentSinceStart": 41.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:11.430Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 437604352,
+          "cpuPercentSinceStart": 36.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436183040,
+          "cpuPercentSinceStart": 42.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:12.012Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113065984,
+          "cpuPercentSinceStart": 8.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 437682176,
+          "cpuPercentSinceStart": 36.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436187136,
+          "cpuPercentSinceStart": 42.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:12.602Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 13
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 437846016,
+          "cpuPercentSinceStart": 36.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436867072,
+          "cpuPercentSinceStart": 42.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:13.192Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 12
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441618432,
+          "cpuPercentSinceStart": 36.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436875264,
+          "cpuPercentSinceStart": 42.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:13.790Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.5
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443633664,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436879360,
+          "cpuPercentSinceStart": 42.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:14.326Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "IO",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443645952,
+          "cpuPercentSinceStart": 36.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436891648,
+          "cpuPercentSinceStart": 42.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:14.893Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "IO",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443695104,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436891648,
+          "cpuPercentSinceStart": 42.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:15.450Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 8
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.4
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443699200,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436895744,
+          "cpuPercentSinceStart": 42.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:16.004Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113078272,
+          "cpuPercentSinceStart": 8.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443699200,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 436916224,
+          "cpuPercentSinceStart": 42.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:16.558Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 113131520,
+          "cpuPercentSinceStart": 8.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443699200,
+          "cpuPercentSinceStart": 36.8
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437153792,
+          "cpuPercentSinceStart": 42.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:17.130Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441720832,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437161984,
+          "cpuPercentSinceStart": 42.9
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:17.690Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.3
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441720832,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437198848,
+          "cpuPercentSinceStart": 43
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:18.217Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441946112,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437198848,
+          "cpuPercentSinceStart": 43
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:18.748Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441946112,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437202944,
+          "cpuPercentSinceStart": 43.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:19.316Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 15
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.2
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441946112,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437207040,
+          "cpuPercentSinceStart": 43.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:19.893Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441946112,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437215232,
+          "cpuPercentSinceStart": 43.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:20.428Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98381824,
+          "cpuPercentSinceStart": 8.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441950208,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437215232,
+          "cpuPercentSinceStart": 43.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:20.990Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 8.1
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 441958400,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437223424,
+          "cpuPercentSinceStart": 43.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:21.524Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 12
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 5
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442003456,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437260288,
+          "cpuPercentSinceStart": 43.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:22.060Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 17
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442011648,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437297152,
+          "cpuPercentSinceStart": 43.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:22.627Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "Timeout",
+          "connections": 2
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 4
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442241024,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437469184,
+          "cpuPercentSinceStart": 43.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:23.196Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 19
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 7.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442277888,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437506048,
+          "cpuPercentSinceStart": 43.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:23.738Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 7.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442322944,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437567488,
+          "cpuPercentSinceStart": 43.5
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:24.341Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98385920,
+          "cpuPercentSinceStart": 7.9
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442580992,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437780480,
+          "cpuPercentSinceStart": 43.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:24.903Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 18
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 4
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98545664,
+          "cpuPercentSinceStart": 7.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442585088,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437846016,
+          "cpuPercentSinceStart": 43.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:25.435Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 14
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98598912,
+          "cpuPercentSinceStart": 7.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442613760,
+          "cpuPercentSinceStart": 36.9
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 437981184,
+          "cpuPercentSinceStart": 43.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:25.967Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 11
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 5
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 6
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98652160,
+          "cpuPercentSinceStart": 7.8
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 442613760,
+          "cpuPercentSinceStart": 37.1
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 438087680,
+          "cpuPercentSinceStart": 43.7
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:26.525Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 10
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 11
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98705408,
+          "cpuPercentSinceStart": 7.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443092992,
+          "cpuPercentSinceStart": 37.2
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 438104064,
+          "cpuPercentSinceStart": 43.8
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:27.110Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 5
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98758656,
+          "cpuPercentSinceStart": 7.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443109376,
+          "cpuPercentSinceStart": 37.3
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 440172544,
+          "cpuPercentSinceStart": 44.1
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:27.722Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 18
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 1
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": null,
+          "connections": 1
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98816000,
+          "cpuPercentSinceStart": 7.7
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443129856,
+          "cpuPercentSinceStart": 37.4
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 441290752,
+          "cpuPercentSinceStart": 44.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:28.245Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98869248,
+          "cpuPercentSinceStart": 7.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443224064,
+          "cpuPercentSinceStart": 37.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 441303040,
+          "cpuPercentSinceStart": 44.2
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:28.813Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 16
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 3
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 3
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98922496,
+          "cpuPercentSinceStart": 7.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443232256,
+          "cpuPercentSinceStart": 37.6
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 441315328,
+          "cpuPercentSinceStart": 44.3
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:29.346Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 10
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 10
+        },
+        {
+          "state": "idle in transaction",
+          "wait_event_type": "Client",
+          "connections": 2
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 98975744,
+          "cpuPercentSinceStart": 7.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443273216,
+          "cpuPercentSinceStart": 37.7
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 441143296,
+          "cpuPercentSinceStart": 44.4
+        }
+      ]
+    },
+    {
+      "at": "2026-10-06T07:35:29.871Z",
+      "activity": [
+        {
+          "state": "active",
+          "wait_event_type": null,
+          "connections": 1
+        },
+        {
+          "state": "idle",
+          "wait_event_type": "Client",
+          "connections": 21
+        }
+      ],
+      "job": {
+        "pending": 0,
+        "oldest_seconds": 0
+      },
+      "processes": [
+        {
+          "pid": 92698,
+          "ppid": 92348,
+          "rssBytes": 99033088,
+          "cpuPercentSinceStart": 7.6
+        },
+        {
+          "pid": 92967,
+          "ppid": 92348,
+          "rssBytes": 39452672,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 92975,
+          "ppid": 92967,
+          "rssBytes": 443273216,
+          "cpuPercentSinceStart": 37.5
+        },
+        {
+          "pid": 93369,
+          "ppid": 92348,
+          "rssBytes": 39522304,
+          "cpuPercentSinceStart": 0.1
+        },
+        {
+          "pid": 93377,
+          "ppid": 93369,
+          "rssBytes": 441163776,
+          "cpuPercentSinceStart": 44.4
+        }
+      ]
+    }
+  ],
+  "loadPhasesPassed": true,
+  "incomplete": "Final throttled mobile/keyboard stage failed after the earth screenshot; diagnostic/retry required."
+}

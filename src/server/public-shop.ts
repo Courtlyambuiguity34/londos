@@ -1,11 +1,20 @@
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
-import { shopSpecification, type ShopSpecification } from "../modules/shop-design/specification";
+import {
+  shopSpecification,
+  productReferences,
+  type ShopSpecification,
+} from "../modules/shop-design/specification";
 import { transaction } from "./db/pool";
 import { requireShop, type Actor } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { eligibilityJoins, eligibleStates } from "./public-eligibility";
 import { contactInput } from "./contacts";
+import {
+  catalogueGeneration,
+  encodeCatalogueCursor,
+  decodeCatalogueCursor,
+} from "./catalogue-pagination";
 
 export type PublicDepartment = { id: string; name: string; slug: string };
 export type PublicProduct = {
@@ -52,6 +61,8 @@ export type ShopView = {
   selectedDepartment: PublicDepartment | null;
   selectedProduct: PublicProduct | null;
   missingDestination: boolean;
+  nextCursor: string | null;
+  paginated: boolean;
 };
 const productColumns =
   "q.id,q.department_id,q.name,q.slug,q.description,q.kind,q.price_minor::text,q.currency,q.availability,q.position,a.id AS media_id,a.alt,a.width,a.height";
@@ -72,7 +83,7 @@ export async function assemble(
   client: PoolClient,
   row: ShopView["shop"] & { design: unknown; revision: number },
   privatePreview: boolean,
-  destination: { department?: string; product?: string } = {},
+  destination: { department?: string; product?: string; after?: string } = {},
 ): Promise<ShopView> {
   const specification = shopSpecification.safeParse(row.design).data ?? emptySpec;
   const departments = (
@@ -86,12 +97,20 @@ export async function assemble(
         (d) => d.id === destination.department || d.slug === destination.department,
       ) ?? null)
     : null;
-  const sources = specification.spaces.flatMap((space) =>
-    space.type === "department" ? [{ id: space.departmentId, limit: space.limit }] : [],
+  const sources = specification.spaces.flatMap((s) =>
+    "departmentId" in s
+      ? [
+          {
+            id: s.departmentId,
+            lim: s.limit,
+            kind: s.type === "collection" ? s.kind : "all",
+            availability: s.type === "collection" ? s.availability : "all",
+          },
+        ]
+      : [],
   );
-  const ids = specification.spaces.flatMap((space) =>
-    space.type === "products" ? space.productIds : [],
-  );
+  const ids = productReferences(specification);
+  let nextCursor: string | null = null;
   let products: PublicProduct[];
   if (destination.product)
     products = (
@@ -100,23 +119,36 @@ export async function assemble(
         [row.id, destination.product],
       )
     ).rows;
-  else if (destination.department)
-    products = selectedDepartment
-      ? (
-          await client.query(
-            `SELECT ${productColumns} FROM products q ${mediaJoin} WHERE q.shop_id=$1 AND q.department_id=$2 AND q.availability<>'archived' ORDER BY q.position,q.id LIMIT 20`,
-            [row.id, selectedDepartment.id],
-          )
-        ).rows
-      : [];
-  else
+  else if (destination.department) {
+    products = [];
+    if (selectedDepartment) {
+      const generation = await catalogueGeneration(client, row.id);
+      const cursor = destination.after
+        ? decodeCatalogueCursor(destination.after, row.id, selectedDepartment.id, generation)
+        : null;
+      const page = (
+        await client.query(
+          `SELECT ${productColumns} FROM products q ${mediaJoin} WHERE q.shop_id=$1 AND q.department_id=$2 AND q.availability<>'archived' AND ($3::integer IS NULL OR (q.position,q.id)>($3,$4::uuid)) ORDER BY q.position,q.id LIMIT 21`,
+          [row.id, selectedDepartment.id, cursor?.position ?? null, cursor?.id ?? null],
+        )
+      ).rows as PublicProduct[];
+      products = page.slice(0, 20);
+      if (page.length > 20) {
+        const last = products[products.length - 1]!;
+        nextCursor = encodeCatalogueCursor(row.id, selectedDepartment.id, generation, {
+          position: last.position,
+          id: last.id,
+        });
+      }
+    }
+  } else
     products = (
       await client.query(
         `SELECT DISTINCT ON (q.id) ${productColumns} FROM (
-    SELECT hit.* FROM jsonb_to_recordset($2::jsonb) AS source(id uuid,lim integer) CROSS JOIN LATERAL (SELECT * FROM products WHERE shop_id=$1 AND department_id=source.id AND availability<>'archived' ORDER BY position,id LIMIT source.lim) hit
+    SELECT hit.* FROM jsonb_to_recordset($2::jsonb) AS source(id uuid,lim integer,kind text,availability text) CROSS JOIN LATERAL (SELECT * FROM products WHERE shop_id=$1 AND department_id=source.id AND availability<>'archived' AND (source.kind='all' OR kind=source.kind) AND (source.availability='all' OR availability=source.availability) ORDER BY position,id LIMIT source.lim) hit
     UNION ALL SELECT * FROM products WHERE shop_id=$1 AND id=ANY($3::uuid[]) AND availability<>'archived'
     ) q JOIN departments d ON d.id=q.department_id AND d.archived=false ${mediaJoin} ORDER BY q.id LIMIT 32`,
-        [row.id, JSON.stringify(sources.map((s) => ({ id: s.id, lim: s.limit }))), ids],
+        [row.id, JSON.stringify(sources), ids],
       )
     ).rows;
   products.sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
@@ -169,20 +201,30 @@ export async function assemble(
     missingDestination: Boolean(
       (destination.product && !products[0]) || (destination.department && !selectedDepartment),
     ),
+    nextCursor,
+    paginated: Boolean(destination.after),
   };
 }
 export async function readPublicShop(
   pool: Pool,
   key: string,
-  destination: { department?: string; product?: string } = {},
+  destination: { department?: string; product?: string; after?: string } = {},
 ) {
   if (
     !routeKey.safeParse(key).success ||
-    Object.values(destination).some((value) => !routeKey.safeParse(value).success)
+    [destination.department, destination.product].some(
+      (value) => value !== undefined && !routeKey.safeParse(value).success,
+    )
   )
     throw new AccessError(404, "resource_unavailable");
+  if (
+    destination.after !== undefined &&
+    (!destination.department || !/^[A-Za-z0-9_-]{1,400}$/.test(destination.after))
+  )
+    throw new AccessError(422, "invalid_catalogue_cursor");
   return transaction(pool, async (client) => {
     await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
+    await client.query("SET LOCAL statement_timeout='2000ms'");
     const row = (
       await client.query(
         `SELECT s.id,s.name,s.slug,s.tagline,s.version,s.category,r.design,r.revision FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id JOIN shop_revisions r ON r.id=sd.published_id AND r.shop_id=s.id WHERE (s.slug=$1 OR s.id::text=$1 OR EXISTS(SELECT 1 FROM shop_addresses sa WHERE sa.slug=$1 AND sa.shop_id=s.id)) AND ${eligibleStates} LIMIT 1`,

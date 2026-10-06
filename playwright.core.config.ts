@@ -21,6 +21,7 @@ export default defineConfig({
       testMatch: [
         "security.spec.ts",
         "p5.spec.ts",
+        "p11.spec.ts",
         "x2.spec.ts",
         "p8.spec.ts",
         "zz-admin.spec.ts",
@@ -37,6 +38,7 @@ export default defineConfig({
       name: "core-mobile",
       testMatch: [
         "mobile.spec.ts",
+        "p11.spec.ts",
         "p5-mobile.spec.ts",
         "x2-mobile.spec.ts",
         "p8-mobile.spec.ts",

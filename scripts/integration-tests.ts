@@ -31,6 +31,7 @@ try {
         AUTH_BASE_URL: "http://127.0.0.1:3101",
         LONDOS_LOCAL_ADAPTERS: "true",
         LONDOS_CORE_ENABLED: "true",
+        LONDOS_AI_REMOTE: "false",
       },
     },
   );

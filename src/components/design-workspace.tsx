@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import type { ShopSpecification } from "@/modules/shop-design/specification";
+import { shopSpecification, type ShopSpecification } from "@/modules/shop-design/specification";
+import { DesignSections } from "./design-sections";
 
 type State = {
   version: number;
@@ -10,6 +11,7 @@ type State = {
   specification: ShopSpecification;
   history: { revision: number; summary: string }[];
   departments: { id: string; name: string }[];
+  products: { id: string; name: string; has_image: boolean }[];
 };
 export function DesignWorkspace({ shopId }: { shopId: string }) {
   const root = `/api/workspace/shops/${shopId}/design`,
@@ -88,7 +90,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
     const space = spec.spaces.find((s) => s.id === id);
     return space?.type === "department"
       ? (state.departments.find((d) => d.id === space.departmentId)?.name ?? id)
-      : space?.type === "story" || space?.type === "products"
+      : space && "title" in space
         ? space.title
         : id;
   };
@@ -110,6 +112,12 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
         className="account-form"
         onSubmit={(e) => {
           e.preventDefault();
+          if (!shopSpecification.safeParse(spec).success) {
+            setStatus(
+              "Check section text, unique references and the eight-section/32-card page budget before saving.",
+            );
+            return;
+          }
           void command("", { version: state.version, summary, specification: spec }, "PUT");
         }}
       >
@@ -175,7 +183,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                   aria-label={`Show ${department.name} department`}
                   checked={selected}
                   disabled={
-                    !selected && spec.spaces.filter((s) => s.type === "department").length >= 4
+                    !selected &&
+                    (spec.spaces.length >= 8 ||
+                      spec.spaces.filter((s) => s.type === "department").length >= 4)
                   }
                   onChange={(e) =>
                     setSpec({
@@ -203,6 +213,12 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             );
           })}
         </fieldset>
+        <DesignSections
+          specification={spec}
+          departments={state.departments}
+          products={state.products}
+          onChange={setSpec}
+        />
         <ol>
           {spec.spaces.map((space) => (
             <li key={space.id}>{spaceName(space.id)}</li>

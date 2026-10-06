@@ -2,6 +2,26 @@ import { z } from "zod";
 
 const identity = z.string().regex(/^[a-z][a-z0-9-]{0,39}$/);
 const heading = z.string().trim().min(1).max(100);
+const narrative = <T extends "entrance" | "story" | "offer" | "service_desk">(type: T) =>
+  z
+    .object({
+      id: identity,
+      type: z.literal(type),
+      version: z.literal(1),
+      title: heading,
+      body: z.string().trim().min(1).max(1000),
+    })
+    .strict();
+const curated = <T extends "products" | "display" | "gallery">(type: T, limit: number) =>
+  z
+    .object({
+      id: identity,
+      type: z.literal(type),
+      version: z.literal(1),
+      title: heading,
+      productIds: z.array(z.uuid()).min(1).max(limit),
+    })
+    .strict();
 export const shopSpecification = z
   .object({
     schemaVersion: z.literal(1),
@@ -10,6 +30,23 @@ export const shopSpecification = z
     spaces: z
       .array(
         z.discriminatedUnion("type", [
+          narrative("entrance"),
+          curated("display", 8),
+          curated("gallery", 4),
+          narrative("offer"),
+          narrative("service_desk"),
+          z
+            .object({
+              id: identity,
+              type: z.literal("collection"),
+              version: z.literal(1),
+              title: heading,
+              departmentId: z.uuid(),
+              limit: z.number().int().min(1).max(8),
+              kind: z.enum(["all", "product", "service"]),
+              availability: z.enum(["all", "available"]),
+            })
+            .strict(),
           z
             .object({
               id: identity,
@@ -53,8 +90,8 @@ export const shopSpecification = z
       context.addIssue({ code: "custom", message: "Actions must be unique" });
     let cards = 0;
     for (const space of spec.spaces) {
-      if (space.type === "department") cards += space.limit;
-      if (space.type === "products") {
+      if ("limit" in space) cards += space.limit;
+      if ("productIds" in space) {
         cards += space.productIds.length;
         if (new Set(space.productIds).size !== space.productIds.length)
           context.addIssue({ code: "custom", message: "Product references must be unique" });
@@ -67,6 +104,30 @@ export const shopSpecification = z
       });
   });
 export type ShopSpecification = z.infer<typeof shopSpecification>;
+export type ShopSpace = ShopSpecification["spaces"][number];
+export function departmentReferences(spec: ShopSpecification) {
+  return spec.spaces.flatMap((s) => ("departmentId" in s ? [s.departmentId] : []));
+}
+export function productReferences(spec: ShopSpecification) {
+  return spec.spaces.flatMap((s) => ("productIds" in s ? s.productIds : []));
+}
+export function spaceProducts<
+  T extends { id: string; department_id: string; kind: string; availability: string },
+>(space: ShopSpace, products: T[]): T[] {
+  if ("productIds" in space)
+    return space.productIds.flatMap((id) => products.filter((p) => p.id === id));
+  if ("departmentId" in space)
+    return products
+      .filter(
+        (p) =>
+          p.department_id === space.departmentId &&
+          (space.type !== "collection" ||
+            ((space.kind === "all" || p.kind === space.kind) &&
+              (space.availability === "all" || p.availability === "available"))),
+      )
+      .slice(0, space.limit);
+  return [];
+}
 export const specificationPatch = z.discriminatedUnion("op", [
   z.object({ op: z.literal("move"), spaceId: identity, before: identity }).strict(),
   z.object({ op: z.literal("theme"), theme: z.enum(["earth", "plum", "blue"]) }).strict(),

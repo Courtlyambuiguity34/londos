@@ -35,6 +35,7 @@ export default defineConfig([
     "dist/**",
     "node_modules/**",
     ".cache/**",
+    ".local/**",
     "playwright-report/**",
     "test-results/**",
     "next-env.d.ts",

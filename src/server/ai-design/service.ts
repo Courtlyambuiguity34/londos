@@ -8,8 +8,14 @@ import { audit } from "../security/audit";
 import { withinDeadline } from "../jobs/deadline";
 import { assemble } from "../public-shop";
 import { fingerprint, currentVersion } from "../lifecycle-common";
+import { catalogueGeneration } from "../catalogue-pagination";
 import { readDesign, validateReferences, state, insertRevision } from "../shop-design";
-import { shopSpecification, type ShopSpecification } from "../../modules/shop-design/specification";
+import {
+  shopSpecification,
+  departmentReferences,
+  productReferences,
+  type ShopSpecification,
+} from "../../modules/shop-design/specification";
 import {
   assistantRequest,
   assistantCommand,
@@ -73,12 +79,8 @@ async function context(db: PoolClient, actor: Actor, id: string) {
   const shop = await access(db, actor, id),
     design = await readDesign(db, actor, id),
     specification = shopSpecification.parse(design.specification);
-  const referencedDepartments = specification.spaces.flatMap((s) =>
-      s.type === "department" ? [s.departmentId] : [],
-    ),
-    referencedProducts = specification.spaces.flatMap((s) =>
-      s.type === "products" ? s.productIds : [],
-    );
+  const referencedDepartments = departmentReferences(specification),
+    referencedProducts = productReferences(specification);
   const departments = (
     await db.query(
       "SELECT id,name,version FROM departments WHERE shop_id=$1 AND merchant_id=$2 AND archived=false AND (id IN(SELECT id FROM departments WHERE shop_id=$1 AND archived=false ORDER BY position,id LIMIT 30) OR id=ANY($3::uuid[])) ORDER BY position,id",
@@ -103,7 +105,11 @@ async function context(db: PoolClient, actor: Actor, id: string) {
   return {
     data,
     version: design.version,
-    digest: fingerprint({ version: design.version, data }),
+    digest: fingerprint({
+      version: design.version,
+      catalogueGeneration: await catalogueGeneration(db, id),
+      data,
+    }),
     merchantId: shop.merchant_id,
   };
 }

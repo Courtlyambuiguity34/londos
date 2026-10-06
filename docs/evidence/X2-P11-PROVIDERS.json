@@ -1,0 +1,30 @@
+{
+  "check": "live-ai-provider-contracts",
+  "recordedAt": "2026-10-06T07:18:24.943Z",
+  "observations": [
+    {
+      "provider": "gemini",
+      "outcome": "unavailable",
+      "reason": "credentials_unavailable",
+      "liveRequest": false
+    },
+    {
+      "provider": "openai",
+      "outcome": "unavailable",
+      "reason": "credentials_unavailable",
+      "liveRequest": false
+    }
+  ],
+  "limit": "Unavailable is not a passing live contract. This bounded fictional theme check does not establish general design quality, price accuracy or provider billing. No credentials, prompts or provider error bodies printed.",
+  "requiredLiveExitCode": 1,
+  "modelChoices": {
+    "gemini": "gemini-2.5-flash",
+    "openai": "gpt-5-mini"
+  },
+  "modelsLiveVerified": false,
+  "priceRatesVerified": false,
+  "activeEnvironmentRevision": "19",
+  "activeProviderSecretBindings": 0,
+  "officialPricingObservation": "Proxy CONNECT 403 under active restricted egress",
+  "remoteMainApplicationEnabled": false
+}

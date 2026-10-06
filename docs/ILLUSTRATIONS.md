@@ -28,7 +28,7 @@ flowchart TB
   Confirm --> Domain
 ```
 
-X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. P9 adds local reporting/moderation/appeals, truthful development verification, assigned incidents/owner-confirmed recovery and privacy-minimized analytics. Live providers, broader governed privacy/costs, the wider renderer registry and AI remain later stages. The complete diagram is the intended system, not a claim that every component is ready.
+X1 implements local PostgreSQL, the initial session/MFA/permission boundary and the durable worker. X2 adds catalogue/contact commands, guest requests and private worker media processing. P6/P7 adds safe LSS/publication, canonical PostgreSQL search and eligible public image delivery. P8 adds local applications/review, development rent/provisioning, scheduled tenancy, owner teams/addresses and scoped shop operations. P9 adds local reporting/moderation/appeals, truthful development verification, assigned incidents/owner-confirmed recovery and privacy-minimized analytics. P9 adds governed local privacy/cost reporting; P10 adds the private deterministic/provider-contract assistant and P11 completes the bounded semantic registry. Live providers and production operational integrations remain separate gates. The complete diagram is the intended system, not a claim that every component is ready.
 
 ## Implemented X1 identity and mutation boundary
 
@@ -502,3 +502,28 @@ The following fictional captures were inspected for readable labels, limits, pri
 | [Mobile assistant](evidence/images/x2-p10-assistant-mobile.png) | Native keyboard-triggered deterministic contact-action proposal, labelled confirmation, unavailable live providers and separate reported-usage explanations; no overflow/axe violations in the recorded viewport. |
 
 These three captures were visually inspected. They are fictional local workflow evidence, not live Gemini/OpenAI demonstrations or manual screen-reader certification. Prior packet illustrations remain preserved. [P10 evidence](evidence/X2-P10.md) records security/verification/preservation limits; the [design pipeline](SHOP-DESIGN-PIPELINE.md) diagrams the implemented boundary.
+
+## P11 semantic shops, continuation and measured load
+
+| Illustration | Recorded meaning |
+|---|---|
+| [Desktop catalogue](evidence/images/x2-p11-catalogue-core-desktop.png) / [mobile catalogue](evidence/images/x2-p11-catalogue-core-mobile.png) | Production native 20-row department continuation with 46 fictional items and a next-page link. Most fixture items intentionally have no photo. |
+| [Earth](evidence/images/x2-p11-template-earth.png), [plum](evidence/images/x2-p11-template-plum.png), [blue](evidence/images/x2-p11-template-blue.png) | All eight new/old compatible semantic spaces on a 390×844 emulated mobile device; photograph/filters/gallery/service desk resolve canonical data. Repeated coffee images are the attributed CC0 fixture, not merchant products. |
+| [Bounded shop-first search](evidence/images/x2-p11-search.png) | Twenty eligible shop results and continuation from the generated scale dataset. |
+| [Load and saturation plot](evidence/images/x2-p11-load.png) | Final actual p50/p95/p99/throughput at 1/5/20/40 clients; 40 is a diagnostic overload phase. |
+
+All six captures and the plot were visually inspected for readable labels, bounded layout/navigation and factual captions. Native tests verify keyboard/labels/axe/overflow; the experiment validates three rendered templates under reduced motion, 4× CPU slowdown and 150 ms/1.6 Mbps emulation. These captures do not certify actual handset/Ugandan-network or screen-reader user sessions. Photo attribution is retained in [fixture provenance](../tests/fixtures/README.md); [P11 evidence](evidence/X2-P11.md) records the final gate and limits. Historical illustrations remain unchanged.
+
+```mermaid
+flowchart LR
+  Forms[Native semantic forms or private AI proposal] --> Validate[Strict shared LSS and current owned references]
+  Validate --> Preview[Private canonical preview]
+  Preview --> Confirm[Confirmed draft]
+  Confirm --> Publish[Separate fresh publication]
+  Publish --> Read[Two independent web processes]
+  Read --> SQL[(Canonical eligibility and bounded PostgreSQL reads)]
+  Mutation[Catalogue transaction] --> Counter[Per-shop generation increment]
+  Counter --> SQL
+  SQL --> Cursor[20 rows and scoped continuation]
+  Cursor --> Restart[Explicit restart after catalogue change]
+```
