@@ -97,7 +97,12 @@ export const presentation = z
     const pairs: [string, string, number, string][] = [
       [colorHex[value.palette.text], colorHex[value.palette.background], 4.5, "text/background"],
       [colorHex[value.palette.text], colorHex[value.palette.surface], 4.5, "text/surface"],
-      [colorHex[value.palette.primary], colorHex[value.palette.background], 3, "primary/background"],
+      [
+        colorHex[value.palette.primary],
+        colorHex[value.palette.background],
+        3,
+        "primary/background",
+      ],
     ];
     for (const [foreground, background, minimum, label] of pairs)
       if (contrast(foreground, background) < minimum)
@@ -281,7 +286,9 @@ export type ShopSpecification = z.infer<typeof shopSpecification>;
 export type ShopSpace = ShopSpecification["spaces"][number];
 
 export function departmentReferences(spec: ShopSpecification) {
-  return spec.spaces.flatMap((s) => ("departmentId" in s && s.departmentId ? [s.departmentId] : []));
+  return spec.spaces.flatMap((s) =>
+    "departmentId" in s && s.departmentId ? [s.departmentId] : [],
+  );
 }
 export function productReferences(spec: ShopSpecification) {
   return spec.spaces.flatMap((s) => {

@@ -17,7 +17,10 @@ const patch = z
       "remove_space",
     ]),
     theme: z.enum(["earth", "plum", "blue"]).nullable(),
-    actions: z.array(z.enum(["call", "whatsapp", "enquiry"])).max(3).nullable(),
+    actions: z
+      .array(z.enum(["call", "whatsapp", "enquiry"]))
+      .max(3)
+      .nullable(),
     spaceId: z.string().max(40).nullable(),
     before: z.string().max(40).nullable(),
     text: z.string().max(240).nullable(),
@@ -105,7 +108,11 @@ const patch = z
       .nullable()
       .optional()
       .default(null),
-    mobileColumns: z.union([z.literal(1), z.literal(2)]).nullable().optional().default(null),
+    mobileColumns: z
+      .union([z.literal(1), z.literal(2)])
+      .nullable()
+      .optional()
+      .default(null),
     desktopColumns: z
       .union([z.literal(2), z.literal(3), z.literal(4)])
       .nullable()

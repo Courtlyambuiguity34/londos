@@ -90,7 +90,7 @@ export async function validateReferences(
         if (productDepartments.get(productId) !== section.departmentId)
           throw new AccessError(422, "design_reference_integrity");
   }
-    const gallery = spec.spaces.flatMap((s) => (s.type === "gallery" ? s.productIds : []));
+  const gallery = spec.spaces.flatMap((s) => (s.type === "gallery" ? s.productIds : []));
   if (
     gallery.length &&
     (

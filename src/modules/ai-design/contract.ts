@@ -203,8 +203,7 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
     }),
     ...richCopy(next).map((field) => field.text),
   ];
-  if (texts.some((t) => unsafe.test(t)))
-    throw new DesignIntegrityError("unsafe_generated_text");
+  if (texts.some((t) => unsafe.test(t))) throw new DesignIntegrityError("unsafe_generated_text");
 
   for (const field of richCopy(next)) {
     if (field.provenance === "ai" && strongUnsupportedClaim.test(field.text))
@@ -273,7 +272,11 @@ export function changeSummary(intent: DesignIntent): string[] {
       p.op === "theme"
         ? "Use " + p.theme + " theme"
         : p.op === "presentation"
-          ? "Use " + p.presentation.premiseStyle + " premises with " + p.presentation.density + " density"
+          ? "Use " +
+            p.presentation.premiseStyle +
+            " premises with " +
+            p.presentation.density +
+            " density"
           : p.op === "actions"
             ? "Show " + (p.actions.join(", ") || "no contact actions")
             : p.op === "move"

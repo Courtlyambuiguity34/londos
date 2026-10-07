@@ -132,13 +132,7 @@ function copyText(value: { text: string } | null) {
   return value?.text ?? "";
 }
 
-function DesignerSection({
-  space,
-  view,
-}: {
-  space: ShopSpace;
-  view: ShopView;
-}) {
+function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) {
   if (space.type === "hero") {
     const product = space.featuredProductId
       ? view.products.find((item) => item.id === space.featuredProductId)

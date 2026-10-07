@@ -469,7 +469,6 @@ test("provider timeout aborts pending transport after eight seconds with a redac
   await expect(p.generate(input)).rejects.toMatchObject({ code: "timeout" });
 }, 10000);
 
-
 const amaraDepartments = {
   dresses: "11111111-1111-4111-8111-111111111111",
   shoes: "22222222-2222-4222-8222-222222222222",
@@ -503,7 +502,13 @@ const amara: DesignContext = {
     [amaraProducts.P101, "Nia Evening Dress", amaraDepartments.dresses, "Dresses", "95000"],
     [amaraProducts.P102, "Kampala Block Heel", amaraDepartments.shoes, "Women’s Shoes", "75000"],
     [amaraProducts.P103, "Amara Classic Handbag", amaraDepartments.handbags, "Handbags", "120000"],
-    [amaraProducts.P104, "Pearl Drop Earrings", amaraDepartments.accessories, "Accessories", "25000"],
+    [
+      amaraProducts.P104,
+      "Pearl Drop Earrings",
+      amaraDepartments.accessories,
+      "Accessories",
+      "25000",
+    ],
     [amaraProducts.P105, "Zuri Flat Sandal", amaraDepartments.shoes, "Women’s Shoes", "48000"],
     [amaraProducts.P106, "Maya Summer Dress", amaraDepartments.dresses, "Dresses", "65000"],
   ].map(([id, name, departmentId, departmentName, priceMinor]) => ({

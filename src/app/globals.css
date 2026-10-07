@@ -2081,7 +2081,6 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-
 /* P13 bounded shop-premise renderer. Values come only from trusted token maps in CanonicalShop. */
 .designer-premise {
   --designer-gap: 32px;
