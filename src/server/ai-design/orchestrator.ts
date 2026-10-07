@@ -176,13 +176,15 @@ export class LondosDesignOrchestrator {
     let reviewWarning = intent.confidence === "low",
       reviewStatus = "not_needed";
     if (quality || repaired || reviewWarning || intent.review === "recommended") {
-      if (path === "openai") {
-        reviewWarning = true;
-        reviewStatus = "initial_fallback_requires_review";
-      } else if (this.providers.openai && calls < aiLimits.maxAttempts) {
-        const prior = JSON.stringify(intent.patches),
-          reviewed = await call("openai", "review", 0, intent);
-        reviewWarning = reviewed.confidence === "low" || prior !== JSON.stringify(reviewed.patches);
+      const reviewProvider: ProviderKind = path === "openai" ? "openai" : primary;
+      if (this.providers[reviewProvider] && calls < aiLimits.maxAttempts) {
+        const prior = JSON.stringify({ patches: intent.patches, decisions: intent.decisions }),
+          reviewed = await call(reviewProvider, "review", 0, intent),
+          reviewedShape = JSON.stringify({
+            patches: reviewed.patches,
+            decisions: reviewed.decisions,
+          });
+        reviewWarning = reviewed.confidence === "low" || prior !== reviewedShape;
         reviewStatus = reviewWarning ? "review_changed_or_low_confidence" : "reviewed";
         intent = reviewed;
       } else {
