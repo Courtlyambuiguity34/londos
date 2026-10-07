@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { renderPilotContext } from "@/server/analytics";
 import { PilotObserver } from "./pilot-observer";
 import type { CaptureInput } from "@/modules/analytics/contract";
@@ -7,7 +8,7 @@ import { formatMinorMoney } from "@/modules/money";
 import { ReadyImage } from "./ready-image";
 import { EmptyState } from "./empty-state";
 import { SearchForm } from "./search-form";
-import { spaceProducts } from "@/modules/shop-design/specification";
+import { spaceProducts, type ShopSpace } from "@/modules/shop-design/specification";
 
 export function CanonicalProduct({
   product,
@@ -109,9 +110,162 @@ function Contacts({ view }: { view: ShopView }) {
     </div>
   );
 }
+
+const palette: Record<string, string> = {
+  cream: "#f7f0e3",
+  burgundy: "#6f1735",
+  gold: "#b38a3e",
+  charcoal: "#292827",
+  white: "#ffffff",
+  black: "#151515",
+  stone: "#d8d2c8",
+  sand: "#e5d2b4",
+  terracotta: "#a9563f",
+  sage: "#8a9a7b",
+  forest: "#304b3b",
+  navy: "#243a5a",
+  sky: "#9fc6dc",
+  plum: "#603950",
+};
+
+function copyText(value: { text: string } | null) {
+  return value?.text ?? "";
+}
+
+function DesignerSection({
+  space,
+  view,
+}: {
+  space: ShopSpace;
+  view: ShopView;
+}) {
+  if (space.type === "hero") {
+    const product = space.featuredProductId
+      ? view.products.find((item) => item.id === space.featuredProductId)
+      : null;
+    return (
+      <section
+        id={space.id}
+        className={"designer-hero designer-hero--" + space.variant}
+        aria-labelledby={space.id + "-title"}
+      >
+        <div className="designer-hero__copy">
+          <p className="eyebrow">{view.shop.category}</p>
+          <h1 id={space.id + "-title"}>{copyText(space.title)}</h1>
+          {space.subtitle ? <p>{copyText(space.subtitle)}</p> : null}
+          {space.cta === "browse" ? (
+            <a className="button" href="#shop-collections">
+              Browse collection
+            </a>
+          ) : space.cta === "whatsapp" && view.contact?.whatsapp ? (
+            <a
+              className="button"
+              href={"https://wa.me/" + view.contact.whatsapp.slice(1)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp shop
+            </a>
+          ) : space.cta === "enquiry" && view.contact?.enquiries_enabled && !view.privatePreview ? (
+            <Link className="button" href={"/contact/" + view.shop.id}>
+              Enquire with the shop
+            </Link>
+          ) : null}
+        </div>
+        {product ? (
+          <div className="designer-hero__product">
+            <CanonicalProduct product={product} view={view} large />
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+  if (space.type === "featured_product") {
+    const product = view.products.find((item) => item.id === space.productId);
+    if (!product) return null;
+    return (
+      <section
+        id={space.id}
+        className={"designer-feature designer-feature--" + space.variant}
+        aria-labelledby={space.id + "-title"}
+      >
+        <div className="designer-feature__intro">
+          <p className="eyebrow">Featured</p>
+          <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
+        </div>
+        <CanonicalProduct product={product} view={view} large />
+      </section>
+    );
+  }
+  if (space.type === "product_section") {
+    const products = spaceProducts(space, view.products);
+    return (
+      <section
+        id={space.id}
+        className={"shop-content-section designer-products designer-products--" + space.variant}
+        aria-labelledby={space.id + "-title"}
+      >
+        <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
+        <div className="product-grid designer-product-grid">
+          {products.map((product) => (
+            <CanonicalProduct key={product.id} product={product} view={view} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (space.type === "department_editorial") {
+    const department = view.departments.find((item) => item.id === space.departmentId);
+    if (!department) return null;
+    return (
+      <section
+        id={space.id}
+        className={"designer-department designer-department--" + space.variant}
+        aria-labelledby={space.id + "-title"}
+      >
+        <p className="eyebrow">{department.name}</p>
+        <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
+        <p>{copyText(space.body)}</p>
+        <Link
+          className="button button--outline"
+          prefetch={false}
+          href={"/shops/" + view.shop.slug + "/departments/" + department.slug}
+        >
+          Explore {department.name}
+        </Link>
+      </section>
+    );
+  }
+  if (space.type === "commerce_info")
+    return (
+      <section
+        id={space.id}
+        className={"designer-commerce designer-commerce--" + space.variant}
+        aria-label="Shop contact, payment and fulfilment information"
+      >
+        <h2>How to buy from this shop</h2>
+        <Contacts view={view} />
+      </section>
+    );
+  return null;
+}
+
 export function CanonicalShop({ view, proposal = false }: { view: ShopView; proposal?: boolean }) {
   const c = view.contact,
-    actions = view.specification.actions;
+    actions = view.specification.actions,
+    presentation = view.specification.presentation,
+    shopStyle = presentation
+      ? ({
+          "--shop-primary": palette[presentation.palette.primary],
+          "--shop-secondary": palette[presentation.palette.secondary],
+          "--shop-background": palette[presentation.palette.background],
+          "--shop-surface": palette[presentation.palette.surface],
+          "--shop-text": palette[presentation.palette.text],
+          "--shop-accent": palette[presentation.palette.accent],
+          "--shop-mobile-columns": String(presentation.productColumns.mobile),
+          "--shop-desktop-columns": String(presentation.productColumns.desktop),
+        } as CSSProperties)
+      : undefined;
   const channels: NonNullable<CaptureInput["channel"]>[] = [];
   if (c?.phone && actions.includes("call")) channels.push("call");
   if (c?.whatsapp && actions.includes("whatsapp")) channels.push("whatsapp");
@@ -138,7 +292,27 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             })
       }
     >
-      <div className={`shell shop-page canonical-shop theme-${view.specification.theme}`}>
+      <div
+        className={
+          "shell shop-page canonical-shop theme-" +
+          view.specification.theme +
+          (presentation
+            ? " designer-premise premise-" +
+              presentation.premiseStyle +
+              " density-" +
+              presentation.density +
+              " width-" +
+              presentation.contentWidth +
+              " type-" +
+              presentation.typography +
+              " nav-desktop-" +
+              presentation.navigation.desktop +
+              " nav-mobile-" +
+              presentation.navigation.mobile
+            : "")
+        }
+        style={shopStyle}
+      >
         {view.privatePreview ? (
           <aside className="notice" aria-label="Private preview">
             {proposal ? (
@@ -226,6 +400,12 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           </section>
         ) : (
           view.specification.spaces.map((space) => {
+            if (
+              ["hero", "featured_product", "product_section", "department_editorial", "commerce_info"].includes(
+                space.type,
+              )
+            )
+              return <DesignerSection key={space.id} space={space} view={view} />;
             if ("body" in space)
               return (
                 <section key={space.id} id={space.id} className="shop-content-section">
@@ -286,7 +466,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           })
         )}
         {!view.selectedProduct ? (
-          <section className="shop-content-section">
+          <section id="shop-collections" className="shop-content-section">
             <h2>Make a connection</h2>
             <Contacts view={view} />
           </section>
