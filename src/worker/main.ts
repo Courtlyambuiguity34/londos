@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { setTimeout } from "node:timers/promises";
+import { writeFile, unlink } from "node:fs/promises";
 import { loadLocalEnv } from "../../scripts/local-env";
 import { coreConfig } from "../server/config";
 import { database } from "../server/db/pool";
@@ -26,6 +27,8 @@ function log(event: string, detail: Record<string, unknown> = {}) {
 log("worker.started", { adapters: "local-private-sink" });
 pool.on("error", () => log("database.connection.lost"));
 try {
+  if (process.env.LONDOS_WORKER_ID_FILE)
+    await writeFile(process.env.LONDOS_WORKER_ID_FILE, workerId, { mode: 0o600 });
   while (!stopping) {
     await pool.query(
       "INSERT INTO worker_heartbeats(worker_id,seen_at,state) VALUES($1,now(),'running') ON CONFLICT(worker_id) DO UPDATE SET seen_at=now(),state='running'",
@@ -72,5 +75,7 @@ try {
     ])
     .catch(() => log("worker.heartbeat.unavailable"));
   await pool.end();
+  if (process.env.LONDOS_WORKER_ID_FILE)
+    await unlink(process.env.LONDOS_WORKER_ID_FILE).catch(() => {});
   log("worker.stopped");
 }

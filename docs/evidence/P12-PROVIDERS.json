@@ -1,0 +1,167 @@
+{
+  "recordedAt": "2026-10-07T02:39:23.967377+00:00",
+  "effectiveModels": {
+    "gemini": "gemini-2.5-flash",
+    "openai": "gpt-5.4-mini"
+  },
+  "effectiveKeyVariablesPresent": [
+    "GEMINI_API_KEY_1",
+    "GEMINI_API_KEY_2",
+    "GEMINI_API_KEY_3",
+    "GEMINI_API_KEY_4",
+    "GEMINI_API_KEY_5",
+    "LONDOS_OPENAI_API_KEY"
+  ],
+  "mainRemoteEnabled": false,
+  "geminiVerifiedContract": {
+    "check": "live-ai-provider-contracts",
+    "recordedAt": "2026-10-06T17:03:20.366Z",
+    "selectedProviders": [
+      "gemini"
+    ],
+    "observations": [
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "outcome": "passed",
+        "liveRequest": true,
+        "usage": {
+          "inputTokens": 426,
+          "outputTokens": 156
+        },
+        "estimatedCostMicroUsd": "518"
+      }
+    ],
+    "limit": "Unavailable is not a passing live contract. This bounded fictional theme check does not establish general design quality, price accuracy or provider billing. No credentials, prompts or provider error bodies printed."
+  },
+  "initialRedactedDiagnostics": [
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
+      "httpStatus": 400,
+      "code": 400,
+      "status": "INVALID_ARGUMENT",
+      "outcome": "unavailable"
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.4-mini",
+      "httpStatus": 401,
+      "code": "invalid_api_key",
+      "type": "invalid_request_error",
+      "outcome": "authentication"
+    }
+  ],
+  "openaiCurrentContract": "blocked: last observed HTTP401 invalid_api_key; no successful live contract claimed",
+  "schemaChange": "Shallow strict transport shape; local wire and original canonical intent/LSS/reference/size constraints unchanged",
+  "environmentMetadata": {
+    "recordedAt": "2026-10-07 02:39:23 UTC",
+    "specRevision": "40",
+    "observationsCurrent": true,
+    "network": {
+      "mode": "restricted",
+      "state": "unknown",
+      "customAllowedHosts": [
+        "ai.google.dev",
+        "api.openai.com",
+        "developers.openai.com",
+        "generativelanguage.googleapis.com",
+        "platform.openai.com"
+      ]
+    },
+    "secrets": [
+      {
+        "name": "GEMINI_API_KEY_1",
+        "state": "unknown"
+      },
+      {
+        "name": "GEMINI_API_KEY_2",
+        "state": "unknown"
+      },
+      {
+        "name": "GEMINI_API_KEY_3",
+        "state": "unknown"
+      },
+      {
+        "name": "GEMINI_API_KEY_4",
+        "state": "unknown"
+      },
+      {
+        "name": "GEMINI_API_KEY_5",
+        "state": "unknown"
+      },
+      {
+        "name": "LONDOS_OPENAI_API_KEY",
+        "state": "unknown"
+      }
+    ],
+    "variables": [
+      {
+        "environment_variable": "LONDOS_AI_REMOTE",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_SLOT",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_DAILY_COST_MICROUSD",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_AUTH_FAILOVER",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_ALLOW_OPENAI_FALLBACK",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "NODE_USE_ENV_PROXY",
+        "optional": false,
+        "state": "unknown"
+      }
+    ]
+  },
+  "limits": [
+    "Binding presence and platform metadata do not establish credential validity.",
+    "Gemini check is bounded fictional transport evidence, not design quality, billing or privacy approval.",
+    "OpenAI must be securely replaced or its binding corrected before retry; main remote processing stays off.",
+    "No credentials, prompts or raw provider error bodies are retained in this report."
+  ]
+}

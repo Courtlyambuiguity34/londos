@@ -1,0 +1,404 @@
+{
+  "format": "londos-p12-recovery-v1",
+  "startedAt": "2026-10-07T02:38:56.885Z",
+  "scope": "isolated fictional staging; same-host recovery copies",
+  "postgresImage": "postgres@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722",
+  "alertProbe": {
+    "exitCode": 2,
+    "codes": [
+      "worker_offline",
+      "backup_missing_or_stale",
+      "independent_backup_unverified"
+    ],
+    "delivery": "stdout-only"
+  },
+  "edge": {
+    "image": "nginx@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94",
+    "certificate": "ephemeral self-signed local CA verified by client",
+    "replicas": 2,
+    "sharedResponseCache": "disabled",
+    "productionDomain": false
+  },
+  "rollback": {
+    "source": "093d61d31c7c3d46465cbe16d207e2adc336b19f",
+    "image": "sha256:0cc9724787d79ffdc456fce61f8f2681d10bc8b724548e078977fdbad5c661d1",
+    "packaging": "R2 application and worker with P12 entry/operations wrapper",
+    "schema": "018 unchanged",
+    "durableHistoryRestored": false
+  },
+  "image": "sha256:146462d9ca87d2d48ebdd9a950badc406397ae2fee2732233d3f2f867b3be3b6",
+  "backups": [
+    {
+      "label": "before-erasure",
+      "bytes": 4618284,
+      "sha256": "8e255e18b6ef332747d7a118fe92329574c5af8033a38d6c04bdc5debb7f0580",
+      "elapsedMs": 1565,
+      "completedAt": "2026-10-07T02:39:11.770Z"
+    },
+    {
+      "label": "after-erasure",
+      "bytes": 4628524,
+      "sha256": "cb7a3a59fc29580424adea6ddd4cac2bb10b6ff3fed45bcdd8d4b3d85d201930",
+      "elapsedMs": 1472,
+      "completedAt": "2026-10-07T02:39:20.222Z"
+    }
+  ],
+  "restore": {
+    "staleMs": 6893,
+    "currentMs": 6871,
+    "canonicalTableCount": 78,
+    "zeroLostFixtureRows": true,
+    "provisionalRpoHours": 24,
+    "provisionalRtoHours": 4,
+    "productionTargetsApproved": false
+  },
+  "canonical": {
+    "account": {
+      "count": 5,
+      "sha256": "5c0ed9353450652bae04670215e373bf24cd1f0a25dc8baf17f417911756b6c6"
+    },
+    "ai_daily_budgets": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ai_design_requests": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ai_provider_attempts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ai_provider_cooldowns": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "application_evidence": {
+      "count": 1,
+      "sha256": "d32aeac308ca5dfb01bd5009ca69fac51f3e46b4cd35a57e4da013caa2c41fe3"
+    },
+    "application_submissions": {
+      "count": 1,
+      "sha256": "10910bb24ae4c7a51321d1189663eb833832da12dd367a97ed168ff72c414504"
+    },
+    "applications": {
+      "count": 1,
+      "sha256": "cc8ac3b9149424e52d37bb4060381813436ba34812d2bf4f4f7c0980dd8f303c"
+    },
+    "audit_events": {
+      "count": 24,
+      "sha256": "c183c26bc5cdb56c7ceeae39967224b8f3204efd1e9b972d11334d3575854730"
+    },
+    "departments": {
+      "count": 4,
+      "sha256": "069e6b8ef10a0ede89cc7eca552c20755e98cfbd4f27de767d10cf20b00be9ee"
+    },
+    "guest_requests": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "incident_cases": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "incident_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "invitations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "invoices": {
+      "count": 1,
+      "sha256": "9a72fdc90912507a2cce0967b778d6c003b02762e7c39cc761b57d026f7ede39"
+    },
+    "job_effects": {
+      "count": 2,
+      "sha256": "d55fa6154ed6ede33b3ad33585021aa78fe041f405aa0c976adb8bd208c76cd0"
+    },
+    "jobs": {
+      "count": 14,
+      "sha256": "6c21dce2b72e2afd2073341c4891549bc1aa7ea4849e11ccf61ee189d15836c3"
+    },
+    "malls": {
+      "count": 2,
+      "sha256": "18f6ea14c830df040d39b74671d86122cc8d6cdef300a8d2ec48b9e3666e06e6"
+    },
+    "media_assets": {
+      "count": 1,
+      "sha256": "6cd68c934391d5a29b401f51360318655019b10859f7e866f3a29aa1d3347bf4"
+    },
+    "media_blobs": {
+      "count": 4,
+      "sha256": "ef41793b3767a29f08822591aba9c1a63b2f41ce47ebec8d9edbc33a042e2acd"
+    },
+    "media_quotas": {
+      "count": 1,
+      "sha256": "dee49d87bb9466d9704f6484497b98843956396ad87017271ce855fda33ccc7a"
+    },
+    "memberships": {
+      "count": 3,
+      "sha256": "cfbe972cfd19529f73121b2a4896b09f3136afa02f8e41a9fcc31326d5ad24d2"
+    },
+    "merchants": {
+      "count": 2,
+      "sha256": "577bfab935a56d1ea4bd2bab8740932da01d6b9f95bd484879eece0c1a86e853"
+    },
+    "mfa_code_receipts": {
+      "count": 1,
+      "sha256": "53c7a8445568e8f61fc1de54446f6cb71190f16450941db5d33e197b56e77175"
+    },
+    "mfa_proofs": {
+      "count": 1,
+      "sha256": "9f096d1245b79d85882bbf6b0378798e572a65d9ea19220f58916a45eb94ddd1"
+    },
+    "operator_application_scopes": {
+      "count": 2,
+      "sha256": "306bbb2d26cfbef53dfb5d09e8c515638694dbf9b8c37cdbcbfac2fe22656b61"
+    },
+    "operator_cost_scopes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "operator_grants": {
+      "count": 4,
+      "sha256": "ed84d49341565ae20501fb37fec368227b5930e0c1b92a239e183600c5147f8c"
+    },
+    "operator_incident_scopes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "operator_operations_scopes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "operator_privacy_scopes": {
+      "count": 1,
+      "sha256": "0c3625762d994d92ce1a424ad29052974cb4aee447f918e28c90e11dd0362af4"
+    },
+    "operator_shop_scopes": {
+      "count": 1,
+      "sha256": "af9f5ee045a07c7c2b479d05d5cb4d54c9ce1b39acef06fdb160a84dbfb66c5f"
+    },
+    "operator_trust_scopes": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pilot_metrics": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pilot_receipts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "privacy_events": {
+      "count": 4,
+      "sha256": "09260043be61a9898d8fce09026e9f6e2b6e8597cf2d2ff1c74c8d98c029c8df"
+    },
+    "privacy_holds": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "privacy_policies": {
+      "count": 1,
+      "sha256": "5fcccf0b0e55e664c519713889e60eab0cae236c68e41cc70e81305388936b7b"
+    },
+    "privacy_requests": {
+      "count": 1,
+      "sha256": "34b1d93d8ff45a5637ae077d1e3d905e90354ab672e7f17a2231fe4d8f1a00cf"
+    },
+    "product_media": {
+      "count": 1,
+      "sha256": "a4177a4c0f18f72e7704437a6364e7863b389a9a896537b1ca6650fe2c20e783"
+    },
+    "products": {
+      "count": 4,
+      "sha256": "c019158dcfc2b1d6915edc6d25a30627835c14931f2961509369edea4d40699f"
+    },
+    "rateLimit": {
+      "count": 3,
+      "sha256": "fbb25d06e27387db307be391589f817acaa6f5dd23d8b0fb9a68af01d4c6ede1"
+    },
+    "rent_command_receipts": {
+      "count": 3,
+      "sha256": "05f2fa815be9d28986a423686844afde4f3fcc4c33a9ba63bfe6a5d694a66957"
+    },
+    "rent_contracts": {
+      "count": 1,
+      "sha256": "0fcc291fa957e4e6a9184a93182c6868dddb036097db8ad37afad2fe8e60ecd3"
+    },
+    "rent_events": {
+      "count": 3,
+      "sha256": "60d32871728459e7f9aa268ca0413bf7272df4f2ed04facbe0d7b5c713e37108"
+    },
+    "rent_invoice_state": {
+      "count": 1,
+      "sha256": "14995d2413ed7767e3959a8d96d954b3aa80345a055b27b50193da669c767a7f"
+    },
+    "rent_policies": {
+      "count": 1,
+      "sha256": "8086357cdc388e7f5c215a5694c79519e47f6a84c316f8df29fa53990ac31958"
+    },
+    "rent_reversals": {
+      "count": 1,
+      "sha256": "5f279266e94b64f7d1111883c0a402c1a378dffab97f5d61424d73bc145a2604"
+    },
+    "request_budgets": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "resource_cost_entries": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "scheduler_ticks": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "schema_migrations": {
+      "count": 18,
+      "sha256": "a316d75c1895712cf232bf2f936a29727847748c7d110fadbdab5d4abf0a006c"
+    },
+    "session": {
+      "count": 3,
+      "sha256": "7be455b1f74986d17af64810fea5be7c30c51f8a17d6996e4a8c5121ca5dc6ee"
+    },
+    "shop_addresses": {
+      "count": 7,
+      "sha256": "399abf2f5c1fb1794efd690291c6fc0e5067d8cfeab70100a972266589eabb38"
+    },
+    "shop_catalogue_versions": {
+      "count": 1,
+      "sha256": "f8c75e164a39701fe93db330387502e326bc2f54d5655d0cde147f2177cad1d5"
+    },
+    "shop_contact_history": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shop_contacts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shop_cost_state": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shop_designs": {
+      "count": 1,
+      "sha256": "1e88f657f24464a2b9a957b01a8ecbb9e906e458344d77420b9c4eb11f6da691"
+    },
+    "shop_moderation": {
+      "count": 7,
+      "sha256": "3782dd92a2569b1b764036a8cca2212130723b96cdf741d2d1334d1243cf1684"
+    },
+    "shop_operations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shop_privacy_exclusions": {
+      "count": 1,
+      "sha256": "0cbec7dba3f13642cd5f9d108a97de9e46d3c8fef2885d190356540ff7966296"
+    },
+    "shop_projections": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shop_publication": {
+      "count": 7,
+      "sha256": "42137aea25f2f6d6ff34fce58c4e3f49e89c6d08bcbf0ec4070697dd5fcc7be3"
+    },
+    "shop_revisions": {
+      "count": 1,
+      "sha256": "01972079a4cf8cf509265b2029cf587562fd17a30c28d22c38b6c6691f8e5794"
+    },
+    "shop_trust_control": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shops": {
+      "count": 7,
+      "sha256": "40a1fc3191f6af6f3e064cc394b8c4a679aaa42f87ee28f7c0e43707b7fd619a"
+    },
+    "staff_shop_grants": {
+      "count": 1,
+      "sha256": "e510792482f41f3cfcc1d952ff9a65e2e18b017e4b340f315e5979a1ab20e457"
+    },
+    "tenancies": {
+      "count": 7,
+      "sha256": "6f538f5302101fec6bec554307c66f6854d929f48fea770f67e7a5cc4666fc01"
+    },
+    "trust_appeals": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "trust_cases": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "trust_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "trust_evidence": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "trust_reports": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "twoFactor": {
+      "count": 1,
+      "sha256": "f47182e4c6f772d1269145f1e562887aafb70b43730d0b80f233040640986ede"
+    },
+    "user": {
+      "count": 5,
+      "sha256": "d4051d21f788c9b8dbf0afcea570cd12106fdd7c29f501a1aa0cbc6a8ba9b050"
+    },
+    "verification": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "worker_heartbeats": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "monitor": {
+    "dead_jobs": 0,
+    "pending_jobs": 12,
+    "oldest_job_seconds": 18.110714,
+    "healthy_workers": 0,
+    "failed_media": 0,
+    "partial_invoices": 0,
+    "auth_budget_pressure": 0,
+    "projection_lag": 7,
+    "media_bytes": "320",
+    "database_bytes": "13170367",
+    "database_connections": 4,
+    "recorded_ai_micro_usd": "0"
+  },
+  "independentFailureDomain": false,
+  "completedAt": "2026-10-07T02:40:23.323Z",
+  "checks": [
+    "compiled-dedicated-migrator-applies-frozen-001-through-018",
+    "schema-018-native-auth-mfa-finance-media-lss-fixtures",
+    "physical-backup-wal-sha256-manifest-encrypted-second-local-copy",
+    "pre-erasure-physical-restore-rejected-before-web-or-worker-admission",
+    "accidental-bulk-catalogue-deletion-recovered-in-isolation",
+    "every-public-table-count-and-digest-equal-after-physical-restore",
+    "fresh-signed-privacy-barrier-admitted-completed-erasure-preserved",
+    "forged-recovery-authority-rejected",
+    "non-owner-runtime-ddl-truncate-migration-finance-denial-and-readonly-monitor",
+    "restored-native-auth-tenant-denial-media-rent-idempotency-notification-replay-search-rebuild",
+    "nonroot-readonly-compiled-web-worker-readiness-and-private-no-store",
+    "worker-sigterm-drain-and-own-heartbeat-stopped",
+    "database-outage-fails-readiness-and-recovers",
+    "compiled-readonly-monitor-emits-worker-and-backup-alerts",
+    "TLS-verified-two-replica-private-cache-isolation-and-fresh-canonical-reads",
+    "R2-compatible-application-rollback-and-P12-forward-fix-preserve-financial-history"
+  ],
+  "result": "passed"
+}

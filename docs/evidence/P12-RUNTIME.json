@@ -1,0 +1,112 @@
+{
+  "canonicalCounts": {
+    "shops": 1506,
+    "products": 150004,
+    "departments": 1504,
+    "shop_revisions": 1,
+    "shop_catalogue_versions": 0
+  },
+  "sourceBaseline": "093d61d31c7c3d46465cbe16d207e2adc336b19f",
+  "recordedAt": "2026-10-07T02:42:05.436Z",
+  "requiredMigration": "018_catalogue_pagination.sql",
+  "compiledAppAndIndependentWorker": true,
+  "readiness": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "ready",
+    "financialOperations": false,
+    "liveNotifications": false,
+    "localRentWorkflow": true,
+    "localPrivacyErasure": false,
+    "liveErasure": false,
+    "localPilotAnalytics": false,
+    "liveAnalytics": false
+  },
+  "health": {
+    "status": "preview",
+    "mode": "database-development",
+    "publicBrowsing": true,
+    "transactions": false,
+    "authentication": false,
+    "database": true,
+    "ai": false,
+    "coreConfigured": true,
+    "readiness": "/api/ready"
+  },
+  "publicChecks": [
+    {
+      "path": "/shops/annette-fashion-house",
+      "status": 200,
+      "privateCredentialLeak": false
+    },
+    {
+      "path": "/search?q=shoes",
+      "status": 200,
+      "privateCredentialLeak": false
+    }
+  ],
+  "anonymousAssistantDenials": [
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace/shops/30000000-0000-4000-8000-000000000001/design/assistant/90000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "privateNoStore": true,
+      "noReferrer": true
+    }
+  ],
+  "mainAssistantCounts": {
+    "ai_design_requests": 0,
+    "ai_provider_attempts": 0,
+    "ai_daily_budgets": 0,
+    "ai_provider_cooldowns": 0
+  },
+  "remoteEnabled": false,
+  "providerCapabilities": {
+    "gemini": "remote_disabled",
+    "openai": "remote_disabled"
+  },
+  "providerConfigurationPresence": {
+    "GEMINI_API_KEY_1": true,
+    "GEMINI_API_KEY_2": true,
+    "GEMINI_API_KEY_3": true,
+    "GEMINI_API_KEY_4": true,
+    "GEMINI_API_KEY_5": true,
+    "OPENAI_API_KEY": false,
+    "LONDOS_OPENAI_API_KEY": true,
+    "LONDOS_AI_GEMINI_MODEL": true,
+    "LONDOS_AI_OPENAI_MODEL": true,
+    "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION": true,
+    "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION": true
+  },
+  "limits": "P12 matching main runtime; canonical counts preserved. Separate P12 recovery report proves an isolated fictional physical restore, not production/off-host recovery or general fresh-task persistence.",
+  "appliedMigrationChecksumVerification": {
+    "count": 18,
+    "allMatchFrozenFiles": true,
+    "readOnly": true
+  }
+}

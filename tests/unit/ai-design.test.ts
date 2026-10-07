@@ -301,7 +301,34 @@ test.each(["gemini", "openai"] as const)(
                   candidates: [
                     {
                       finishReason: "STOP",
-                      content: { parts: [{ text: JSON.stringify(intent()) }] },
+                      content: {
+                        parts: [
+                          {
+                            text: JSON.stringify({
+                              patches: [
+                                {
+                                  op: "theme",
+                                  theme: "plum",
+                                  actions: null,
+                                  spaceId: null,
+                                  before: null,
+                                  text: null,
+                                  spaceType: null,
+                                  title: null,
+                                  body: null,
+                                  departmentId: null,
+                                  productIds: null,
+                                  limit: null,
+                                  kind: null,
+                                  availability: null,
+                                },
+                              ],
+                              confidence: "high",
+                              review: "not_needed",
+                            }),
+                          },
+                        ],
+                      },
                     },
                   ],
                   usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 4 },
@@ -311,7 +338,33 @@ test.each(["gemini", "openai"] as const)(
                   output: [
                     {
                       type: "message",
-                      content: [{ type: "output_text", text: JSON.stringify(intent()) }],
+                      content: [
+                        {
+                          type: "output_text",
+                          text: JSON.stringify({
+                            patches: [
+                              {
+                                op: "theme",
+                                theme: "plum",
+                                actions: null,
+                                spaceId: null,
+                                before: null,
+                                text: null,
+                                spaceType: null,
+                                title: null,
+                                body: null,
+                                departmentId: null,
+                                productIds: null,
+                                limit: null,
+                                kind: null,
+                                availability: null,
+                              },
+                            ],
+                            confidence: "high",
+                            review: "not_needed",
+                          }),
+                        },
+                      ],
                     },
                   ],
                   usage: { input_tokens: 12, output_tokens: 4 },
