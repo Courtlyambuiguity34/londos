@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { designIntent } from "../../modules/ai-design/contract";
 
-// Provider decoders reject the combinatorial nested LSS union. Use one shallow,
-// closed wire shape, then reconstruct and validate the original canonical union.
+// Keep the provider grammar shallow. Londos reconstructs the canonical intent and
+// then runs the strict LSS, reference, provenance and protected-fact validators.
+const nullableCopyProvenance = z.enum(["merchant", "ai"]).nullable();
 const patch = z
   .object({
     op: z.enum([
       "theme",
+      "presentation",
       "actions",
       "move",
       "announcement",
@@ -15,13 +17,10 @@ const patch = z
       "remove_space",
     ]),
     theme: z.enum(["earth", "plum", "blue"]).nullable(),
-    actions: z
-      .array(z.enum(["call", "whatsapp", "enquiry"]))
-      .max(3)
-      .nullable(),
+    actions: z.array(z.enum(["call", "whatsapp", "enquiry"])).max(3).nullable(),
     spaceId: z.string().max(40).nullable(),
     before: z.string().max(40).nullable(),
-    text: z.string().max(160).nullable(),
+    text: z.string().max(240).nullable(),
     spaceType: z
       .enum([
         "entrance",
@@ -34,24 +33,93 @@ const patch = z
         "products",
         "story",
         "contact",
+        "hero",
+        "featured_product",
+        "product_section",
+        "department_editorial",
+        "commerce_info",
       ])
       .nullable(),
-    title: z.string().max(100).nullable(),
+    title: z.string().max(240).nullable(),
+    titleProvenance: nullableCopyProvenance,
+    subtitle: z.string().max(240).nullable(),
+    subtitleProvenance: nullableCopyProvenance,
     body: z.string().max(1000).nullable(),
+    bodyProvenance: nullableCopyProvenance,
     departmentId: z.string().max(36).nullable(),
+    productId: z.string().max(36).nullable(),
+    featuredProductId: z.string().max(36).nullable(),
     productIds: z.array(z.string().max(36)).max(8).nullable(),
     limit: z.number().int().min(1).max(8).nullable(),
     kind: z.enum(["all", "product", "service"]).nullable(),
     availability: z.enum(["all", "available"]).nullable(),
+    variant: z
+      .enum([
+        "editorial",
+        "split",
+        "product_led",
+        "spotlight",
+        "compact",
+        "grid",
+        "carousel",
+        "summary",
+      ])
+      .nullable(),
+    cta: z.enum(["browse", "whatsapp", "enquiry"]).nullable(),
+    premiseStyle: z
+      .enum([
+        "luxury",
+        "streetwear",
+        "electronics",
+        "food",
+        "service",
+        "minimalist",
+        "editorial",
+        "catalogue",
+      ])
+      .nullable(),
+    primary: z.string().max(20).nullable(),
+    secondary: z.string().max(20).nullable(),
+    background: z.string().max(20).nullable(),
+    surface: z.string().max(20).nullable(),
+    textColor: z.string().max(20).nullable(),
+    accent: z.string().max(20).nullable(),
+    typography: z.enum(["editorial", "modern", "classic", "technical", "friendly"]).nullable(),
+    density: z.enum(["airy", "balanced", "compact"]).nullable(),
+    contentWidth: z.enum(["narrow", "standard", "wide"]).nullable(),
+    desktopNavigation: z.enum(["minimal", "department_bar", "editorial"]).nullable(),
+    mobileNavigation: z.enum(["compact", "bottom", "department_bar"]).nullable(),
+    mobileColumns: z.union([z.literal(1), z.literal(2)]).nullable(),
+    desktopColumns: z.union([z.literal(2), z.literal(3), z.literal(4)]).nullable(),
   })
   .strict();
+
+const decision = z
+  .object({
+    type: z.literal("design_decision"),
+    code: z.enum([
+      "FEATURED_PRODUCT_DUPLICATION",
+      "MISSING_MERCHANT_INFORMATION",
+      "AMBIGUOUS_PRIORITY",
+      "COMMERCE_DISPLAY_CHOICE",
+      "MOBILE_NAVIGATION_CHOICE",
+    ]),
+    question: z.string().max(240),
+    options: z.array(z.string().max(120)).min(2).max(5),
+    recommended: z.string().max(120),
+    blocking: z.boolean(),
+  })
+  .strict();
+
 export const providerIntent = z
   .object({
-    patches: z.array(patch).min(1).max(8),
+    patches: z.array(patch).max(8),
+    decisions: z.array(decision).max(4),
     confidence: z.enum(["high", "low"]),
     review: z.enum(["not_needed", "recommended"]),
   })
   .strict();
+
 function transportGrammar(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(transportGrammar);
   if (value && typeof value === "object")
@@ -75,67 +143,126 @@ function transportGrammar(value: unknown): unknown {
     );
   return value;
 }
-// Cardinality/string-range decoder constraints make Gemini's grammar too large.
-// They remain mandatory in providerIntent, canonical LSS and transport byte/token
-// limits; only the provider-side grammar drops these validation annotations.
+
 export const providerSchema = transportGrammar(z.toJSONSchema(providerIntent, { io: "input" }));
 export const providerGuide =
-  "Wire contract: each patch contains EVERY schema field; use null for fields not used by that operation. " +
-  "theme uses theme; actions uses actions; move uses spaceId and before; announcement uses text; remove_space uses spaceId. " +
-  "add_space/replace_space use spaceId as the section id, spaceType, and only fields for that type. " +
-  "entrance/story/offer/service_desk use title/body; display/products/gallery use title/productIds (gallery at most4, others8); " +
-  "department uses departmentId/limit; collection uses title/departmentId/limit/kind/availability; contact uses no other fields. " +
-  "Section version1 is supplied by the server. IDs are existing owned UUIDs for catalogue references; section ids use lowercase letters/digits/hyphens and start with a letter. " +
-  "At most8 sections,32 cards,7000 bytes and3 unique actions per resulting shop; keep the change small.";
+  "Return only the closed wire contract. Every patch contains every patch field; use null for unused fields. " +
+  "Use existing catalogue UUIDs only. New rich copy must set provenance=ai unless the exact text is already a merchant fact in context. " +
+  "Never rewrite prices, product facts, WhatsApp, phone, website, payment, delivery, pickup or fulfilment facts. " +
+  "If genuinely missing information blocks a sound design, return no patches and one blocking design_decision. " +
+  "presentation selects only listed premise/palette/typography/density/navigation/column tokens. " +
+  "hero supports editorial/split/product_led; featured_product supports spotlight/split/compact; " +
+  "product_section supports editorial/grid/carousel; department_editorial supports editorial/split/compact; " +
+  "commerce_info supports summary/split. Product sections scoped to a department may contain only products from that department. " +
+  "Section version1 is supplied by Londos. Keep at most8 sections,32 cards and3 actions. No HTML, CSS, scripts, URLs, tools or publication.";
+
+function copy(text: string | null, provenance: "merchant" | "ai" | null) {
+  return text === null ? null : { text, provenance };
+}
+
+function presentationPatch(p: z.infer<typeof patch>) {
+  return {
+    op: "presentation",
+    presentation: {
+      premiseStyle: p.premiseStyle,
+      palette: {
+        primary: p.primary,
+        secondary: p.secondary,
+        background: p.background,
+        surface: p.surface,
+        text: p.textColor,
+        accent: p.accent,
+      },
+      typography: p.typography,
+      density: p.density,
+      contentWidth: p.contentWidth,
+      navigation: {
+        desktop: p.desktopNavigation,
+        mobile: p.mobileNavigation,
+      },
+      productColumns: {
+        mobile: p.mobileColumns,
+        desktop: p.desktopColumns,
+      },
+    },
+  };
+}
+
+function richSpace(p: z.infer<typeof patch>) {
+  const base = { id: p.spaceId, type: p.spaceType, version: 1 };
+  if (p.spaceType === "hero")
+    return {
+      ...base,
+      variant: p.variant,
+      title: copy(p.title, p.titleProvenance),
+      subtitle: copy(p.subtitle, p.subtitleProvenance),
+      featuredProductId: p.featuredProductId,
+      cta: p.cta,
+    };
+  if (p.spaceType === "featured_product")
+    return {
+      ...base,
+      variant: p.variant,
+      title: copy(p.title, p.titleProvenance),
+      departmentId: p.departmentId,
+      productId: p.productId,
+    };
+  if (p.spaceType === "product_section")
+    return {
+      ...base,
+      variant: p.variant,
+      title: copy(p.title, p.titleProvenance),
+      departmentId: p.departmentId,
+      productIds: p.productIds,
+    };
+  if (p.spaceType === "department_editorial")
+    return {
+      ...base,
+      variant: p.variant,
+      title: copy(p.title, p.titleProvenance),
+      body: copy(p.body, p.bodyProvenance),
+      departmentId: p.departmentId,
+    };
+  if (p.spaceType === "commerce_info") return { ...base, variant: p.variant };
+  if (p.spaceType === "contact") return base;
+  if (p.spaceType === "department")
+    return { ...base, departmentId: p.departmentId, limit: p.limit };
+  if (p.spaceType === "collection")
+    return {
+      ...base,
+      title: p.title,
+      departmentId: p.departmentId,
+      limit: p.limit,
+      kind: p.kind,
+      availability: p.availability,
+    };
+  if (["display", "products", "gallery"].includes(p.spaceType ?? ""))
+    return { ...base, title: p.title, productIds: p.productIds };
+  return { ...base, title: p.title, body: p.body };
+}
 
 export function decodeProviderIntent(text: string): string {
   const wire = providerIntent.parse(JSON.parse(text));
   const patches = wire.patches.map((p) => {
-    let allowed: string[], result: Record<string, unknown>;
-    if (p.op === "theme") {
-      allowed = ["theme"];
-      result = { op: p.op, theme: p.theme };
-    } else if (p.op === "actions") {
-      allowed = ["actions"];
-      result = { op: p.op, actions: p.actions };
-    } else if (p.op === "move") {
-      allowed = ["spaceId", "before"];
-      result = { op: p.op, spaceId: p.spaceId, before: p.before };
-    } else if (p.op === "announcement") {
-      allowed = ["text"];
-      result = { op: p.op, text: p.text };
-    } else if (p.op === "remove_space") {
-      allowed = ["spaceId"];
-      result = { op: p.op, spaceId: p.spaceId };
-    } else {
-      const fields =
-        p.spaceType === "contact"
-          ? []
-          : p.spaceType === "department"
-            ? ["departmentId", "limit"]
-            : p.spaceType === "collection"
-              ? ["title", "departmentId", "limit", "kind", "availability"]
-              : ["display", "products", "gallery"].includes(p.spaceType ?? "")
-                ? ["title", "productIds"]
-                : ["title", "body"];
-      allowed = ["spaceId", "spaceType", ...fields];
-      const space = {
-        id: p.spaceId,
-        type: p.spaceType,
-        version: 1,
-        ...Object.fromEntries(fields.map((key) => [key, p[key as keyof typeof p]])),
-      };
-      result = { op: p.op, ...(p.op === "replace_space" ? { spaceId: p.spaceId } : {}), space };
-    }
-    if (
-      Object.entries(p).some(
-        ([key, value]) => key !== "op" && !allowed.includes(key) && value !== null,
-      )
-    )
-      throw new Error("Unexpected provider patch field");
-    return result;
+    if (p.op === "theme") return { op: p.op, theme: p.theme };
+    if (p.op === "presentation") return presentationPatch(p);
+    if (p.op === "actions") return { op: p.op, actions: p.actions };
+    if (p.op === "move") return { op: p.op, spaceId: p.spaceId, before: p.before };
+    if (p.op === "announcement") return { op: p.op, text: p.text };
+    if (p.op === "remove_space") return { op: p.op, spaceId: p.spaceId };
+    const space = richSpace(p);
+    return {
+      op: p.op,
+      ...(p.op === "replace_space" ? { spaceId: p.spaceId } : {}),
+      space,
+    };
   });
   return JSON.stringify(
-    designIntent.parse({ patches, confidence: wire.confidence, review: wire.review }),
+    designIntent.parse({
+      patches,
+      decisions: wire.decisions,
+      confidence: wire.confidence,
+      review: wire.review,
+    }),
   );
 }
