@@ -410,8 +410,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                 type="button"
                 className="text-button"
                 onClick={() => {
-                  const { presentation: _presentation, ...legacy } = spec;
-                  setSpec(legacy as ShopSpecification);
+                  const legacy: ShopSpecification = { ...spec };
+                  delete legacy.presentation;
+                  setSpec(legacy);
                 }}
               >
                 Use classic premise styling
