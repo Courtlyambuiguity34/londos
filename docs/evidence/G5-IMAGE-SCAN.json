@@ -1,0 +1,9 @@
+{
+  "check": "complete-image-filesystem-configured-secret-scan",
+  "image": "sha256:caedbbfe9e43389602fe4e76bf9c03f9e40bf375ecdac85ceeb98589a51df2fc",
+  "regularFiles": 26318,
+  "bytes": 820597692,
+  "configuredCandidates": 27,
+  "result": "passed",
+  "limit": "Exact configured values and root app environment/Git-file guards; not general production scanning or registry signing."
+}

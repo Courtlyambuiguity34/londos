@@ -2,13 +2,13 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** P12 local release preparation is complete; production G5 remains open. Read the [P12 dossier](docs/evidence/P12.md), [release/recovery runbook](docs/RELEASE-RUNBOOK.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). The packet adds pinned compiled artifacts, isolated encrypted physical recovery, privacy admission, monitoring and rollback evidence. **400 unique tests** pass; schema **018** is unchanged. Gemini passed its bounded live contract; OpenAI returned `401 invalid_api_key`. Main remote AI stays off. Development rent remains **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows [prompt.txt](prompt.txt).
+**Status:** P12 is preserved. The P13/G5 development packet now adds 12 fictional merchant accounts with native-MFA admin removal, guarded Brevo delivery, optional services and pilot/launch reporting. **PostgreSQL remains active; no MongoDB migration was performed.** MongoDB public copies, Redis and Cloudinary are manually enabled and default off. The current schema is **019**; applied 001–018 are unchanged. Read [current evidence](docs/evidence/G5-P13.md), [deployment profiles](docs/DEPLOYMENT-PROFILES.md), [pilot runbook](docs/PILOT-RUNBOOK.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). Production G5 and real P13 outcomes remain open. Development rent stays **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows [prompt.txt](prompt.txt).
 
 ## Recommendations
 
 Use **Sol 6.1 High** for the foundation, ordinary interface work, routine tests and documentation. Use **Sol 6.1 Extra High** for schema/migrations, tenant isolation, financial correctness, concurrency, safe LSS and AI boundaries. Use **6 Astra Extra High** for critical architecture/security and release reviews.
 
-The assistant will record progress and remind you at each model boundary. You control the model selector and confirm the change before the next stage starts. See [RECOMMENDATIONS](RECOMMENDATIONS.md) for the full workflow, [the implementation plan](docs/IMPLEMENTATION-PLAN.md) for task dependencies, and [BUILD-STATUS](docs/BUILD-STATUS.md) for the next action.
+The assistant records progress and reminders at model boundaries. You control the selector; the latest reported setting is **6 Astra Extra High**. Model recommendations do not block work you already authorized. See [RECOMMENDATIONS](RECOMMENDATIONS.md) for the full workflow, [the implementation plan](docs/IMPLEMENTATION-PLAN.md) for task dependencies, and [BUILD-STATUS](docs/BUILD-STATUS.md) for the next action.
 
 ## Run the public preview
 
@@ -22,6 +22,8 @@ npm run dev
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
 Public browsing defaults to fictional fixtures. With the configured local core and `LONDOS_DATA_SOURCE=database`, X2 renders eligible published PostgreSQL shops, bounded shop-first search and processed ready images. Merchants can edit catalogues/contacts, upload private images, save safe manual designs, preview privately and explicitly publish immutable revisions. Opted-in guest enquiries have a scoped private inbox and local notifications. Owners can now apply with private evidence; scoped MFA operators review and manually reconcile development rent, provision shops and manage credit reversals. Scheduled reminders, grace/closure and verified renewal preserve moderation. The private manual/deterministic AI design workflow and bounded semantic registry are implemented; purchases, live rent/providers and production release remain separate gates.
+
+To add the authorized fictional cohort, run `npm run db:demonstration` after migration/seed. Credentials remain in private ignored `.local/demonstration-accounts.json`. An operations operator with fresh native MFA can remove these accounts from **Landlord → Demonstration accounts**; business history is retained. No real participants or paid renewals are fabricated. Brevo uses the proposed sender **mnelsontravor@gmail.com**; its key and verified delivery remain outstanding. See [deployment profiles](docs/DEPLOYMENT-PROFILES.md) for exact configuration and optional-service limits.
 
 For the full local environment, run `npm run db:local`, `npm run db:migrate`, `npm run db:seed`, then build and start the web and `npm run worker` in separate terminals. Run `npm run db:p8` for development reconciliation and `npm run db:operations` for local shop administration after migration/seed; these explicitly grant only the existing fictional operator. `npm run db:trust` explicitly enables local moderation and preserves a separate fictional reviewer in ignored `.local/trust-reviewer.json` for independent appeals. `npm run db:incidents` explicitly adds recovery/support to the verified fictional operator for assigned incident triage. Ordinary seed grants remain unchanged; real MFA and separate scope claims are required. Local credentials are random and stored only in ignored private files. See [DEVELOPMENT](docs/DEVELOPMENT.md) for guarded setup, sign-in and verification.
 
@@ -98,12 +100,12 @@ Every shop has a unique immutable identifier such as `SHOP-UG-00000451`. Human-f
 
 ## Four product surfaces
 
-| Surface | Audience | Purpose |
-|---|---|---|
-| Mall | Public | Discovery, categories, global search, directories |
-| Shop | Public | Merchant-controlled commercial premises |
-| Shopkeeper | Merchant/private | Inventory, design, messages, analytics, rent, settings |
-| Landlord | Operator/private | Applications, verification, tenancy, rent, reports, safety, mall operations |
+| Surface    | Audience         | Purpose                                                                     |
+| ---------- | ---------------- | --------------------------------------------------------------------------- |
+| Mall       | Public           | Discovery, categories, global search, directories                           |
+| Shop       | Public           | Merchant-controlled commercial premises                                     |
+| Shopkeeper | Merchant/private | Inventory, design, messages, analytics, rent, settings                      |
+| Landlord   | Operator/private | Applications, verification, tenancy, rent, reports, safety, mall operations |
 
 ## Search philosophy
 

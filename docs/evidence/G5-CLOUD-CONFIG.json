@@ -1,0 +1,323 @@
+{
+  "format": "londos-g5-cloud-configuration-v1",
+  "recordedAt": "2026-10-07T05:14:26.888Z",
+  "draftId": "bb9d9f3a-0e60-450f-9521-b5a3696e662e~cecfgdraft_6ac5ca9c6e948198b1050acf0bf78ab0",
+  "revision": 32,
+  "baseVersionId": "bb9d9f3a-0e60-450f-9521-b5a3696e662e~cecfgver_6ac5b6a497ac8198949613a7e412f5ce",
+  "persistence": "Confirmed by independent draft readback, despite save-tool INVALID_ARGUMENT responses.",
+  "saveToolResponses": [
+    {
+      "field": "start_skill",
+      "errorCode": "INVALID_ARGUMENT",
+      "subsequentReadbackRevision": 31
+    },
+    {
+      "field": "repositories",
+      "errorCode": "INVALID_ARGUMENT",
+      "subsequentReadbackRevision": 32
+    }
+  ],
+  "startupInstructionsMatchRepositoryFile": true,
+  "repositoryCheckpoint": [
+    {
+      "name": "Courtlyambuiguity34/londos",
+      "host": "github.com",
+      "commit": "dc5cc264e9d4a81520ec79fdb9bab5ca99693354",
+      "mount_path": "londos"
+    }
+  ],
+  "checkpointNote": "Immutable implementation checkpoint. Subsequent documentation-only evidence commits follow it; the final branch tip is repinned after commit/push, without a self-referential evidence commit.",
+  "inventory": {
+    "directoriesTraversed": 6527,
+    "gitMarkers": 2,
+    "emptyGitPlaceholders": ["/workspace"],
+    "dependencyBuildCachesInspected": ["londos/node_modules", "londos/.next"],
+    "symlinksInspected": 29,
+    "errors": []
+  },
+  "installScriptPreserved": true,
+  "customNetworkDomains": [
+    "ai.google.dev",
+    "api.brevo.com",
+    "api.cloudinary.com",
+    "api.openai.com",
+    "cloudinary.com",
+    "developers.brevo.com",
+    "developers.openai.com",
+    "docs.render.com",
+    "generativelanguage.googleapis.com",
+    "platform.openai.com",
+    "render.com"
+  ],
+  "presetGroups": ["package_managers"],
+  "optionalSecretRequirements": [
+    {
+      "name": "GEMINI_API_KEY_1",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "GEMINI_API_KEY_1",
+        "allowed_domains": ["generativelanguage.googleapis.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "GEMINI_API_KEY_2",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "GEMINI_API_KEY_2",
+        "allowed_domains": ["generativelanguage.googleapis.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "GEMINI_API_KEY_3",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "GEMINI_API_KEY_3",
+        "allowed_domains": ["generativelanguage.googleapis.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "GEMINI_API_KEY_4",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "GEMINI_API_KEY_4",
+        "allowed_domains": ["generativelanguage.googleapis.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "GEMINI_API_KEY_5",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "GEMINI_API_KEY_5",
+        "allowed_domains": ["generativelanguage.googleapis.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "LONDOS_OPENAI_API_KEY",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "LONDOS_OPENAI_API_KEY",
+        "allowed_domains": ["api.openai.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "LONDOS_BREVO_API_KEY",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "LONDOS_BREVO_API_KEY",
+        "allowed_domains": ["api.brevo.com"]
+      },
+      "hasSavedBinding": false
+    },
+    {
+      "name": "CLOUDINARY_URL",
+      "source": "user_provided",
+      "optional": true,
+      "target": {
+        "environment_variable": "CLOUDINARY_URL",
+        "allowed_domains": ["api.cloudinary.com"]
+      },
+      "hasSavedBinding": false
+    }
+  ],
+  "existingRuntimeVariableNames": [
+    "LONDOS_AI_REMOTE",
+    "LONDOS_AI_GEMINI_SLOT",
+    "LONDOS_AI_GEMINI_MODEL",
+    "LONDOS_AI_OPENAI_MODEL",
+    "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION",
+    "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION",
+    "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION",
+    "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION",
+    "LONDOS_AI_DAILY_COST_MICROUSD",
+    "LONDOS_AI_AUTH_FAILOVER",
+    "LONDOS_AI_ALLOW_OPENAI_FALLBACK",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "pendingRuntimeRequirements": [
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_DATABASE_ENGINE"
+      },
+      "suggested_value": "postgresql"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_EMAIL_PROVIDER"
+      },
+      "suggested_value": "brevo"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_EMAIL_FROM"
+      },
+      "suggested_value": "mnelsontravor@gmail.com"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_EMAIL_FROM_NAME"
+      },
+      "suggested_value": "Londos"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_MONGODB_ENABLED"
+      },
+      "suggested_value": "false"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_MONGODB_MIGRATION_ENABLED"
+      },
+      "suggested_value": "false"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_REDIS_ENABLED"
+      },
+      "suggested_value": "false"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "LONDOS_CLOUDINARY_ENABLED"
+      },
+      "suggested_value": "false"
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "MONGODB_URI"
+      },
+      "suggested_value": null
+    },
+    {
+      "source": {
+        "type": "environment"
+      },
+      "delivery": {
+        "type": "direct_environment_variable",
+        "variable_name": "REDIS_URL"
+      },
+      "suggested_value": null
+    }
+  ],
+  "observedRuntime": {
+    "specRevision": "42",
+    "observedSpecRevision": "42",
+    "observationsCurrent": true,
+    "networkPolicyState": "unknown",
+    "variableStates": [
+      {
+        "environment_variable": "LONDOS_AI_REMOTE",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_SLOT",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_MODEL",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_GEMINI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_INPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_OPENAI_OUTPUT_MICROUSD_PER_MILLION",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_DAILY_COST_MICROUSD",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_AUTH_FAILOVER",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "LONDOS_AI_ALLOW_OPENAI_FALLBACK",
+        "optional": false,
+        "state": "unknown"
+      },
+      {
+        "environment_variable": "NODE_USE_ENV_PROXY",
+        "optional": false,
+        "state": "unknown"
+      }
+    ]
+  },
+  "requiresReviewSaveAndPublish": true,
+  "publishedNewDraft": false,
+  "actualRemoteCredentialsVerified": false,
+  "limit": "Saved draft/readback are distinct from application of runtime variables/network policy, publication, provider validity or fresh-task restoration. No credential values or secret-store references recorded."
+}

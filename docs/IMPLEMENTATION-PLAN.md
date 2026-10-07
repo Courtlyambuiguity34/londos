@@ -2,7 +2,7 @@
 
 Status: implementation authorized; progress and model handoffs are tracked in [BUILD-STATUS](BUILD-STATUS.md) and [RECOMMENDATIONS](../RECOMMENDATIONS.md).
 
-Current progress (2026-10-07, Africa/Kampala): H/X1/R1 and local P5–P11/R2 remain preserved. **P12 local release preparation is complete**, with [physical recovery and release evidence](evidence/P12.md), 400 unique tests, pinned artifacts, runbooks, privacy admission and compatible rollback. Schema 018 is unchanged. Gemini passed its bounded live contract; OpenAI returned 401 invalid_api_key. G4 local acceptance remains conditional and **G5 production acceptance remains open** for independent recovery/policy, live adapters/hosting, legal/field evidence and authorization. Latest explicitly reported assistant setting remains Astra Extra High; the owner's P12 continuation was not blocked by the advisory Sol recommendation.
+Current progress (2026-10-07, Africa/Kampala): H/X1/R1, local P5–P11/R2 and [P12](evidence/P12.md) are preserved. The [P13/G5 development packet](evidence/G5-P13.md) adds fictional cohort administration, Brevo delivery contracts, optional service copies/checks, numeric pilot proposals and fail-closed launch reporting; current schema 019 is additive and 001–018 are unchanged. PostgreSQL remains active and **no MongoDB migration occurred**. Real P13/G6 observations and G5 launch requirements remain open; demonstration accounts and local recovery cannot satisfy them. Latest reported model is Astra Extra High.
 
 Prepared: 2026-10-04. Repository baseline: `2d8d587f5dd4d9bc57e631043486351fd4419aa2`.
 
@@ -414,6 +414,8 @@ Local P9.5/P9.6 acceptance is recorded in [ADR-0010](ADR/0010-local-pilot-analyt
 
 ### P13 — Controlled pilot, business validation and later scope
 
+**Development preparation recorded:** [pilot tooling/runbook](PILOT-RUNBOOK.md), [demonstration administration and optional services](DEPLOYMENT-PROFILES.md), [initial insufficient-evidence report](evidence/P13-INITIAL-REPORT.json) and [G5 manifest](launch/G5-DECISIONS.json). Numeric thresholds are proposed before real outcomes. The twelve seeded demonstrations are not recruited merchants; P13.1–7 below retain their real-world acceptance requirements. PostgreSQL stays canonical and the owner explicitly prohibits migration now.
+
 **Depends on:** authorized launch of a P12 release candidate. **Produces:** evidence to go, revise or stop.
 
 - [ ] P13.1 Recruit 10–20 merchants across manageable categories. Record existing discovery channels/catalogue/contact methods, pain points and willingness-to-pay before onboarding.
@@ -650,6 +652,6 @@ This matrix prevents less visible requirements from disappearing as implementati
 
 P0 decision reconciliation and P1–P4 foundation/review are complete at their documented local scope; preserve those decisions and finished work. The P5–P7 local prototype now has passing functional/security evidence and measured G2 results.
 
-Continue remaining P9 at Sol 6.1 Extra High, preserving completed local P5–P9 trust and authenticated-owner incident/recovery work and resolving D04/D07/D08 policy contracts before dependent live operations. Complete remaining P8 policy/accounting obligations and P9–P12, the wider component registry and public catalogue pagination before declaring the requested build/release dossier complete; use P13 for subsequent investment decisions.
+Preserve completed P5–P12 and the current P13/G5 development packet. Resolve the source-bound live launch manifest and remaining D04/D07/D08 subject-rights/recovery/rent-policy/accounting conditions before production acceptance. Then preregister and observe a genuine pilot through its first mature renewal window. Use Astra Extra High for critical review at the owner's latest reported setting; no model switch or repeated confirmation is required for already authorized work.
 
 At each checkpoint, report what is now demonstrably possible, the exact evidence, remaining limitations and the next dependency. Update this plan as requirements change, retaining the reason for each material scope or architecture decision.

@@ -1,0 +1,120 @@
+{
+  "checkedAt": "2026-10-07T04:55:36.449Z",
+  "result": "passed",
+  "originalCanonicalChecksums": {
+    "shops": {
+      "count": 1506,
+      "checksum": "316a9b0c2128caa7f6fcd3351e4edb22"
+    },
+    "products": {
+      "count": 150004,
+      "checksum": "3fcf0deba4adea6781d4874818dae748"
+    },
+    "departments": {
+      "count": 1504,
+      "checksum": "8b3ad73f1723d2fcf8511b7aba616003"
+    },
+    "shop_revisions": {
+      "count": 1,
+      "checksum": "ed39786cf3b8c60b28e270fc72639d44"
+    },
+    "invoices": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "rent_events": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "migrations": [
+    {
+      "name": "001_identity.sql",
+      "checksum": "dd45d715854221c9f1c9aaf2aab0f5930738f86149ef0ad5b8d1625c9df1e56f"
+    },
+    {
+      "name": "002_domain.sql",
+      "checksum": "24a9f736b51db92dffe29483af2e08227658191327c5f3b251779cb9eb849fd0"
+    },
+    {
+      "name": "003_jobs.sql",
+      "checksum": "863eec5082500340ab9668401fe22f273f269630bda24363cc209d9b41f43a00"
+    },
+    {
+      "name": "004_security_constraints.sql",
+      "checksum": "599ecb178d2d80cebe0a68d2fc9589f78d44bd746a9b7d5889369ff06aafc9bc"
+    },
+    {
+      "name": "005_membership_safeguards.sql",
+      "checksum": "cea3d9a29e58bccf46eb2d48391a3b9e8fac7e146e60406dc6966f8c36424ca8"
+    },
+    {
+      "name": "006_security_receipts.sql",
+      "checksum": "f41a8d54677b5cca4cd575ffbc93d1eeabde896d426429aec1bef9d36938dcde"
+    },
+    {
+      "name": "007_r1_security_contracts.sql",
+      "checksum": "de1016bec5dc5406b8fe725961da313919763cdaf0f70a0670a8cef6ca5c6414"
+    },
+    {
+      "name": "008_p5_catalogue_and_media.sql",
+      "checksum": "2cac28d6510a69c74e6cd85085b9d1f63b8c885528148ca4a7045ec77cb14a4d"
+    },
+    {
+      "name": "009_shop_design_and_public_reads.sql",
+      "checksum": "b98ac0926e3f6c4255715de4c435cd3c16992346cec1f11e9a69c2da26962e24"
+    },
+    {
+      "name": "010_applications_and_local_rent.sql",
+      "checksum": "e317bc69a1e58515e1b4bfbc49714a2885b74bea62a524a3c9521e8aaf6d5c73"
+    },
+    {
+      "name": "011_local_administration_and_addresses.sql",
+      "checksum": "ac0c2008d7b8f598f2b191c2545881da3ef6bc23f8b1cbbd4c2f3c03611aba17"
+    },
+    {
+      "name": "012_local_reporting_and_trust.sql",
+      "checksum": "51e99e74345b5b5bfa5bbe364b4554624e23042bb8058692926a749bcac43f04"
+    },
+    {
+      "name": "013_local_incidents_and_contact_history.sql",
+      "checksum": "df04c3e99e9917769bb75db516589f9d0ac8994cfd84dbe03163e2d16d2847c5"
+    },
+    {
+      "name": "014_local_pilot_analytics.sql",
+      "checksum": "27bac0bcd770a8a7e2b23c5201566d91c1c3aae987936592cee039e2b522666a"
+    },
+    {
+      "name": "015_local_privacy_governance.sql",
+      "checksum": "80c3b01e5dd4b00a44106915d6e265693ff3bc99c8027cb201636db1f59983ec"
+    },
+    {
+      "name": "016_local_resource_costs.sql",
+      "checksum": "474c584a63863d70d3172cd3bc1f3381c52585a7657f88f006d76b58796a10f8"
+    },
+    {
+      "name": "017_conversational_design.sql",
+      "checksum": "4f11f726b7107a1d4b12bb8ff5dca76d7314f1c6ea26191f318da69981eb58ea"
+    },
+    {
+      "name": "018_catalogue_pagination.sql",
+      "checksum": "9aefb326eb616f5db2f509865d1cbf5a4a9aad1e6ec3207f2a062d257472d288"
+    },
+    {
+      "name": "019_release_delivery_and_demo_cohort.sql",
+      "checksum": "6b70b9b0b14c5adadfb454783d48017480e0cf9d531f094cb7accc5a48551702"
+    }
+  ],
+  "originalNativeCredentialFilePreserved": true,
+  "demo": {
+    "registered": 12,
+    "active": 12,
+    "unpublished_pending": 12
+  },
+  "totalShops": 1518,
+  "demonstrationOperatorGrants": 0,
+  "demonstrationInvoices": 0,
+  "operationsOperators": 1,
+  "hashPurpose": "MD5 aggregate detects accidental canonical row changes; not a security/authenticity seal.",
+  "remoteDatabaseMigrationPerformed": false
+}

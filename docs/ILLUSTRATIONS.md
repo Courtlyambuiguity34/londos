@@ -527,3 +527,12 @@ flowchart LR
   SQL --> Cursor[20 rows and scoped continuation]
   Cursor --> Restart[Explicit restart after catalogue change]
 ```
+
+
+## Demonstration account administration
+
+![Fresh-MFA operations controls for explicitly fictional accounts](evidence/images/g5-demo-desktop.png)
+
+![Mobile keyboard-accessible demonstration account removal controls](evidence/images/g5-demo-mobile.png)
+
+These new captures show the compiled application with fictional accounts in an isolated browser database. Removal requires native fresh MFA, operations scope, a reason and confirmation; it blocks sessions and archives shops while retaining legal/business history. Keyboard, axe and bounded layout are verified. These are emulated-device illustrations, not genuine merchant recruitment, actual handset/screen-reader validation or production evidence. Historical captures remain unchanged. See [current evidence](evidence/G5-P13.md).
