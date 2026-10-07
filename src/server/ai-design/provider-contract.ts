@@ -263,6 +263,61 @@ function richSpace(p: z.infer<typeof patch>) {
 
 export function decodeProviderIntent(text: string): string {
   const wire = providerIntent.parse(JSON.parse(text));
+  const spaceFields = new Set([
+    "op",
+    "spaceId",
+    "spaceType",
+    "title",
+    "titleProvenance",
+    "subtitle",
+    "subtitleProvenance",
+    "body",
+    "bodyProvenance",
+    "departmentId",
+    "productId",
+    "featuredProductId",
+    "productIds",
+    "limit",
+    "kind",
+    "availability",
+    "variant",
+    "cta",
+  ]);
+  const presentationFields = new Set([
+    "op",
+    "premiseStyle",
+    "primary",
+    "secondary",
+    "background",
+    "surface",
+    "textColor",
+    "accent",
+    "typography",
+    "density",
+    "contentWidth",
+    "desktopNavigation",
+    "mobileNavigation",
+    "mobileColumns",
+    "desktopColumns",
+  ]);
+  const allowed = (op: z.infer<typeof patch>["op"]) =>
+    op === "theme"
+      ? new Set(["op", "theme"])
+      : op === "presentation"
+        ? presentationFields
+        : op === "actions"
+          ? new Set(["op", "actions"])
+          : op === "move"
+            ? new Set(["op", "spaceId", "before"])
+            : op === "announcement"
+              ? new Set(["op", "text"])
+              : op === "remove_space"
+                ? new Set(["op", "spaceId"])
+                : spaceFields;
+  for (const item of wire.patches)
+    for (const [field, value] of Object.entries(item))
+      if (!allowed(item.op).has(field) && value !== null && value !== undefined)
+        throw new Error("provider_patch_field_not_allowed");
   const patches = wire.patches.map((p) => {
     if (p.op === "theme") return { op: p.op, theme: p.theme };
     if (p.op === "presentation") return presentationPatch(p);
