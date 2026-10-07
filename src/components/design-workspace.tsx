@@ -1,7 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { shopSpecification, type ShopSpecification } from "@/modules/shop-design/specification";
+import {
+  shopSpecification,
+  type ShopSpecification,
+  type ShopPresentation,
+} from "@/modules/shop-design/specification";
 import { DesignSections } from "./design-sections";
 
 type State = {
@@ -13,6 +17,40 @@ type State = {
   departments: { id: string; name: string }[];
   products: { id: string; name: string; has_image: boolean }[];
 };
+const defaultPresentation: ShopPresentation = {
+  premiseStyle: "minimalist",
+  palette: {
+    primary: "charcoal",
+    secondary: "stone",
+    background: "white",
+    surface: "cream",
+    text: "charcoal",
+    accent: "burgundy",
+  },
+  typography: "modern",
+  density: "balanced",
+  contentWidth: "standard",
+  navigation: { desktop: "department_bar", mobile: "compact" },
+  productColumns: { mobile: 2, desktop: 3 },
+};
+
+const colorTokens = [
+  "cream",
+  "burgundy",
+  "gold",
+  "charcoal",
+  "white",
+  "black",
+  "stone",
+  "sand",
+  "terracotta",
+  "sage",
+  "forest",
+  "navy",
+  "sky",
+  "plum",
+] as const;
+
 export function DesignWorkspace({ shopId }: { shopId: string }) {
   const root = `/api/workspace/shops/${shopId}/design`,
     [state, setState] = useState<State | null>(null),
@@ -91,7 +129,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
     return space?.type === "department"
       ? (state.departments.find((d) => d.id === space.departmentId)?.name ?? id)
       : space && "title" in space
-        ? space.title
+        ? typeof space.title === "string"
+          ? space.title
+          : space.title.text
         : id;
   };
   return (
@@ -146,6 +186,239 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             onChange={(e) => setSpec({ ...spec, announcement: e.target.value })}
           />
         </label>
+        <fieldset>
+          <legend>Responsive premises</legend>
+          <p>
+            These controls are deterministic and provider-free. They use only Londos-approved
+            layout, palette and responsive tokens.
+          </p>
+          {!spec.presentation ? (
+            <button
+              type="button"
+              className="button button--outline"
+              onClick={() => setSpec({ ...spec, presentation: defaultPresentation })}
+            >
+              Enable responsive premise controls
+            </button>
+          ) : (
+            <>
+              <label>
+                Premise style
+                <select
+                  value={spec.presentation.premiseStyle}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        premiseStyle: e.target.value as ShopPresentation["premiseStyle"],
+                      },
+                    })
+                  }
+                >
+                  {[
+                    "luxury",
+                    "streetwear",
+                    "electronics",
+                    "food",
+                    "service",
+                    "minimalist",
+                    "editorial",
+                    "catalogue",
+                  ].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Density
+                <select
+                  value={spec.presentation.density}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        density: e.target.value as ShopPresentation["density"],
+                      },
+                    })
+                  }
+                >
+                  <option value="airy">Airy</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="compact">Compact</option>
+                </select>
+              </label>
+              <label>
+                Content width
+                <select
+                  value={spec.presentation.contentWidth}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        contentWidth: e.target.value as ShopPresentation["contentWidth"],
+                      },
+                    })
+                  }
+                >
+                  <option value="narrow">Narrow</option>
+                  <option value="standard">Standard</option>
+                  <option value="wide">Wide</option>
+                </select>
+              </label>
+              <label>
+                Typography
+                <select
+                  value={spec.presentation.typography}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        typography: e.target.value as ShopPresentation["typography"],
+                      },
+                    })
+                  }
+                >
+                  {["editorial", "modern", "classic", "technical", "friendly"].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {(["primary", "secondary", "background", "surface", "text", "accent"] as const).map(
+                (role) => (
+                  <label key={role}>
+                    {role} colour
+                    <select
+                      value={spec.presentation!.palette[role]}
+                      onChange={(e) =>
+                        setSpec({
+                          ...spec,
+                          presentation: {
+                            ...spec.presentation!,
+                            palette: {
+                              ...spec.presentation!.palette,
+                              [role]: e.target.value as (typeof colorTokens)[number],
+                            },
+                          },
+                        })
+                      }
+                    >
+                      {colorTokens.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ),
+              )}
+              <label>
+                Desktop navigation
+                <select
+                  value={spec.presentation.navigation.desktop}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        navigation: {
+                          ...spec.presentation!.navigation,
+                          desktop: e.target.value as ShopPresentation["navigation"]["desktop"],
+                        },
+                      },
+                    })
+                  }
+                >
+                  <option value="minimal">Minimal</option>
+                  <option value="department_bar">Department bar</option>
+                  <option value="editorial">Editorial</option>
+                </select>
+              </label>
+              <label>
+                Mobile navigation
+                <select
+                  value={spec.presentation.navigation.mobile}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        navigation: {
+                          ...spec.presentation!.navigation,
+                          mobile: e.target.value as ShopPresentation["navigation"]["mobile"],
+                        },
+                      },
+                    })
+                  }
+                >
+                  <option value="compact">Compact</option>
+                  <option value="bottom">Bottom navigation</option>
+                  <option value="department_bar">Department bar</option>
+                </select>
+              </label>
+              <label>
+                Mobile product columns
+                <select
+                  value={spec.presentation.productColumns.mobile}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        productColumns: {
+                          ...spec.presentation!.productColumns,
+                          mobile: Number(e.target.value) as 1 | 2,
+                        },
+                      },
+                    })
+                  }
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                </select>
+              </label>
+              <label>
+                Desktop product columns
+                <select
+                  value={spec.presentation.productColumns.desktop}
+                  onChange={(e) =>
+                    setSpec({
+                      ...spec,
+                      presentation: {
+                        ...spec.presentation!,
+                        productColumns: {
+                          ...spec.presentation!.productColumns,
+                          desktop: Number(e.target.value) as 2 | 3 | 4,
+                        },
+                      },
+                    })
+                  }
+                >
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  const { presentation: _presentation, ...legacy } = spec;
+                  setSpec(legacy as ShopSpecification);
+                }}
+              >
+                Use classic premise styling
+              </button>
+            </>
+          )}
+        </fieldset>
         <fieldset>
           <legend>Contact actions</legend>
           {(["call", "whatsapp", "enquiry"] as const).map((action) => (
@@ -240,7 +513,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             })
           }
         >
-          Use department template
+          Replace layout with department template
         </button>
         <label>
           Change summary
