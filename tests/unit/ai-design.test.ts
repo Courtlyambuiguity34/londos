@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import {
   compileIntent,
   deterministicIntent,
+  DesignIntegrityError,
   type DesignContext,
 } from "../../src/modules/ai-design/contract";
 import {
@@ -467,3 +468,229 @@ test("provider timeout aborts pending transport after eight seconds with a redac
   );
   await expect(p.generate(input)).rejects.toMatchObject({ code: "timeout" });
 }, 10000);
+
+
+const amaraDepartments = {
+  dresses: "11111111-1111-4111-8111-111111111111",
+  shoes: "22222222-2222-4222-8222-222222222222",
+  handbags: "33333333-3333-4333-8333-333333333333",
+  accessories: "44444444-4444-4444-8444-444444444444",
+};
+const amaraProducts = {
+  P101: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa101",
+  P102: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa102",
+  P103: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa103",
+  P104: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa104",
+  P105: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa105",
+  P106: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa106",
+};
+const amara: DesignContext = {
+  shop: { name: "Amara Collections", category: "fashion", tagline: "Merchant-owned fashion shop" },
+  specification: {
+    schemaVersion: 1,
+    theme: "plum",
+    announcement: "",
+    spaces: [],
+    actions: ["whatsapp", "enquiry"],
+  },
+  departments: [
+    { id: amaraDepartments.dresses, name: "Dresses", version: 1 },
+    { id: amaraDepartments.shoes, name: "Women’s Shoes", version: 1 },
+    { id: amaraDepartments.handbags, name: "Handbags", version: 1 },
+    { id: amaraDepartments.accessories, name: "Accessories", version: 1 },
+  ],
+  products: [
+    [amaraProducts.P101, "Nia Evening Dress", amaraDepartments.dresses, "Dresses", "95000"],
+    [amaraProducts.P102, "Kampala Block Heel", amaraDepartments.shoes, "Women’s Shoes", "75000"],
+    [amaraProducts.P103, "Amara Classic Handbag", amaraDepartments.handbags, "Handbags", "120000"],
+    [amaraProducts.P104, "Pearl Drop Earrings", amaraDepartments.accessories, "Accessories", "25000"],
+    [amaraProducts.P105, "Zuri Flat Sandal", amaraDepartments.shoes, "Women’s Shoes", "48000"],
+    [amaraProducts.P106, "Maya Summer Dress", amaraDepartments.dresses, "Dresses", "65000"],
+  ].map(([id, name, departmentId, departmentName, priceMinor]) => ({
+    id: id as string,
+    name: name as string,
+    version: 1,
+    departmentId: departmentId as string,
+    departmentName: departmentName as string,
+    kind: "product" as const,
+    priceMinor: priceMinor as string,
+    currency: "UGX",
+    availability: "available",
+  })),
+  protectedFacts: {
+    contact: {
+      phone: "",
+      whatsapp: "+256700123456",
+      website: "",
+      fulfilment: "Pickup: merchant premises",
+      paymentInstructions: "COD + Mobile Money after confirmation",
+      deliveryInstructions: "Kampala/Wakiso",
+      enquiriesEnabled: true,
+    },
+  },
+  supported: {
+    premiseStyles: ["luxury", "editorial"],
+    sectionTypes: ["hero", "featured_product", "product_section", "commerce_info"],
+    colorTokens: ["cream", "burgundy", "gold", "charcoal"],
+    typography: ["editorial", "classic"],
+  },
+};
+
+function amaraPresentation() {
+  return {
+    premiseStyle: "luxury" as const,
+    palette: {
+      primary: "burgundy" as const,
+      secondary: "burgundy" as const,
+      background: "cream" as const,
+      surface: "cream" as const,
+      text: "charcoal" as const,
+      accent: "gold" as const,
+    },
+    typography: "editorial" as const,
+    density: "airy" as const,
+    contentWidth: "wide" as const,
+    navigation: { desktop: "editorial" as const, mobile: "bottom" as const },
+    productColumns: { mobile: 2 as const, desktop: 3 as const },
+  };
+}
+
+test("Amara rich intent preserves catalogue facts and compiles a bounded luxury composition", () => {
+  const candidate = compileIntent(amara, {
+    patches: [
+      { op: "presentation", presentation: amaraPresentation() },
+      {
+        op: "add_space",
+        space: {
+          id: "hero",
+          type: "hero",
+          version: 1,
+          variant: "product_led",
+          title: { text: "Amara Collections", provenance: "merchant" },
+          subtitle: { text: "Shoes first, dresses close behind.", provenance: "ai" },
+          featuredProductId: amaraProducts.P102,
+          cta: "whatsapp",
+        },
+      },
+      {
+        op: "add_space",
+        space: {
+          id: "shoe-spotlight",
+          type: "featured_product",
+          version: 1,
+          variant: "split",
+          title: { text: "Kampala Block Heel", provenance: "merchant" },
+          departmentId: amaraDepartments.shoes,
+          productId: amaraProducts.P102,
+        },
+      },
+      {
+        op: "add_space",
+        space: {
+          id: "shoe-edit",
+          type: "product_section",
+          version: 1,
+          variant: "editorial",
+          title: { text: "Women’s Shoes", provenance: "merchant" },
+          departmentId: amaraDepartments.shoes,
+          productIds: [amaraProducts.P102, amaraProducts.P105],
+        },
+      },
+      {
+        op: "add_space",
+        space: {
+          id: "commerce",
+          type: "commerce_info",
+          version: 1,
+          variant: "summary",
+        },
+      },
+    ],
+    decisions: [],
+    confidence: "high",
+    review: "not_needed",
+  });
+  expect(candidate.presentation).toEqual(amaraPresentation());
+  expect(candidate.spaces[1]).toMatchObject({ productId: amaraProducts.P102 });
+  expect(amara.protectedFacts?.contact?.whatsapp).toBe("+256700123456");
+});
+
+test("Amara P104 in a Handbags-scoped section is rejected with machine-readable reference integrity", () => {
+  try {
+    compileIntent(amara, {
+      patches: [
+        {
+          op: "add_space",
+          space: {
+            id: "wrong-handbags",
+            type: "product_section",
+            version: 1,
+            variant: "grid",
+            title: { text: "Handbags", provenance: "merchant" },
+            departmentId: amaraDepartments.handbags,
+            productIds: [amaraProducts.P103, amaraProducts.P104],
+          },
+        },
+      ],
+      decisions: [],
+      confidence: "high",
+      review: "not_needed",
+    });
+    throw new Error("expected reference-integrity rejection");
+  } catch (error) {
+    expect(error).toBeInstanceOf(DesignIntegrityError);
+    expect(error).toMatchObject({
+      code: "reference_integrity",
+      detail: {
+        productId: amaraProducts.P104,
+        expectedDepartmentId: amaraDepartments.handbags,
+        actualDepartmentId: amaraDepartments.accessories,
+      },
+    });
+  }
+});
+
+test("AI copy cannot silently strengthen weak merchant facts into strong marketing claims", () => {
+  expect(() =>
+    compileIntent(amara, {
+      patches: [
+        {
+          op: "add_space",
+          space: {
+            id: "claim",
+            type: "hero",
+            version: 1,
+            variant: "editorial",
+            title: { text: "Uganda’s best guaranteed authentic fashion", provenance: "ai" },
+            subtitle: null,
+            featuredProductId: null,
+            cta: "browse",
+          },
+        },
+      ],
+      decisions: [],
+      confidence: "high",
+      review: "not_needed",
+    }),
+  ).toThrowError(DesignIntegrityError);
+});
+
+test("blocking design decisions cannot be bundled with layout mutations", () => {
+  expect(() =>
+    compileIntent(amara, {
+      patches: [{ op: "presentation", presentation: amaraPresentation() }],
+      decisions: [
+        {
+          type: "design_decision",
+          code: "MISSING_MERCHANT_INFORMATION",
+          question: "Which pickup wording should customers see?",
+          options: ["Merchant premises", "Do not show pickup"],
+          recommended: "Merchant premises",
+          blocking: true,
+        },
+      ],
+      confidence: "low",
+      review: "recommended",
+    }),
+  ).toThrow();
+});
