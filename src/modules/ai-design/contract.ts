@@ -177,7 +177,7 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
         throw new DesignIntegrityError("reference_integrity", {
           productId: section.productId,
           expectedDepartmentId: section.departmentId,
-          actualDepartmentId: product.departmentId,
+          actualDepartmentId: product.departmentId ?? "unknown",
         });
     }
     if (section.type === "product_section" && section.departmentId) {
@@ -187,7 +187,7 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
           throw new DesignIntegrityError("reference_integrity", {
             productId,
             expectedDepartmentId: section.departmentId,
-            actualDepartmentId: product.departmentId,
+            actualDepartmentId: product.departmentId ?? "unknown",
           });
       }
     }
@@ -195,13 +195,12 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
 
   const texts = [
     next.announcement,
-    ...next.spaces.flatMap((s) =>
-      "body" in s && typeof s.body === "string"
-        ? [s.title, s.body]
-        : "title" in s && typeof s.title === "string"
-          ? [s.title]
-          : [],
-    ),
+    ...next.spaces.flatMap((s) => {
+      const values: string[] = [];
+      if ("title" in s && typeof s.title === "string") values.push(s.title);
+      if ("body" in s && typeof s.body === "string") values.push(s.body);
+      return values;
+    }),
     ...richCopy(next).map((field) => field.text),
   ];
   if (texts.some((t) => unsafe.test(t)))
