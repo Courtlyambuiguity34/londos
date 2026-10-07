@@ -1,0 +1,78 @@
+{
+  "name": "amara-collections-regression",
+  "shop": "Amara Collections",
+  "departments": [
+    {
+      "id": "Dresses",
+      "name": "Dresses"
+    },
+    {
+      "id": "Women’s Shoes",
+      "name": "Women’s Shoes"
+    },
+    {
+      "id": "Handbags",
+      "name": "Handbags"
+    },
+    {
+      "id": "Accessories",
+      "name": "Accessories"
+    }
+  ],
+  "products": [
+    {
+      "merchantId": "P101",
+      "name": "Nia Evening Dress",
+      "department": "Dresses",
+      "priceUGX": 95000
+    },
+    {
+      "merchantId": "P102",
+      "name": "Kampala Block Heel",
+      "department": "Women’s Shoes",
+      "priceUGX": 75000
+    },
+    {
+      "merchantId": "P103",
+      "name": "Amara Classic Handbag",
+      "department": "Handbags",
+      "priceUGX": 120000
+    },
+    {
+      "merchantId": "P104",
+      "name": "Pearl Drop Earrings",
+      "department": "Accessories",
+      "priceUGX": 25000
+    },
+    {
+      "merchantId": "P105",
+      "name": "Zuri Flat Sandal",
+      "department": "Women’s Shoes",
+      "priceUGX": 48000
+    },
+    {
+      "merchantId": "P106",
+      "name": "Maya Summer Dress",
+      "department": "Dresses",
+      "priceUGX": 65000
+    }
+  ],
+  "commerce": {
+    "whatsapp": "+256700123456",
+    "payment": "COD + Mobile Money after confirmation",
+    "delivery": "Kampala/Wakiso",
+    "pickup": "merchant premises"
+  },
+  "request": "Make the shop luxurious and feminine, not overcrowded. Prioritize Women’s Shoes. Make P102 the standout product. Dresses remain important. Use warm cream, deep burgundy and a little gold. Mobile must be excellent. Do NOT alter products, prices, payment methods, WhatsApp, delivery, pickup or business information.",
+  "expected": {
+    "protectedFactsUnchanged": true,
+    "prioritizedDepartment": "Women’s Shoes",
+    "standoutProduct": "P102",
+    "mobileExcellent": true,
+    "invalidCase": {
+      "sectionDepartment": "Handbags",
+      "product": "P104",
+      "expectedError": "reference_integrity"
+    }
+  }
+}
