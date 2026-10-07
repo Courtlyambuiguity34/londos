@@ -89,13 +89,14 @@ export function DesignSections({ specification, departments, products, onChange 
                 <input
                   maxLength={100}
                   value={space.title}
-                  onChange={(e) =>
-                    onChange({
+                  onChange={(e) => {
+                    const checked = shopSpecification.safeParse({
                       ...specification,
                       spaces: specification.spaces.map((s) =>
                         s.id === space.id ? { ...space, title: e.target.value } : s,
                       ),
-                    })
+                    });
+                    if (checked.success) onChange(checked.data);
                   }
                 />
               </label>
@@ -106,13 +107,14 @@ export function DesignSections({ specification, departments, products, onChange 
                 <textarea
                   maxLength={1000}
                   value={space.body}
-                  onChange={(e) =>
-                    onChange({
+                  onChange={(e) => {
+                    const checked = shopSpecification.safeParse({
                       ...specification,
                       spaces: specification.spaces.map((s) =>
                         s.id === space.id ? { ...space, body: e.target.value } : s,
                       ),
-                    })
+                    });
+                    if (checked.success) onChange(checked.data);
                   }
                 />
               </label>
