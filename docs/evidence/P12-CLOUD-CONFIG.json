@@ -1,20 +1,51 @@
 {
-  "recordedAt": "2026-10-07T02:47:03.382447+00:00",
-  "state": "persistence_unconfirmed",
-  "priorResult": "R2 full/repository-only/startup-only saves returned INVALID_ARGUMENT",
-  "currentReadback": {
+  "recordedAt": "2026-10-07 02:50:29 UTC",
+  "state": "draft_persistence_confirmed_by_readback",
+  "saveResponse": {
+    "errorCode": "INVALID_ARGUMENT",
+    "message": "Setup could not be completed; saving the draft could not be confirmed."
+  },
+  "independentReadback": {
+    "consecutiveReads": 2,
+    "draftId": "bb9d9f3a-0e60-450f-9521-b5a3696e662e~cecfgdraft_6ac5b300a8448198ac161e793f7ce848",
+    "revision": 28,
+    "exactStartupMatches": true,
+    "exactRepositoriesMatch": true,
     "repositories": [
       {
         "repository_id": "Courtlyambuiguity34/londos",
-        "ref": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
-        "mount_path": "londos"
+        "ref": "2d335240cb1379a597c7abdca88cd17ebebec852",
+        "mount_path": "londos",
+        "depth": null
       }
-    ],
-    "draftId": null,
-    "revision": null
+    ]
   },
-  "proposedStartup": "docs/CLOUD-STARTUP.md",
-  "installScript": "scripts/cloud-install.sh unchanged",
-  "nextAction": "Attempt current exact branch pin and startup update after final evidence commit; preserve network/key/value settings.",
-  "activation": "Draft save is not publication; no activation claimed."
+  "requestedStartup": "docs/CLOUD-STARTUP.md",
+  "preserved": {
+    "installScriptUnchanged": true,
+    "customNetworkRulesAndPresetSelectionUnchanged": true,
+    "credentialRequirementsUnchanged": true,
+    "runtimeRequirementsUnchanged": true
+  },
+  "serverResolvedPresetChange": {
+    "addedHost": "lfs.github.com",
+    "explanation": "Read-only package_managers preset expanded between observations; no network fields were submitted."
+  },
+  "inventory": {
+    "directoriesTraversed": 6313,
+    "gitMarkers": 2,
+    "emptyGitPlaceholders": [
+      "/workspace"
+    ],
+    "dependencyBuildCachesInspected": [
+      "londos/node_modules",
+      "londos/.next"
+    ],
+    "symlinksInspected": 29,
+    "externalDirectorySymlinks": 0,
+    "errors": []
+  },
+  "diagnosis": "The save response reported INVALID_ARGUMENT, but two independent reads returned a real draft ID/revision and exact requested repository pin/startup. Those persisted fields are confirmed; API response inconsistency remains recorded. Prior R2 results are not rewritten.",
+  "activation": "This is a saved draft, not applied/published configuration. Review/save the changes in environment settings and publish to activate. No fresh-task or general Docker-volume durability claim.",
+  "pinLimit": "The exact pushed merge checkpoint is pinned here. Final evidence-only follow-up may advance the branch; a final repository-only update/readback is recorded by the task handoff."
 }

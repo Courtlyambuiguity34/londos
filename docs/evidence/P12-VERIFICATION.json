@@ -1708,5 +1708,18 @@
     "No production launch, off-host restore, approved SLA, real device/assistive-technology session or general security certification.",
     "OpenAI credential rejection and production capability/policy/ownership conditions remain explicit.",
     "Historical P11 benchmarks are not newly measured P12 capacity."
-  ]
+  ],
+  "remoteIntegration": {
+    "mergeCommit": "2d335240cb1379a597c7abdca88cd17ebebec852",
+    "preservedRemoteCommit": "1938a64c5f9e67f5c03e0b652f94930d31b493d8",
+    "scope": "Deferred future designer document only; no application/test/build source changed",
+    "sourceInventoryStillMatches": true,
+    "docsCheck": "passed"
+  },
+  "stagedDocumentationScan": {
+    "files": 13,
+    "taskLogs": 40,
+    "configuredCandidates": 15,
+    "result": "passed"
+  }
 }

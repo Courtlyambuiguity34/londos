@@ -53,5 +53,10 @@
       "sha256": "ae60628e0708be64ab1768e91e5fe2e9b75a738d83199521f9eadebfbc814b61"
     }
   ],
-  "identityLimit": "Evidence/handoff follow-up binds the preceding tested implementation; it does not claim a self-referential final metadata commit hash or production acceptance."
+  "identityLimit": "Evidence/handoff follow-up binds the preceding tested implementation; it does not claim a self-referential final metadata commit hash or production acceptance.",
+  "remotelyVerifiedMergeCheckpoint": "2d335240cb1379a597c7abdca88cd17ebebec852",
+  "preservedRemoteDocumentationCommit": "1938a64c5f9e67f5c03e0b652f94930d31b493d8",
+  "mergedDocument": "docs/future/LONDOS-SHOP-DESIGNER.md",
+  "testedSourcesUnchangedByMerge": true,
+  "postMergeDocsCheck": "67 Markdown files;584 local links resolve"
 }
