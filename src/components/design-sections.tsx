@@ -60,57 +60,78 @@ export function DesignSections({ specification, departments, products, onChange 
         All text is plain text. Offers describe merchant terms; the service desk uses your saved
         contact settings. Choose up to eight sections and 32 cards in total.
       </p>
-      {specification.spaces.map((space) => (
-        <fieldset key={space.id}>
-          <legend>{"title" in space ? space.title : space.type} section</legend>
-          {"title" in space ? (
-            <label>
-              Section title
-              <input
-                maxLength={100}
-                value={space.title}
-                onChange={(e) =>
-                  onChange({
-                    ...specification,
-                    spaces: specification.spaces.map((s) =>
-                      s.id === space.id ? { ...space, title: e.target.value } : s,
-                    ),
-                  })
-                }
-              />
-            </label>
-          ) : null}
-          {"body" in space ? (
-            <label>
-              Section text
-              <textarea
-                maxLength={1000}
-                value={space.body}
-                onChange={(e) =>
-                  onChange({
-                    ...specification,
-                    spaces: specification.spaces.map((s) =>
-                      s.id === space.id ? { ...space, body: e.target.value } : s,
-                    ),
-                  })
-                }
-              />
-            </label>
-          ) : null}
-          <button
-            type="button"
-            className="text-button"
-            onClick={() =>
-              onChange({
-                ...specification,
-                spaces: specification.spaces.filter((s) => s.id !== space.id),
-              })
-            }
-          >
-            Remove {"title" in space ? space.title : space.type} section
-          </button>
-        </fieldset>
-      ))}
+      {specification.spaces.map((space) => {
+        const title =
+          "title" in space
+            ? typeof space.title === "string"
+              ? space.title
+              : space.title.text
+            : space.type;
+        const rich = [
+          "hero",
+          "featured_product",
+          "product_section",
+          "department_editorial",
+          "commerce_info",
+        ].includes(space.type);
+        return (
+          <fieldset key={space.id}>
+            <legend>{title} section</legend>
+            {rich ? (
+              <p>
+                This is a trusted responsive designer section. Its provenance-bearing copy and
+                catalogue scope stay intact here; remove it, rearrange it, or ask the design
+                assistant for a reviewed replacement.
+              </p>
+            ) : "title" in space && typeof space.title === "string" ? (
+              <label>
+                Section title
+                <input
+                  maxLength={100}
+                  value={space.title}
+                  onChange={(e) =>
+                    onChange({
+                      ...specification,
+                      spaces: specification.spaces.map((s) =>
+                        s.id === space.id ? { ...space, title: e.target.value } : s,
+                      ),
+                    })
+                  }
+                />
+              </label>
+            ) : null}
+            {!rich && "body" in space && typeof space.body === "string" ? (
+              <label>
+                Section text
+                <textarea
+                  maxLength={1000}
+                  value={space.body}
+                  onChange={(e) =>
+                    onChange({
+                      ...specification,
+                      spaces: specification.spaces.map((s) =>
+                        s.id === space.id ? { ...space, body: e.target.value } : s,
+                      ),
+                    })
+                  }
+                />
+              </label>
+            ) : null}
+            <button
+              type="button"
+              className="text-button"
+              onClick={() =>
+                onChange({
+                  ...specification,
+                  spaces: specification.spaces.filter((s) => s.id !== space.id),
+                })
+              }
+            >
+              Remove {title} section
+            </button>
+          </fieldset>
+        );
+      })}
       <label htmlFor="new-section-type">New section type</label>
       <select
         id="new-section-type"
