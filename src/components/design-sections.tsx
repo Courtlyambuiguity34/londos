@@ -97,7 +97,7 @@ export function DesignSections({ specification, departments, products, onChange 
                       ),
                     });
                     if (checked.success) onChange(checked.data);
-                  }
+                  }}
                 />
               </label>
             ) : null}
@@ -115,7 +115,7 @@ export function DesignSections({ specification, departments, products, onChange 
                       ),
                     });
                     if (checked.success) onChange(checked.data);
-                  }
+                  }}
                 />
               </label>
             ) : null}
