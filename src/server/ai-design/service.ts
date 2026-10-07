@@ -89,16 +89,91 @@ async function context(db: PoolClient, actor: Actor, id: string) {
   ).rows as DesignContext["departments"];
   const products = (
     await db.query(
-      "SELECT p.id,p.name,p.version FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.merchant_id=p.merchant_id WHERE p.shop_id=$1 AND p.merchant_id=$2 AND p.availability<>'archived' AND d.archived=false AND (p.id IN(SELECT chosen.id FROM products chosen JOIN departments current_department ON current_department.id=chosen.department_id AND current_department.shop_id=chosen.shop_id AND current_department.merchant_id=chosen.merchant_id AND current_department.archived=false WHERE chosen.shop_id=$1 AND chosen.availability<>'archived' ORDER BY chosen.position,chosen.id LIMIT 32) OR p.id=ANY($3::uuid[])) ORDER BY p.position,p.id",
+      "SELECT p.id,p.name,p.version,p.department_id AS \"departmentId\",d.name AS \"departmentName\",p.kind,p.price_minor::text AS \"priceMinor\",p.currency,p.availability FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.merchant_id=p.merchant_id WHERE p.shop_id=$1 AND p.merchant_id=$2 AND p.availability<>'archived' AND d.archived=false AND (p.id IN(SELECT chosen.id FROM products chosen JOIN departments current_department ON current_department.id=chosen.department_id AND current_department.shop_id=chosen.shop_id AND current_department.merchant_id=chosen.merchant_id AND current_department.archived=false WHERE chosen.shop_id=$1 AND chosen.availability<>'archived' ORDER BY chosen.position,chosen.id LIMIT 32) OR p.id=ANY($3::uuid[])) ORDER BY p.position,p.id",
       [id, shop.merchant_id, referencedProducts],
     )
   ).rows as DesignContext["products"];
   await validateReferences(db, id, specification);
+  const contactRow = (
+    await db.query(
+      "SELECT phone,whatsapp,website,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled FROM shop_contacts WHERE shop_id=$1 AND merchant_id=$2",
+      [id, shop.merchant_id],
+    )
+  ).rows[0] as
+    | {
+        phone: string;
+        whatsapp: string;
+        website: string;
+        fulfilment: string;
+        payment_instructions: string;
+        delivery_instructions: string;
+        enquiries_enabled: boolean;
+      }
+    | undefined;
   const data: DesignContext = {
     shop: { name: shop.name, category: shop.category, tagline: shop.tagline },
     specification,
     departments,
     products,
+    protectedFacts: {
+      contact: contactRow
+        ? {
+            phone: contactRow.phone,
+            whatsapp: contactRow.whatsapp,
+            website: contactRow.website,
+            fulfilment: contactRow.fulfilment,
+            paymentInstructions: contactRow.payment_instructions,
+            deliveryInstructions: contactRow.delivery_instructions,
+            enquiriesEnabled: contactRow.enquiries_enabled,
+          }
+        : null,
+    },
+    supported: {
+      premiseStyles: [
+        "luxury",
+        "streetwear",
+        "electronics",
+        "food",
+        "service",
+        "minimalist",
+        "editorial",
+        "catalogue",
+      ],
+      sectionTypes: [
+        "hero",
+        "featured_product",
+        "product_section",
+        "department_editorial",
+        "commerce_info",
+        "entrance",
+        "display",
+        "gallery",
+        "offer",
+        "service_desk",
+        "collection",
+        "department",
+        "products",
+        "story",
+        "contact",
+      ],
+      colorTokens: [
+        "cream",
+        "burgundy",
+        "gold",
+        "charcoal",
+        "white",
+        "black",
+        "stone",
+        "sand",
+        "terracotta",
+        "sage",
+        "forest",
+        "navy",
+        "sky",
+        "plum",
+      ],
+      typography: ["editorial", "modern", "classic", "technical", "friendly"],
+    },
   };
   if (Buffer.byteLength(JSON.stringify(data)) > aiLimits.contextBytes)
     throw new AccessError(422, "ai_context_limit");
