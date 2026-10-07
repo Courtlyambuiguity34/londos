@@ -401,9 +401,11 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
         ) : (
           view.specification.spaces.map((space) => {
             if (
-              ["hero", "featured_product", "product_section", "department_editorial", "commerce_info"].includes(
-                space.type,
-              )
+              space.type === "hero" ||
+              space.type === "featured_product" ||
+              space.type === "product_section" ||
+              space.type === "department_editorial" ||
+              space.type === "commerce_info"
             )
               return <DesignerSection key={space.id} space={space} view={view} />;
             if ("body" in space)
