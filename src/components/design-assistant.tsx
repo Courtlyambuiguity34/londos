@@ -234,6 +234,30 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
                   <li key={i}>{c}</li>
                 ))}
               </ul>
+              {proposal.decisions.length ? (
+                <section className="secret-panel" aria-label="Design decisions">
+                  <h3>Design decisions</h3>
+                  {proposal.decisions.map((decision) => (
+                    <div key={decision.code}>
+                      <p>
+                        <strong>{decision.question}</strong>
+                      </p>
+                      <ul>
+                        {decision.options.map((option) => (
+                          <li key={option}>{option}</li>
+                        ))}
+                      </ul>
+                      <p>Recommended: {decision.recommended}</p>
+                      {decision.blocking ? (
+                        <p>
+                          This decision blocks applying the proposal. Add your answer to a new
+                          design request so Londos can produce a resolved candidate.
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </section>
+              ) : null}
               <Link
                 prefetch={false}
                 className="button button--outline"
@@ -271,7 +295,12 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
               </label>
               <button
                 className="button"
-                disabled={busy || !confirmed || (proposal.reviewWarning && !warning)}
+                disabled={
+                  busy ||
+                  !confirmed ||
+                  proposal.decisions.some((decision) => decision.blocking) ||
+                  (proposal.reviewWarning && !warning)
+                }
                 onClick={() => void decide("apply")}
               >
                 Apply reviewed proposal as draft
