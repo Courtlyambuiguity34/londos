@@ -41,14 +41,14 @@ const patch = z
       ])
       .nullable(),
     title: z.string().max(240).nullable(),
-    titleProvenance: nullableCopyProvenance,
-    subtitle: z.string().max(240).nullable(),
-    subtitleProvenance: nullableCopyProvenance,
+    titleProvenance: nullableCopyProvenance.optional().default(null),
+    subtitle: z.string().max(240).nullable().optional().default(null),
+    subtitleProvenance: nullableCopyProvenance.optional().default(null),
     body: z.string().max(1000).nullable(),
-    bodyProvenance: nullableCopyProvenance,
+    bodyProvenance: nullableCopyProvenance.optional().default(null),
     departmentId: z.string().max(36).nullable(),
-    productId: z.string().max(36).nullable(),
-    featuredProductId: z.string().max(36).nullable(),
+    productId: z.string().max(36).nullable().optional().default(null),
+    featuredProductId: z.string().max(36).nullable().optional().default(null),
     productIds: z.array(z.string().max(36)).max(8).nullable(),
     limit: z.number().int().min(1).max(8).nullable(),
     kind: z.enum(["all", "product", "service"]).nullable(),
@@ -64,8 +64,10 @@ const patch = z
         "carousel",
         "summary",
       ])
-      .nullable(),
-    cta: z.enum(["browse", "whatsapp", "enquiry"]).nullable(),
+      .nullable()
+      .optional()
+      .default(null),
+    cta: z.enum(["browse", "whatsapp", "enquiry"]).nullable().optional().default(null),
     premiseStyle: z
       .enum([
         "luxury",
@@ -77,20 +79,38 @@ const patch = z
         "editorial",
         "catalogue",
       ])
-      .nullable(),
-    primary: z.string().max(20).nullable(),
-    secondary: z.string().max(20).nullable(),
-    background: z.string().max(20).nullable(),
-    surface: z.string().max(20).nullable(),
-    textColor: z.string().max(20).nullable(),
-    accent: z.string().max(20).nullable(),
-    typography: z.enum(["editorial", "modern", "classic", "technical", "friendly"]).nullable(),
-    density: z.enum(["airy", "balanced", "compact"]).nullable(),
-    contentWidth: z.enum(["narrow", "standard", "wide"]).nullable(),
-    desktopNavigation: z.enum(["minimal", "department_bar", "editorial"]).nullable(),
-    mobileNavigation: z.enum(["compact", "bottom", "department_bar"]).nullable(),
-    mobileColumns: z.union([z.literal(1), z.literal(2)]).nullable(),
-    desktopColumns: z.union([z.literal(2), z.literal(3), z.literal(4)]).nullable(),
+      .nullable()
+      .optional()
+      .default(null),
+    primary: z.string().max(20).nullable().optional().default(null),
+    secondary: z.string().max(20).nullable().optional().default(null),
+    background: z.string().max(20).nullable().optional().default(null),
+    surface: z.string().max(20).nullable().optional().default(null),
+    textColor: z.string().max(20).nullable().optional().default(null),
+    accent: z.string().max(20).nullable().optional().default(null),
+    typography: z
+      .enum(["editorial", "modern", "classic", "technical", "friendly"])
+      .nullable()
+      .optional()
+      .default(null),
+    density: z.enum(["airy", "balanced", "compact"]).nullable().optional().default(null),
+    contentWidth: z.enum(["narrow", "standard", "wide"]).nullable().optional().default(null),
+    desktopNavigation: z
+      .enum(["minimal", "department_bar", "editorial"])
+      .nullable()
+      .optional()
+      .default(null),
+    mobileNavigation: z
+      .enum(["compact", "bottom", "department_bar"])
+      .nullable()
+      .optional()
+      .default(null),
+    mobileColumns: z.union([z.literal(1), z.literal(2)]).nullable().optional().default(null),
+    desktopColumns: z
+      .union([z.literal(2), z.literal(3), z.literal(4)])
+      .nullable()
+      .optional()
+      .default(null),
   })
   .strict();
 
