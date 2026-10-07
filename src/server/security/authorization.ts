@@ -30,7 +30,7 @@ export async function sessionState(db: Queryable, actor: Actor, allowUnverifiedM
     `SELECT s."createdAt" AS created_at,u.email,u."twoFactorEnabled" AS mfa_enabled,p.verified_at
     FROM session s JOIN "user" u ON u.id=s."userId"
     LEFT JOIN mfa_proofs p ON p.session_id=s.id AND p.user_id=u.id AND p.auth_epoch=u.auth_epoch
-    WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">clock_timestamp() AND u."emailVerified"=true`,
+    WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">clock_timestamp() AND u."emailVerified"=true AND coalesce((to_jsonb(u)->>'demo_retired')::boolean,false)=false`,
     [actor.sessionId, actor.userId],
   );
   if (!result.rows[0]) throw new AccessError(401, "authentication_required");

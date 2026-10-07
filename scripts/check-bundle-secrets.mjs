@@ -6,6 +6,10 @@ const values = [
   process.env.DATABASE_URL,
   process.env.OPENAI_API_KEY,
   process.env.LONDOS_OPENAI_API_KEY,
+  process.env.LONDOS_BREVO_API_KEY,
+  process.env.MONGODB_URI,
+  process.env.REDIS_URL,
+  process.env.CLOUDINARY_URL,
   ...Array.from({ length: 5 }, (_, i) => process.env[`GEMINI_API_KEY_${i + 1}`]),
 ];
 if (process.env.DATABASE_URL) values.push(new URL(process.env.DATABASE_URL).password);
@@ -17,6 +21,18 @@ if (existsSync(".local/development-accounts.json")) {
 }
 if (existsSync(".local/trust-reviewer.json"))
   values.push(JSON.parse(readFileSync(".local/trust-reviewer.json", "utf8")).password);
+if (existsSync(".local/demonstration-accounts.json"))
+  for (const account of JSON.parse(readFileSync(".local/demonstration-accounts.json", "utf8")))
+    values.push(account.password);
+for (const name of ["MONGODB_URI", "REDIS_URL", "CLOUDINARY_URL"])
+  if (process.env[name]) {
+    try {
+      const value = new URL(process.env[name]);
+      values.push(decodeURIComponent(value.password));
+    } catch {
+      /* Invalid optional configuration is checked separately. */
+    }
+  }
 const needles = values
   .filter((value) => typeof value === "string" && value.length >= 12)
   .map((value) => Buffer.from(value));

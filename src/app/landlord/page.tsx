@@ -100,6 +100,11 @@ export default async function LandlordPage() {
           Account security
         </Link>
         {grants.some((g) => g.permission === "operations") ? (
+          <Link className="button" href="/landlord/demo-accounts">
+            Demonstration accounts
+          </Link>
+        ) : null}
+        {grants.some((g) => g.permission === "operations") ? (
           <Link className="button" href="/landlord/operations">
             Mall and shop operations
           </Link>

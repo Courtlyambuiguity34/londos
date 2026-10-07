@@ -7,6 +7,7 @@ import { coreConfig } from "../config";
 import { database, transaction } from "../db/pool";
 import { enqueue } from "../jobs/enqueue";
 import { audit } from "./audit";
+import { notificationsConfigured } from "../jobs/brevo";
 
 const observationKey = Symbol("londosAuthenticationObservation");
 type AuthenticationObservation = { user_id: string; auth_epoch: string; factor_id: string | null };
@@ -14,9 +15,9 @@ type ObservedContext = { [observationKey]?: AuthenticationObservation };
 const factorVerification = new Set(["/two-factor/verify-totp", "/two-factor/verify-backup-code"]);
 
 export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bootstrap = false) {
-  if (!config.localAdapters)
+  if (!config.localAdapters && !notificationsConfigured(config))
     throw new Error(
-      "X1 requires explicit loopback local notification adapters. Live delivery must be implemented before remote authentication.",
+      "Remote authentication requires explicitly configured Brevo notification delivery.",
     );
   return betterAuth({
     appName: "Londos",
@@ -107,12 +108,16 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
         if (!userId && !email) return;
         const snapshot = (
           await pool.query(
-            `SELECT u.id AS user_id,u.auth_epoch,f.id AS factor_id FROM "user" u
+            `SELECT u.id AS user_id,u.auth_epoch,f.id AS factor_id,coalesce((to_jsonb(u)->>'demo_retired')::boolean,false) AS demo_retired FROM "user" u
            LEFT JOIN "twoFactor" f ON f."userId"=u.id
            WHERE ($1::text IS NOT NULL AND u.id=$1) OR ($2::text IS NOT NULL AND u.email=$2)`,
             [userId ?? null, email],
           )
-        ).rows[0] as AuthenticationObservation | undefined;
+        ).rows[0] as (AuthenticationObservation & { demo_retired: boolean }) | undefined;
+        if (snapshot?.demo_retired)
+          throw new APIError("UNAUTHORIZED", {
+            message: "This demonstration account has been retired.",
+          });
         if (snapshot) (ctx.context as ObservedContext)[observationKey] = snapshot;
       }),
       after: createAuthMiddleware(async (ctx) => {

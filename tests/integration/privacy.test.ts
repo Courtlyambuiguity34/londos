@@ -288,7 +288,7 @@ test("014 upgrade preserves original enquiry fields/default grants and unknown c
   ).rows[0];
   expect(row.closed_at.getTime()).toBeGreaterThan(Date.now() - 60000);
   expect(row.erased_at).toBeNull();
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(18);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(19);
   await expect(
     pool.query("UPDATE privacy_policies SET terminal_days=1 WHERE id=$1", [privacyPolicyId]),
   ).rejects.toThrow();

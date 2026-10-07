@@ -4,6 +4,7 @@ import { pilotPolicy } from "./analytics";
 import { coreConfigured, coreConfig } from "./config";
 import { database } from "./db/pool";
 import { requiredMigration } from "./db/schema-contract";
+import { notificationsConfigured } from "./jobs/brevo";
 export async function readiness() {
   if (!coreConfigured())
     return {
@@ -26,19 +27,19 @@ export async function readiness() {
     const migrations = await db.query("SELECT 1 FROM schema_migrations WHERE name=$1", [
       requiredMigration,
     ]);
-    if (!migrations.rowCount || !config.localAdapters) throw new Error("Core is incomplete");
+    if (!migrations.rowCount || !notificationsConfigured()) throw new Error("Core is incomplete");
     const worker = await db.query(
       "SELECT EXISTS(SELECT 1 FROM worker_heartbeats WHERE state='running' AND seen_at>now()-interval '30 seconds') AS ready",
     );
     return {
       ready: true,
-      mode: "development-core",
+      mode: config.localAdapters ? "development-core" : "configured-core",
       database: true,
       authentication: true,
       worker: worker.rows[0].ready ? "ready" : "offline",
       financialOperations: false,
-      liveNotifications: false,
-      localRentWorkflow: true,
+      liveNotifications: !config.localAdapters,
+      localRentWorkflow: config.localAdapters,
       localPrivacyErasure: privacyErasureEnabled(),
       liveErasure: false,
       localPilotAnalytics: pilotPolicy().enabled,

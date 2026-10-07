@@ -4,7 +4,12 @@ import { resolve } from "node:path";
 import { z } from "zod";
 
 export interface NotificationAdapter {
-  deliver(key: string, message: Record<string, unknown>, signal: AbortSignal): Promise<void>;
+  deliver(
+    key: string,
+    message: Record<string, unknown>,
+    signal: AbortSignal,
+    authority?: { leaseToken: string },
+  ): Promise<void>;
 }
 export interface PrivateStorageAdapter {
   put(key: string, bytes: Uint8Array, signal: AbortSignal): Promise<void>;
@@ -34,7 +39,7 @@ export class LocalPrivateStorage implements PrivateStorageAdapter {
     }
   }
 }
-const messageSchema = z.discriminatedUnion("template", [
+export const messageSchema = z.discriminatedUnion("template", [
   z
     .object({
       template: z.literal("incident-status"),

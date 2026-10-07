@@ -5,15 +5,16 @@ import { loadLocalEnv } from "../../scripts/local-env";
 import { coreConfig } from "../server/config";
 import { database } from "../server/db/pool";
 import { LocalNotifications } from "../server/jobs/adapters";
+import { BrevoNotifications } from "../server/jobs/brevo";
 import { claim, acknowledge, heartbeat, fail } from "../server/jobs/queue";
 import { handle } from "../server/jobs/handlers";
 import { schedule } from "../server/jobs/scheduler";
 import { withinDeadline } from "../server/jobs/deadline";
 loadLocalEnv();
-if (!coreConfig().localAdapters) throw new Error("Live worker adapters are not configured.");
+const localAdapters = coreConfig().localAdapters;
 const pool = database(),
   workerId = randomUUID(),
-  notifications = new LocalNotifications();
+  notifications = localAdapters ? new LocalNotifications() : new BrevoNotifications(pool);
 let stopping = false;
 process.on("SIGTERM", () => {
   stopping = true;
@@ -24,7 +25,7 @@ process.on("SIGINT", () => {
 function log(event: string, detail: Record<string, unknown> = {}) {
   console.log(JSON.stringify({ time: new Date().toISOString(), event, workerId, ...detail }));
 }
-log("worker.started", { adapters: "local-private-sink" });
+log("worker.started", { adapters: localAdapters ? "local-private-sink" : "brevo" });
 pool.on("error", () => log("database.connection.lost"));
 try {
   if (process.env.LONDOS_WORKER_ID_FILE)

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Londos digital mall \u2014 staged implementation",
+  "description": "Londos digital mall — staged implementation",
   "engines": {
     "node": ">=24.19.0 <25",
     "npm": ">=11 <12"
@@ -45,14 +45,21 @@
     "benchmark:p11": "tsx scripts/benchmark-p11.ts",
     "check:clean": "tsx scripts/verify-clean.ts",
     "release:rehearse": "tsx scripts/release/rehearse.ts",
-    "release:recovery": "tsx scripts/release/recovery-cli.ts"
+    "release:recovery": "tsx scripts/release/recovery-cli.ts",
+    "release:gate": "tsx scripts/release/gate-cli.ts",
+    "db:demonstration": "tsx scripts/seed-demonstration.ts",
+    "email:verify": "node --use-env-proxy --import tsx scripts/verify-brevo.ts",
+    "pilot": "tsx scripts/pilot.ts",
+    "services": "node --use-env-proxy --import tsx scripts/services.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",
+    "mongodb": "7.7.0",
     "next": "16.3.8",
     "pg": "8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "redis": "6.3.0",
     "server-only": "0.0.1",
     "sharp": "0.35.5",
     "zod": "4.3.6"

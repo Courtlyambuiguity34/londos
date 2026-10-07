@@ -59,7 +59,8 @@ export async function provisionRuntimeRoles(
         (SELECT coalesce(sum(octet_length(bytes)),0)::text FROM media_blobs) AS media_bytes,
         (SELECT pg_database_size(current_database()))::text AS database_bytes,
         (SELECT count(*)::int FROM pg_stat_activity WHERE datname=current_database()) AS database_connections,
-        (SELECT coalesce(sum(estimated_cost_microusd),0)::text FROM ai_provider_attempts WHERE verification='live_transport') AS recorded_ai_micro_usd`);
+        (SELECT coalesce(sum(estimated_cost_microusd),0)::text FROM ai_provider_attempts WHERE verification='live_transport') AS recorded_ai_micro_usd,
+        (SELECT count(*)::int FROM notification_deliveries WHERE state IN ('uncertain','rejected') OR (state='attempting' AND attempted_at<clock_timestamp()-interval '1 minute')) AS delivery_attention`);
     await client.query("REVOKE ALL ON londos_operations.snapshot FROM PUBLIC");
     await client.query("GRANT USAGE ON SCHEMA londos_operations TO londos_monitor");
     await client.query("GRANT SELECT ON londos_operations.snapshot TO londos_monitor");

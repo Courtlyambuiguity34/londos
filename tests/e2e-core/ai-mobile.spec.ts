@@ -1,16 +1,45 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { readFile, mkdir } from "node:fs/promises";
-import { seedIds, type SeedAccounts } from "../../src/server/db/seed";
+import { mkdir } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { Pool } from "pg";
+import { seedIds } from "../../src/server/db/seed";
+import { createAuth } from "../../src/server/security/auth";
+import { coreConfig } from "../../src/server/config";
+let account: { email: string; password: string };
+test.beforeAll(async () => {
+  // The full desktop suite intentionally stresses the shared owner's sign-in budget.
+  // A separate authorized designer keeps this UI test independent of that history.
+  if (!/^\/londos_test_/.test(new URL(process.env.DATABASE_URL!).pathname))
+    throw new Error("Disposable browser database required");
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    account = {
+      email: `mobile-designer-${randomUUID()}@londos.invalid`,
+      password: `Fictional-${randomUUID()}`,
+    };
+    const created = await createAuth(pool, coreConfig(), true).api.signUpEmail({
+      body: { ...account, name: "Fictional mobile designer" },
+    });
+    await pool.query('UPDATE "user" SET "emailVerified"=true WHERE id=$1', [created.user.id]);
+    await pool.query(
+      "INSERT INTO memberships(merchant_id,user_id,role,permissions) VALUES($1,$2,'staff',ARRAY['design'])",
+      [seedIds.merchantA, created.user.id],
+    );
+    await pool.query(
+      "INSERT INTO staff_shop_grants(merchant_id,user_id,shop_id,permissions) VALUES($1,$2,$3,ARRAY['design'])",
+      [seedIds.merchantA, created.user.id, seedIds.shopA],
+    );
+  } finally {
+    await pool.end();
+  }
+});
 test("mobile assistant supports keyboard, explicit review, bounded canonical preview and rejection", async ({
   page,
 }) => {
-  const a = JSON.parse(
-    await readFile(process.env.LONDOS_TEST_ACCOUNTS_FILE!, "utf8"),
-  ) as SeedAccounts;
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill(a.ownerA.email);
-  await page.getByLabel("Password", { exact: true }).fill(a.ownerA.password);
+  await page.getByLabel("Email", { exact: true }).fill(account.email);
+  await page.getByLabel("Password", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}/design/assistant`);

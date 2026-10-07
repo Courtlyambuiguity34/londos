@@ -40,6 +40,7 @@ const checks: string[] = [],
     scope: "isolated fictional staging; same-host recovery copies",
     postgresImage,
   };
+const reportPath = process.env.LONDOS_RELEASE_EVIDENCE_FILE ?? "docs/evidence/P12-RECOVERY.json";
 function passed(name: string) {
   checks.push(name);
   console.log(JSON.stringify({ check: name, result: "passed" }));
@@ -140,13 +141,13 @@ try {
     "migrate",
   ]);
   assert.equal(await docker(["wait", migrationContainer]), "0");
-  passed("compiled-dedicated-migrator-applies-frozen-001-through-018");
+  passed("compiled-dedicated-migrator-applies-current-checksummed-schema");
   stage = "native fixtures";
   await migrate(db);
   await migrate(db);
   const fixtures = await recoveryFixtures(db, local, join(local, "notifications"));
   await provisionRuntimeRoles(db, passwords);
-  passed("schema-018-native-auth-mfa-finance-media-lss-fixtures");
+  passed("current-schema-native-auth-mfa-finance-media-lss-fixtures");
   const baseline = await canonicalSnapshot(db);
   assert(baseline.media_blobs!.count >= 4);
   assert(baseline.product_media!.count > 0);
@@ -663,13 +664,15 @@ try {
     await owned.remove(app);
   }
   evidence.rollback = {
-    source: "093d61d31c7c3d46465cbe16d207e2adc336b19f",
+    source: process.env.LONDOS_ROLLBACK_SOURCE ?? "093d61d31c7c3d46465cbe16d207e2adc336b19f",
     image: await docker(["image", "inspect", "--format", "{{.Id}}", rollbackImage]),
-    packaging: "R2 application and worker with P12 entry/operations wrapper",
-    schema: "018 unchanged",
+    packaging: "prior compatible compiled application; image identity recorded",
+    schema: (
+      await restored.db.query("SELECT name FROM schema_migrations ORDER BY name DESC LIMIT 1")
+    ).rows[0].name,
     durableHistoryRestored: false,
   };
-  passed("R2-compatible-application-rollback-and-P12-forward-fix-preserve-financial-history");
+  passed("compatible-application-rollback-and-forward-fix-preserve-financial-history");
   evidence.image = await docker(["image", "inspect", "--format", "{{.Id}}", image]);
   evidence.backups = [before, current].map((b) => ({
     label: b.label,
@@ -693,15 +696,12 @@ try {
   evidence.completedAt = new Date().toISOString();
   evidence.checks = checks;
   evidence.result = "passed";
-  await writeFile(
-    resolve("docs/evidence/P12-RECOVERY.json"),
-    `${JSON.stringify(evidence, null, 2)}\n`,
-  );
+  await writeFile(resolve(reportPath), `${JSON.stringify(evidence, null, 2)}\n`, { flag: "wx" });
   console.log(
     JSON.stringify({
       result: "passed",
       checks: checks.length,
-      report: "docs/evidence/P12-RECOVERY.json",
+      report: reportPath,
     }),
   );
 } catch (error) {
