@@ -98,7 +98,7 @@ export async function assemble(
       ) ?? null)
     : null;
   const sources = specification.spaces.flatMap((s) =>
-    "departmentId" in s
+    s.type === "department" || s.type === "collection"
       ? [
           {
             id: s.departmentId,
