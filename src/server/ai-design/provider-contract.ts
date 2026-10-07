@@ -114,7 +114,7 @@ const decision = z
 export const providerIntent = z
   .object({
     patches: z.array(patch).max(8),
-    decisions: z.array(decision).max(4),
+    decisions: z.array(decision).max(4).optional().default([]),
     confidence: z.enum(["high", "low"]),
     review: z.enum(["not_needed", "recommended"]),
   })
