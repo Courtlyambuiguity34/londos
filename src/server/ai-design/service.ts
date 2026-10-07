@@ -50,6 +50,7 @@ type RequestRow = {
   version: number;
   candidate: ShopSpecification | null;
   patches: DesignIntent["patches"] | null;
+  decisions: DesignIntent["decisions"];
   path: string | null;
   review_warning: boolean;
   review_status: string;
@@ -203,9 +204,15 @@ function present(row: RequestRow) {
     failureCode: row.failure_code,
     expiresAt: row.expires_at.toISOString(),
     candidate: expired ? null : row.candidate,
+    decisions: expired ? [] : row.decisions,
     changes:
       !expired && row.patches
-        ? changeSummary({ patches: row.patches, confidence: "high", review: "not_needed" })
+        ? changeSummary({
+            patches: row.patches,
+            decisions: row.decisions,
+            confidence: "high",
+            review: "not_needed",
+          })
         : [],
     result: row.result_revision
       ? { version: row.result_version, revision: row.result_revision }
@@ -460,11 +467,12 @@ export async function proposeDesign(
       await validateReferences(db, shopId, result.candidate);
       const updated = (
         await db.query(
-          "UPDATE ai_design_requests SET status='proposed',version=version+1,candidate=$2,patches=$3,path=$4,review_warning=$5,review_status=$6 WHERE id=$1 RETURNING *",
+          "UPDATE ai_design_requests SET status='proposed',version=version+1,candidate=$2,patches=$3,decisions=$4,path=$5,review_warning=$6,review_status=$7 WHERE id=$1 RETURNING *",
           [
             id,
             JSON.stringify(result.candidate),
             JSON.stringify(result.intent.patches),
+            JSON.stringify(result.intent.decisions),
             result.path,
             result.reviewWarning,
             result.reviewStatus,
@@ -531,12 +539,15 @@ export async function assistantDecision(
     if (v.action === "apply") {
       if (row.status !== "proposed" || !row.candidate || !row.patches)
         throw new AccessError(409, "ai_proposal_unavailable");
+      if (row.decisions.some((decision) => decision.blocking))
+        throw new AccessError(422, "ai_design_decision_required");
       if (row.review_warning && !v.acceptReviewWarning)
         throw new AccessError(422, "ai_review_acknowledgment_required");
       const current = await context(db, actor, shopId);
       if (current.digest !== row.context_digest) throw new AccessError(409, "ai_context_changed");
       const next = compileIntent(current.data, {
         patches: row.patches,
+        decisions: row.decisions,
         confidence: "high",
         review: "not_needed",
       });
@@ -607,6 +618,7 @@ export async function readAssistantPreview(pool: Pool, actor: Actor, shopId: str
     if (current.digest !== row.context_digest) throw new AccessError(409, "ai_context_changed");
     const spec = compileIntent(current.data, {
       patches: row.patches,
+      decisions: row.decisions,
       confidence: "high",
       review: "not_needed",
     });
