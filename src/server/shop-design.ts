@@ -69,16 +69,28 @@ export async function validateReferences(
   ).rows;
   const validProducts = (
     await client.query(
-      "SELECT p.id FROM products p JOIN departments d ON d.id=p.department_id WHERE p.shop_id=$1 AND p.availability<>'archived' AND d.archived=false AND p.id=ANY($2::uuid[])",
+      "SELECT p.id,p.department_id FROM products p JOIN departments d ON d.id=p.department_id WHERE p.shop_id=$1 AND p.availability<>'archived' AND d.archived=false AND p.id=ANY($2::uuid[])",
       [shopId, products],
     )
-  ).rows;
+  ).rows as { id: string; department_id: string }[];
   if (
     validDepartments.length !== new Set(departments).size ||
     validProducts.length !== new Set(products).size
   )
     throw new AccessError(404, "resource_unavailable");
-  const gallery = spec.spaces.flatMap((s) => (s.type === "gallery" ? s.productIds : []));
+  const productDepartments = new Map(validProducts.map((p) => [p.id, p.department_id]));
+  for (const section of spec.spaces) {
+    if (
+      section.type === "featured_product" &&
+      productDepartments.get(section.productId) !== section.departmentId
+    )
+      throw new AccessError(422, "design_reference_integrity");
+    if (section.type === "product_section" && section.departmentId)
+      for (const productId of section.productIds)
+        if (productDepartments.get(productId) !== section.departmentId)
+          throw new AccessError(422, "design_reference_integrity");
+  }
+    const gallery = spec.spaces.flatMap((s) => (s.type === "gallery" ? s.productIds : []));
   if (
     gallery.length &&
     (
