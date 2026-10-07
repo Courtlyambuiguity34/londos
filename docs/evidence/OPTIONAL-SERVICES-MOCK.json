@@ -1,0 +1,75 @@
+{
+  "format": "londos-authenticated-mock-services-v1",
+  "startedAt": "2026-10-07T05:55:35.339Z",
+  "applicationCommit": "6f45c92e3e729de962d3ecd97c5b8aa4a604ec00",
+  "scope": "Disposable PostgreSQL, authenticated loopback MongoDB/Redis, process-only Cloudinary mock",
+  "mongoImage": "mongo@sha256:d6b569590880bca35e43318418133a426b024bcb649eeb63bb071bc1490bee41",
+  "redisImage": "redis@sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba",
+  "checks": [
+    "generated-local-mongodb-credentials-authenticate",
+    "generated-local-redis-credentials-authenticate",
+    "authenticated-redis-write-read-roundtrip",
+    "existing-services-cli-check-with-explicit-cloudinary-mock",
+    "mongodb-rejects-wrong-password",
+    "redis-rejects-wrong-password",
+    "existing-cli-copies-four-public-products-and-one-mocked-cloudinary-image",
+    "existing-cli-reads-authenticated-mongodb-public-copy",
+    "repeat-copy-replaces-one-document-without-duplicates",
+    "unpublished-shop-copy-is-rejected",
+    "current-postgresql-eligibility-blocks-suspended-copy-read",
+    "public-copy-preserves-disposable-postgresql-catalogue",
+    "main-postgresql-catalogue-finance-and-migrations-unchanged",
+    "main-environment-file-and-disabled-service-flags-preserved"
+  ],
+  "remoteProviderValidated": false,
+  "migrationPerformed": false,
+  "realEmailSent": false,
+  "mockCredentialValuesPublished": false,
+  "mainCanonicalSnapshot": {
+    "shops": {
+      "count": 1518,
+      "checksum": "41df8ac836d04fdc705b05938006ed83"
+    },
+    "products": {
+      "count": 150004,
+      "checksum": "3fcf0deba4adea6781d4874818dae748"
+    },
+    "departments": {
+      "count": 1504,
+      "checksum": "8b3ad73f1723d2fcf8511b7aba616003"
+    },
+    "shop_revisions": {
+      "count": 1,
+      "checksum": "ed39786cf3b8c60b28e270fc72639d44"
+    },
+    "invoices": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "rent_events": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "schema_migrations": {
+      "count": 19,
+      "checksum": "f0b26136a182ef52b809427ab5e601c8"
+    }
+  },
+  "cloudinaryMockCalls": {
+    "usage": 1,
+    "uploads": 2
+  },
+  "resourcesRemoved": true,
+  "privateCredentialFile": ".local/mock-services/runs/londos_test_mock_99ac94a295894052b014cc98d08b30a7/mock.env",
+  "testCredentialsExpiredAfterCleanup": true,
+  "completedAt": "2026-10-07T05:55:58.187Z",
+  "result": "passed",
+  "localHelperFiles": [".local/mock-services/run.mjs", ".local/mock-services/cloudinary-mock.mjs"],
+  "helperSha256": {
+    ".local/mock-services/run.mjs": "33bda31d1da18ac6672bbed99af47d2e42e9621e4ee72cdaafab314bbb59dcb9",
+    ".local/mock-services/cloudinary-mock.mjs": "49ab4023ff5c7045ac7924e47469d80b292102734ba228e720b830b127ffc9e4"
+  },
+  "reminder": "Replace MONGODB_URI and REDIS_URL with real connection strings before remote service validation. Local fixture credentials are expired after cleanup. CLOUDINARY_URL and LONDOS_BREVO_API_KEY are also absent; the Cloudinary mock does not validate them.",
+  "automatedSuiteTotalsUnchanged": 464,
+  "mainChecksumPurpose": "Whole-row MD5 aggregates detect accidental canonical changes, not an authenticity/security seal."
+}

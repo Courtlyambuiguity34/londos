@@ -6,6 +6,8 @@
 
 ## Recommendations
 
+**Credential reminder:** add the real `MONGODB_URI` and `REDIS_URL` before remote validation. Generated local credentials passed 14 [mock-service checks](docs/evidence/OPTIONAL-SERVICES-MOCK.json); Cloudinary was simulated and PostgreSQL was preserved. Cloudinary/Brevo credentials also remain missing. Read [test credentials and replacement instructions](docs/TEST-CREDENTIALS.md).
+
 Use **Sol 6.1 High** for the foundation, ordinary interface work, routine tests and documentation. Use **Sol 6.1 Extra High** for schema/migrations, tenant isolation, financial correctness, concurrency, safe LSS and AI boundaries. Use **6 Astra Extra High** for critical architecture/security and release reviews.
 
 The assistant records progress and reminders at model boundaries. You control the selector; the latest reported setting is **6 Astra Extra High**. Model recommendations do not block work you already authorized. See [RECOMMENDATIONS](RECOMMENDATIONS.md) for the full workflow, [the implementation plan](docs/IMPLEMENTATION-PLAN.md) for task dependencies, and [BUILD-STATUS](docs/BUILD-STATUS.md) for the next action.
