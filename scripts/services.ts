@@ -2,7 +2,7 @@ import { MongoClient } from "mongodb";
 import { createClient } from "redis";
 import { Pool } from "pg";
 import { loadLocalEnv } from "./local-env";
-import { optionalServiceConfig } from "../src/server/services/config";
+import { optionalServiceConfig, mongoClient } from "../src/server/services/config";
 import { CloudinaryPublicCopy } from "../src/server/services/cloudinary";
 import { copyPublicCatalogue, readPublicCopy } from "../src/server/services/mongo-mirror";
 loadLocalEnv();
@@ -13,19 +13,14 @@ let mongo: MongoClient | undefined,
 try {
   const config = optionalServiceConfig();
   if (config.mongodb) {
-    mongo = new MongoClient(config.mongodb.uri, {
-      maxPoolSize: 2,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
-    });
+    mongo = mongoClient(config.mongodb);
     await mongo.connect();
   }
   if (command === "check") {
     let mongoReady = false,
       redisReady = false;
     if (mongo) {
-      await mongo.db().command({ ping: 1 });
+      await mongo.db(config.mongodb!.database).command({ ping: 1 });
       mongoReady = true;
     }
     if (config.redis) {
@@ -89,7 +84,7 @@ try {
     });
     const result = await copyPublicCatalogue(
       pool,
-      mongo.db(),
+      mongo.db(config.mongodb!.database),
       argument.split(","),
       new CloudinaryPublicCopy(config.cloudinary),
       AbortSignal.timeout(120000),
@@ -103,7 +98,7 @@ try {
       connectionTimeoutMillis: 3000,
       statement_timeout: 2000,
     });
-    const copy = await readPublicCopy(pool, mongo.db(), argument);
+    const copy = await readPublicCopy(pool, mongo.db(config.mongodb!.database), argument);
     console.log(
       JSON.stringify({
         event: "services.public_copy_read",
@@ -123,6 +118,10 @@ try {
   process.exitCode = 1;
 } finally {
   await redis?.destroy();
-  await mongo?.close();
-  await pool?.end();
+  await mongo?.close().catch(() => {
+    process.exitCode = 1;
+  });
+  await pool?.end().catch(() => {
+    process.exitCode = 1;
+  });
 }

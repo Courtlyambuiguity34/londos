@@ -68,7 +68,7 @@ export class CloudinaryPublicCopy {
         width: z.literal(metadata.width),
         height: z.literal(metadata.height),
         format: z.literal("webp"),
-        bytes: z.number().int().positive().max(2097152),
+        bytes: z.literal(bytes.length),
       })
       .parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
     const url = new URL(result.secure_url);
@@ -77,7 +77,9 @@ export class CloudinaryPublicCopy {
       url.hostname !== "res.cloudinary.com" ||
       url.username ||
       url.password ||
-      !url.pathname.startsWith(`/${this.config.cloudName}/image/upload/`) ||
+      !new RegExp(
+        `^/${this.config.cloudName}/image/upload/(?:v[1-9][0-9]*/)?${publicId}\\.webp$`,
+      ).test(url.pathname) ||
       url.search ||
       url.hash
     )

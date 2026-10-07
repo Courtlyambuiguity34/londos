@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-07T11:43:34.838Z",
+  "result": "passed",
+  "matchesHistoricalSnapshot": true,
+  "canonicalDatabase": "postgresql",
+  "snapshot": {
+    "shops": {
+      "count": 1518,
+      "checksum": "41df8ac836d04fdc705b05938006ed83"
+    },
+    "products": {
+      "count": 150004,
+      "checksum": "3fcf0deba4adea6781d4874818dae748"
+    },
+    "departments": {
+      "count": 1504,
+      "checksum": "8b3ad73f1723d2fcf8511b7aba616003"
+    },
+    "shop_revisions": {
+      "count": 1,
+      "checksum": "ed39786cf3b8c60b28e270fc72639d44"
+    },
+    "invoices": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "rent_events": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "schema_migrations": {
+      "count": 19,
+      "checksum": "f0b26136a182ef52b809427ab5e601c8"
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # Model and execution recommendations
 
+**Next comprehensive review:** use Sol 6.1 Extra High after the preserved designer/provider branches are consolidated with a new additive migration. First run the real Atlas check once MONGODB_URL is delivered; current targeted provider results do not establish live credentials or G5 release readiness. Keep Redis optional. Read [current verification](docs/evidence/SERVICES-2026-10-07.md) and [designer review](docs/SHOP-DESIGNER-REVIEW.md). The assistant cannot switch the model selector or infer that a switch occurred.
+
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
 
 **Current progress (2026-10-07, Africa/Kampala):** P12 and all earlier packets are preserved. The [P13/G5 development packet](docs/evidence/G5-P13.md) adds demonstration administration, optional service provisions, guarded Brevo delivery and pilot/launch reporting. PostgreSQL stays active and no MongoDB migration occurs. Real production/pilot acceptance remains conditional. **Latest reported setting: 6 Astra Extra High; retain it for critical review if still selected.** No selector change is required or invented. [BUILD-STATUS](docs/BUILD-STATUS.md) records verified tests and concrete remaining work. Development rent remains UGX 5,000/30 days, seven-day grace/manual reconciliation, live collection disabled.

@@ -1,7 +1,6 @@
 import { beforeAll, afterAll, test, expect } from "vitest";
 import { Pool } from "pg";
 import { MongoClient } from "mongodb";
-import { createClient } from "redis";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -14,15 +13,20 @@ import { createAuth } from "../../src/server/security/auth";
 import { coreConfig } from "../../src/server/config";
 import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-design";
 import { copyPublicCatalogue, readPublicCopy } from "../../src/server/services/mongo-mirror";
+import {
+  mongoRoundTrip,
+  MongoProbeError,
+  probeCollection,
+} from "../../src/server/services/mongo-probe";
+import type { Db } from "mongodb";
+import sharp from "sharp";
+import { CloudinaryPublicCopy } from "../../src/server/services/cloudinary";
+import { spawn } from "node:child_process";
 const owned = new RehearsalDocker(),
   parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
-let pool: Pool,
-  mongo: MongoClient,
-  redis: ReturnType<typeof createClient>,
-  directory: string,
-  baseline: unknown;
+let pool: Pool, mongo: MongoClient, directory: string, baseline: unknown;
 const noImages = {
   upload: async () => {
     throw new Error("Fixture has no managed public images");
@@ -82,43 +86,8 @@ beforeAll(async () => {
     maxPoolSize: 2,
   });
   await mongo.connect();
-  const r = await owned.run("redis", [
-    "--user",
-    "999:999",
-    "--read-only",
-    "--cap-drop",
-    "ALL",
-    "--security-opt",
-    "no-new-privileges:true",
-    "--memory",
-    "128m",
-    "--cpus",
-    "0.5",
-    "--tmpfs",
-    "/tmp:size=32m",
-    "--publish",
-    "127.0.0.1::6379",
-    "redis@sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba",
-    "redis-server",
-    "--save",
-    "",
-    "--appendonly",
-    "no",
-    "--dir",
-    "/tmp",
-    "--maxmemory",
-    "32mb",
-  ]);
-  const rp = Number((await docker(["port", r, "6379/tcp"])).split(":").at(-1));
-  redis = createClient({
-    url: `redis://127.0.0.1:${rp}`,
-    socket: { connectTimeout: 5000, reconnectStrategy: false },
-  });
-  redis.on("error", () => {});
-  await redis.connect();
 }, 60000);
 afterAll(async () => {
-  redis?.destroy();
   await mongo?.close();
   await pool?.end();
   await owned.cleanup();
@@ -183,9 +152,173 @@ test("hidden, foreign-unpublished and oversized copy requests are denied before 
   );
   await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [seedIds.shopA]);
 });
-test("real Redis responds without being substituted for durable jobs or the canonical database", async () => {
-  expect(await redis.ping()).toBe("PONG");
-  await redis.set("londos:fixture", "public-test", { EX: 10 });
-  expect(await redis.get("londos:fixture")).toBe("public-test");
+test("temporary MongoDB CRUD removes only its own record and preserves existing catalogue copies", async () => {
+  const collection = mongo.db().collection<{ _id: string; marker: string }>(probeCollection);
+  await collection.insertOne({ _id: "unrelated-fixture", marker: "preserve" });
+  const baselineCopy = await mongo.db().collection("londos_public_copies").findOne({});
+  expect(await mongoRoundTrip(mongo.db())).toEqual({
+    write: true,
+    read: true,
+    update: true,
+    delete: true,
+    cleanup: true,
+  });
+  expect(await collection.countDocuments()).toBe(1);
+  expect(await collection.findOne({ _id: "unrelated-fixture" })).toMatchObject({
+    marker: "preserve",
+  });
+  expect(await mongo.db().collection("londos_public_copies").findOne({})).toEqual(baselineCopy);
+});
+test("failed temporary reads trigger exact-marker cleanup and sanitize driver exceptions", async () => {
+  const collection = mongo.db().collection(probeCollection);
+  let failOnce = true;
+  const fake = {
+    collection: () =>
+      new Proxy(collection, {
+        get(target, key) {
+          if (key === "findOne" && failOnce) {
+            failOnce = false;
+            return async () => {
+              throw new Error("PRIVATE-DRIVER-SENTINEL");
+            };
+          }
+          const value = Reflect.get(target, key);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      }),
+  } as unknown as Db;
+  try {
+    await mongoRoundTrip(fake);
+    throw new Error("unexpected success");
+  } catch (e) {
+    expect(e).toBeInstanceOf(MongoProbeError);
+    expect((e as MongoProbeError).results).toMatchObject({
+      write: true,
+      read: false,
+      cleanup: true,
+    });
+    expect(String(e)).not.toContain("PRIVATE-DRIVER-SENTINEL");
+  }
+  expect(
+    await collection.countDocuments({
+      purpose: "temporary Londos connection verification; safe to remove",
+    }),
+  ).toBe(0);
+});
+test("public MongoDB products link to normalized Cloudinary images from their own shop only", async () => {
+  const asset = randomUUID(),
+    foreign = randomUUID(),
+    owner = (await pool.query('SELECT id FROM "user" WHERE email=$1', ["owner-a@londos.example"]))
+      .rows[0]?.id;
+  // Seed identity is obtained from the existing merchant membership, not guessed.
+  const ownerId =
+    owner ??
+    (
+      await pool.query("SELECT user_id FROM memberships WHERE merchant_id=$1 AND role='owner'", [
+        seedIds.merchantA,
+      ])
+    ).rows[0].user_id;
+  const product = (
+    await pool.query("SELECT id FROM products WHERE shop_id=$1 ORDER BY id LIMIT 1", [
+      seedIds.shopA,
+    ])
+  ).rows[0].id;
+  const bytes = await sharp({ create: { width: 20, height: 15, channels: 3, background: "white" } })
+    .webp()
+    .toBuffer();
+  for (const [id, shop, merchant] of [
+    [asset, seedIds.shopA, seedIds.merchantA],
+    [foreign, seedIds.shopB, seedIds.merchantB],
+  ]) {
+    await pool.query(
+      "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,created_by,alt,width,height) VALUES($1,$2,$3,'ready',$4,$5,'Merchant product image',20,15)",
+      [id, shop, merchant, `fictional/${id}`, ownerId],
+    );
+    await pool.query(
+      "INSERT INTO media_blobs(asset_id,variant,bytes,width,height) VALUES($1,'display',$2,20,15)",
+      [id, bytes],
+    );
+  }
+  await expect(
+    pool.query(
+      "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+      [product, foreign, seedIds.shopA, seedIds.merchantA],
+    ),
+  ).rejects.toMatchObject({ code: "23503" });
+  await pool.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [product, asset, seedIds.shopA, seedIds.merchantA],
+  );
+  const adapter = new CloudinaryPublicCopy(
+    { cloudName: "fictional", apiKey: "fixture-key", apiSecret: "fixture-secret" },
+    async (_, init) => {
+      const publicId = String((init!.body as FormData).get("public_id"));
+      return Response.json({
+        public_id: publicId,
+        secure_url: `https://res.cloudinary.com/fictional/image/upload/v1/${publicId}.webp`,
+        width: 20,
+        height: 15,
+        format: "webp",
+        bytes: bytes.length,
+      });
+    },
+  );
+  await copyPublicCatalogue(
+    pool,
+    mongo.db(),
+    [seedIds.shopA],
+    adapter,
+    new AbortController().signal,
+  );
+  const copy = await readPublicCopy(pool, mongo.db(), seedIds.shopA);
+  expect(copy.images).toHaveLength(1);
+  expect(copy.images[0]).toMatchObject({ assetId: asset, width: 20, height: 15 });
+  expect(copy.products.find((p) => p.id === product)).toMatchObject({
+    imageAssetId: asset,
+    imageAlt: "Merchant product image",
+  });
+  expect(copy.products.filter((p) => p.id !== product).every((p) => p.imageAssetId === null)).toBe(
+    true,
+  );
+  expect(JSON.stringify(copy)).not.toContain(foreign);
   expect((await pool.query("SELECT * FROM shops ORDER BY id")).rows).toEqual(baseline);
 });
+test("unavailable MongoDB CLI configuration fails safely while Redis and Cloudinary are absent", async () => {
+  const child = spawn(process.execPath, ["--import", "tsx", "scripts/verify-mongodb.ts"], {
+    env: {
+      ...process.env,
+      MONGODB_URL: "mongodb://fixture-user:PRIVATE-UNAVAILABLE-SENTINEL@127.0.0.1:1/londos_test",
+      MONGODB_URI: "",
+      MONGODB_DATABASE: "",
+      REDIS_URL: "",
+      CLOUDINARY_URL: "",
+      LONDOS_REDIS_ENABLED: "false",
+      LONDOS_CLOUDINARY_ENABLED: "false",
+      MONGODB_LOG_ALL: "debug",
+      MONGODB_LOG_COMMAND: "debug",
+      MONGODB_LOG_CONNECTION: "debug",
+      MONGODB_LOG_SERVER_SELECTION: "debug",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let output = "";
+  child.stdout.on("data", (chunk) => {
+    output += chunk;
+  });
+  child.stderr.on("data", (chunk) => {
+    output += chunk;
+  });
+  const code = await new Promise<number | null>((resolve, reject) => {
+    child.on("exit", resolve);
+    child.on("error", reject);
+  });
+  expect(code).toBe(1);
+  expect(output).not.toContain("PRIVATE-UNAVAILABLE-SENTINEL");
+  expect(output).not.toContain("mongodb://");
+  expect(JSON.parse(output)).toMatchObject({
+    connected: false,
+    result: "failed",
+    redisRequired: false,
+    migrationPerformed: false,
+  });
+}, 15000);

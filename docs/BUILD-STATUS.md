@@ -1,5 +1,8 @@
 # Build status and next model setting
 
+**Latest provider follow-up (2026-10-07):** [149 targeted tests passed](evidence/SERVICES-2026-10-07.md), with MongoDB URL alias/TLS/error/log hardening, temporary CRUD cleanup, Cloudinary product-image linkage and recent-MFA admin warnings. PostgreSQL and migrations 001–019 are preserved; Redis stays optional and was not provisioned. Real Atlas is **not executed** because MONGODB_URL/MONGODB_URI are not delivered to this runtime. Read [local setup](LOCAL-FIRST-SETUP.md), [Render setup](RENDER-SETUP.md) and [designer branch review](SHOP-DESIGNER-REVIEW.md). The newer designer branch has a conflicting 019 and remains preserved separately; consolidation and comprehensive Sol verification are pending. Historical G5 evidence does not verify this new source.
+
+
 Updated 2026-10-07, Africa/Kampala. Branch `codex/londos-x2-2026-10-05`.
 
 **P12 is preserved; the P13/G5 development packet is implemented and verified. Production G5 and the real P13/G6 learning gate remain open.** Read [current evidence](evidence/G5-P13.md), [verification](evidence/G5-VERIFICATION.json), [recovery](evidence/G5-RECOVERY.json), [launch status](evidence/G5-STATUS.json), [deployment profiles](DEPLOYMENT-PROFILES.md) and [pilot runbook](PILOT-RUNBOOK.md). No production deployment, public signup, external email or live collection was performed.

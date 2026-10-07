@@ -25,12 +25,14 @@ const settings = z
 export type BrevoSettings = z.infer<typeof settings>;
 export function brevoSettings(baseURL = coreConfig().baseURL): BrevoSettings {
   if (process.env.LONDOS_EMAIL_PROVIDER !== "brevo") throw new Error("email_provider_unavailable");
-  return settings.parse({
+  const value = settings.safeParse({
     apiKey: process.env.LONDOS_BREVO_API_KEY,
     senderEmail: process.env.LONDOS_EMAIL_FROM,
     senderName: process.env.LONDOS_EMAIL_FROM_NAME,
     baseURL,
   });
+  if (!value.success) throw new Error("email_configuration_invalid");
+  return value.data;
 }
 export function notificationsConfigured(config = coreConfig()) {
   try {

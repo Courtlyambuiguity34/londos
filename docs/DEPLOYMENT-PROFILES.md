@@ -2,6 +2,8 @@
 
 The first installation uses **PostgreSQL on the owner's computer**. The owner explicitly asked to retain the existing PostgreSQL database and not migrate it. MongoDB, Redis and Cloudinary are optional, manually enabled services. Their credentials are absent in the current environment; no account, subscription or live integration has been invented.
 
+Detailed first-time instructions: [local setup and usage](LOCAL-FIRST-SETUP.md), [Render setup](RENDER-SETUP.md), [offline Render checklist](../render.html), and [Cloudinary media linkage](CLOUDINARY-MEDIA.md).
+
 ## Working local installation
 
 Use Linux or Ubuntu under WSL2 with Docker, Node 24.19.0 and npm 11.9.0. The verified environment uses these versions. Native Windows/macOS installation has not been independently tested.
@@ -28,8 +30,8 @@ In the Landlord workspace, an existing **operations** operator verifies fresh na
 | `LONDOS_DATABASE_ENGINE`           | `postgresql`          | Canonical account, rent, audit, catalogue and job data stay in PostgreSQL.                                                |
 | `LONDOS_MONGODB_ENABLED`           | `false`               | Enables explicit MongoDB connection and public-copy commands.                                                             |
 | `LONDOS_MONGODB_MIGRATION_ENABLED` | `false`               | Must remain false. A true value fails closed; no canonical migration is implemented or authorized.                        |
-| `MONGODB_URI`                      | Absent secret         | MongoDB URI, including a dedicated copy database. Prefer a limited database user and verified TLS for remote connections. |
-| `LONDOS_CLOUDINARY_ENABLED`        | `false`               | Enables Cloudinary checks and normalized public image copies. Required when MongoDB copies are enabled.                   |
+| `MONGODB_URL` / legacy `MONGODB_URI`                      | Absent secret         | MongoDB URI, including a dedicated copy database. Prefer a limited database user and verified TLS for remote connections. |
+| `LONDOS_CLOUDINARY_ENABLED`        | `false`               | Enables Cloudinary checks and normalized public image copies. Required for public catalogue-with-image copies; not MongoDB verification.                   |
 | `CLOUDINARY_URL`                   | Absent secret         | `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`, stored securely.                                                            |
 | `LONDOS_REDIS_ENABLED`             | `false`               | Enables the explicit Redis connection check.                                                                              |
 | `REDIS_URL`                        | Absent secret         | `rediss://USER:PASSWORD@HOST:PORT` for a remote service; loopback Redis may use `redis://`.                               |

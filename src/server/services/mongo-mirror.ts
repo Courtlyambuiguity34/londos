@@ -4,6 +4,7 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { eligibilityJoins, eligibleStates } from "../public-eligibility";
 import type { CloudinaryPublicCopy } from "./cloudinary";
+import { publicCopyCollection } from "./mongo-probe";
 const shopIds = z
   .array(z.uuid())
   .min(1)
@@ -25,6 +26,8 @@ type ShopCopy = {
     currency: string;
     price_minor: string | null;
     availability: string;
+    imageAssetId: string | null;
+    imageAlt: string | null;
   }[];
   images: Awaited<ReturnType<CloudinaryPublicCopy["upload"]>>[];
   authority: "PostgreSQL remains canonical; this copy is not a migration or automatic failover";
@@ -59,7 +62,7 @@ export async function copyPublicCatalogue(
       ).rows;
       const products = (
         await db.query(
-          "SELECT p.id,p.department_id,p.name,p.slug,p.kind,p.currency,p.price_minor::text,p.availability FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.archived=false WHERE p.shop_id=$1 AND p.availability<>'archived' ORDER BY p.id LIMIT 1001",
+          `SELECT p.id,p.department_id,p.name,p.slug,p.kind,p.currency,p.price_minor::text,p.availability,a.id AS "imageAssetId",a.alt AS "imageAlt" FROM products p JOIN departments d ON d.id=p.department_id AND d.shop_id=p.shop_id AND d.archived=false LEFT JOIN product_media pm ON pm.product_id=p.id AND pm.shop_id=p.shop_id AND pm.merchant_id=p.merchant_id LEFT JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=p.shop_id AND a.merchant_id=p.merchant_id AND a.state='ready' AND a.created_by IS NOT NULL AND EXISTS(SELECT 1 FROM media_blobs b WHERE b.asset_id=a.id AND b.variant='display') WHERE p.shop_id=$1 AND p.availability<>'archived' ORDER BY p.id LIMIT 1001`,
           [id],
         )
       ).rows;
@@ -97,12 +100,12 @@ export async function copyPublicCatalogue(
       signal.throwIfAborted();
       // Recheck current eligibility immediately before copying the publicly visible data.
       const publicNow = await pool.query(
-        `SELECT s.id FROM shops s ${eligibilityJoins} WHERE s.id=$1 AND ${eligibleStates}`,
+        `SELECT s.id FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE s.id=$1 AND ${eligibleStates}`,
         [capture.document._id],
       );
       if (!publicNow.rowCount) throw new Error("public_shop_changed");
       await mongo
-        .collection<ShopCopy>("londos_public_copies")
+        .collection<ShopCopy>(publicCopyCollection)
         .replaceOne({ _id: capture.document._id }, capture.document, { upsert: true });
     }
     return {
@@ -123,11 +126,11 @@ export async function copyPublicCatalogue(
 export async function readPublicCopy(pool: Pool, mongo: Db, id: string) {
   z.uuid().parse(id);
   const current = await pool.query(
-    `SELECT s.id FROM shops s ${eligibilityJoins} WHERE s.id=$1 AND ${eligibleStates}`,
+    `SELECT s.id FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE s.id=$1 AND ${eligibleStates}`,
     [id],
   );
   if (!current.rowCount) throw new Error("public_shop_unavailable");
-  const copy = await mongo.collection<ShopCopy>("londos_public_copies").findOne({ _id: id });
+  const copy = await mongo.collection<ShopCopy>(publicCopyCollection).findOne({ _id: id });
   if (!copy) throw new Error("public_copy_unavailable");
   return copy;
 }

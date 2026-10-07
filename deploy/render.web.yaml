@@ -36,12 +36,18 @@ services:
         value: "false"
       - key: LONDOS_MONGODB_ENABLED
         value: "false"
+      - key: MONGODB_URL
+        sync: false
+      - key: MONGODB_DATABASE
+        value: londos_public_copy
       - key: LONDOS_MONGODB_MIGRATION_ENABLED
         value: "false"
       - key: LONDOS_REDIS_ENABLED
         value: "false"
       - key: LONDOS_CLOUDINARY_ENABLED
         value: "false"
+      - key: CLOUDINARY_URL
+        sync: false
       - key: LONDOS_PILOT_ANALYTICS
         value: "false"
       - key: LONDOS_PRIVACY_ERASURE

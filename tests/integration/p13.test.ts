@@ -17,6 +17,7 @@ import { BrevoNotifications, type BrevoSettings } from "../../src/server/jobs/br
 import { enqueue } from "../../src/server/jobs/enqueue";
 import { handle } from "../../src/server/jobs/handlers";
 import { replay, type Job } from "../../src/server/jobs/queue";
+import { readServiceConfiguration } from "../../src/server/services/status";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -113,6 +114,33 @@ afterAll(async () => {
   await parent.end();
   await rm(directory, { recursive: true, force: true });
   process.env.DATABASE_URL = parentURL;
+});
+test("service configuration is restricted to operations operators with current native MFA", async () => {
+  await expect(readServiceConfiguration(pool, owner)).rejects.toMatchObject({
+    code: "mfa_required",
+  });
+  expect(await readServiceConfiguration(pool, operator)).toMatchObject({
+    verification: "configuration only; no provider request made",
+  });
+  await pool.query(
+    "UPDATE mfa_proofs SET verified_at=clock_timestamp()-interval '6 minutes' WHERE session_id=$1",
+    [operator.sessionId],
+  );
+  await expect(readServiceConfiguration(pool, operator)).rejects.toMatchObject({
+    code: "fresh_authentication_required",
+  });
+  await pool.query("UPDATE mfa_proofs SET verified_at=clock_timestamp() WHERE session_id=$1", [
+    operator.sessionId,
+  ]);
+  await pool.query("DELETE FROM operator_grants WHERE user_id=$1 AND permission='operations'", [
+    operator.userId,
+  ]);
+  await expect(readServiceConfiguration(pool, operator)).rejects.toMatchObject({
+    code: "permission_denied",
+  });
+  await pool.query("INSERT INTO operator_grants(user_id,permission) VALUES($1,'operations')", [
+    operator.userId,
+  ]);
 });
 test("019 expands an 018 native-auth database idempotently without modifying applied migration checksums", async () => {
   expect(

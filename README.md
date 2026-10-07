@@ -6,7 +6,7 @@
 
 ## Recommendations
 
-**Credential reminder:** add the real `MONGODB_URI` and `REDIS_URL` before remote validation. Generated local credentials passed 14 [mock-service checks](docs/evidence/OPTIONAL-SERVICES-MOCK.json); Cloudinary was simulated and PostgreSQL was preserved. Cloudinary/Brevo credentials also remain missing. Read [test credentials and replacement instructions](docs/TEST-CREDENTIALS.md).
+**Current integration check:** 149 targeted tests passed; [results and limits](docs/evidence/SERVICES-2026-10-07.md). `MONGODB_URL` is now supported, but the real value has not reached this running environment, so Atlas is not verified. **Redis is optional; leave it disabled/unset.** Use [first local setup](docs/LOCAL-FIRST-SETUP.md), [Render setup](docs/RENDER-SETUP.md), and [Cloudinary image linkage](docs/CLOUDINARY-MEDIA.md). Real Cloudinary/Brevo acceptance remains unverified. Earlier [mock evidence](docs/evidence/OPTIONAL-SERVICES-MOCK.json) remains historical.
 
 Use **Sol 6.1 High** for the foundation, ordinary interface work, routine tests and documentation. Use **Sol 6.1 Extra High** for schema/migrations, tenant isolation, financial correctness, concurrency, safe LSS and AI boundaries. Use **6 Astra Extra High** for critical architecture/security and release reviews.
 
@@ -196,6 +196,11 @@ Initially, Londos should allow merchants to configure methods such as:
 Londos may recommend safer/better practices, but should not force one checkout model before evidence justifies it.
 
 ## Documentation map
+
+- [First local installation and usage](docs/LOCAL-FIRST-SETUP.md)
+- [Initial Render setup](docs/RENDER-SETUP.md) and [offline checklist](render.html)
+- [Cloudinary media storage and MongoDB linkage](docs/CLOUDINARY-MEDIA.md)
+- [Current provider integration verification](docs/evidence/SERVICES-2026-10-07.md)
 
 - [Model recommendations and handoffs](RECOMMENDATIONS.md)
 - [Implementation plan](docs/IMPLEMENTATION-PLAN.md)

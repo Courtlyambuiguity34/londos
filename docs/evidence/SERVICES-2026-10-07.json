@@ -1,0 +1,144 @@
+{
+  "format": "londos-provider-integration-verification-v1",
+  "date": "2026-10-07",
+  "sourceBase": "2b7258fa1842759f28770e55c1f620be18bc1265",
+  "branch": "codex/londos-x2-2026-10-05",
+  "runtimeInputDigest": "e3d0f1df236d5e962beb83a23f48dc7ceaab6ca215ecf0b2164a1966baa811c8",
+  "runtimeFiles": 325,
+  "realMongoDB": {
+    "result": "not-executed",
+    "reason": "MONGODB_URL and MONGODB_URI absent from process and local env files; neither delivered by active runtime configuration",
+    "credentialPresent": false,
+    "connectionPassed": false,
+    "atlasTLSVerified": false,
+    "realDatabase": null,
+    "realCollectionsExercised": [],
+    "realCrudExecuted": false
+  },
+  "localMongoDB": {
+    "database": "londos_test",
+    "collections": [
+      "londos_public_copies",
+      "londos_integration_checks"
+    ],
+    "write": true,
+    "read": true,
+    "update": true,
+    "delete": true,
+    "cleanup": true,
+    "failedReadCleanup": true,
+    "preservesUnrelatedData": true,
+    "provider": "disposable pinned local MongoDB 8.2.3; Cloudinary HTTP transport mocked; not Atlas"
+  },
+  "security": {
+    "malformedConfigurationSanitized": true,
+    "unavailableConnectionSanitized": true,
+    "tlsBypassRejected": true,
+    "driverDebugLoggingSuppressed": true,
+    "tenantAndMediaForeignKeys": true,
+    "hiddenUnpublishedSuspendedShopRejected": true,
+    "nativeMFAAndFreshOperatorGrantRequired": true,
+    "privateCacheNoStore": true,
+    "postgresqlRemainsCanonical": true,
+    "migrationsUnchanged": true,
+    "mainCanonicalSnapshotMatches": true,
+    "redisRequired": false,
+    "redisProvisionedThisTask": false
+  },
+  "tests": [
+    {
+      "command": "npm test -- tests/unit/services.test.ts tests/unit/p13.test.ts",
+      "passed": 62,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:integration -- tests/integration/services.test.ts tests/integration/p13.test.ts tests/integration/core.test.ts tests/integration/p5.test.ts",
+      "passed": 85,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:integration -- tests/integration/services.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "note": "Affected rerun after explicit driver logging suppression; included in earlier 85 unique tests"
+    },
+    {
+      "command": "MONGODB_URL/MONGODB_URI/MONGODB_DATABASE/CLOUDINARY_URL/REDIS_URL empty; MongoDB/Cloudinary flags true, Redis false; PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e:core -- services.spec.ts",
+      "passed": 2,
+      "failed": 0,
+      "note": "Desktop/mobile final compiled build; no real provider credentials; native MFA, no-store, missing configuration, axe and overflow checks"
+    }
+  ],
+  "uniqueTargetedTestsPassed": 149,
+  "initialIssuesResolved": [
+    "MongoDB TLS bypass flags map to driver rejectUnauthorized/checkServerIdentity rather than similarly named public options",
+    "MongoClientOptions does not accept dbName; selected database is explicitly passed to db()"
+  ],
+  "checksPassed": [
+    "npm run build (compiled web/worker/monitor/migrator)",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run format:check",
+    "git diff --check",
+    "configured-secret artifact scan",
+    "current Git/log/browser/artifact exact-secret scan",
+    "main catalogue/finance/migration checksum comparison",
+    "optional services check with all flags disabled"
+  ],
+  "liveBrevo": {
+    "result": "configuration_or_access_unavailable",
+    "keyDelivered": false,
+    "deliveryTested": false
+  },
+  "mockBrevo": {
+    "readOnlyEndpoints": [
+      "account",
+      "senders"
+    ],
+    "acceptedKeyActiveSender": true,
+    "inactiveSenderReported": true,
+    "networkUnauthorizedMalformedOversizedHandled": true,
+    "durableDeliveryAndRetryRegressionExecuted": true,
+    "realEmailSent": false
+  },
+  "cloudinary": {
+    "realCredentialsDelivered": false,
+    "liveUploadExecuted": false,
+    "normalizedUploadContractMocked": true,
+    "exactAssetDeliveryURLChecked": true,
+    "productAssetLinkageVerified": true,
+    "canonicalApplicationMediaBackendReplaced": false
+  },
+  "historicalPhysicalDrillsRepeated": false,
+  "designerBranch": {
+    "branch": "codex/londos-pre-sol-completion-2026-10-07",
+    "head": "0e9879829ead8e818a52f5674d7c385f94e57855",
+    "inspected": true,
+    "merged": false,
+    "testsExecutedOnThatBranch": false,
+    "reason": "Preserve diverged work and conflicting applied migration 019; separate consolidation pending"
+  },
+  "cloudDraft": {
+    "saved": true,
+    "revision": 35,
+    "addedRuntimeRequirementNames": [
+      "MONGODB_URL",
+      "MONGODB_DATABASE"
+    ],
+    "startInstructionsSaved": true,
+    "publishedByAgent": false,
+    "credentialDeliveryEstablished": false
+  },
+  "g5": {
+    "status": "blocked",
+    "oldSourcePinHistorical": true,
+    "productionDeployed": false,
+    "liveRequirementsPending": 12
+  },
+  "remaining": [
+    "Deliver real MONGODB_URL and selected database to current runtime; verify approved Atlas native TCP access and execute the real TLS/access/CRUD/cleanup check",
+    "Supply/verify real Cloudinary and Brevo credentials/sender; live delivery and external-copy retention remain unverified",
+    "Consolidate designer branch with a new additive migration before comprehensive Sol campaign",
+    "Create a new source-bound comprehensive verification/release candidate and satisfy G5 live obligations"
+  ]
+}

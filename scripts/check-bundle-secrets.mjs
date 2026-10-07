@@ -8,6 +8,7 @@ const values = [
   process.env.LONDOS_OPENAI_API_KEY,
   process.env.LONDOS_BREVO_API_KEY,
   process.env.MONGODB_URI,
+  process.env.MONGODB_URL,
   process.env.REDIS_URL,
   process.env.CLOUDINARY_URL,
   ...Array.from({ length: 5 }, (_, i) => process.env[`GEMINI_API_KEY_${i + 1}`]),
@@ -24,11 +25,12 @@ if (existsSync(".local/trust-reviewer.json"))
 if (existsSync(".local/demonstration-accounts.json"))
   for (const account of JSON.parse(readFileSync(".local/demonstration-accounts.json", "utf8")))
     values.push(account.password);
-for (const name of ["MONGODB_URI", "REDIS_URL", "CLOUDINARY_URL"])
+for (const name of ["MONGODB_URL", "MONGODB_URI", "REDIS_URL", "CLOUDINARY_URL"])
   if (process.env[name]) {
     try {
       const value = new URL(process.env[name]);
       values.push(decodeURIComponent(value.password));
+      values.push(value.password, value.username, decodeURIComponent(value.username));
     } catch {
       /* Invalid optional configuration is checked separately. */
     }

@@ -50,7 +50,8 @@
     "db:demonstration": "tsx scripts/seed-demonstration.ts",
     "email:verify": "node --use-env-proxy --import tsx scripts/verify-brevo.ts",
     "pilot": "tsx scripts/pilot.ts",
-    "services": "node --use-env-proxy --import tsx scripts/services.ts"
+    "services": "node --use-env-proxy --import tsx scripts/services.ts",
+    "mongo:verify": "node --use-env-proxy --import tsx scripts/verify-mongodb.ts"
   },
   "dependencies": {
     "better-auth": "1.7.7",
