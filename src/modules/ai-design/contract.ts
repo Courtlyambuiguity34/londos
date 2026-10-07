@@ -64,14 +64,14 @@ export type DesignContext = {
     id: string;
     name: string;
     version: number;
-    departmentId: string;
-    departmentName: string;
-    kind: "product" | "service";
-    priceMinor: string | null;
-    currency: string;
-    availability: string;
+    departmentId?: string;
+    departmentName?: string;
+    kind?: "product" | "service";
+    priceMinor?: string | null;
+    currency?: string;
+    availability?: string;
   }[];
-  protectedFacts: {
+  protectedFacts?: {
     contact: {
       phone: string;
       whatsapp: string;
@@ -82,7 +82,7 @@ export type DesignContext = {
       enquiriesEnabled: boolean;
     } | null;
   };
-  supported: {
+  supported?: {
     premiseStyles: string[];
     sectionTypes: string[];
     colorTokens: string[];
