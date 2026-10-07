@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-10-07T02:47:03.382447+00:00",
+  "implementationCommit": "3322c14e3e8d8ee2dcf6d3fff874f51f4ebe5659",
+  "implementationTree": "268f9a8b2aaa8f3eb453db21f144c2e8825f8ac9",
+  "baselineCommit": "093d61d31c7c3d46465cbe16d207e2adc336b19f",
+  "branch": "codex/londos-x2-2026-10-05",
+  "testedSourceInventorySha256": "ae550e02a84529899d740303b7809c840b89f7bdf1032bbcd87f116fa0a49dec",
+  "sourceFiles": 368,
+  "sourceFilesMatchImplementationCommit": true,
+  "tests": {
+    "unit": 79,
+    "postgresqlIntegration": 260,
+    "fixtureBrowser": 16,
+    "coreHttpAndBrowser": 45,
+    "uniqueTotal": 400,
+    "additionalReleaseChecks": 16
+  },
+  "candidateImage": "sha256:146462d9ca87d2d48ebdd9a950badc406397ae2fee2732233d3f2f867b3be3b6",
+  "rollback": {
+    "source": "093d61d31c7c3d46465cbe16d207e2adc336b19f",
+    "image": "sha256:0cc9724787d79ffdc456fce61f8f2681d10bc8b724548e078977fdbad5c661d1",
+    "packaging": "R2 application and worker with P12 entry/operations wrapper",
+    "schema": "018 unchanged",
+    "durableHistoryRestored": false
+  },
+  "compiledArtifacts": [
+    {
+      "path": ".next/BUILD_ID",
+      "sha256": "8fcb79cd95d00669e6ccdce8e9d2a07b0d82f197cdabc56641d8a26b2b16bebd"
+    },
+    {
+      "path": ".next/routes-manifest.json",
+      "sha256": "a60a55c7327e9af185a511004d61423986d9574f12230532d478eb1e5e8ba59c"
+    },
+    {
+      "path": ".next/server/app-paths-manifest.json",
+      "sha256": "3eafc8bde43d55f7eb158d42160320e128619d8df2dce60f0b40b3511bfdfa58"
+    },
+    {
+      "path": ".next/standalone/server.js",
+      "sha256": "24a6907313005ad8e609bce9bcca7278b4ab411c0d62499d965049e68f0eab4d"
+    },
+    {
+      "path": "dist/worker.mjs",
+      "sha256": "cc98b3f13ec713e7a6b16a8be213f83d16c17ad286100ec3fba6b1f1a752ebd2"
+    },
+    {
+      "path": "dist/operations.mjs",
+      "sha256": "16bd7a8c8e0418fb6356b4ce788519234140c8933b6565b166e70a16c2bf2fbd"
+    },
+    {
+      "path": "dist/migrate.mjs",
+      "sha256": "ae60628e0708be64ab1768e91e5fe2e9b75a738d83199521f9eadebfbc814b61"
+    }
+  ],
+  "identityLimit": "Evidence/handoff follow-up binds the preceding tested implementation; it does not claim a self-referential final metadata commit hash or production acceptance."
+}

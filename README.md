@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** R2 is complete at owner-confirmed **6 Astra Extra High**: six reproduced defects fixed, **390 passing tests**, schema **018** unchanged. Read the [R2 review](docs/evidence/R2-REVIEW.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). P11's local G4 remains conditional; G5/release is open. Provider variables and published prices are checked, but secure key bindings/live verification remain unavailable. **Next: switch to Sol 6.1 Extra High for P12 and report the switch.** Development rent remains **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows Next.js / TypeScript / Node.js / PostgreSQL in [prompt.txt](prompt.txt).
+**Status:** P12 local release preparation is complete; production G5 remains open. Read the [P12 dossier](docs/evidence/P12.md), [release/recovery runbook](docs/RELEASE-RUNBOOK.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). The packet adds pinned compiled artifacts, isolated encrypted physical recovery, privacy admission, monitoring and rollback evidence. **400 unique tests** pass; schema **018** is unchanged. Gemini passed its bounded live contract; OpenAI returned `401 invalid_api_key`. Main remote AI stays off. Development rent remains **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows [prompt.txt](prompt.txt).
 
 ## Recommendations
 

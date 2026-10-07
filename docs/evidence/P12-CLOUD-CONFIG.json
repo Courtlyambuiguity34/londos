@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-10-07T02:47:03.382447+00:00",
+  "state": "persistence_unconfirmed",
+  "priorResult": "R2 full/repository-only/startup-only saves returned INVALID_ARGUMENT",
+  "currentReadback": {
+    "repositories": [
+      {
+        "repository_id": "Courtlyambuiguity34/londos",
+        "ref": "79e9fe5b3dbea69dee7461038b7c9f31442de462",
+        "mount_path": "londos"
+      }
+    ],
+    "draftId": null,
+    "revision": null
+  },
+  "proposedStartup": "docs/CLOUD-STARTUP.md",
+  "installScript": "scripts/cloud-install.sh unchanged",
+  "nextAction": "Attempt current exact branch pin and startup update after final evidence commit; preserve network/key/value settings.",
+  "activation": "Draft save is not publication; no activation claimed."
+}

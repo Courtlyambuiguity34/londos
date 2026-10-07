@@ -19,12 +19,18 @@ Model settings do not replace tests, acceptance gates, review or recovery. Use H
 
 R1 selected X2 for new authorization, concurrency and media controls. The local catalogue, safe design/publication, discovery, P8 lifecycle/administration and P9 trust/incident/analytics/privacy/cost-reporting packets are now verified. P10/P11 are locally verified; R2 reviewed the completed system and remaining live provider/privacy/release conditions at the owner-confirmed Astra Extra High setting. P12 implementation should use Sol 6.1 Extra High, with Astra Extra High for the final recovery/security dossier review when required. Cost snapshots and reported work do not prove actual provider charges or complete all P9 legal/release obligations. H2 is a conditional stage for routine interface work once contracts are stable, not a required detour. The completed R2 review does not close G5. Request a further Astra handoff if P12 reveals a critical architecture decision or the final recovery/security dossier needs review.
 
+## P12 handoff (2026-10-07)
+
+P12 local release preparation is complete; read the [dossier](docs/evidence/P12.md) and [runbook](docs/RELEASE-RUNBOOK.md). The latest explicitly reported selector is **6 Astra Extra High**. Sol 6.1 Extra High was recommended for this implementation, but no new selector confirmation was received. The owner's repeated “Continue/finish P12” authorized completing the work without blocking on the advisory model question. Do not claim the assistant switched models or that a Sol confirmation occurred.
+
+**Next recommendation: Astra Extra High for the final G5 recovery/security dossier review when required.** If the owner is still at the reported Astra setting, no switch is needed. Production launch remains blocked by the dossier's concrete external conditions and separate authorization; P13 follows an authorized launch, not simply a completed local drill.
+
 ## Handoff and reminder procedure
 
 1. Read [BUILD-STATUS](docs/BUILD-STATUS.md) at the start of each turn. It is the persistent record of completed work, evidence and the next model setting.
 2. Complete the currently authorized stage, run its meaningful checks, and save an honest progress report.
 3. At a model boundary, update BUILD-STATUS and end the response with an explicit reminder. For example: **“Sol 6.1 High work is complete. Please switch to Sol 6.1 Extra High and say ‘Continue X1.’”**
-4. At a requested model change, wait for the owner’s setting confirmation before executing dependent work. Continue packets within an already confirmed setting without requesting it again. Do not infer a switch from elapsed time.
+4. Record explicit owner setting confirmations and never infer a switch from elapsed time. Model recommendations do not override the owner’s authorization to continue useful work. Ask only when a setting answer is actually necessary; do not repeatedly request an already confirmed selector.
 5. The assistant cannot operate the owner's model selector or verify its UI setting. Record the setting the owner reports; do not pretend to have switched it programmatically.
 6. Recheck repository state and the latest evidence after resuming. Continue the existing branch/checkout and preserve completed work.
 7. Give the same explicit handoff for required Astra reviews. The owner controls those model changes; no automatic background reminder or autonomous model switching is promised.
