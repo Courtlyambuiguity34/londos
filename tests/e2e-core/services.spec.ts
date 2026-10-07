@@ -55,7 +55,7 @@ test("operations setup warnings require native MFA and work without Redis on des
       true,
     );
     await page.screenshot({
-      path: `docs/evidence/images/services-${info.project.name}.png`,
+      path: info.outputPath(`services-${info.project.name}.png`),
       fullPage: true,
     });
     await pool.query(

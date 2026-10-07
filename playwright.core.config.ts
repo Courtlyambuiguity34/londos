@@ -68,6 +68,16 @@ export default defineConfig({
       LONDOS_DATA_SOURCE: "database",
       LONDOS_LOCAL_ADAPTERS: "true",
       LONDOS_PILOT_ANALYTICS: "true",
+      // The warning fixture must not inherit a developer's real provider credentials.
+      LONDOS_MONGODB_ENABLED: "true",
+      LONDOS_MONGODB_MIGRATION_ENABLED: "false",
+      LONDOS_CLOUDINARY_ENABLED: "true",
+      LONDOS_REDIS_ENABLED: "false",
+      MONGODB_URL: "",
+      MONGODB_URI: "",
+      MONGODB_DATABASE: "",
+      CLOUDINARY_URL: "",
+      REDIS_URL: "",
     },
   },
 });

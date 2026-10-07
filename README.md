@@ -197,6 +197,7 @@ Londos may recommend safer/better practices, but should not force one checkout m
 
 ## Documentation map
 
+- [Quickstart: local preview, Render and Vercel options](docs/DEPLOYMENT-QUICKSTART.md)
 - [First local installation and usage](docs/LOCAL-FIRST-SETUP.md)
 - [Initial Render setup](docs/RENDER-SETUP.md) and [offline checklist](render.html)
 - [Cloudinary media storage and MongoDB linkage](docs/CLOUDINARY-MEDIA.md)
