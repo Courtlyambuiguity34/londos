@@ -14,7 +14,7 @@ const dockerEnv = Object.fromEntries(
   Object.entries(process.env).filter(([key]) => !selectorNames.has(key)),
 );
 function docker(args) {
-  return execFileSync("docker", ["--host=unix:///var/run/docker.sock", ...args], {
+  return execFileSync("docker", args, {
     env: dockerEnv,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
