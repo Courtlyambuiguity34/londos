@@ -5,7 +5,23 @@ export function coreConfigured(): boolean {
   );
 }
 
+function configurationURL(value: string, name: string): URL {
+  try {
+    return new URL(value);
+  } catch {
+    // Native URL errors retain their input, which can include database credentials.
+    throw new Error(`${name} must be a valid URL.`);
+  }
+}
+
 export function coreConfig() {
+  if (
+    (process.env.LONDOS_DATABASE_ENGINE ?? "postgresql") !== "postgresql" ||
+    process.env.LONDOS_MONGODB_MIGRATION_ENABLED === "true"
+  )
+    throw new Error(
+      "Canonical database migration is not supported or authorized; keep PostgreSQL active.",
+    );
   const databaseUrl = process.env.DATABASE_URL;
   const secret = process.env.AUTH_SECRET;
   const baseURL = process.env.AUTH_BASE_URL;
@@ -14,7 +30,11 @@ export function coreConfig() {
       "Core configuration requires DATABASE_URL, AUTH_SECRET (32+ characters) and AUTH_BASE_URL.",
     );
   }
-  const url = new URL(baseURL);
+  if (
+    !["postgres:", "postgresql:"].includes(configurationURL(databaseUrl, "DATABASE_URL").protocol)
+  )
+    throw new Error("DATABASE_URL must select the PostgreSQL canonical database.");
+  const url = configurationURL(baseURL, "AUTH_BASE_URL");
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
   if (
     url.pathname !== "/" ||

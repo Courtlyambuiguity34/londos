@@ -1,0 +1,54 @@
+# Review-only Render free web blueprint. No deployment or paid worker is created.
+# A separately supervised worker and reachable PostgreSQL are required.
+services:
+  - type: web
+    name: londos-preview
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: AUTH_BASE_URL
+        sync: false
+      - key: LONDOS_CORE_ENABLED
+        value: "true"
+      - key: LONDOS_DATA_SOURCE
+        value: database
+      - key: LONDOS_DATABASE_ENGINE
+        value: postgresql
+      - key: LONDOS_LOCAL_ADAPTERS
+        value: "false"
+      - key: LONDOS_EMAIL_PROVIDER
+        value: brevo
+      - key: LONDOS_EMAIL_FROM
+        value: mnelsontravor@gmail.com
+      - key: LONDOS_EMAIL_FROM_NAME
+        value: Londos
+      - key: LONDOS_BREVO_API_KEY
+        sync: false
+      - key: LONDOS_AI_REMOTE
+        value: "false"
+      - key: LONDOS_MONGODB_ENABLED
+        value: "false"
+      - key: MONGODB_URL
+        sync: false
+      - key: MONGODB_DATABASE
+        value: londos_public_copy
+      - key: LONDOS_MONGODB_MIGRATION_ENABLED
+        value: "false"
+      - key: LONDOS_REDIS_ENABLED
+        value: "false"
+      - key: LONDOS_CLOUDINARY_ENABLED
+        value: "false"
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: LONDOS_PILOT_ANALYTICS
+        value: "false"
+      - key: LONDOS_PRIVACY_ERASURE
+        value: "false"

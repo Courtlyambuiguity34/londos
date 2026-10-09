@@ -20,6 +20,8 @@ export function operationalAlerts(
     add("database_storage", "warning", "media-outage");
   if (Number(snapshot.media_bytes) > 5 * 1024 ** 3) add("media_storage", "warning", "media-outage");
   if (Number(snapshot.failed_media) > 0) add("failed_media", "warning", "media-outage");
+  if (Number(snapshot.delivery_attention) > 0)
+    add("email_delivery_requires_reconciliation", "warning", "email-delivery");
   if (Number(snapshot.partial_invoices) > 0)
     add("rent_exceptions", "warning", "rent-reconciliation");
   if (Number(snapshot.auth_budget_pressure) > 0)

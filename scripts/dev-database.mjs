@@ -89,7 +89,7 @@ if (found) {
 if (!existsSync(".env.local"))
   writeFileSync(
     ".env.local",
-    `LONDOS_DATA_SOURCE=fixtures\nDATABASE_URL=postgresql://londos:${password}@127.0.0.1:54329/londos_development\nAUTH_SECRET=${randomBytes(48).toString("hex")}\nAUTH_BASE_URL=http://127.0.0.1:3000\nLONDOS_LOCAL_ADAPTERS=true\n`,
+    `LONDOS_CORE_ENABLED=true\nLONDOS_DATA_SOURCE=database\nDATABASE_URL=postgresql://londos:${password}@127.0.0.1:54329/londos_development\nAUTH_SECRET=${randomBytes(48).toString("hex")}\nAUTH_BASE_URL=http://127.0.0.1:3000\nLONDOS_LOCAL_ADAPTERS=true\n`,
     { mode: 0o600 },
   );
 let ready = false;

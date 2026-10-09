@@ -49,6 +49,7 @@ export function SiteFooter() {
           <Link href="/search">Explore the mall</Link>
           <Link href="/rent-a-shop">Become a shopkeeper</Link>
           <Link href="/about">About Londos</Link>
+          <Link href="/install">Install Londos</Link>
           <Link href="/landlord">Londos Management</Link>
         </nav>
         <p className="footer-note">

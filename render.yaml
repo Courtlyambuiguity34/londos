@@ -1,0 +1,34 @@
+# One-click Render Blueprint for a credential-free, fictional public demonstration.
+# This free profile has no accounts, worker, database, payments, or provider calls.
+services:
+  - type: web
+    name: londos-mall-preview
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: LONDOS_CORE_ENABLED
+        value: "false"
+      - key: LONDOS_DATA_SOURCE
+        value: fixtures
+      - key: LONDOS_DATABASE_ENGINE
+        value: postgresql
+      - key: LONDOS_LOCAL_ADAPTERS
+        value: "false"
+      - key: LONDOS_AI_REMOTE
+        value: "false"
+      - key: LONDOS_MONGODB_ENABLED
+        value: "false"
+      - key: LONDOS_MONGODB_MIGRATION_ENABLED
+        value: "false"
+      - key: LONDOS_REDIS_ENABLED
+        value: "false"
+      - key: LONDOS_CLOUDINARY_ENABLED
+        value: "false"
+      - key: LONDOS_PILOT_ANALYTICS
+        value: "false"
+      - key: LONDOS_PRIVACY_ERASURE
+        value: "false"

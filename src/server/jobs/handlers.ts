@@ -28,7 +28,7 @@ export async function handle(
     return;
   }
   if (job.kind === "notification.local") {
-    await notifications.deliver(job.id, job.payload, signal);
+    await notifications.deliver(job.id, job.payload, signal, { leaseToken: job.lease_token });
     return;
   }
   if (

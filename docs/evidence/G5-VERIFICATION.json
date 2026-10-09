@@ -1,0 +1,197 @@
+{
+  "format": "londos-g5-verification-v1",
+  "recordedAt": "2026-10-07T05:14:28.197098+00:00",
+  "implementationCommit": "dc5cc264e9d4a81520ec79fdb9bab5ca99693354",
+  "uniqueAutomatedTests": 464,
+  "testRuns": [
+    {
+      "suite": "unit",
+      "command": "npm test",
+      "passed": 122,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "privateLog": ".local/g5-unit-verified.log",
+      "logSha256": "649c4dd0d20028d2e7b010a170e5f8aef1c9d2ac7a72ab67cda05a8652ff2e13"
+    },
+    {
+      "suite": "postgresql",
+      "command": "npm run test:integration",
+      "passed": 279,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "privateLog": ".local/g5-integration-final.log",
+      "logSha256": "26a98a59e10eb30257b0caa4c07b3cf3d401c82352ff8b978b5612238c98c071"
+    },
+    {
+      "suite": "fixtureBrowser",
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "privateLog": ".local/g5-fixture-final.log",
+      "logSha256": "1b8323a09fc18006a2fcf65b109a74a38b76f53454980d5a4606621873d55307"
+    },
+    {
+      "suite": "compiledCoreBrowser",
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e:core",
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "privateLog": ".local/g5-core-verified.log",
+      "logSha256": "989a39e80b08dd3598bb4a1baff92ed0e91dc5f90174a7135e413c8ddc3b7722"
+    }
+  ],
+  "checks": [
+    {
+      "check": "typecheck",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-typecheck-verified.log",
+      "logSha256": "b31ec4429a65731b28e337bf689fcdf6c5a83d5580affe66be5fcd7995103790"
+    },
+    {
+      "check": "lint",
+      "command": "npm run lint",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-lint-verified.log",
+      "logSha256": "60f2590ea32134dda4e58eab39a42d320e3fb8214db091fa83bd96539ac061dc"
+    },
+    {
+      "check": "format",
+      "command": "npm run format:check",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-format-verified.log",
+      "logSha256": "8accfb1f7c2b3fc93ee2082e24449b91d9598424ffdf6b5bf6b516af96fced37"
+    },
+    {
+      "check": "audit",
+      "command": "npm audit --audit-level=moderate",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-audit-complete.log",
+      "logSha256": "6d8c5c8f3d7684adb070417bd608d01ae90aa3dc26a65af03ffda4955f38d9a3"
+    },
+    {
+      "check": "build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-build.log",
+      "logSha256": "0187a13ce4d37a445da5c9d3ac9a99b274f0e4f0fe643ead2612e2cd73ed64b0"
+    },
+    {
+      "check": "dockerBuild",
+      "command": "Pinned deploy/Dockerfile with proxy_ca build secret",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-image-build.log",
+      "logSha256": "5b663ecaf4e8a11760f00d9eee0043c1c005455c978a6e36e269a03838e57598"
+    },
+    {
+      "check": "bundleScan",
+      "command": "npm run check:bundle-secrets",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-bundle-complete.log",
+      "logSha256": "bdd9f2c0bb1f1b2e38c488dfbce430f48d225ae3f80329b55ff8b199028e5b2d"
+    },
+    {
+      "check": "recovery",
+      "command": "LONDOS_IMAGE=londos:g5-candidate LONDOS_ROLLBACK_IMAGE=londos:p12-candidate LONDOS_ROLLBACK_SOURCE=3322c14e3e8d8ee2dcf6d3fff874f51f4ebe5659 LONDOS_RELEASE_EVIDENCE_FILE=docs/evidence/G5-RECOVERY.json npm run release:rehearse",
+      "exitCode": 0,
+      "result": "passed",
+      "privateLog": ".local/g5-recovery.log",
+      "logSha256": "65dc8fa42845dabeb0249b929c569876bbb4df69bd3e8cb5453a45ac57dd4dc8"
+    }
+  ],
+  "documentationLinks": {
+    "command": "npm run check:docs",
+    "result": "passed",
+    "exitCode": 0,
+    "output": "71 Markdown files; 633 local links resolve.",
+    "privateLog": ".local/g5-docs-verified.log",
+    "logSha256": "e9dba8befc1eb5148d06dedcc16fb99f04e977d344bbe7db59a86399cb8b98ec"
+  },
+  "auditVulnerabilities": 0,
+  "releaseAssertions": {
+    "passed": 16,
+    "countedAsUnitTests": false,
+    "report": "G5-RECOVERY.json",
+    "sameHostOnly": true
+  },
+  "bundleScan": {
+    "check": "configured-secret-artifact-scan",
+    "files": 1643,
+    "candidateValues": 27,
+    "result": "passed",
+    "limit": "Exact configured values only; this does not replace repository/production secret scanning."
+  },
+  "stagedConfiguredValueScan": {
+    "check": "staged-configured-value-scan",
+    "files": 55,
+    "candidateValues": 27,
+    "result": "passed"
+  },
+  "historicalImages": {
+    "check": "historical-screenshot-preservation",
+    "images": 35,
+    "originalsRestoredByteExactly": true,
+    "newCapturesKeptPrivate": true,
+    "result": "passed"
+  },
+  "expectedBlockedChecks": [
+    {
+      "command": "npm run release:gate -- docs/launch/G5-DECISIONS.json docs/evidence/G5-STATUS.json",
+      "exitCode": 2,
+      "result": "blocked-real-launch-prerequisites",
+      "sourcePinVerified": true
+    },
+    {
+      "command": "npm run email:verify",
+      "exitCode": 1,
+      "result": "configuration-or-access-unavailable",
+      "emailSent": false
+    },
+    {
+      "command": "npm run pilot -- report .local/p13-initial/plan.json .local/p13-initial/data.json NEW_REPORT.json",
+      "exitCode": 2,
+      "result": "insufficient-evidence",
+      "realParticipants": 0
+    }
+  ],
+  "resolvedFailedRuns": [
+    {
+      "run": ".local/g5-core-final.log",
+      "passed": 46,
+      "failed": 1,
+      "cause": "Shared owner account correctly exhausted sign-in rate limit."
+    },
+    {
+      "run": ".local/g5-core-complete.log",
+      "passed": 46,
+      "failed": 1,
+      "cause": "The intermediate independently provisioned designer fixture lacked shop scope. Both merchant and shop design scope are now explicit; no production limits/authority checks weakened."
+    }
+  ],
+  "finalBrowserRun": ".local/g5-core-verified.log",
+  "rerunsCountedTwice": false,
+  "optionalProviders": {
+    "mongodb": "Actual owned local MongoDB8.2.3 container ping/copy/read/replace/eligibility tests.",
+    "redis": "Actual owned local Redis8.2.3 container ping.",
+    "cloudinary": "Mocked fixed-endpoint normalization/response tests; no real credential/upload.",
+    "brevo": "Mocked payload/lease/durable attempt/replay tests; no real key/sender/inbox/send."
+  },
+  "limits": [
+    "No real merchants or pilot renewal/cost outcomes fabricated.",
+    "No production deployment, approved live policies or independent disaster-recovery proof.",
+    "Image runtime built before final host-only CLI/tests/docs; runtime inputs unchanged, command hashes match.",
+    "Passing automated tests do not certify live provider access, human subject rights or real-device/field accessibility."
+  ]
+}

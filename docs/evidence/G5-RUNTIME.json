@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-07T05:13:07.413184+00:00",
+  "readiness": {
+    "ready": true,
+    "mode": "development-core",
+    "database": true,
+    "authentication": true,
+    "worker": "ready",
+    "financialOperations": false,
+    "liveNotifications": false,
+    "localRentWorkflow": true,
+    "localPrivacyErasure": false,
+    "liveErasure": false,
+    "localPilotAnalytics": false,
+    "liveAnalytics": false
+  },
+  "health": {
+    "status": "preview",
+    "mode": "database-development",
+    "publicBrowsing": true,
+    "transactions": false,
+    "authentication": false,
+    "database": true,
+    "ai": false,
+    "coreConfigured": true,
+    "readiness": "/api/ready"
+  },
+  "publishedSearchRequest": "passed",
+  "canonicalDatabase": "postgresql",
+  "mongodbMigrationPerformed": false,
+  "optionalServicesEnabled": false,
+  "liveCollectionEnabled": false,
+  "externalEmailSent": false,
+  "demoAccounts": 12,
+  "credentialFileMode": "600",
+  "scope": "Existing development PostgreSQL; no production exposure or optional remote-provider validation."
+}

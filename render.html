@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Londos — Render and local setup checklist</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; background: #f8f7f3; color: #1c2520; }
+    body { max-width: 54rem; margin: auto; padding: 2rem 1rem; line-height: 1.65; }
+    h1,h2 { line-height: 1.2; } code { overflow-wrap: anywhere; }
+    section { margin: 1.5rem 0; padding: 1.25rem; background: white; border: 1px solid #ccd3cc; border-radius: .75rem; }
+    a { color: #24593c; } li { margin: .65rem 0; } .status { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header><p>Londos setup reference</p><h1>Run locally, then prepare Render.</h1>
+    <p class="status">Review checklist — no deployment or live provider verification is performed by this page.</p></header>
+  <main>
+    <section><h2>Supported storage</h2><p>PostgreSQL holds accounts, tenancy, rent/subscriptions, jobs, audit and canonical catalogue/media ownership. MongoDB optionally holds public catalogue copies; Cloudinary holds normalized public image copies. Redis is optional and may remain absent.</p><p>Render still requires reachable PostgreSQL and an independent supervised worker. A MongoDB-only deployment is not supported by this implementation.</p></section>
+    <section><h2>First local installation</h2><ol>
+      <li>Use Linux/Ubuntu or WSL2, Node 24.19.0, npm 11.9.0 and Docker.</li>
+      <li>On the implementation branch, run <code>npm ci --no-fund</code>, then <code>npm run db:local</code>.</li>
+      <li>Edit the ignored <code>.env.local</code> privately: choose database mode, a loopback origin and local adapters. Keep generated secrets and PostgreSQL authority.</li>
+      <li>Run <code>db:migrate</code>, <code>db:seed</code>, <code>db:operations</code> and <code>build</code> through npm.</li>
+      <li>Run <code>npm run start -- --port 3000</code> and, in another terminal, <code>npm run worker</code>.</li>
+      <li>Confirm database/authentication and a ready worker at <code>/api/ready</code>. Read private fictional credentials locally; enroll native MFA for operator access.</li>
+    </ol><p><a href="docs/LOCAL-FIRST-SETUP.md">Complete local installation and usage guide</a></p></section>
+    <section><h2>Render preparation</h2><ol>
+      <li>Review the exact branch/commit and open launch obligations. Back up before migrations; use separate migrator and least-privilege runtime roles.</li>
+      <li>Review the free Docker web blueprint with auto-deploy off. Use <code>deploy/Dockerfile</code>, repository root context and <code>/api/ready</code>.</li>
+      <li>Supply reachable PostgreSQL, a private stable auth secret, the exact HTTPS auth origin and real verified Brevo settings in Render's environment facility.</li>
+      <li>Provide an independently supervised worker using the same compatible artifact and database. Free web sleeping/ephemeral storage is not durable worker or backup infrastructure.</li>
+      <li>For optional copies, privately supply <code>MONGODB_URL</code>, an explicit copy database and <code>CLOUDINARY_URL</code>; enable their flags manually. Keep migration false and Redis disabled.</li>
+      <li>Verify trusted ingress/client IP, TLS, backups/privacy authority/key recovery, responders and live policies before public release.</li>
+    </ol><p><a href="docs/RENDER-SETUP.md">Complete Render guide</a> · <a href="deploy/render.web.yaml">Review-only blueprint</a></p></section>
+    <section><h2>Provider checks and warnings</h2><p>Run <code>npm run mongo:verify</code> on a protected tooling host for temporary CRUD and cleanup, <code>npm run email:verify</code> for read-only Brevo account/sender validation, and <code>npm run services -- check</code> for enabled optional services. Keep keys and connection strings out of command arguments, screenshots, documentation and Git.</p><p>The operations page <code>/landlord/services</code> requires recent native MFA and shows fixed configuration warnings. A configured status is not a successful network test. Mock tests do not prove live provider credentials or inbox delivery.</p><p><a href="docs/CLOUDINARY-MEDIA.md">Cloudinary storage, identifiers and MongoDB image linkage</a> · <a href="docs/evidence/SERVICES-2026-10-07.md">Current verification evidence</a></p></section>
+  </main>
+</body>
+</html>

@@ -5,6 +5,7 @@ try {
   for (const name of [
     "DATABASE_URL",
     "AUTH_SECRET",
+    "LONDOS_BREVO_API_KEY",
     "LONDOS_OPENAI_API_KEY",
     ...Array.from({ length: 5 }, (_, i) => `GEMINI_API_KEY_${i + 1}`),
   ]) {

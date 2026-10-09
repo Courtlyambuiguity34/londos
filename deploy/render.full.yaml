@@ -1,0 +1,58 @@
+# Review template for the full shared-server topology. The worker is not available
+# on Render's free web tier, and PostgreSQL is supplied separately. No deployment
+# is created by committing this file.
+services:
+  - type: web
+    name: londos-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/ready
+    autoDeployTrigger: "off"
+    envVars: &londos-core
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: AUTH_BASE_URL
+        sync: false
+      - key: LONDOS_CORE_ENABLED
+        value: "true"
+      - key: LONDOS_DATA_SOURCE
+        value: database
+      - key: LONDOS_DATABASE_ENGINE
+        value: postgresql
+      - key: LONDOS_LOCAL_ADAPTERS
+        value: "false"
+      - key: LONDOS_EMAIL_PROVIDER
+        value: brevo
+      - key: LONDOS_EMAIL_FROM
+        sync: false
+      - key: LONDOS_EMAIL_FROM_NAME
+        value: Londos
+      - key: LONDOS_BREVO_API_KEY
+        sync: false
+      - key: LONDOS_AI_REMOTE
+        value: "false"
+      - key: LONDOS_MONGODB_ENABLED
+        value: "false"
+      - key: LONDOS_MONGODB_MIGRATION_ENABLED
+        value: "false"
+      - key: LONDOS_REDIS_ENABLED
+        value: "false"
+      - key: LONDOS_CLOUDINARY_ENABLED
+        value: "false"
+      - key: LONDOS_PILOT_ANALYTICS
+        value: "false"
+      - key: LONDOS_PRIVACY_ERASURE
+        value: "false"
+  - type: worker
+    name: londos-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    dockerCommand: worker
+    autoDeployTrigger: "off"
+    envVars: *londos-core

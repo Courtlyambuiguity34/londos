@@ -95,40 +95,11 @@ async function context(db: PoolClient, actor: Actor, id: string) {
     )
   ).rows as DesignContext["products"];
   await validateReferences(db, id, specification);
-  const contactRow = (
-    await db.query(
-      "SELECT phone,whatsapp,website,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled FROM shop_contacts WHERE shop_id=$1 AND merchant_id=$2",
-      [id, shop.merchant_id],
-    )
-  ).rows[0] as
-    | {
-        phone: string;
-        whatsapp: string;
-        website: string;
-        fulfilment: string;
-        payment_instructions: string;
-        delivery_instructions: string;
-        enquiries_enabled: boolean;
-      }
-    | undefined;
   const data: DesignContext = {
     shop: { name: shop.name, category: shop.category, tagline: shop.tagline },
     specification,
     departments,
     products,
-    protectedFacts: {
-      contact: contactRow
-        ? {
-            phone: contactRow.phone,
-            whatsapp: contactRow.whatsapp,
-            website: contactRow.website,
-            fulfilment: contactRow.fulfilment,
-            paymentInstructions: contactRow.payment_instructions,
-            deliveryInstructions: contactRow.delivery_instructions,
-            enquiriesEnabled: contactRow.enquiries_enabled,
-          }
-        : null,
-    },
     supported: {
       premiseStyles: [
         "luxury",

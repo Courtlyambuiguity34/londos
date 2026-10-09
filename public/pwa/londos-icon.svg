@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Londos">
+  <rect width="512" height="512" rx="112" fill="#16382b"/>
+  <path d="M120 168h272v208H120z" fill="#fffaf1"/>
+  <path d="M96 176l52-80h216l52 80z" fill="#e8673f"/>
+  <path d="M160 224h72v152h-72zm120 0h72v72h-72z" fill="#f4c85b"/>
+  <circle cx="373" cy="357" r="19" fill="#e8673f"/>
+</svg>

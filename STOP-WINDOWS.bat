@@ -1,4 +1,8 @@
 @echo off
+setlocal
 cd /d "%~dp0"
-node scripts\local\launcher.mjs stop %~1
-if errorlevel 1 pause
+set "MODE=%~1"
+if "%MODE%"=="" set "MODE=local"
+node scripts\local\launcher.mjs stop %MODE%
+echo.
+pause

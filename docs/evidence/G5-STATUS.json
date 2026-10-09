@@ -1,0 +1,88 @@
+{
+  "gate": "G5",
+  "status": "blocked",
+  "sourceCommit": "dc5cc264e9d4a81520ec79fdb9bab5ca99693354",
+  "blockers": [
+    "production_domain_missing",
+    "runtime_is_development_loopback",
+    "brevo_sender_or_secret_missing",
+    "requirement:hosting-domain-tls",
+    "requirement:brevo-delivery",
+    "requirement:independent-backup",
+    "requirement:key-recovery",
+    "requirement:current-privacy-journal",
+    "requirement:live-subject-rights-and-recovery",
+    "requirement:approved-rent-privacy-rpo-rto",
+    "requirement:oncall-alert-delivery-and-http-telemetry",
+    "requirement:actual-provider-cost-coverage",
+    "requirement:real-device-accessibility",
+    "requirement:release-security-review",
+    "requirement:owner-launch-authorization"
+  ],
+  "requirements": [
+    {
+      "id": "hosting-domain-tls",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "brevo-delivery",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "independent-backup",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "key-recovery",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "current-privacy-journal",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "live-subject-rights-and-recovery",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "approved-rent-privacy-rpo-rto",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "oncall-alert-delivery-and-http-telemetry",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "actual-provider-cost-coverage",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "real-device-accessibility",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "release-security-review",
+      "owner": null,
+      "verified": false
+    },
+    {
+      "id": "owner-launch-authorization",
+      "owner": null,
+      "verified": false
+    }
+  ],
+  "productionDeployed": false,
+  "authorizationConsumed": false,
+  "limitation": "This verifies supplied review receipts and current configuration only. Human attestations do not independently test providers, legal rights, deliverability or backup durability; it never deploys or publishes.",
+  "checkedAt": "2026-10-07T05:13:07.905Z"
+}

@@ -1,0 +1,92 @@
+{
+  "format": "londos-launch-manifest-v1",
+  "sourceCommit": "dc5cc264e9d4a81520ec79fdb9bab5ca99693354",
+  "domain": null,
+  "emailProvider": "brevo",
+  "requirements": [
+    {
+      "id": "hosting-domain-tls",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "brevo-delivery",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "independent-backup",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "key-recovery",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "current-privacy-journal",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "live-subject-rights-and-recovery",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "approved-rent-privacy-rpo-rto",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "oncall-alert-delivery-and-http-telemetry",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "actual-provider-cost-coverage",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "real-device-accessibility",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "release-security-review",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    },
+    {
+      "id": "owner-launch-authorization",
+      "status": "pending",
+      "owner": null,
+      "evidenceFile": null,
+      "sha256": null
+    }
+  ]
+}

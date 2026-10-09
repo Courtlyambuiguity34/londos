@@ -1,0 +1,201 @@
+{
+  "format": "londos-pilot-report-v1",
+  "cohortId": "32e21459-b288-4ae0-ba42-4f612f2841cf",
+  "asOf": "2026-10-07T04:52:02.043Z",
+  "planSha256": "9093cf3d0d0016143fdc2451bab7a63119373810dfec4409b67b602d144d0dd8",
+  "evidenceKind": "demonstration",
+  "decision": "insufficient-evidence",
+  "blockers": [
+    "demonstration_data_is_not_business_evidence",
+    "independent_pre_outcome_registration_missing",
+    "live_operating_terms_unapproved",
+    "real_cohort_incomplete",
+    "observation_window_not_complete",
+    "complete_actual_renewal_opportunity_missing",
+    "actual_cost_coverage_incomplete",
+    "traffic_window_incomplete",
+    "decision_recommendations_missing"
+  ],
+  "criteria": {
+    "activation": false,
+    "maintenance": false,
+    "paidRenewal": false,
+    "incrementalValue": false,
+    "support": false,
+    "unitEconomics": false,
+    "trust": true
+  },
+  "thresholds": {
+    "activationPercent": 70,
+    "maintenancePercent": 60,
+    "paidRenewalPercent": 60,
+    "incrementalValuePercent": 50,
+    "maximumMedianAssistanceMinutes": 60,
+    "stopPaidRenewalPercent": 20,
+    "maximumUnresolvedCriticalIncidents": 0
+  },
+  "cohort": {
+    "participants": 0,
+    "categories": []
+  },
+  "funnel": [
+    {
+      "task": "application",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "setup",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "catalogue",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "design",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "contact",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "publication",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "sharing",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    },
+    {
+      "task": "maintenance",
+      "observed": 0,
+      "completed": 0,
+      "independent": 0
+    }
+  ],
+  "retention": {
+    "maintained": 0,
+    "denominator": 0,
+    "percent": null
+  },
+  "renewal": {
+    "completedOpportunities": 0,
+    "fullyPaid": 0,
+    "waiverSupported": 0,
+    "fullyPaidPercent": null,
+    "descriptiveInterval": null,
+    "statedIntentYes": 0,
+    "definition": "First reconciled real renewal opportunity per merchant after due date plus grace, fully covered by net payments; later successes, waivers and intent never replace its outcome."
+  },
+  "economics": {
+    "currency": "UGX",
+    "reconciledNetPaymentMinor": "0",
+    "costCoverageComplete": false,
+    "recordedActualCostMinor": "0",
+    "contributionBeforeAcquisitionMinor": null,
+    "netAfterAcquisitionMinor": null,
+    "costs": [
+      {
+        "category": "collection_fees",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "support_verification",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "moderation",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "storage_bandwidth",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "compute_search_media",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "ai",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      },
+      {
+        "category": "acquisition",
+        "amountMinor": null,
+        "source": "unavailable",
+        "evidenceReference": null,
+        "allocationReference": null,
+        "complete": false
+      }
+    ],
+    "scaleAcquisitionAllowed": false
+  },
+  "support": {
+    "medianAssistanceAndVerificationMinutes": null,
+    "totalReportedMinutes": 0,
+    "definition": "Explicit observed assistance plus verification; not queue age or independent staff measurement."
+  },
+  "discovery": {
+    "merchantReportedIncrementalValue": 0,
+    "denominator": 0,
+    "percent": null,
+    "observations": {
+      "scope": "cohort-shop-events",
+      "retainedFrom": null,
+      "counts": []
+    },
+    "definition": "Aggregate observed routes and merchant interviews; no unique visitor, linked funnel, causal discovery or completed-sale claim."
+  },
+  "trust": {
+    "incidents": 0,
+    "unresolvedCritical": 0
+  },
+  "architectureBottlenecks": [],
+  "productChangeRecommendation": null,
+  "pricingRecommendation": null,
+  "limits": [
+    "A selected 10–20 merchant cohort does not establish population demand or causation.",
+    "Supplied records and evidence references require human review; local hashes do not prove independent preregistration, payments, consent or provider bills.",
+    "Missing observations and cost sources remain unavailable, never zero or free.",
+    "Improve a measured bottleneck; index and bounded-query work precedes new infrastructure."
+  ]
+}
