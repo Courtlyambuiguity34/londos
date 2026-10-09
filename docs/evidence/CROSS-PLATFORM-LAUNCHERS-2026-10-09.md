@@ -12,8 +12,9 @@ branch, one-click local build/start files, role-specific PWAs, and Render topolo
   created because Londos has no Python runtime.
 - Local mode creates/reuses only the marked loopback PostgreSQL development service and refuses to
   migrate a hosted `DATABASE_URL`. Server mode builds but does not migrate or seed.
-- Start uses the standalone production build, starts the independent worker for configured modes,
-  waits for health, then opens the selected role. `LONDOS_NO_BROWSER=true` supports headless servers.
+- Start uses the standalone production build, starts/reuses the private local PostgreSQL container,
+  starts the independent worker for configured modes, and waits for full readiness before opening
+  the selected role. `LONDOS_NO_BROWSER=true` supports headless servers.
 - Public, Shopkeeper and Management manifests have distinct IDs/names/start routes. One lifecycle
   service worker is registered and deliberately has no fetch/cache handler for HTML, API,
   authentication, or private data.
@@ -43,6 +44,40 @@ branch, one-click local build/start files, role-specific PWAs, and Render topolo
 | Markdown local-link check                                                              | Passed                                              |
 | `git diff --check`                                                                     | Passed                                              |
 
+## Follow-up launcher and topology verification
+
+The owner requested a same-day local launch and clarification of the central gateway, domain and
+database topology. The follow-up inspection counted 68 SQL-dependent source files and 21 migrations;
+MongoDB-primary was therefore not represented as a safe flag switch. The deployment documentation
+now states that all clients use the web/API gateway, PostgreSQL remains canonical, MongoDB and
+Cloudinary are optional public copies, and database credentials never enter a browser/PWA.
+
+The follow-up found two concrete launcher defects and corrected them:
+
+1. A configured local `PORT` could differ from `AUTH_BASE_URL`, causing private-page redirects to the
+   wrong origin. Local start now derives the port from the authentication origin and rejects an
+   explicit mismatch. Hosted server mode still separates a platform's internal port from the public
+   HTTPS origin.
+2. STOP previously stopped only PostgreSQL. The launcher now records only its own web/worker process
+   tree in ignored private local state; STOP terminates that recorded tree before stopping the marked
+   database container. START also restarts the preserved database container, so normal stop/start is
+   a complete click workflow.
+
+Newly executed checks, without repeating completed recovery/load suites:
+
+| Check                                                | Observed result                                                                                                                              |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./install-linux.sh local`                           | Locked install, preserved DB start, migration checksum verification, repeatable seed and production web/worker build passed                  |
+| `./start-linux.sh local landlord` after a prior STOP | Database restarted; web, authentication and worker reached ready state                                                                       |
+| `/api/ready` full local                              | `ready=true`, `development-core`, database/authentication true, worker ready                                                                 |
+| Anonymous `/`, `/shopkeeper`, `/landlord`            | 200 public; both private surfaces redirected to the exact configured sign-in origin                                                          |
+| Anonymous workspace/operator API                     | Both returned 401                                                                                                                            |
+| Cross-origin workspace write                         | Returned 403                                                                                                                                 |
+| Preview launcher and `/api/ready`                    | `fixture-preview`, database/authentication false, worker not configured, public route 200                                                    |
+| `./stop-linux.sh local`                              | Recorded web and worker stopped gracefully; database stopped; named volume retained                                                          |
+| Focused launcher/config/PWA unit files               | 10 passed                                                                                                                                    |
+| Documentation check                                  | 85 Markdown files and 709 local links passed before this additive evidence update; final documentation check is recorded by the task handoff |
+
 The initial combined integration run reported 54 passing checks and one failed designer assertion.
 The assertion rejected the harmless schema word `contact` after the branches were merged. Inspection
 also showed the new designer was querying actual contact values for provider context. The query was
@@ -56,7 +91,7 @@ not repeated after this isolated privacy change.
   deployment were not available in this Linux environment and are not claimed as executed.
 - No real external email, domain, paid worker, public signup, live rent, or production deployment was
   enabled. Existing G5 conditions still apply.
-- The cloud PTY detached when sent Ctrl+C, so launcher shutdown was verified by delivering SIGTERM
-  directly to the launcher. Its owned web process group stopped and the test port was released.
+- Windows/macOS click behavior remains an operating-system verification item. The common launcher
+  logic and wrapper routing are covered locally; Linux install/start/stop wrappers were executed.
 - The free Render Blueprint is a fictional public demonstration. Full private workflows need the
   shared worker and reachable PostgreSQL described in the deployment guide.

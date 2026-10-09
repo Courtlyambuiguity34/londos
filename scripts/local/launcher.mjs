@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -8,6 +8,7 @@ const root = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 process.chdir(root);
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const statePath = resolve(root, ".local", "londos-launcher.json");
 const rolePaths = Object.freeze({
   mall: "/",
   user: "/",
@@ -67,6 +68,112 @@ function loadEnvFile(path) {
   return values;
 }
 
+function readLauncherState() {
+  if (!existsSync(statePath)) return null;
+  try {
+    const state = JSON.parse(readFileSync(statePath, "utf8"));
+    if (
+      state?.version !== 1 ||
+      !Number.isInteger(state.launcherPid) ||
+      state.launcherPid < 1 ||
+      !Array.isArray(state.childPids) ||
+      !state.childPids.every((pid) => Number.isInteger(pid) && pid > 0) ||
+      !["local", "server", "preview"].includes(state.mode) ||
+      typeof state.port !== "string"
+    )
+      return null;
+    return state;
+  } catch {
+    return null;
+  }
+}
+
+function writeLauncherState(mode, port, children) {
+  mkdirSync(resolve(root, ".local"), { recursive: true, mode: 0o700 });
+  writeFileSync(
+    statePath,
+    `${JSON.stringify(
+      {
+        version: 1,
+        launcherPid: process.pid,
+        childPids: children.flatMap((child) => (child.pid ? [child.pid] : [])),
+        mode,
+        port,
+        startedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    )}\n`,
+    { mode: 0o600 },
+  );
+}
+
+function clearLauncherState(launcherPid = process.pid) {
+  const state = readLauncherState();
+  if (state?.launcherPid === launcherPid)
+    try {
+      unlinkSync(statePath);
+    } catch {
+      // A missing/stale local state file must not hide process shutdown.
+    }
+}
+
+function processRunning(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function launchTargets(mode, values = {}) {
+  const requestedPort = values.PORT;
+  if (requestedPort && !/^\d+$/.test(requestedPort))
+    throw new Error("PORT must be between 1 and 65535.");
+
+  if (mode === "preview") {
+    const port = requestedPort ?? "3000";
+    if (Number(port) < 1 || Number(port) > 65535)
+      throw new Error("PORT must be between 1 and 65535.");
+    const origin = `http://127.0.0.1:${port}`;
+    return { port, healthOrigin: origin, publicOrigin: origin };
+  }
+
+  const configured = values.AUTH_BASE_URL;
+  if (!configured) throw new Error(`${mode} mode needs AUTH_BASE_URL.`);
+  let publicURL;
+  try {
+    publicURL = new URL(configured);
+  } catch {
+    throw new Error("AUTH_BASE_URL must be a valid HTTP(S) origin.");
+  }
+  if (
+    !["http:", "https:"].includes(publicURL.protocol) ||
+    publicURL.pathname !== "/" ||
+    publicURL.search ||
+    publicURL.hash ||
+    publicURL.username ||
+    publicURL.password
+  )
+    throw new Error("AUTH_BASE_URL must be a plain HTTP(S) origin.");
+
+  const defaultPublicPort = publicURL.protocol === "https:" ? "443" : "80";
+  const publicPort = publicURL.port || defaultPublicPort;
+  const port = requestedPort ?? (mode === "local" ? publicPort : "3000");
+  if (Number(port) < 1 || Number(port) > 65535)
+    throw new Error("PORT must be between 1 and 65535.");
+  if (mode === "local" && port !== publicPort)
+    throw new Error(
+      `Local PORT ${port} must match AUTH_BASE_URL port ${publicPort}; change both together.`,
+    );
+  return {
+    port,
+    healthOrigin: `http://127.0.0.1:${port}`,
+    publicOrigin: publicURL.origin,
+  };
+}
+
 export function assertLocalConfiguration(values) {
   for (const key of ["DATABASE_URL", "AUTH_SECRET", "AUTH_BASE_URL"]) {
     if (!values[key]) throw new Error(`.env.local is missing ${key}.`);
@@ -119,12 +226,19 @@ function productionReady() {
   );
 }
 
-async function isLondosRunning(origin) {
+async function isLondosRunning(origin, mode) {
   try {
-    const response = await fetch(`${origin}/api/health`, { signal: AbortSignal.timeout(1_000) });
+    const response = await fetch(`${origin}/api/ready`, { signal: AbortSignal.timeout(1_000) });
     if (!response.ok) return false;
     const body = await response.json();
-    return body?.status === "preview" && body?.readiness === "/api/ready";
+    if (body?.ready !== true) return false;
+    if (mode === "preview") return body.mode === "fixture-preview";
+    return (
+      ["development-core", "configured-core"].includes(body.mode) &&
+      body.database === true &&
+      body.authentication === true &&
+      body.worker === "ready"
+    );
   } catch {
     return false;
   }
@@ -147,16 +261,18 @@ function openBrowser(url) {
   child.unref();
 }
 
-async function waitAndOpen(origin, path, shouldStop = () => false) {
+async function waitAndOpen(healthOrigin, publicOrigin, path, mode, shouldStop = () => false) {
   for (let attempt = 0; attempt < 90; attempt++) {
     if (shouldStop()) return;
-    if (await isLondosRunning(origin)) {
-      openBrowser(new URL(path, origin).href);
+    if (await isLondosRunning(healthOrigin, mode)) {
+      openBrowser(new URL(path, publicOrigin).href);
       return;
     }
     await delay(500);
   }
-  throw new Error(`Londos did not become healthy at ${origin} within 45 seconds.`);
+  throw new Error(
+    `Londos web, database, authentication and worker did not become ready at ${healthOrigin} within 45 seconds.`,
+  );
 }
 
 async function start(mode, role) {
@@ -166,15 +282,17 @@ async function start(mode, role) {
   if (mode !== "preview" && !existsSync(resolve(root, ".env.local")) && !process.env.DATABASE_URL)
     throw new Error(`${mode} mode needs operator-managed environment variables or .env.local.`);
 
-  const port = process.env.PORT ?? "3000";
-  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535)
-    throw new Error("PORT must be between 1 and 65535.");
-  const origin = `http://127.0.0.1:${port}`;
+  const runtime = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
+  const { port, healthOrigin, publicOrigin } = launchTargets(mode, runtime);
   const path = rolePath(role);
-  if (await isLondosRunning(origin)) {
-    console.log(`Londos is already running at ${origin}; opening ${role}.`);
-    openBrowser(new URL(path, origin).href);
+  if (await isLondosRunning(healthOrigin, mode)) {
+    console.log(`Londos is already ready at ${publicOrigin}; opening ${role}.`);
+    openBrowser(new URL(path, publicOrigin).href);
     return;
+  }
+  if (mode === "local") {
+    console.log("Ensuring the private local PostgreSQL database is running...");
+    command(npm, ["run", "db:local"]);
   }
 
   const env =
@@ -231,18 +349,41 @@ async function start(mode, role) {
   web.on("exit", (code) => {
     if (!stopping) shutdown(code ?? 1);
   });
-  console.log(`Londos is starting at ${origin}. This window keeps the server running.`);
+  writeLauncherState(mode, port, children);
+  process.on("exit", () => clearLauncherState());
+  console.log(`Londos is starting at ${publicOrigin}. This window keeps the server running.`);
+  if (healthOrigin !== publicOrigin)
+    console.log(`Local readiness is checked at ${healthOrigin}; AUTH_BASE_URL remains public.`);
   console.log("Press Ctrl+C to stop web and worker; the database volume is preserved.");
-  void waitAndOpen(origin, path, () => stopping).catch((error) => {
+  void waitAndOpen(healthOrigin, publicOrigin, path, mode, () => stopping).catch((error) => {
     console.error(error.message);
     shutdown(1);
   });
   await new Promise((resolvePromise) => web.on("close", resolvePromise));
 }
 
-function stop(mode) {
+async function stop(mode) {
   verifyTools();
-  console.log("Close the START window or press Ctrl+C there to stop Londos web and worker.");
+  const state = readLauncherState();
+  if (state && processRunning(state.launcherPid)) {
+    console.log(`Stopping the Londos ${state.mode} web and worker processes...`);
+    if (process.platform === "win32")
+      spawnSync("taskkill", ["/PID", String(state.launcherPid), "/T", "/F"], {
+        stdio: "ignore",
+      });
+    else process.kill(state.launcherPid, "SIGTERM");
+    for (let attempt = 0; attempt < 50 && processRunning(state.launcherPid); attempt++)
+      await delay(100);
+    if (processRunning(state.launcherPid))
+      throw new Error(
+        "The recorded Londos launcher did not stop. Close its START window before stopping the database.",
+      );
+    clearLauncherState(state.launcherPid);
+    console.log("Londos web and worker stopped.");
+  } else {
+    if (state) clearLauncherState(state.launcherPid);
+    console.log("No running Londos launcher was recorded.");
+  }
   if (mode === "local") command(npm, ["run", "db:stop"]);
 }
 

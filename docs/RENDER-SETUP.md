@@ -6,6 +6,12 @@ This is a reviewable setup guide, not evidence of a deployed production service.
 
 Render can host the web artifact alongside **MongoDB Atlas and Cloudinary**, but this Londos implementation also requires **reachable PostgreSQL and an independent supervised worker**. MongoDB stores optional public catalogue copies; it does not implement canonical native authentication, tenancy/rent, SQL integrity constraints, jobs or audit. Redis is optional and can remain completely absent.
 
+Render does not block PostgreSQL URLs. `DATABASE_URL` may name a Render database or another
+reachable PostgreSQL service whose current plan, TLS and access controls the owner has reviewed. The
+practical restriction is that Render cannot connect to the owner's `localhost`; it is not a
+PostgreSQL protocol restriction. Provider free-tier availability and sleeping/storage limits change,
+so confirm the current terms rather than encoding a free-service promise in Londos.
+
 The owner's local PostgreSQL can serve a local installation. A Render container cannot reach that computer's loopback address. For Render, use a reviewed reachable PostgreSQL service or an explicitly protected network route to the owned server. Preserve certificate/hostname verification and least-privilege roles. Do not expose the database openly or label MongoDB-only Render as supported.
 
 A free web instance's sleeping/ephemeral behavior is not an always-on worker, database, key store or backup system. Review current [Render free-service limits](https://render.com/docs/free). This guide does not create a paid worker/database. An owned, always-on supervised worker may connect securely to the same PostgreSQL database. Any paid hosting choice remains a separate owner decision.
@@ -39,6 +45,11 @@ Store secrets through Render's server-side environment facility. Do not put valu
 | `LONDOS_AI_REMOTE`                            | Start with `false`; remote AI requires verified bindings/models, consent, budgets and acceptance.                           |
 
 Keep analytics/erasure and live collection at the existing authorized settings. Remote privacy/lifecycle/pilot acceptance is incomplete; changing a development guard is not a release implementation.
+
+Render supplies an `onrender.com` HTTPS address, so purchasing a domain is not required for an
+initial hosted check. If a custom domain is later attached, change `AUTH_BASE_URL` to that one exact
+canonical origin, update the provider configuration, restart both services and verify sign-in and
+origin protections. Do not operate two competing authentication origins as if they were one session.
 
 ## Add Atlas and Cloudinary manually
 

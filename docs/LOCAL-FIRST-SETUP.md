@@ -1,6 +1,6 @@
 # First local installation and usage
 
-Use the current implementation branch, `codex/londos-x2-2026-10-05`. Keep an existing checkout, database volume, `.env.local` and private `.local` files. Do not reset the repository, delete a volume, or reseed from an unrelated account file.
+Use the current implementation branch, `feature/cross-platform-local-launchers-2026-10-09`. Keep an existing checkout, database volume, `.env.local` and private `.local` files. Do not reset the repository, delete a volume, or reseed from an unrelated account file.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ For a new checkout:
 ```bash
 git clone https://github.com/Courtlyambuiguity34/londos.git
 cd londos
-git switch codex/londos-x2-2026-10-05
+git switch feature/cross-platform-local-launchers-2026-10-09
 npm ci --no-fund
 npm run db:local
 ```
@@ -53,7 +53,7 @@ npm run worker
 
 Visit `http://127.0.0.1:3000`. Inspect `/api/ready`: expect `database=true`, `authentication=true`, `worker=ready`, and `mode=development-core`. `fixture-preview` means you are viewing fictional public fixtures instead of the database; `worker=offline` means the separately supervised worker needs attention. A ready response does not certify real email or production launch readiness.
 
-Migrations verify immutable checksums. On this branch schema **019_release_delivery_and_demo_cohort.sql** is the required schema. Never edit an applied migration to make it pass. The separate pre-Sol designer branch has a different 019; do not apply that branch's migration directly to this database. Consolidation needs a new additive migration and its own verification.
+Migrations verify immutable checksums. On this branch schema **020_combined_feature_contract.sql** is the required schema. Never edit an applied migration to make it pass. Migration 020 is the additive reconciliation of the prior release/demonstration and designer work; do not replace either earlier migration in an existing database.
 
 ## Try the product
 
@@ -69,14 +69,14 @@ Open ignored `.local/development-accounts.json` privately to obtain the seeded o
 
 The same local application can manually enable MongoDB/Cloudinary. Store actual credentials in server-side environment settings or the ignored local file. Never use a `NEXT_PUBLIC_` name for a secret.
 
-| Setting | Purpose |
-| --- | --- |
-| `MONGODB_URL` | Preferred MongoDB connection string. Legacy `MONGODB_URI` works; different values supplied under both names are rejected. |
-| `MONGODB_DATABASE` | Explicit dedicated database, e.g. `londos_public_copy`, if the URI has no database. If both select a database they must match. System databases are rejected. |
-| `LONDOS_MONGODB_ENABLED=true` | Enables manual copy/read/check commands. It does not move PostgreSQL authority or automatically export anything. |
-| `CLOUDINARY_URL` | Cloudinary credential URL stored privately; its documented format is in `.env.example`. |
-| `LONDOS_CLOUDINARY_ENABLED=true` | Enables public normalized image copies and read-only usage verification. |
-| `LONDOS_REDIS_ENABLED=false` | Keep disabled when Redis is absent. `REDIS_URL` can remain unset. |
+| Setting                          | Purpose                                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URL`                    | Preferred MongoDB connection string. Legacy `MONGODB_URI` works; different values supplied under both names are rejected.                                     |
+| `MONGODB_DATABASE`               | Explicit dedicated database, e.g. `londos_public_copy`, if the URI has no database. If both select a database they must match. System databases are rejected. |
+| `LONDOS_MONGODB_ENABLED=true`    | Enables manual copy/read/check commands. It does not move PostgreSQL authority or automatically export anything.                                              |
+| `CLOUDINARY_URL`                 | Cloudinary credential URL stored privately; its documented format is in `.env.example`.                                                                       |
+| `LONDOS_CLOUDINARY_ENABLED=true` | Enables public normalized image copies and read-only usage verification.                                                                                      |
+| `LONDOS_REDIS_ENABLED=false`     | Keep disabled when Redis is absent. `REDIS_URL` can remain unset.                                                                                             |
 
 Restart application/worker commands after editing runtime settings. MongoDB verification works even with its feature flag false, without Cloudinary or Redis:
 

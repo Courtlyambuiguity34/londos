@@ -32,8 +32,11 @@ After installation, use one of these files:
 | `START-PREVIEW-WINDOWS.bat`    | Fictional public preview, without database/private features |
 
 The START window runs the server and worker and opens the browser after the health endpoint responds.
-Keep it open. Press Ctrl+C to stop the processes. `STOP-WINDOWS.bat` stops the development PostgreSQL
-container and preserves its named volume; it does not terminate an unrelated process.
+The launcher now waits for `/api/ready` to confirm the web process, database, authentication and
+worker—not merely an open port. Keep it open. Press Ctrl+C to stop the processes. `STOP-WINDOWS.bat`
+stops the web/worker recorded by the launcher and the development PostgreSQL container, preserving
+its named volume. A later START click starts that database again. It does not search for or terminate
+unrelated Node/PostgreSQL processes.
 
 On a headless server, set `LONDOS_NO_BROWSER=true`; the launcher prints the ready URL instead of
 calling the operating system's browser opener.
@@ -74,6 +77,12 @@ node scripts/local/launcher.mjs start local shopkeeper
 - `server` builds with operator-supplied environment settings but never runs migrations or seeds.
   Follow the release runbook for the separately authorized migration step.
 
+In local mode, the listening `PORT` must match the port in `AUTH_BASE_URL`; the launcher rejects a
+mismatch because authentication redirects and cookies would otherwise point at a different origin.
+In server mode, a hosting platform may supply an internal `PORT` while `AUTH_BASE_URL` remains the
+external HTTPS Render/custom-domain origin. `AUTH_BASE_URL` is the central-domain setting—do not add
+a second public-domain variable or put a database URL in a browser/PWA.
+
 `npm ci` intentionally restores the exact lockfile state, so do not keep hand-edited packages inside
 `node_modules`. Private credentials remain in ignored `.env.local` and `.local` files. Never give
 those files to a merchant or customer.
@@ -90,3 +99,8 @@ The PWA does not contain secrets and deliberately does not cache HTML, API respo
 authentication, or private data for offline use. A native `.exe`, `.dmg`, or Linux bundle would wrap
 the same website while increasing download size and update/security work, so the PWA is the supported
 desktop/mobile client for this stage.
+
+For a same-day local proof, double-click the installer, then one START file, and open
+`http://127.0.0.1:3000/api/ready`. A successful full local run reports `ready=true`,
+`mode=development-core`, `database=true`, `authentication=true`, and `worker=ready`. A fixture
+preview is useful for interface review but does not prove private workflows or a database.

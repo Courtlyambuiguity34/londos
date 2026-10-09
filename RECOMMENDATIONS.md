@@ -1,5 +1,20 @@
 # Model and execution recommendations
 
+## Terminology clarification
+
+“Selected model” means the configured Gemini/OpenAI model used for an explicitly consented remote
+design request. “Provider quota” means that external account's request/token allowance. It does not
+select a Londos module or database and it is not the mall's planning capacity. Londos also reports
+separate mall-capacity and media-quota values. The application deliberately does not rotate API keys
+or switch providers to evade an exhausted provider quota; deterministic/manual design remains
+available.
+
+For deployment, retain one protected Londos web/API gateway with three role-specific PWA entry
+points. Keep PostgreSQL canonical for the current implementation. MongoDB/Cloudinary are optional
+public-copy services, not a drop-in replacement. An owned mini PC can become a later server after a
+stable HTTPS origin, private database networking, supervision, power, monitoring and tested backups
+exist. See [cross-platform deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md).
+
 **Next comprehensive review:** use Sol 6.1 Extra High after the preserved designer/provider branches are consolidated with a new additive migration. First run the real Atlas check once MONGODB_URL is delivered; current targeted provider results do not establish live credentials or G5 release readiness. Keep Redis optional. Read [current verification](docs/evidence/SERVICES-2026-10-07.md) and [designer review](docs/SHOP-DESIGNER-REVIEW.md). The assistant cannot switch the model selector or infer that a switch occurred.
 
 The owner requested explicit model handoffs on 2026-10-04. Follow these stages when executing [the implementation plan](docs/IMPLEMENTATION-PLAN.md). The model choices are a workflow recommendation, not a measured comparison on this repository.
