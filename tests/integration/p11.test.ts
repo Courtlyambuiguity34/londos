@@ -135,7 +135,7 @@ test("017 to 018 is additive and repeatable, preserving old canonical fixtures",
     (await pool.query("SELECT id,name,slug,version FROM shops WHERE id=$1", [seedIds.shopA]))
       .rows[0],
   ).toEqual(before);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(21);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(24);
   await migrate(pool);
   expect((await readDesign(pool, actors.ownerA!, seedIds.shopA)).specification.schemaVersion).toBe(
     1,
@@ -369,7 +369,7 @@ test("an interrupted 018 migration rolls back completely and a retry preserves o
     await migrate(isolated, directory);
     expect(
       (await isolated.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n,
-    ).toBe(21);
+    ).toBe(24);
   } finally {
     await isolated.end();
     await parent.query(`DROP DATABASE ${name}`);

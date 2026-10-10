@@ -53,10 +53,7 @@ export default function RentShopPage() {
               : "Merchant applications are unavailable in this read-only preview. It does not collect business information or accept rent payments. Rent and space allowances will be confirmed for the pilot."}
           </p>
         </div>
-        <Link
-          href={coreConfigured() ? "/shopkeeper/applications/new" : "/search"}
-          className="button"
-        >
+        <Link href={coreConfigured() ? "/register" : "/search"} className="button">
           {coreConfigured() ? "Apply for a shop" : "Explore a sample shop"}
           <Icon name="arrow" />
         </Link>

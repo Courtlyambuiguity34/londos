@@ -41,6 +41,8 @@ Store secrets through Render's server-side environment facility. Do not put valu
 | `LONDOS_EMAIL_PROVIDER`                       | `brevo`.                                                                                                                    |
 | `LONDOS_EMAIL_FROM`, `LONDOS_EMAIL_FROM_NAME` | Actual verified sender email and name.                                                                                      |
 | `LONDOS_BREVO_API_KEY`                        | Real private key, never a mock placeholder in remote authentication.                                                        |
+| `LONDOS_EMAIL_MAX_PER_HOUR` / `...PER_DAY`    | `250` / `250` conservative caps; confirm both against the current Brevo plan before enabling delivery.                      |
+| `LONDOS_MONTHLY_REPORTS_ENABLED`              | Start `false`; enable only after analytics/privacy and live-email approval.                                                  |
 | `LONDOS_REDIS_ENABLED`                        | `false`; leave `REDIS_URL` unset.                                                                                           |
 | `LONDOS_AI_REMOTE`                            | Start with `false`; remote AI requires verified bindings/models, consent, budgets and acceptance.                           |
 

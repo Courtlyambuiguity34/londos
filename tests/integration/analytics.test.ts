@@ -190,7 +190,7 @@ async function waitForLock() {
 }
 test("013-to-014 preserves existing shops/default grants and aggregate references are tenant-consistent", async () => {
   expect((await pool.query("SELECT * FROM shops ORDER BY id")).rows).toEqual(baseline);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(21);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(24);
   await expect(
     pool.query(
       "INSERT INTO pilot_metrics VALUES(current_date,$1,$2,'shop_viewed','direct','none',1)",

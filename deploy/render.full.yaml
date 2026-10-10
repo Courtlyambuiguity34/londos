@@ -35,6 +35,12 @@ services:
         value: Londos
       - key: LONDOS_BREVO_API_KEY
         sync: false
+      - key: LONDOS_EMAIL_MAX_PER_HOUR
+        value: "250"
+      - key: LONDOS_EMAIL_MAX_PER_DAY
+        value: "250"
+      - key: LONDOS_MONTHLY_REPORTS_ENABLED
+        value: "false"
       - key: LONDOS_AI_REMOTE
         value: "false"
       - key: LONDOS_MONGODB_ENABLED

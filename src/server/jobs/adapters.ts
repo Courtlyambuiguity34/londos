@@ -39,6 +39,23 @@ export class LocalPrivateStorage implements PrivateStorageAdapter {
     }
   }
 }
+const paymentDetails = z
+  .object({
+    supportEmail: z.email(),
+    supportPhone: z
+      .string()
+      .regex(/^\+[1-9][0-9]{7,14}$/)
+      .nullable(),
+    mobileMoneyPhone: z
+      .string()
+      .regex(/^\+[1-9][0-9]{7,14}$/)
+      .nullable(),
+    mobileMoneyName: z.string().min(2).max(120).nullable(),
+    bankName: z.string().min(2).max(120).nullable(),
+    bankAccountName: z.string().min(2).max(120).nullable(),
+    bankAccountNumber: z.string().min(4).max(80).nullable(),
+  })
+  .strict();
 export const messageSchema = z.discriminatedUnion("template", [
   z
     .object({
@@ -73,6 +90,16 @@ export const messageSchema = z.discriminatedUnion("template", [
       shopId: z.uuid(),
       state: z.enum(["renewal_due", "due", "grace", "closed"]),
       periodEnd: z.iso.datetime(),
+      invoice: z
+        .object({
+          id: z.uuid(),
+          reference: z.string().regex(/^LON-[A-F0-9]{32}$/),
+          currency: z.enum(["UGX", "USD", "KES", "EUR", "GBP"]),
+          remaining_minor: z.string().regex(/^[1-9][0-9]{0,19}$/),
+        })
+        .strict()
+        .optional(),
+      payment: paymentDetails.optional(),
     })
     .strict(),
   z
@@ -83,6 +110,54 @@ export const messageSchema = z.discriminatedUnion("template", [
       eventId: z.uuid(),
     })
     .strict(),
+  z
+    .object({
+      template: z.literal("shop-welcome"),
+      to: z.email(),
+      shopId: z.uuid(),
+      shopName: z.string().min(1).max(120),
+    })
+    .strict(),
+  z
+    .object({
+      template: z.literal("monthly-report"),
+      to: z.email(),
+      shopId: z.uuid(),
+      shopName: z.string().min(1).max(120),
+      month: z.string().regex(/^\d{4}-\d{2}$/),
+      shopViews: z.string().regex(/^\d+$/),
+      productViews: z.string().regex(/^\d+$/),
+      contactActions: z.string().regex(/^\d+$/),
+      discoveryClicks: z.string().regex(/^\d+$/),
+    })
+    .strict(),
+  z
+    .object({
+      template: z.literal("campaign"),
+      to: z.email(),
+      campaignId: z.uuid(),
+      subject: z
+        .string()
+        .min(3)
+        .max(140)
+        .regex(/^[^\r\n]+$/),
+      body: z.string().min(10).max(5000),
+      ctaLabel: z
+        .string()
+        .min(2)
+        .max(50)
+        .regex(/^[^\r\n]+$/)
+        .optional(),
+      ctaPath: z
+        .string()
+        .regex(/^\/[A-Za-z0-9/_?=&.-]{0,300}$/)
+        .optional(),
+    })
+    .strict()
+    .superRefine((value, context) => {
+      if (Boolean(value.ctaLabel) !== Boolean(value.ctaPath))
+        context.addIssue({ code: "custom", message: "cta_pair_required" });
+    }),
   z
     .object({
       template: z.literal("contact-changed"),

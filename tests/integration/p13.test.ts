@@ -13,11 +13,16 @@ import { seedDemonstration } from "../../src/server/db/demo-seed";
 import { resolveActor, sessionState, type Actor } from "../../src/server/security/authorization";
 import { readDemoAccounts, retireDemoAccount } from "../../src/server/demo-accounts";
 import { generate } from "otplib";
-import { BrevoNotifications, type BrevoSettings } from "../../src/server/jobs/brevo";
+import {
+  BrevoNotifications,
+  EmailQuotaDeferred,
+  type BrevoSettings,
+} from "../../src/server/jobs/brevo";
 import { enqueue } from "../../src/server/jobs/enqueue";
 import { handle } from "../../src/server/jobs/handlers";
 import { replay, type Job } from "../../src/server/jobs/queue";
 import { readServiceConfiguration } from "../../src/server/services/status";
+import { registerShopkeeper } from "../../src/server/registration";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -151,6 +156,40 @@ test("019 expands an 018 native-auth database idempotently without modifying app
   expect(
     (await pool.query("SELECT count(*)::int AS n FROM notification_deliveries")).rows[0].n,
   ).toBe(0);
+});
+test("public shopkeeper registration creates only an unverified, unprivileged identity", async () => {
+  const email = `registration-${randomUUID()}@londos.invalid`,
+    input = {
+      name: "Fictional registering owner",
+      email,
+      password: "Fictional-registration-password-42",
+      acceptTerms: true as const,
+    };
+  await expect(registerShopkeeper(pool, input)).resolves.toEqual({ accepted: true });
+  await expect(registerShopkeeper(pool, input)).resolves.toEqual({ accepted: true });
+  const identity = (
+    await pool.query('SELECT id,"emailVerified" FROM "user" WHERE email=$1', [email])
+  ).rows[0];
+  expect(identity.emailVerified).toBe(false);
+  expect(
+    (
+      await pool.query(
+        "SELECT (SELECT count(*) FROM memberships WHERE user_id=$1)::int AS memberships,(SELECT count(*) FROM operator_grants WHERE user_id=$1)::int AS grants",
+        [identity.id],
+      )
+    ).rows[0],
+  ).toEqual({ memberships: 0, grants: 0 });
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int AS n FROM jobs WHERE payload->>'template'='email-verification' AND payload->>'to'=$1",
+        [email],
+      )
+    ).rows[0].n,
+  ).toBeGreaterThan(0);
+  expect(
+    (await new Client().post("sign-in/email", { email, password: input.password })).status,
+  ).toBe(403);
 });
 test("native demonstration accounts have no operators, payments, live publication or fabricated pilot outcomes", async () => {
   const r = await pool.query(
@@ -418,4 +457,44 @@ test("stale worker lease, altered durable payload and fictional addresses never 
     ),
   ).rejects.toThrow("fictional_email_denied");
   expect(calls).toBe(0);
+});
+test("Brevo quota reservations defer excess work without provider calls or recipient artifacts", async () => {
+  const previousHour = process.env.LONDOS_EMAIL_MAX_PER_HOUR,
+    previousDay = process.env.LONDOS_EMAIL_MAX_PER_DAY;
+  process.env.LONDOS_EMAIL_MAX_PER_HOUR = "1";
+  process.env.LONDOS_EMAIL_MAX_PER_DAY = "1";
+  await pool.query("DELETE FROM email_quota_windows");
+  let calls = 0;
+  const adapter = new BrevoNotifications(pool, settings, async () => {
+    calls++;
+    return Response.json({ messageId: `quota-fixture-${calls}` }, { status: 201 });
+  });
+  try {
+    const first = await notification();
+    await adapter.deliver(first.id, first.payload, new AbortController().signal, {
+      leaseToken: first.lease_token,
+    });
+    const deferred = await notification();
+    await expect(
+      adapter.deliver(deferred.id, deferred.payload, new AbortController().signal, {
+        leaseToken: deferred.lease_token,
+      }),
+    ).rejects.toBeInstanceOf(EmailQuotaDeferred);
+    expect(calls).toBe(1);
+    expect((await pool.query("SELECT count(*)::int AS n FROM email_quota_windows")).rows[0].n).toBe(
+      2,
+    );
+    expect(
+      (
+        await pool.query("SELECT count(*)::int AS n FROM notification_deliveries WHERE job_id=$1", [
+          deferred.id,
+        ])
+      ).rows[0].n,
+    ).toBe(0);
+  } finally {
+    if (previousHour === undefined) delete process.env.LONDOS_EMAIL_MAX_PER_HOUR;
+    else process.env.LONDOS_EMAIL_MAX_PER_HOUR = previousHour;
+    if (previousDay === undefined) delete process.env.LONDOS_EMAIL_MAX_PER_DAY;
+    else process.env.LONDOS_EMAIL_MAX_PER_DAY = previousDay;
+  }
 });

@@ -59,6 +59,8 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
       },
     },
     emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url }) => {
         await enqueue(pool, {
           kind: "notification.local",

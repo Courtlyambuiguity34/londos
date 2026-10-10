@@ -68,6 +68,14 @@ export async function fail(
     [job.id, job.lease_token, code],
   );
 }
+export async function defer(pool: Pool, job: Job, availableAt: Date) {
+  await pool.query(
+    `UPDATE jobs SET state='pending',attempts=greatest(0,attempts-1),available_at=$3,
+     lease_token=NULL,lease_until=NULL,last_error='provider_quota_deferred'
+     WHERE id=$1 AND lease_token=$2 AND state='running'`,
+    [job.id, job.lease_token, availableAt],
+  );
+}
 export async function replay(pool: Pool, actor: Actor, jobId: string) {
   return transaction(pool, async (client) => {
     await requireOperator(client, actor, "jobs", true);

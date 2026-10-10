@@ -119,6 +119,117 @@ export function SignOutButton() {
     </>
   );
 }
+export function RegistrationForm() {
+  const [message, setMessage] = useState(""),
+    [email, setEmail] = useState(""),
+    [pending, setPending] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    const data = fields(event);
+    setMessage("");
+    if (data.password !== data.confirmPassword) {
+      setMessage("The passwords do not match.");
+      return;
+    }
+    setPending(true);
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          acceptTerms: data.acceptTerms === "on",
+        }),
+      });
+      if (!response.ok) throw new Error();
+      setEmail(data.email ?? "");
+      setMessage(
+        "Check your email for the Londos verification link. You cannot sign in until verification succeeds.",
+      );
+    } catch {
+      setMessage("Registration could not be completed. Check the fields and try again shortly.");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function resend() {
+    setPending(true);
+    try {
+      await send("send-verification-email", {
+        email,
+        callbackURL: `${window.location.origin}/shopkeeper`,
+      });
+      setMessage("If this address is awaiting verification, a fresh email has been queued.");
+    } catch {
+      setMessage("A new verification message could not be requested yet. Please wait and retry.");
+    } finally {
+      setPending(false);
+    }
+  }
+  return (
+    <div className="account-form">
+      <form className="account-form" onSubmit={submit}>
+        <label htmlFor="register-name">Your name</label>
+        <input
+          id="register-name"
+          name="name"
+          autoComplete="name"
+          minLength={2}
+          maxLength={100}
+          required
+        />
+        <label htmlFor="register-email">Email</label>
+        <input
+          id="register-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          required
+        />
+        <label htmlFor="register-password">Password (at least 12 characters)</label>
+        <input
+          id="register-password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={12}
+          maxLength={128}
+          required
+        />
+        <label htmlFor="register-confirm-password">Confirm password</label>
+        <input
+          id="register-confirm-password"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={12}
+          maxLength={128}
+          required
+        />
+        <label className="checkbox-label">
+          <input type="checkbox" name="acceptTerms" required /> I will provide accurate business
+          information and accept that shop approval and payment verification are separate reviews.
+        </label>
+        <button className="button" disabled={pending}>
+          {pending ? "Creating…" : "Create account and verify email"}
+        </button>
+      </form>
+      {email ? (
+        <button
+          type="button"
+          className="button button--outline"
+          disabled={pending}
+          onClick={() => void resend()}
+        >
+          Send verification email again
+        </button>
+      ) : null}
+      <p role="status">{message}</p>
+    </div>
+  );
+}
 export function RecoveryForm({ token }: { token?: string }) {
   const [message, setMessage] = useState(""),
     [pending, setPending] = useState(false);

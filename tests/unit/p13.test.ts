@@ -14,7 +14,8 @@ import {
   evaluateLaunch,
   type LaunchManifest,
 } from "../../scripts/release/gate";
-import { brevoMessage, notificationsConfigured } from "../../src/server/jobs/brevo";
+import { brevoMessage, emailLimits, notificationsConfigured } from "../../src/server/jobs/brevo";
+import { registrationInput } from "../../src/server/registration";
 function fixture() {
   const plan = pilotPlan.parse({
     format: "londos-pilot-plan-v1",
@@ -327,6 +328,73 @@ test("Brevo action links are fixed-origin native-auth routes and messages contai
       origin,
     ),
   ).toThrow();
+});
+test("Londos HTML campaigns escape operator content and monthly reports identify aggregate counts", () => {
+  const origin = "https://mall.example.org";
+  const campaign = brevoMessage(
+    {
+      template: "campaign",
+      to: "merchant@example.org",
+      campaignId: randomUUID(),
+      subject: "A safe Londos update",
+      body: "Read this update.\n\n<script>alert('unsafe')</script>",
+      ctaLabel: "Open Londos",
+      ctaPath: "/shopkeeper",
+    },
+    origin,
+  );
+  expect(campaign.html).toContain("Londos");
+  expect(campaign.html).toContain("&lt;script&gt;");
+  expect(campaign.html).not.toContain("<script>alert");
+  expect(campaign.text).toContain("<script>alert");
+  const report = brevoMessage(
+    {
+      template: "monthly-report",
+      to: "merchant@example.org",
+      shopId: randomUUID(),
+      shopName: "Example shop",
+      month: "2026-09",
+      shopViews: "12",
+      productViews: "8",
+      contactActions: "3",
+      discoveryClicks: "5",
+    },
+    origin,
+  );
+  expect(report.text).toContain("not unique people");
+  expect(report.html).toContain("not unique visitors");
+});
+test("registration and email limits reject unsafe or ambiguous configuration", () => {
+  expect(
+    registrationInput.parse({
+      name: "Shop Owner",
+      email: "OWNER@EXAMPLE.ORG",
+      password: "a-long-password-value",
+      acceptTerms: true,
+    }).email,
+  ).toBe("owner@example.org");
+  expect(() =>
+    registrationInput.parse({
+      name: "Shop Owner",
+      email: "owner@example.org",
+      password: "short",
+      acceptTerms: true,
+    }),
+  ).toThrow();
+  const previousHour = process.env.LONDOS_EMAIL_MAX_PER_HOUR,
+    previousDay = process.env.LONDOS_EMAIL_MAX_PER_DAY;
+  try {
+    delete process.env.LONDOS_EMAIL_MAX_PER_HOUR;
+    delete process.env.LONDOS_EMAIL_MAX_PER_DAY;
+    expect(emailLimits()).toEqual({ hourly: 250, daily: 250 });
+    process.env.LONDOS_EMAIL_MAX_PER_HOUR = "0";
+    expect(() => emailLimits()).toThrow("londos_email_max_per_hour_invalid");
+  } finally {
+    if (previousHour === undefined) delete process.env.LONDOS_EMAIL_MAX_PER_HOUR;
+    else process.env.LONDOS_EMAIL_MAX_PER_HOUR = previousHour;
+    if (previousDay === undefined) delete process.env.LONDOS_EMAIL_MAX_PER_DAY;
+    else process.env.LONDOS_EMAIL_MAX_PER_DAY = previousDay;
+  }
 });
 test("remote authentication configuration fails closed without a selected email provider", () => {
   const before = process.env.LONDOS_EMAIL_PROVIDER;

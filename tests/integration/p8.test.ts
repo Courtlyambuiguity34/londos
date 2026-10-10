@@ -36,6 +36,8 @@ import {
   syncTenancy,
   createPolicy,
   tenancyAt,
+  submitPaymentClaim,
+  applyPromotion,
   type Invoice,
 } from "../../src/server/rent";
 import { schedule } from "../../src/server/jobs/scheduler";
@@ -57,6 +59,12 @@ import {
 } from "../../src/server/administration";
 import { PostgresSearch } from "../../src/server/discovery";
 import { saveContacts, publicContact } from "../../src/server/contacts";
+import {
+  createCampaign,
+  createPromotion,
+  scheduleCommunications,
+  updatePaymentSettings,
+} from "../../src/server/communications";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -233,6 +241,124 @@ test("009 upgrade preserves existing shops and policies are immutable exact mino
     ),
   ).rejects.toMatchObject({ code: "23514" });
   expect((await pool.query("SELECT count(*)::int AS n FROM rent_contracts")).rows[0].n).toBe(0);
+});
+test("merchant payment claims remain pending until exact operator reconciliation", async () => {
+  await updatePaymentSettings(pool, actors.operator!, {
+    version: 0,
+    supportEmail: "billing@londos.test",
+    supportPhone: "+256700000001",
+    mobileMoneyPhone: "+256700000002",
+    mobileMoneyName: "Londos Test Payments",
+    bankName: null,
+    bankAccountName: null,
+    bankAccountNumber: null,
+    notifyShops: false,
+    confirm: true,
+  });
+  const invoice = await approved(),
+    reference = `PAY-${randomUUID().toUpperCase()}`;
+  await submitPaymentClaim(pool, actors.ownerA!, invoice.id, {
+    amountMinor: invoice.amount_minor,
+    currency: "UGX",
+    reference,
+    note: "Fictional external payment submitted for verification",
+    confirm: true,
+  });
+  let record = await readInvoice(pool, actors.ownerA!, invoice.id);
+  expect(record.claims[0]).toMatchObject({ reference, state: "pending" });
+  expect(record.paymentSettings).toMatchObject({
+    support_email: "billing@londos.test",
+    mobile_money_phone: "+256700000002",
+  });
+  expect(record.invoice.finalized).toBe(false);
+  await reconcileInvoice(pool, actors.operator!, invoice.id, {
+    ...credit(invoice),
+    reference,
+  });
+  record = await readInvoice(pool, actors.ownerA!, invoice.id);
+  expect(record.claims[0]!.state).toBe("verified");
+  expect(record.invoice.finalized).toBe(true);
+});
+test("eligible free-period promo creates one auditable waiver and provisions once", async () => {
+  const code = `FREE_${randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
+  await createPromotion(pool, actors.operator!, {
+    code,
+    title: "Fictional first month free",
+    description: "A fictional promotion used only for integration verification.",
+    benefit: "free_period",
+    audience: "new_shops",
+    startsAt: new Date(Date.now() - 60_000).toISOString(),
+    endsAt: new Date(Date.now() + 86_400_000).toISOString(),
+    maxRedemptions: 10,
+    announce: false,
+    confirm: true,
+  });
+  const invoice = await approved(),
+    result = await applyPromotion(pool, actors.ownerA!, invoice.id, { code });
+  expect(result).toMatchObject({ amountMinor: invoice.amount_minor });
+  expect(result.shopId).toBeTruthy();
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int AS n FROM rent_events WHERE invoice_id=$1 AND kind='waiver' AND source_reference LIKE 'PROMO-%'",
+        [invoice.id],
+      )
+    ).rows[0].n,
+  ).toBe(1);
+  await expect(applyPromotion(pool, actors.ownerA!, invoice.id, { code })).rejects.toMatchObject({
+    code: "promotion_unavailable",
+  });
+});
+test("campaign expansion stays owner-scoped and monthly reports use aggregate counts", async () => {
+  await pool.query("INSERT INTO operator_grants(user_id,permission) VALUES($1,'operations')", [
+    accounts.operator.id,
+  ]);
+  let campaign: { id: string; recipients: number };
+  try {
+    campaign = await createCampaign(pool, actors.operator!, {
+      subject: "Fictional Londos notice",
+      body: "This fictional message verifies safe campaign queue expansion.",
+      ctaLabel: "Open Londos",
+      ctaPath: "/shopkeeper",
+      audience: "specific_shops",
+      shopIds: [seedIds.shopA],
+      confirm: true,
+    });
+  } finally {
+    await pool.query("DELETE FROM operator_grants WHERE user_id=$1 AND permission='operations'", [
+      accounts.operator.id,
+    ]);
+  }
+  expect(campaign.recipients).toBeGreaterThan(0);
+  process.env.LONDOS_MONTHLY_REPORTS_ENABLED = "true";
+  const reportMonth = new Date();
+  reportMonth.setUTCDate(1);
+  reportMonth.setUTCMonth(reportMonth.getUTCMonth() - 1);
+  await pool.query(
+    "INSERT INTO pilot_metrics(day,shop_id,merchant_id,event,source,detail,count) VALUES($1,$2,$3,'shop_viewed','direct','none',7) ON CONFLICT(day,shop_id,event,source,detail) DO UPDATE SET count=excluded.count",
+    [reportMonth, seedIds.shopA, seedIds.merchantA],
+  );
+  try {
+    await transaction(pool, (client) => scheduleCommunications(client, new Date()));
+  } finally {
+    delete process.env.LONDOS_MONTHLY_REPORTS_ENABLED;
+  }
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int AS n FROM jobs WHERE payload->>'template'='campaign' AND payload->>'campaignId'=$1",
+        [campaign.id],
+      )
+    ).rows[0].n,
+  ).toBe(campaign.recipients);
+  const monthly = (
+    await pool.query(
+      "SELECT payload FROM jobs WHERE payload->>'template'='monthly-report' AND shop_id=$1 ORDER BY created_at DESC LIMIT 1",
+      [seedIds.shopA],
+    )
+  ).rows[0].payload;
+  expect(monthly).toMatchObject({ shopViews: "7", shopId: seedIds.shopA });
+  expect(monthly).not.toHaveProperty("visitorEmail");
 });
 test("application creation is idempotent and cannot use another merchant or staff authority", async () => {
   const input = { ...details(), key: randomUUID(), merchantId: seedIds.merchantA };

@@ -1,6 +1,7 @@
 import { transaction } from "../db/pool";
 import { enqueue } from "./enqueue";
 import type { Pool } from "pg";
+import { scheduleCommunications } from "../communications";
 export async function schedule(pool: Pool, now = new Date()) {
   const tick = now.toISOString().slice(0, 16);
   return transaction(pool, async (client) => {
@@ -28,6 +29,7 @@ export async function schedule(pool: Pool, now = new Date()) {
           shopId: contract.shop_id,
           payload: { shopId: contract.shop_id },
         });
+      await scheduleCommunications(client, now);
     }
     return Boolean(result.rowCount);
   });

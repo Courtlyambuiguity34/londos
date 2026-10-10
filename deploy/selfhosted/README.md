@@ -95,6 +95,11 @@ curl --fail http://127.0.0.1:3000/api/ready
 Readiness must report `ready:true`, database/authentication true, and worker `ready` before traffic is
 flipped.
 
+The worker also expands campaigns, prepares opted-in monthly reports and drains Brevo notifications.
+For live email set the verified Brevo sender/key and conservative hourly/daily limits in the private
+service environment. Keep `LONDOS_MONTHLY_REPORTS_ENABLED=false` until analytics/privacy and live
+delivery are approved. See [communications and manual billing](../../docs/COMMUNICATIONS-AND-MANUAL-BILLING.md).
+
 ### Linux systemd
 
 1. Review the paths and hardening directives in `systemd/*.service`.

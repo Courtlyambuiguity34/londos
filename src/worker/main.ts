@@ -5,8 +5,8 @@ import { loadLocalEnv } from "../../scripts/local-env";
 import { coreConfig } from "../server/config";
 import { database } from "../server/db/pool";
 import { LocalNotifications } from "../server/jobs/adapters";
-import { BrevoNotifications } from "../server/jobs/brevo";
-import { claim, acknowledge, heartbeat, fail } from "../server/jobs/queue";
+import { BrevoNotifications, EmailQuotaDeferred } from "../server/jobs/brevo";
+import { claim, acknowledge, heartbeat, fail, defer } from "../server/jobs/queue";
 import { handle } from "../server/jobs/handlers";
 import { schedule } from "../server/jobs/scheduler";
 import { withinDeadline } from "../server/jobs/deadline";
@@ -54,6 +54,11 @@ try {
       await withinDeadline((signal) => handle(pool, job, notifications, signal), controller.signal);
       if (await acknowledge(pool, job)) log("job.done", { jobId: job.id, kind: job.kind });
     } catch (error) {
+      if (error instanceof EmailQuotaDeferred) {
+        await defer(pool, job, error.availableAt);
+        log("job.deferred", { jobId: job.id, kind: job.kind, code: "provider_quota" });
+        continue;
+      }
       const code = controller.signal.aborted
         ? "timeout"
         : error instanceof Error && error.message === "unsupported_job"

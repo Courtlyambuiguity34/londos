@@ -53,11 +53,19 @@ npm run services -- read SHOP_UUID
 
 The configured proposed sender is **mnelsontravor@gmail.com**, with name **Londos**. Set `LONDOS_EMAIL_PROVIDER=brevo`, `LONDOS_EMAIL_FROM`, `LONDOS_EMAIL_FROM_NAME`, and the **secret** `LONDOS_BREVO_API_KEY`. Brevo must verify the sender; a future purchased mailbox/domain needs its own sender and DNS authentication. A configured Gmail address alone is not proof of sender acceptance, domain authentication or inbox delivery.
 
+Set `LONDOS_EMAIL_MAX_PER_HOUR` and `LONDOS_EMAIL_MAX_PER_DAY` at or below the actual limits of the
+selected plan. The conservative templates use 250 for both. Brevo's official [Free plan limits
+FAQ](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan)
+was checked on **2026-10-10** and stated **300 email sends per day**, not 300 per hour. Limits can
+change, so confirm the provider page before deployment. Londos atomically reserves both quota
+windows in PostgreSQL and defers excess jobs to the next window without consuming their retry
+budget. Other Brevo/API traffic still counts at the provider; leave headroom.
+
 ```bash
 npm run email:verify
 ```
 
-This sends no email: it checks the fixed Brevo account/senders endpoints and reports booleans without account identity, key values or provider error bodies. A missing key fails closed. Local adapters always keep notifications in the private local sink, even when Brevo settings exist. Remote authentication/worker startup requires configured Brevo instead of a local sink; core readiness reports configuration, not deliverability certification. Public sign-up and remote merchant/rent/privacy/analytics contracts still require the remaining G5 work.
+This sends no email: it checks the fixed Brevo account/senders endpoints and reports booleans without account identity, key values or provider error bodies. A missing key fails closed. Local adapters always keep notifications in the private local sink, even when Brevo settings exist. Remote authentication/worker startup requires configured Brevo instead of a local sink; core readiness reports configuration, not deliverability certification. Shopkeeper registration creates an unverified account and sends the native single-use verification link; it never creates operator grants. Password recovery uses the same native expiring-token contract. `LONDOS_MONTHLY_REPORTS_ENABLED=false` remains the default until analytics/privacy policy and live delivery are approved.
 
 Migration 019 records one durable Brevo attempt per existing `notification.local` job identity; keeping that kind preserves old queued jobs. Payload identity and current worker lease are checked before an attempt. Accepted receipts survive acknowledgement loss, so retries cannot resend. Timeout, connection loss, malformed responses, HTTP errors and an interrupted `attempting` record require reconciliation and cannot be replayed into another send. The provider's own idempotency header is additional protection, not a claim of unlimited provider deduplication. This conservative policy can miss a notification after a crash before network transmission. Verify provider history, keep the original receipt, and explicitly regenerate a fresh action (for example request a new password reset) when appropriate. Do not reset/delete an attempt record. Aggregate monitoring raises `email_delivery_requires_reconciliation`; no payload or token appears in that alert. See [the runbook](RELEASE-RUNBOOK.md).
 

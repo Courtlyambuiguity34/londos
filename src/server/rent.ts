@@ -14,6 +14,7 @@ import {
 import { requireOperator, requireShop, requireStepUp, type Actor } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { audit } from "./security/audit";
+import { currentPaymentSettings } from "./communications";
 
 const day = 86400000;
 const amount = z.string().regex(/^[1-9][0-9]{0,19}$/);
@@ -51,6 +52,31 @@ export const reverseInput = z
     eventId: z.uuid(),
     reason: reasonInput,
     confirm: z.literal(true),
+  })
+  .strict();
+export const paymentClaimInput = z
+  .object({
+    amountMinor: amount,
+    currency: z.literal("UGX"),
+    reference: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9][A-Z0-9/-]{5,79}$/),
+    note: reasonInput,
+    confirm: z.literal(true),
+  })
+  .strict();
+export const rejectPaymentClaimInput = z
+  .object({ version: z.number().int().positive(), reason: reasonInput, confirm: z.literal(true) })
+  .strict();
+export const promotionRedemptionInput = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9][A-Z0-9_-]{3,31}$/),
   })
   .strict();
 export type RentPolicy = {
@@ -189,7 +215,30 @@ export async function readInvoice(
     const policy = (
       await client.query("SELECT * FROM rent_policies WHERE id=$1", [invoice.policy_id])
     ).rows[0] as RentPolicy;
-    return { invoice, events, policy };
+    const claims = (
+      await client.query(
+        "SELECT id,amount_minor::text,currency,reference,note,state,version,review_reason,created_at,updated_at FROM payment_claims WHERE invoice_id=$1 ORDER BY created_at DESC,id DESC LIMIT 50",
+        [id],
+      )
+    ).rows as {
+      id: string;
+      amount_minor: string;
+      currency: string;
+      reference: string;
+      note: string;
+      state: string;
+      version: number;
+      review_reason: string | null;
+      created_at: Date;
+      updated_at: Date;
+    }[];
+    return {
+      invoice,
+      events,
+      policy,
+      claims,
+      paymentSettings: (await currentPaymentSettings(client)) ?? null,
+    };
   });
 }
 export async function applicationInvoices(
@@ -348,6 +397,48 @@ async function provision(
   });
   return id;
 }
+async function finalizeCoverage(
+  client: PoolClient,
+  actor: Actor,
+  invoice: Invoice,
+  effectiveNow: Date,
+) {
+  if (invoice.finalized) return invoice.shop_id;
+  const policy = (
+    await client.query("SELECT * FROM rent_policies WHERE id=$1", [invoice.policy_id])
+  ).rows[0] as RentPolicy;
+  const previousEnd = invoice.shop_id
+    ? (await client.query("SELECT period_end FROM tenancies WHERE shop_id=$1", [invoice.shop_id]))
+        .rows[0]?.period_end
+    : null;
+  const start = new Date(
+      Math.max(effectiveNow.getTime(), previousEnd ? new Date(previousEnd).getTime() : 0),
+    ),
+    end = new Date(start.getTime() + policy.period_days * day);
+  await client.query("UPDATE invoices SET period_start=$2,period_end=$3 WHERE id=$1", [
+    invoice.id,
+    start,
+    end,
+  ]);
+  const created = !invoice.shop_id;
+  const shopId = invoice.shop_id ?? (await provision(client, actor, invoice, policy, start, end));
+  await client.query("UPDATE rent_invoice_state SET finalized=true WHERE invoice_id=$1", [
+    invoice.id,
+  ]);
+  await audit(client, actor, "rent.coverage.finalized", invoice.id, invoice.merchant_id, {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  });
+  if (created) {
+    const shop = (await client.query("SELECT name FROM shops WHERE id=$1", [shopId])).rows[0];
+    await notifyOwners(client, invoice.merchant_id, `shop-welcome:${shopId}`, {
+      template: "shop-welcome",
+      shopId,
+      shopName: shop.name,
+    });
+  }
+  return shopId;
+}
 export function tenancyAt(end: Date, graceDays: number, now: Date, debt = false) {
   if (debt || now.getTime() >= end.getTime() + graceDays * day) return "closed";
   if (now < end) return "active";
@@ -401,13 +492,44 @@ export async function syncTenancy(client: PoolClient, shopId: string, now: Date,
   }
   const notice =
     state === "active" && end.getTime() - now.getTime() <= 3 * day ? "renewal_due" : state;
-  if (notice !== "active")
+  if (notice !== "active") {
+    const dueInvoice = (
+      await client.query(
+        `SELECT i.id,s.reference,i.currency,(i.amount_minor-coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id),0))::text AS remaining_minor
+         FROM invoices i JOIN rent_invoice_state s ON s.invoice_id=i.id
+         WHERE i.shop_id=$1 AND (i.amount_minor-coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id),0))>0
+         ORDER BY i.created_at DESC,i.id DESC LIMIT 1`,
+        [shopId],
+      )
+    ).rows[0] as
+      { id: string; reference: string; currency: string; remaining_minor: string } | undefined;
+    const payment = await currentPaymentSettings(client);
     await notifyOwners(
       client,
       row.merchant_id,
       `rent:${shopId}:${end.toISOString()}:${notice}:${debt ? "debt" : "time"}`,
-      { template: "tenancy-status", shopId, state: notice, periodEnd: end.toISOString() },
+      {
+        template: "tenancy-status",
+        shopId,
+        state: notice,
+        periodEnd: end.toISOString(),
+        ...(dueInvoice ? { invoice: dueInvoice } : {}),
+        ...(payment
+          ? {
+              payment: {
+                supportEmail: payment.support_email,
+                supportPhone: payment.support_phone,
+                mobileMoneyPhone: payment.mobile_money_phone,
+                mobileMoneyName: payment.mobile_money_name,
+                bankName: payment.bank_name,
+                bankAccountName: payment.bank_account_name,
+                bankAccountNumber: payment.bank_account_number,
+              },
+            }
+          : {}),
+      },
     );
+  }
   const milestones = [
     end.getTime() - 3 * day,
     end.getTime(),
@@ -505,31 +627,13 @@ export async function reconcileInvoice(
       ],
     );
     let shopId = invoice.shop_id;
-    if (total === due && !invoice.finalized) {
-      const policy = (
-        await client.query("SELECT * FROM rent_policies WHERE id=$1", [invoice.policy_id])
-      ).rows[0] as RentPolicy;
-      const previousEnd = shopId
-        ? (await client.query("SELECT period_end FROM tenancies WHERE shop_id=$1", [shopId]))
-            .rows[0]?.period_end
-        : null;
-      const start = new Date(
-          Math.max(effectiveNow.getTime(), previousEnd ? new Date(previousEnd).getTime() : 0),
-        ),
-        end = new Date(start.getTime() + policy.period_days * day);
-      await client.query("UPDATE invoices SET period_start=$2,period_end=$3 WHERE id=$1", [
-        id,
-        start,
-        end,
-      ]);
-      if (!shopId) shopId = await provision(client, actor, invoice, policy, start, end);
-      await client.query("UPDATE rent_invoice_state SET finalized=true WHERE invoice_id=$1", [id]);
-      await audit(client, actor, "rent.coverage.finalized", id, invoice.merchant_id, {
-        start: start.toISOString(),
-        end: end.toISOString(),
-      });
-    }
+    if (total === due && !invoice.finalized)
+      shopId = await finalizeCoverage(client, actor, invoice, effectiveNow);
     await client.query("UPDATE rent_invoice_state SET version=version+1 WHERE invoice_id=$1", [id]);
+    await client.query(
+      "UPDATE payment_claims SET state='verified',version=version+1,reviewed_by=$2,reviewed_at=clock_timestamp(),review_reason=$3,updated_at=clock_timestamp() WHERE invoice_id=$1 AND reference=$4 AND state='pending'",
+      [id, actor.userId, v.reason, v.reference],
+    );
     if (shopId) await syncTenancy(client, shopId, effectiveNow, actor);
     await audit(client, actor, `rent.${v.kind}.recorded`, id, invoice.merchant_id, {
       eventId,
@@ -552,6 +656,207 @@ export async function reconcileInvoice(
       version: invoice.version + 1,
       creditedMinor: total.toString(),
     });
+  });
+}
+export async function submitPaymentClaim(
+  pool: Pool,
+  actor: Actor,
+  id: string,
+  input: z.infer<typeof paymentClaimInput>,
+) {
+  const value = paymentClaimInput.parse(input);
+  return transaction(pool, async (client) => {
+    const initial = await invoiceAccess(client, actor, id, "owner");
+    await requireStepUp(client, actor);
+    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [initial.merchant_id]);
+    const invoice = await invoiceAccess(client, actor, id, "owner");
+    await requireStepUp(client, actor);
+    if (invoice.currency !== value.currency) throw new AccessError(422, "currency_mismatch");
+    const remaining = BigInt(invoice.amount_minor) - BigInt(invoice.credited_minor);
+    if (remaining <= 0n) throw new AccessError(409, "invoice_already_covered");
+    if (BigInt(value.amountMinor) > remaining) throw new AccessError(409, "amount_exceeds_balance");
+    const claimId = randomUUID();
+    try {
+      await client.query(
+        "INSERT INTO payment_claims(id,invoice_id,merchant_id,currency,amount_minor,reference,note,submitted_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+        [
+          claimId,
+          id,
+          invoice.merchant_id,
+          value.currency,
+          value.amountMinor,
+          value.reference,
+          value.note,
+          actor.userId,
+        ],
+      );
+    } catch (error) {
+      if ((error as { code?: string }).code === "23505")
+        throw new AccessError(409, "payment_reference_already_submitted");
+      throw error;
+    }
+    await audit(client, actor, "rent.payment-claim.submitted", claimId, invoice.merchant_id, {
+      invoiceId: id,
+      amountMinor: value.amountMinor,
+    });
+    return { id: claimId, state: "pending" as const };
+  });
+}
+
+export async function rejectPaymentClaim(
+  pool: Pool,
+  actor: Actor,
+  invoiceId: string,
+  claimId: string,
+  input: z.infer<typeof rejectPaymentClaimInput>,
+) {
+  const value = rejectPaymentClaimInput.parse(input);
+  z.uuid().parse(claimId);
+  return transaction(pool, async (client) => {
+    const invoice = await invoiceAccess(client, actor, invoiceId, "finance");
+    await requireOperator(client, actor, "finance", true);
+    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [invoice.merchant_id]);
+    await invoiceAccess(client, actor, invoiceId, "finance");
+    await requireOperator(client, actor, "finance", true);
+    const updated = await client.query(
+      "UPDATE payment_claims SET state='rejected',version=version+1,reviewed_by=$4,reviewed_at=clock_timestamp(),review_reason=$5,updated_at=clock_timestamp() WHERE id=$1 AND invoice_id=$2 AND merchant_id=$3 AND state='pending' AND version=$6 RETURNING version",
+      [claimId, invoiceId, invoice.merchant_id, actor.userId, value.reason, value.version],
+    );
+    if (!updated.rowCount) throw new AccessError(409, "payment_claim_changed");
+    await audit(client, actor, "rent.payment-claim.rejected", claimId, invoice.merchant_id, {
+      invoiceId,
+      reason: value.reason,
+    });
+    return { state: "rejected" as const, version: updated.rows[0].version as number };
+  });
+}
+
+export async function applyPromotion(
+  pool: Pool,
+  actor: Actor,
+  invoiceId: string,
+  input: z.infer<typeof promotionRedemptionInput>,
+  now = new Date(),
+) {
+  const value = promotionRedemptionInput.parse(input);
+  return transaction(pool, async (client) => {
+    const initial = await invoiceAccess(client, actor, invoiceId, "owner");
+    await requireStepUp(client, actor);
+    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [initial.merchant_id]);
+    const invoice = await invoiceAccess(client, actor, invoiceId, "owner");
+    await requireStepUp(client, actor);
+    const promotion = (
+      await client.query("SELECT * FROM promotions WHERE code=$1 FOR UPDATE", [value.code])
+    ).rows[0] as
+      | {
+          id: string;
+          code: string;
+          benefit: "free_period" | "percentage" | "fixed";
+          percent_off: number | null;
+          fixed_minor: string | null;
+          currency: string | null;
+          audience: "all_shops" | "new_shops" | "specific_merchants";
+          starts_at: Date;
+          ends_at: Date;
+          max_redemptions: number | null;
+          active: boolean;
+        }
+      | undefined;
+    if (
+      !promotion?.active ||
+      promotion.starts_at > now ||
+      promotion.ends_at <= now ||
+      (promotion.max_redemptions !== null &&
+        Number(
+          (
+            await client.query(
+              "SELECT count(*)::int AS count FROM promotion_redemptions WHERE promotion_id=$1",
+              [promotion.id],
+            )
+          ).rows[0].count,
+        ) >= promotion.max_redemptions)
+    )
+      throw new AccessError(422, "promotion_unavailable");
+    if (
+      promotion.audience === "specific_merchants" &&
+      !(
+        await client.query(
+          "SELECT 1 FROM promotion_targets WHERE promotion_id=$1 AND merchant_id=$2",
+          [promotion.id, invoice.merchant_id],
+        )
+      ).rowCount
+    )
+      throw new AccessError(422, "promotion_unavailable");
+    if (promotion.audience === "new_shops") {
+      const eligible = await client.query(
+        "SELECT 1 FROM applications WHERE id=$1 AND created_at>=$2 AND provisioned_shop_id IS NULL",
+        [invoice.application_id, promotion.starts_at],
+      );
+      if (!eligible.rowCount) throw new AccessError(422, "promotion_unavailable");
+    }
+    const remaining = BigInt(invoice.amount_minor) - BigInt(invoice.credited_minor);
+    if (remaining <= 0n) throw new AccessError(409, "invoice_already_covered");
+    if (promotion.benefit === "fixed" && promotion.currency !== invoice.currency)
+      throw new AccessError(422, "promotion_unavailable");
+    const discount =
+      promotion.benefit === "free_period"
+        ? remaining
+        : promotion.benefit === "percentage"
+          ? (remaining * BigInt(promotion.percent_off!)) / 100n
+          : BigInt(promotion.fixed_minor!);
+    const amountMinor = discount > remaining ? remaining : discount;
+    if (amountMinor <= 0n) throw new AccessError(422, "promotion_unavailable");
+    const redemptionId = randomUUID(),
+      eventId = randomUUID();
+    try {
+      await client.query(
+        "INSERT INTO promotion_redemptions(id,promotion_id,invoice_id,merchant_id,currency,amount_minor,redeemed_by) VALUES($1,$2,$3,$4,$5,$6,$7)",
+        [
+          redemptionId,
+          promotion.id,
+          invoiceId,
+          invoice.merchant_id,
+          invoice.currency,
+          amountMinor.toString(),
+          actor.userId,
+        ],
+      );
+    } catch (error) {
+      if ((error as { code?: string }).code === "23505")
+        throw new AccessError(409, "promotion_already_redeemed");
+      throw error;
+    }
+    await client.query(
+      "INSERT INTO rent_events(id,invoice_id,merchant_id,currency,amount_minor,kind,source,source_reference,actor_id,reason) VALUES($1,$2,$3,$4,$5,'waiver','local-manual',$6,$7,$8)",
+      [
+        eventId,
+        invoiceId,
+        invoice.merchant_id,
+        invoice.currency,
+        amountMinor.toString(),
+        `PROMO-${promotion.code}-${redemptionId}`,
+        actor.userId,
+        `Promotion ${promotion.code}`,
+      ],
+    );
+    let shopId = invoice.shop_id;
+    if (amountMinor === remaining && !invoice.finalized)
+      shopId = await finalizeCoverage(client, actor, invoice, now);
+    await client.query("UPDATE rent_invoice_state SET version=version+1 WHERE invoice_id=$1", [
+      invoiceId,
+    ]);
+    if (shopId) await syncTenancy(client, shopId, now, actor);
+    await audit(client, actor, "billing.promotion.redeemed", promotion.id, invoice.merchant_id, {
+      invoiceId,
+      amountMinor: amountMinor.toString(),
+      code: promotion.code,
+    });
+    await notifyOwners(client, invoice.merchant_id, `rent-credit:${eventId}`, {
+      template: "rent-credit",
+      invoiceId,
+      eventId,
+    });
+    return { amountMinor: amountMinor.toString(), shopId };
   });
 }
 export async function reverseCredit(

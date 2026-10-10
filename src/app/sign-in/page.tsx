@@ -21,6 +21,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
       <Link className="text-button" href="/recover">
         Recover your account
       </Link>
+      <Link className="text-button" href="/register">
+        Create a verified shopkeeper account
+      </Link>
     </section>
   );
 }

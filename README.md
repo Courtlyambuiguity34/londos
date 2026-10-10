@@ -2,7 +2,7 @@
 
 > **Working concept:** a digital mall where businesses rent autonomous digital shop space inside a shared commercial destination.
 
-**Status:** P12 is preserved. The P13/G5 development packet now adds 12 fictional merchant accounts with native-MFA admin removal, guarded Brevo delivery, optional services and pilot/launch reporting. **PostgreSQL remains active; no MongoDB migration was performed.** MongoDB public copies, Redis and Cloudinary are manually enabled and default off. The merged feature schema is **020**: both independently developed 019 migrations are preserved and 020 verifies their combined contract. Read [current evidence](docs/evidence/G5-P13.md), [cross-platform deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md), [deployment profiles](docs/DEPLOYMENT-PROFILES.md), [pilot runbook](docs/PILOT-RUNBOOK.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). Production G5 and real P13 outcomes remain open. Development rent stays **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows [prompt.txt](prompt.txt).
+**Status:** P12 is preserved. The P13/G5 development packet now adds 12 fictional merchant accounts with native-MFA admin removal, guarded Brevo delivery, optional services and pilot/launch reporting. **PostgreSQL remains active; no MongoDB migration was performed.** MongoDB public copies, Redis and Cloudinary are manually enabled and default off. The current additive schema is **023**; both independently developed 019 migrations and their combined 020 contract remain preserved. Branded account verification/recovery, shop welcome, rent reminders, manual payment claims, promotions, scoped campaigns and optional aggregate monthly reports are documented in [communications and manual billing](docs/COMMUNICATIONS-AND-MANUAL-BILLING.md). Read [current evidence](docs/evidence/G5-P13.md), [cross-platform deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md), [deployment profiles](docs/DEPLOYMENT-PROFILES.md), [pilot runbook](docs/PILOT-RUNBOOK.md) and [BUILD-STATUS](docs/BUILD-STATUS.md). Production G5 and real P13 outcomes remain open. Development rent stays **UGX 5,000 per 30 days, seven-day grace, manual reconciliation; live collection disabled**. The build follows [prompt.txt](prompt.txt).
 
 ## Recommendations
 
@@ -305,6 +305,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Quickstart: local preview, Render and Vercel options](docs/DEPLOYMENT-QUICKSTART.md)
 - [First local installation and usage](docs/LOCAL-FIRST-SETUP.md)
 - [Initial Render setup](docs/RENDER-SETUP.md) and [offline checklist](render.html)
+- [Branded communications, registration, promotions and manual billing](docs/COMMUNICATIONS-AND-MANUAL-BILLING.md)
+- [Communications and manual-billing verification](docs/evidence/COMMUNICATIONS-2026-10-10.md)
 - [Cloudinary media storage and MongoDB linkage](docs/CLOUDINARY-MEDIA.md)
 - [Current provider integration verification](docs/evidence/SERVICES-2026-10-07.md)
 

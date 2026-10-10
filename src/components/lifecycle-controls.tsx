@@ -504,11 +504,74 @@ export function InvoicePanel({
       setPending(false);
     }
   }
+  async function submitClaim(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget,
+      f = new FormData(form);
+    setPending(true);
+    setMessage("");
+    try {
+      await send(`${base}/claims`, "POST", {
+        amountMinor: String(f.get("amountMinor")),
+        currency: "UGX",
+        reference: String(f.get("reference")),
+        note: String(f.get("note")),
+        confirm: f.get("confirm") === "on",
+      });
+      form.reset();
+      await reload();
+      setMessage(
+        "Payment reference submitted. Coverage will not change until an operator verifies it.",
+      );
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "The payment reference was not submitted.");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function redeemPromotion(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget,
+      f = new FormData(form);
+    setPending(true);
+    setMessage("");
+    try {
+      await send(`${base}/promotion`, "POST", { code: String(f.get("code")) });
+      form.reset();
+      await reload();
+      setMessage("Promotion applied and recorded in the invoice ledger.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "The promotion could not be applied.");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function rejectClaim(e: FormEvent<HTMLFormElement>, claimId: string) {
+    e.preventDefault();
+    const form = e.currentTarget,
+      f = new FormData(form),
+      claim = data.claims.find((entry) => entry.id === claimId)!;
+    setPending(true);
+    setMessage("");
+    try {
+      await send(`${base}/claims/${claimId}`, "POST", {
+        version: claim.version,
+        reason: String(f.get("reason")),
+        confirm: f.get("confirm") === "on",
+      });
+      await reload();
+      setMessage("Payment claim rejected with an auditable reason.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "The payment claim was not changed.");
+    } finally {
+      setPending(false);
+    }
+  }
   return (
     <div className="lifecycle-panel">
       <p className="development-disclosure">
-        Development invoice · Live payment collection is disabled. No payment form or merchant claim
-        can activate a shop.
+        Manual invoice · Londos does not collect money in this form. A submitted payment reference
+        cannot activate or renew a shop until an MFA-protected finance operator verifies it.
       </p>
       <dl className="lifecycle-summary">
         <dt>Reference</dt>
@@ -530,6 +593,114 @@ export function InvoicePanel({
             : "Provisional: starts when the full amount is verified, or after existing coverage ends."}
         </dd>
       </dl>
+      {data.paymentSettings ? (
+        <div className="secret-panel">
+          <h2>Current payment instructions</h2>
+          {data.paymentSettings.mobile_money_phone ? (
+            <p>
+              Mobile money: <strong>{data.paymentSettings.mobile_money_phone}</strong> · registered
+              name <strong>{data.paymentSettings.mobile_money_name}</strong>
+            </p>
+          ) : null}
+          {data.paymentSettings.bank_name ? (
+            <p>
+              Bank: <strong>{data.paymentSettings.bank_name}</strong> · account name{" "}
+              <strong>{data.paymentSettings.bank_account_name}</strong> · account number{" "}
+              <strong>{data.paymentSettings.bank_account_number}</strong>
+            </p>
+          ) : null}
+          <p>
+            Support: {data.paymentSettings.support_email}
+            {data.paymentSettings.support_phone ? ` · ${data.paymentSettings.support_phone}` : ""}
+          </p>
+          <p>Use invoice reference {i.reference} with the external payment.</p>
+        </div>
+      ) : !operator ? (
+        <p>Payment instructions are not configured. Contact Londos support before sending money.</p>
+      ) : null}
+      {!operator && remaining !== "0" ? (
+        <>
+          <form className="account-form" onSubmit={(e) => void submitClaim(e)}>
+            <h2>Submit an external payment reference</h2>
+            <label htmlFor="claim-amount">Amount sent in UGX</label>
+            <input
+              id="claim-amount"
+              name="amountMinor"
+              inputMode="numeric"
+              pattern="[1-9][0-9]*"
+              maxLength={20}
+              defaultValue={remaining}
+              required
+            />
+            <label htmlFor="claim-reference">Transaction or bank reference</label>
+            <input id="claim-reference" name="reference" minLength={6} maxLength={80} required />
+            <label htmlFor="claim-note">Payment note</label>
+            <textarea id="claim-note" name="note" minLength={5} maxLength={500} required />
+            <label className="checkbox-label">
+              <input type="checkbox" name="confirm" required /> I sent this payment externally and
+              entered its reference accurately
+            </label>
+            <button className="button" disabled={pending}>
+              Submit for verification
+            </button>
+          </form>
+          <form className="account-form" onSubmit={(e) => void redeemPromotion(e)}>
+            <h2>Use a promo code</h2>
+            <label htmlFor="promotion-code">Promo code</label>
+            <input
+              id="promotion-code"
+              name="code"
+              pattern="[A-Za-z0-9][A-Za-z0-9_-]{3,31}"
+              required
+            />
+            <button className="button button--outline" disabled={pending}>
+              Apply promo code
+            </button>
+          </form>
+        </>
+      ) : null}
+      {data.claims.length ? (
+        <section>
+          <h2>Submitted payment references</h2>
+          <ul className="ledger-events">
+            {data.claims.map((claim) => (
+              <li key={claim.id}>
+                <strong>
+                  {claim.reference} · {formatMinorMoney(claim.amount_minor, claim.currency)} ·{" "}
+                  {claim.state}
+                </strong>
+                <span>{claim.note}</span>
+                {claim.review_reason ? <span>Review: {claim.review_reason}</span> : null}
+                {operator && claim.state === "pending" ? (
+                  <form className="account-form" onSubmit={(e) => void rejectClaim(e, claim.id)}>
+                    <label htmlFor={`reject-${claim.id}`}>Reason to reject this claim</label>
+                    <textarea
+                      id={`reject-${claim.id}`}
+                      name="reason"
+                      minLength={5}
+                      maxLength={500}
+                      required
+                    />
+                    <label className="checkbox-label">
+                      <input type="checkbox" name="confirm" required /> Reject this payment
+                      reference
+                    </label>
+                    <button className="button button--outline" disabled={pending}>
+                      Reject claim
+                    </button>
+                  </form>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {operator ? (
+            <p>
+              To verify a pending claim, enter its exact reference in the credit form below after
+              independently checking the external payment.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
       {operator && remaining !== "0" ? (
         <form className="account-form" onSubmit={(e) => void submit(e)}>
           <h2>Record a development credit</h2>

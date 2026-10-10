@@ -261,7 +261,7 @@ test("011→012 upgrade preserves shop fields/moderation and does not seed moder
     ).rows,
   ).toEqual(baseline);
   expect(defaultModerationGrants).toBe(0);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(21);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(24);
 });
 test("anonymous retry races create one immutable report/case, with uniform unknown-target receipt", async () => {
   const s = await shop(),
