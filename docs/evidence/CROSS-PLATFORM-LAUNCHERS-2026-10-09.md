@@ -85,6 +85,35 @@ removed, the test was changed to insert and reject explicit private contact/paym
 sentinels, and all 26 AI design integration checks then passed. The already-green P11/P13 suites were
 not repeated after this isolated privacy change.
 
+## Private runtime bootstrap follow-up
+
+The optional self-hosted work exposed one remaining fresh-computer assumption: every click file
+expected a compatible global `node` command. The installers now provision private Node.js 24.19.0
+under ignored `.local/runtime` storage and all START/STOP shortcuts locate that runtime. Downloads
+come only from `https://nodejs.org`, require TLS, and must match the archive entry in Node's official
+`SHASUMS256.txt` before extraction. The existing launcher then runs `npm ci`, so
+`package-lock.json` still selects every application package.
+
+Full local mode also checks Docker. If it is absent, Windows uses `winget`, macOS uses the Homebrew
+Docker Desktop cask when Homebrew is available, and supported Linux distributions use their system
+package manager with `sudo`. Preview/server mode does not install Docker. Local development secrets
+remain random and ignored; hosted database URLs, domains, and provider credentials are never
+fabricated by an installer.
+
+Executed on Linux x64:
+
+| Check                                                      | Observed result                                                                 |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Official Node 24.19.0 archive and checksum download        | Passed; 54.7 MiB archive matched the official SHA-256 list and extracted        |
+| Downloaded private runtime → launcher help                 | Passed; supported modes and roles printed                                       |
+| Focused launcher/deployment/self-host unit files           | 17/17 passed                                                                    |
+| `./install-linux.sh preview` through private Node/npm      | 270 locked packages installed; production web and worker build passed           |
+| `./start-preview-linux.sh` → `/api/ready` → STOP shortcut  | Passed; fixture-preview readiness returned and recorded process stopped cleanly |
+| POSIX syntax for installer, launcher and self-host scripts | Passed                                                                          |
+
+Windows PowerShell and macOS native execution remain OS-specific checks; their wrapper/bootstrap
+contracts are inspected by the unit suite and share the already-executed application launcher.
+
 ## Limits
 
 - Native Windows and macOS clicks, browser PWA installation prompts, Android installation and Render

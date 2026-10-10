@@ -1,9 +1,9 @@
 import { beforeAll, afterAll, describe, test, expect } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { generate } from "otplib";
 import { fork } from "node:child_process";
 import { migrate } from "../../src/server/db/migrate";
@@ -182,9 +182,14 @@ afterAll(async () => {
 
 describe("canonical persistence", () => {
   test("fresh/upgrade/repeated/concurrent migrations preserve data and verify checksums", async () => {
+    const checkedIn = (await readdir(resolve("migrations")))
+      .filter((file) => /^\d{3}_.+\.sql$/.test(file))
+      .sort();
     expect(
-      (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-    ).toBe(19);
+      (await pool.query("SELECT name FROM schema_migrations ORDER BY name")).rows.map(
+        (row) => row.name,
+      ),
+    ).toEqual(checkedIn);
     await migrate(pool);
     expect((await pool.query("SELECT count(*)::int AS count FROM shops")).rows[0].count).toBe(6);
     const changed = join(directory, "changed-migrations");

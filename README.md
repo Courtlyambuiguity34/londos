@@ -23,6 +23,107 @@ npm run dev
 
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
+## Connecting to Aiven Postgres
+
+Render plus hosted Aiven PostgreSQL is the default deployment (`DEPLOY_MODE=render`). PostgreSQL is
+the source of truth; neither MongoDB nor a browser/PWA receives `DATABASE_URL`.
+
+These Aiven official pages were checked on **2026-10-09**:
+
+- [Get started with Aiven for PostgreSQL](https://aiven.io/docs/products/postgresql/get-started)
+- [Aiven for PostgreSQL free tier](https://aiven.io/docs/products/postgresql/concepts/pg-free-tier)
+- [Connect with psql](https://aiven.io/docs/products/postgresql/howto/connect-psql)
+- [Restrict network access](https://aiven.io/docs/platform/howto/restrict-access)
+- [Connection pooling](https://aiven.io/docs/products/postgresql/concepts/pg-connection-pooling)
+
+Current official steps and Console labels:
+
+1. Create an Aiven account and open [Aiven Console](https://console.aiven.io). The free tier does not
+   require a credit card. In the target project, open **Services**, select **Create service**, choose
+   **PostgreSQL**, select the **Free** service tier/plan, enter the service details/name, and select
+   **Create service**. Aiven says Free does not allow choosing a specific cloud provider or region.
+   Wait for service status **Running** rather than **Rebuilding**.
+2. Open the PostgreSQL service **Overview**, select **Quick connect**, choose the client/tool, and copy
+   the generated service URI. It supplies the actual host, provider-assigned port, user, password,
+   database (often `defaultdb`) and required SSL mode. Do not assume port 5432 or remove
+   `sslmode=require`. Do not paste the URI into Git, logs, screenshots or chat.
+3. Aiven currently allows `0.0.0.0/0` inbound by default, so no allowlist edit is required merely to
+   connect, but that default is broad. To restrict it, go to **Overview → Service settings → Cloud
+   and network → Actions → Set IP address allowlist** (later **Edit IP address allowlist**), remove
+   `0.0.0.0/0`, add every verified Render outbound range and the operator's current CIDR, then **Save
+   changes**. Removing the default before adding all real clients locks them out. If the chosen free
+   Render topology cannot provide a stable outbound range, record that limitation instead of
+   claiming the database is IP-restricted.
+4. Store the URI as `DATABASE_URL` in an ignored local `.env.local` (or another private service
+   environment file). In Render, open each Londos web/worker service's **Environment** settings and
+   add the same value as the secret `DATABASE_URL`; also set `DEPLOY_MODE=render`. Never expose it as
+   a `NEXT_PUBLIC_` variable. Keep web and worker pointed at the same canonical database.
+5. Test without printing the URL:
+
+   ```bash
+   node --input-type=module -e 'import pg from "pg"; const p=new pg.Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:5000}); try { const r=await p.query("select current_database() as database,current_user as user"); console.log({connected:true,...r.rows[0]}); } finally { await p.end(); }'
+   ```
+
+   Then apply reviewed migrations through the migration authority, build, start web plus worker and
+   require `/api/ready` to report database/authentication true and worker ready.
+
+Common failures:
+
+- **SSL or `no pg_hba.conf entry`**: use the unmodified Quick connect URI with
+  `sslmode=require` (or the stronger verified mode and CA material you configured). Do not disable
+  certificate checks to silence an error.
+- **Too many connections / remaining slots reserved**: the current Free service has
+  `max_connections=20` and no PgBouncer. Londos uses a three-connection pool per web/worker process;
+  stop duplicate processes and account for Console/maintenance connections before scaling replicas.
+- **Connection refused / timeout**: confirm service status is **Running**, use the Aiven-assigned
+  host and port, and verify the IP allowlist contains every real client. Free services may be powered
+  off after no initial or continuing activity; Aiven says they can be powered on again.
+- **Authentication failed**: recopy the complete URI and URL-encode reserved password characters;
+  do not hand-edit the host, port, user or database.
+
+The current docs differ from the earlier assumption that “free tier” merely means limited capacity:
+it is a **single node**, 1 CPU, 1 GB RAM, 1 GB disk, `max_connections=20`, no connection pooling,
+VPC, static IP, integrations, support or 99.99% SLA, and only one free service of each type per
+organization. It has no fixed time expiry, but Aiven reserves the right to power off inactive
+services, change provider/region/configuration, or stop acceptable-use violations. Build monitoring,
+tested backups and an outage plan around those facts.
+
+## Moving to self-hosting
+
+The complete, executable guide is [deploy/selfhosted/README.md](deploy/selfhosted/README.md). The
+cutover is environment-driven; do not edit application code or create a second write path.
+
+1. Prepare a patched, encrypted, always-on machine, UPS, monitoring and a separate backup target.
+2. Install PostgreSQL locally with `listen_addresses='localhost'`, loopback-only `pg_hba.conf` rules
+   and a non-superuser Londos role. Keep port 5432 closed externally.
+3. Run `npm ci`, `npm run check`, `npm run build`, and the existing release/security verification.
+4. Copy `deploy/selfhosted/.env.selfhosted.example` to a private untracked service environment. Set
+   `DEPLOY_MODE=selfhosted`, a loopback `DATABASE_URL`, an HTTPS `AUTH_BASE_URL`, and up to three exact
+   PWA origins. Secrets stay only in that file/service manager.
+5. Install Cloudflare Tunnel, keep Namecheap as registrar, move authoritative nameservers to
+   Cloudflare, and recreate **all** existing email/DNS records (MX, SPF, DKIM, DMARC and verification
+   records) before the switch. Route only `api.<domain>` to `http://127.0.0.1:3000` and install
+   `cloudflared` as a boot service.
+6. Put the admin/Landlord hostname behind Cloudflare Access for named identities with MFA. Keep
+   Londos native MFA, operator grants, shop scopes and auditing enabled.
+7. Stop writes for the maintenance window. Set `AIVEN_DATABASE_URL` privately and run
+   `deploy/selfhosted/export-aiven.sh` (or the PowerShell wrapper). Review the dump checksum.
+8. Set the loopback `DATABASE_URL`, set `LONDOS_RESTORE_CONFIRM=restore-local`, restore into the
+   approved local database, run migrations, and verify row counts, Mall reads, Shopkeeper tenant
+   isolation, Landlord MFA/permissions, worker health and readiness.
+9. Start the production web and worker using the supplied systemd units or Windows Task Scheduler
+   instructions. Confirm the web socket listens only on `127.0.0.1`.
+10. Flip the Cloudflare route only after verification. Keep Aiven unchanged for the approved rollback
+    window; never accept writes independently on both databases.
+11. Enable the nightly dump timer/task with `LONDOS_BACKUP_OFFSITE_DIR` pointing to encrypted mounted
+    off-machine storage. Periodically restore a backup into an isolated database and record the
+    result.
+
+Switching back to Render changes `DEPLOY_MODE`, `DATABASE_URL`, `AUTH_BASE_URL` and approved origins
+in the environment. PostgreSQL remains canonical in both modes. MongoDB remains an optional,
+manually refreshed, read-only public catalogue copy; Redis remains optional and its absence must not
+block startup.
+
 Public browsing defaults to fictional fixtures. With the configured local core and `LONDOS_DATA_SOURCE=database`, X2 renders eligible published PostgreSQL shops, bounded shop-first search and processed ready images. Merchants can edit catalogues/contacts, upload private images, save safe manual designs, preview privately and explicitly publish immutable revisions. Opted-in guest enquiries have a scoped private inbox and local notifications. Owners can now apply with private evidence; scoped MFA operators review and manually reconcile development rent, provision shops and manage credit reversals. Scheduled reminders, grace/closure and verified renewal preserve moderation. The private manual/deterministic AI design workflow and bounded semantic registry are implemented; purchases, live rent/providers and production release remain separate gates.
 
 To add the authorized fictional cohort, run `npm run db:demonstration` after migration/seed. Credentials remain in private ignored `.local/demonstration-accounts.json`. An operations operator with fresh native MFA can remove these accounts from **Landlord → Demonstration accounts**; business history is retained. No real participants or paid renewals are fabricated. Brevo uses the proposed sender **mnelsontravor@gmail.com**; its key and verified delivery remain outstanding. See [deployment profiles](docs/DEPLOYMENT-PROFILES.md) for exact configuration and optional-service limits.
@@ -198,6 +299,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 ## Documentation map
 
 - [One-click Windows, macOS and Linux installation](docs/LOCAL-INSTALLATION.md)
+- [Optional self-hosted production mode](deploy/selfhosted/README.md)
+- [Self-hosted mode verification](docs/evidence/SELFHOSTED-MODE-2026-10-09.md)
 - [PWA clients and shared-server deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md)
 - [Quickstart: local preview, Render and Vercel options](docs/DEPLOYMENT-QUICKSTART.md)
 - [First local installation and usage](docs/LOCAL-FIRST-SETUP.md)
@@ -212,6 +315,7 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [System and journey illustrations](docs/ILLUSTRATIONS.md)
 - [Current Next.js / Node architecture ADR](docs/ADR/0002-nextjs-node-application-architecture.md)
 - [Identity and durable jobs ADR](docs/ADR/0003-identity-and-durable-jobs.md)
+- [Optional self-hosted PostgreSQL ADR](docs/ADR/0018-optional-selfhosted-postgresql-mode.md)
 - [Reviewed security contracts](docs/X1-SECURITY.md)
 - [X1 verification evidence](docs/evidence/X1-STAGE.md)
 - [R1 findings, fixes and verification](docs/evidence/R1-REVIEW.md)

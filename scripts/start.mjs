@@ -6,6 +6,11 @@ import { spawn } from "node:child_process";
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const args = process.argv.slice(2);
+const deployMode = process.env.DEPLOY_MODE ?? "render";
+if (!["render", "selfhosted"].includes(deployMode)) {
+  console.error("DEPLOY_MODE must be render or selfhosted.");
+  process.exit(1);
+}
 let port = process.env.PORT ?? "3000";
 for (let i = 0; i < args.length; i++) {
   if (args[i] !== "--port" || !args[i + 1]) {
@@ -27,7 +32,7 @@ const child = spawn(process.execPath, [".next/standalone/server.js"], {
   env: {
     ...process.env,
     PORT: port,
-    HOSTNAME: "0.0.0.0",
+    HOSTNAME: deployMode === "selfhosted" ? "127.0.0.1" : "0.0.0.0",
     NODE_USE_ENV_PROXY:
       process.env.NODE_USE_ENV_PROXY ??
       (process.env.HTTPS_PROXY || process.env.HTTP_PROXY ? "1" : "0"),

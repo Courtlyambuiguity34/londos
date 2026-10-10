@@ -26,3 +26,16 @@ test.each(["DATABASE_URL", "AUTH_BASE_URL"])(
     expect(error).not.toHaveProperty("input");
   },
 );
+
+test("malformed PWA origin does not expose credential input", () => {
+  vi.stubEnv("DATABASE_URL", "postgresql://fixture:fictional@localhost/londos_development");
+  vi.stubEnv("AUTH_SECRET", "fictional-auth-secret-with-at-least-32-characters");
+  vi.stubEnv("AUTH_BASE_URL", "http://127.0.0.1:3000");
+  vi.stubEnv("LONDOS_PWA_ORIGINS", "https://user:PRIVATE-CONFIG-SENTINEL@[invalid");
+  expect(() => coreConfig()).toThrow("LONDOS_PWA_ORIGINS must be a valid URL.");
+  try {
+    coreConfig();
+  } catch (error) {
+    expect(String((error as Error).stack)).not.toContain("PRIVATE-CONFIG-SENTINEL");
+  }
+});

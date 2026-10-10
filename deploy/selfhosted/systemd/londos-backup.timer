@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Londos PostgreSQL backup every night
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=londos-backup.service
+
+[Install]
+WantedBy=timers.target

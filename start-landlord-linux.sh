@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")"
-exec node scripts/local/launcher.mjs start local landlord
+exec scripts/local/run-with-node.sh start local landlord

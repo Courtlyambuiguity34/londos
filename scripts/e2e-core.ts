@@ -2,6 +2,7 @@ import { randomUUID, randomBytes } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { spawn } from "node:child_process";
 import { Pool } from "pg";
 import { loadLocalEnv } from "./local-env";
@@ -55,7 +56,12 @@ try {
   });
 } finally {
   await db?.end();
-  await parent.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    if (!(await parent.query("SELECT 1 FROM pg_stat_activity WHERE datname=$1", [name])).rowCount)
+      break;
+    await delay(25);
+  }
+  await parent.query(`DROP DATABASE IF EXISTS ${name}`);
   await parent.end();
   await rm(directory, { recursive: true, force: true });
 }

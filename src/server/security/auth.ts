@@ -24,7 +24,7 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
     baseURL: config.baseURL,
     secret: config.secret,
     database: pool,
-    trustedOrigins: [config.baseURL],
+    trustedOrigins: config.allowedOrigins,
     telemetry: { enabled: false },
     logger: { disabled: true },
     advanced: {

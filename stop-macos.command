@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")"
-exec node scripts/local/launcher.mjs stop "${1:-local}"
+exec scripts/local/run-with-node.sh stop "${1:-local}"

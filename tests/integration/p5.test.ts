@@ -1,8 +1,8 @@
 import { beforeAll, afterAll, beforeEach, test, expect } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { setTimeout } from "node:timers/promises";
 import sharp from "sharp";
@@ -222,9 +222,14 @@ test("007 to 008 and repeat seed preserve existing catalogue and identity data",
   const before = await pool.query('SELECT id,email FROM "user" ORDER BY id');
   await seed(pool, auth, directory);
   expect((await pool.query('SELECT id,email FROM "user" ORDER BY id')).rows).toEqual(before.rows);
+  const checkedIn = (await readdir(resolve("migrations")))
+    .filter((file) => /^\d{3}_.+\.sql$/.test(file))
+    .sort();
   expect(
-    (await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count,
-  ).toBe(19);
+    (await pool.query("SELECT name FROM schema_migrations ORDER BY name")).rows.map(
+      (row) => row.name,
+    ),
+  ).toEqual(checkedIn);
 });
 test("catalogue checks tenant, nested references, staff action and explicit shop scope", async () => {
   await expect(readCatalogue(pool, actors.ownerB!, shop)).rejects.toMatchObject({ status: 404 });

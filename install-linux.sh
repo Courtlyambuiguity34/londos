@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")"
-exec node scripts/local/launcher.mjs install "${1:-local}"
+exec scripts/local/bootstrap-prerequisites.sh "${1:-local}"

@@ -10,6 +10,8 @@ services:
     healthCheckPath: /api/ready
     autoDeployTrigger: "off"
     envVars:
+      - key: DEPLOY_MODE
+        value: render
       - key: LONDOS_CORE_ENABLED
         value: "false"
       - key: LONDOS_DATA_SOURCE

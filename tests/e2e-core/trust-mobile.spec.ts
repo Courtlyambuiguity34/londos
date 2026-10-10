@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixture";
 import AxeBuilder from "@axe-core/playwright";
 import { seedIds } from "../../src/server/db/seed";
 test("mobile anonymous concern form is labelled, keyboard reachable and bounded", async ({

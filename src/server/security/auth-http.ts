@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import type { Auth } from "./auth";
-import { coreConfig } from "../config";
 import { consumeBudget } from "./budget";
 import { resolveActor, requireStepUp } from "./authorization";
 import { AccessError } from "./errors";
+import { corsResponse, requireAcceptedOrigin } from "./origin";
 
 const allowed = new Set([
   "/sign-in/email",
@@ -40,18 +40,14 @@ export async function authenticationRequest(
 ) {
   const path = new URL(request.url).pathname.replace(/^\/api\/auth/, "");
   const resetCallback = /^\/reset-password\/[A-Za-z0-9_-]{16,128}$/.test(path);
-  if (!allowed.has(path) && !resetCallback) return response({ error: "endpoint_unavailable" }, 404);
+  const respond = (data: unknown, status: number) => corsResponse(request, response(data, status));
+  if (!allowed.has(path) && !resetCallback) return respond({ error: "endpoint_unavailable" }, 404);
   if (resetCallback && request.method !== "GET")
-    return response({ error: "method_unavailable" }, 405);
+    return respond({ error: "method_unavailable" }, 405);
   try {
-    const config = coreConfig();
     let body: Record<string, unknown> | undefined;
     if (request.method === "POST") {
-      if (
-        request.headers.get("origin") !== config.baseURL ||
-        request.headers.get("sec-fetch-site") === "cross-site"
-      )
-        throw new AccessError(403, "origin_denied");
+      requireAcceptedOrigin(request);
       const parsed = await readBody(request);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
         throw new AccessError(422, "invalid_input");
@@ -92,7 +88,7 @@ export async function authenticationRequest(
         )
           throw new AccessError(403, "operator_mfa_mandatory");
       }
-    } else if (request.method !== "GET") return response({ error: "method_unavailable" }, 405);
+    } else if (request.method !== "GET") return respond({ error: "method_unavailable" }, 405);
     if (path === "/list-sessions")
       await requireStepUp(pool, await resolveActor(authentication, request.headers));
     const headers = new Headers(request.headers);
@@ -112,10 +108,10 @@ export async function authenticationRequest(
     result.headers.set("Cache-Control", "private, no-store, max-age=0");
     result.headers.set("Vary", "Cookie");
     result.headers.set("X-Request-ID", randomUUID());
-    return result;
+    return corsResponse(request, result);
   } catch (error) {
-    if (error instanceof AccessError) return response({ error: error.code }, error.status);
+    if (error instanceof AccessError) return respond({ error: error.code }, error.status);
     console.error(JSON.stringify({ event: "authentication.failed", requestId: randomUUID() }));
-    return response({ error: "service_unavailable" }, 503);
+    return respond({ error: "service_unavailable" }, 503);
   }
 }

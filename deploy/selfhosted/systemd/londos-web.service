@@ -1,0 +1,24 @@
+[Unit]
+Description=Londos production web service
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=londos
+Group=londos
+WorkingDirectory=/opt/londos/current
+EnvironmentFile=/etc/londos/londos.env
+ExecStart=/opt/londos/current/deploy/selfhosted/start-production.sh web
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/londos/current/.local /opt/londos/current/.next/cache
+
+[Install]
+WantedBy=multi-user.target

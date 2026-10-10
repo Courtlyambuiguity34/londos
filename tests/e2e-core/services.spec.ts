@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixture";
 import AxeBuilder from "@axe-core/playwright";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";

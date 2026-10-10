@@ -1,22 +1,42 @@
 # One-click local installation and role launchers
 
 Londos is a Node.js/Next.js application. Python `.venv` directories cannot contain or isolate its
-Node packages, so creating one would add a folder that Londos never uses. The installer uses the
-Node equivalent: the exact committed npm lockfile installs into the local `node_modules` directory,
-then produces the standalone production web build and worker.
+Node packages, so creating one would add a folder that Londos never uses. The installer provisions
+a private, pinned Node runtime under the ignored `.local/runtime` directory, installs the exact
+committed npm lockfile into `node_modules`, then produces the standalone production web build and
+worker. START and STOP shortcuts find that private runtime, so they do not depend on a later PATH
+change or a global Node installation.
 
-## Prerequisites
+## What the installer obtains automatically
 
-- 64-bit Node.js **24.19 or newer in the 24.x line**, including npm **11.x**.
-- Docker Desktop on Windows/macOS, or Docker Engine on Linux, for the full local database.
-- Internet access for the first dependency/image download. A previously populated npm cache and the
-  pinned PostgreSQL image are needed for a fully offline first installation.
+- Node.js **24.19.0** from `nodejs.org`, selected for x64 or arm64 and verified against Node's
+  official `SHASUMS256.txt` before extraction. An incomplete or altered download is rejected.
+- npm **11.x** from that runtime and every exact JavaScript dependency in `package-lock.json`, using
+  `npm ci` rather than choosing newer package versions.
+- Docker Desktop through `winget` on Windows when it is absent. On macOS the installer uses the
+  checksum-controlled Homebrew cask when Homebrew is present. On supported Linux distributions it
+  uses the system `apt`, `dnf`, `yum`, `pacman`, or `zypper` package with `sudo`.
+- The pinned PostgreSQL image, a loopback-only database container, random local database/authentication
+  credentials, migrations, fictional development seed accounts, and the production application build
+  when `local` mode is selected.
+
+The first run therefore needs Internet access, enough disk space, and permission to approve an
+operating-system package installation. Docker Desktop may show its own first-run screen. Linux may
+require signing out and back in after the installer adds the current account to the `docker` group;
+rerun the same installer afterward. If macOS does not already have Homebrew, install it from
+<https://brew.sh> first so the Docker package can be authenticated and managed normally. The
+installer refuses to execute an unverified Node or Docker download as a workaround.
+
+A repeated installation reuses the verified private Node runtime, Docker installation, npm cache,
+database volume, and generated local configuration. It still runs `npm ci`, migrations, seed, and a
+fresh production build so that repository changes are applied reproducibly.
 
 Keep the whole repository together. Do not copy a START file away from it.
 
 ## Windows
 
-Double-click `INSTALL-WINDOWS.bat`. It installs locked dependencies, creates the private local
+Double-click `INSTALL-WINDOWS.bat`. It obtains Node/Docker when needed, installs locked dependencies,
+creates the private local
 PostgreSQL configuration when absent, applies migrations, creates fictional development accounts,
 and builds the production application. Existing `.env.local`, account files and the named database
 volume are preserved. The installer refuses to migrate when `.env.local` points at a non-loopback
@@ -65,10 +85,10 @@ The generic launcher accepts `preview`, `local`, and `server`; the old `full` sp
 alias for `local`.
 
 ```bash
-node scripts/local/launcher.mjs install preview
-node scripts/local/launcher.mjs install local
-node scripts/local/launcher.mjs install server
-node scripts/local/launcher.mjs start local shopkeeper
+./install-linux.sh preview
+./install-linux.sh local
+./install-linux.sh server
+./start-shopkeeper-linux.sh
 ```
 
 - `preview` needs no database and disables private/core services explicitly.
@@ -86,6 +106,20 @@ a second public-domain variable or put a database URL in a browser/PWA.
 `npm ci` intentionally restores the exact lockfile state, so do not keep hand-edited packages inside
 `node_modules`. Private credentials remain in ignored `.env.local` and `.local` files. Never give
 those files to a merchant or customer.
+
+## Environment values and secrets
+
+The `local` installer is allowed to generate only private development values: a random local
+PostgreSQL password, a random authentication secret, the loopback database URL, and the loopback
+authentication origin. They are written to ignored `.local/postgres.env` and `.env.local` files and
+are never committed.
+
+The installer does **not** invent production values. In `server` mode, copy the documented names
+from `.env.example` and supply the real `DATABASE_URL`, `AUTH_SECRET`, `AUTH_BASE_URL`, PWA origins,
+mail/provider credentials, and public domains through the host's secret/environment manager. It also
+does not replace PostgreSQL with MongoDB: PostgreSQL remains authoritative, while MongoDB, Cloudinary,
+Redis, AI, and Brevo integrations remain optional and controlled by their existing environment flags.
+Missing optional integrations must not prevent the base application from starting.
 
 ## Other computers and phones
 

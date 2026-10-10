@@ -11,6 +11,8 @@ services:
     healthCheckPath: /api/ready
     autoDeployTrigger: "off"
     envVars: &londos-core
+      - key: DEPLOY_MODE
+        value: render
       - key: DATABASE_URL
         sync: false
       - key: AUTH_SECRET

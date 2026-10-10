@@ -4,9 +4,10 @@ import { coreConfig } from "../config";
 const globalDb = globalThis as unknown as { londosPool?: Pool };
 export function database(): Pool {
   if (globalDb.londosPool) return globalDb.londosPool;
+  const config = coreConfig();
   const pool = new Pool({
-    connectionString: coreConfig().databaseUrl,
-    max: 10,
+    connectionString: config.databaseUrl,
+    max: config.databasePoolMax,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30_000,
     statement_timeout: 10_000,

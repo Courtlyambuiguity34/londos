@@ -92,10 +92,17 @@ test("launcher rejects a local port that would break the configured authenticati
   );
 });
 
-test("one-click wrappers target the shared launcher and role entry points", () => {
+test("one-click installers bootstrap the private runtime and preserve role entry points", () => {
   expect(readFileSync(resolve(root, "INSTALL-WINDOWS.bat"), "utf8")).toContain(
-    "launcher.mjs install %MODE%",
+    "bootstrap-prerequisites.ps1",
   );
+  expect(readFileSync(resolve(root, "install-linux.sh"), "utf8")).toContain(
+    "bootstrap-prerequisites.sh",
+  );
+  expect(readFileSync(resolve(root, "install-macos.command"), "utf8")).toContain(
+    "bootstrap-prerequisites.sh",
+  );
+  expect(readFileSync(resolve(root, "START-WINDOWS.bat"), "utf8")).toContain("run-with-node.ps1");
   expect(readFileSync(resolve(root, "START-SHOPKEEPER-WINDOWS.bat"), "utf8")).toContain(
     "local shopkeeper",
   );
@@ -108,4 +115,30 @@ test("one-click wrappers target the shared launcher and role entry points", () =
   expect(readFileSync(resolve(root, "start-landlord-macos.command"), "utf8")).toContain(
     "start local landlord",
   );
+});
+
+test("runtime bootstrap pins and verifies official Node downloads", () => {
+  const shell = readFileSync(resolve(root, "scripts/local/run-with-node.sh"), "utf8");
+  const powershell = readFileSync(resolve(root, "scripts/local/run-with-node.ps1"), "utf8");
+  for (const content of [shell, powershell]) {
+    expect(content).toContain("24.19.0");
+    expect(content).toContain("https://nodejs.org/dist/");
+    expect(content).toContain("SHASUMS256");
+    expect(content).toContain(".local");
+    expect(content).not.toMatch(/curl[^\n]*\|\s*(?:ba)?sh/);
+  }
+  expect(shell).toMatch(/sha256sum|shasum/);
+  expect(powershell).toContain("Get-FileHash");
+});
+
+test("full local bootstrap handles Docker while preview and server keep it optional", () => {
+  const shell = readFileSync(resolve(root, "scripts/local/bootstrap-prerequisites.sh"), "utf8");
+  const powershell = readFileSync(
+    resolve(root, "scripts/local/bootstrap-prerequisites.ps1"),
+    "utf8",
+  );
+  expect(shell).toContain('if [ "$MODE" = "local" ] || [ "$MODE" = "full" ]');
+  expect(shell).toContain("docker info");
+  expect(powershell).toContain('$Mode -in @("local", "full")');
+  expect(powershell).toContain("Docker.DockerDesktop");
 });

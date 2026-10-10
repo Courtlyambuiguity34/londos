@@ -334,9 +334,12 @@ test("remote authentication configuration fails closed without a selected email 
   try {
     expect(
       notificationsConfigured({
+        deployMode: "render",
         localAdapters: false,
+        databasePoolMax: 3,
         secureCookies: true,
         baseURL: "https://mall.example.org",
+        allowedOrigins: ["https://mall.example.org"],
         databaseUrl: "postgresql://invalid",
         secret: "s".repeat(32),
       }),

@@ -9,8 +9,11 @@ import {
 } from "@/server/analytics";
 import { boundedBody, checkOrigin, privateResponse } from "@/server/http";
 import { AccessError } from "@/server/security/errors";
+import { corsResponse } from "@/server/security/origin";
 export async function POST(request: Request) {
-  const receipt = () => privateResponse({ received: true }, 202);
+  const respond = (data: unknown, status = 200) =>
+    corsResponse(request, privateResponse(data, status));
+  const receipt = () => respond({ received: true }, 202);
   if (!coreConfigured()) return receipt();
   try {
     checkOrigin(request);
@@ -19,9 +22,9 @@ export async function POST(request: Request) {
     await storePilotEvent(pilotDatabase(), request.headers, input);
     return receipt();
   } catch (error) {
-    if (error instanceof z.ZodError) return privateResponse({ error: "invalid_input" }, 422);
+    if (error instanceof z.ZodError) return respond({ error: "invalid_input" }, 422);
     if (error instanceof AccessError && [403, 422].includes(error.status))
-      return privateResponse({ error: error.code }, error.status);
+      return respond({ error: error.code }, error.status);
     // No target, token, query, driver details or storage outcome enter this response/log.
     return receipt();
   }

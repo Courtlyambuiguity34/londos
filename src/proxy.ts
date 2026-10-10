@@ -19,6 +19,7 @@ import { privacyOwnerAccess, privacyOperatorAccess } from "./server/privacy";
 import { incidentAccess, incidentQueue } from "./server/incidents";
 import { requireMerchant } from "./server/security/authorization";
 import { AccessError } from "./server/security/errors";
+import { acceptedRequestOrigin, corsResponse } from "./server/security/origin";
 
 function unavailable(status: number) {
   // Authorize before the Flight/HTML renderer can start its response stream.
@@ -39,6 +40,11 @@ function unavailable(status: number) {
 export async function proxy(request: NextRequest) {
   if (!coreConfigured()) return NextResponse.next();
   try {
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      if (request.method !== "OPTIONS" || !acceptedRequestOrigin(request))
+        return new NextResponse(null, { status: 403 });
+      return corsResponse(request, new NextResponse(null, { status: 204 }));
+    }
     const actor = await resolveActor(auth(), request.headers),
       path = request.nextUrl.pathname;
     const shop = /^\/shopkeeper\/shops\/([^/]+)(?:\/.*)?$/.exec(path);
@@ -175,4 +181,14 @@ export async function proxy(request: NextRequest) {
     return unavailable(503);
   }
 }
-export const config = { matcher: ["/shopkeeper/:path*", "/landlord/:path*", "/security"] };
+export const config = {
+  matcher: [
+    {
+      source: "/api/:path*",
+      has: [{ type: "header", key: "access-control-request-method" }],
+    },
+    "/shopkeeper/:path*",
+    "/landlord/:path*",
+    "/security",
+  ],
+};

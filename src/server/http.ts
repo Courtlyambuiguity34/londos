@@ -1,12 +1,13 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { coreConfigured, coreConfig } from "./config";
+import { coreConfigured } from "./config";
 import { database } from "./db/pool";
 import { auth } from "./security/auth";
 import { resolveActor, type Actor } from "./security/authorization";
 import { consumeBudget } from "./security/budget";
 import { AccessError } from "./security/errors";
+import { corsResponse, requireAcceptedOrigin } from "./security/origin";
 
 export function privateResponse(data: unknown, status = 200, requestId = randomUUID()) {
   return Response.json(data, {
@@ -21,12 +22,7 @@ export function privateResponse(data: unknown, status = 200, requestId = randomU
   });
 }
 export function checkOrigin(request: Request) {
-  const expected = coreConfig().baseURL;
-  if (
-    request.headers.get("origin") !== expected ||
-    request.headers.get("sec-fetch-site") === "cross-site"
-  )
-    throw new AccessError(403, "origin_denied");
+  requireAcceptedOrigin(request);
 }
 export async function boundedBody(request: Request) {
   const declared = Number(request.headers.get("content-length") ?? 0);
@@ -46,8 +42,10 @@ export async function boundedBody(request: Request) {
 }
 export async function workspaceRequest(request: Request, work: (actor: Actor) => Promise<unknown>) {
   const requestId = randomUUID();
+  const respond = (data: unknown, status = 200) =>
+    corsResponse(request, privateResponse(data, status, requestId));
   try {
-    if (!coreConfigured()) return privateResponse({ error: "core_unavailable" }, 503, requestId);
+    if (!coreConfigured()) return respond({ error: "core_unavailable" }, 503);
     if (!["GET", "HEAD"].includes(request.method)) checkOrigin(request);
     const actor = await resolveActor(auth(), request.headers);
     if (!["GET", "HEAD"].includes(request.method))
@@ -56,16 +54,14 @@ export async function workspaceRequest(request: Request, work: (actor: Actor) =>
     if (result instanceof Response) {
       for (const [key, value] of privateResponse(null, 200, requestId).headers)
         if (key !== "content-type") result.headers.set(key, value);
-      return result;
+      return corsResponse(request, result);
     }
-    return privateResponse(result, 200, requestId);
+    return respond(result);
   } catch (error) {
-    if (error instanceof AccessError)
-      return privateResponse({ error: error.code }, error.status, requestId);
-    if (error instanceof z.ZodError)
-      return privateResponse({ error: "invalid_input" }, 422, requestId);
+    if (error instanceof AccessError) return respond({ error: error.code }, error.status);
+    if (error instanceof z.ZodError) return respond({ error: "invalid_input" }, 422);
     console.error(JSON.stringify({ event: "request.failed", requestId }));
-    return privateResponse({ error: "service_unavailable" }, 503, requestId);
+    return respond({ error: "service_unavailable" }, 503);
   }
 }
 
