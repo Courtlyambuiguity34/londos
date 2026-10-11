@@ -32,7 +32,8 @@ database volume, and generated local configuration. It still runs `npm ci`, migr
 fresh production build so that repository changes are applied reproducibly.
 
 On Windows, Docker discovery checks the current `PATH`, Docker Desktop's registered uninstall/App
-Paths metadata, the normal Program Files and per-user locations, and then the optional
+Paths metadata, its Windows service and running process, the normal Program Files and per-user
+locations (including Docker's current per-user `Programs\DockerDesktop` layout), and then the optional
 `LONDOS_DOCKER_DESKTOP_DIR` override. Set that override to a custom Docker Desktop installation
 folder (for example `D:\Applications\Docker\Docker`) only when registry/PATH discovery is not
 available. An existing installation is started and reused; `winget` runs only when neither the
@@ -62,7 +63,13 @@ state and does not attempt a second elevation. Normal-user execution is recommen
 everything elevated can create app/cache files owned by the administrator account. Docker Desktop
 may still require its normal first-run agreement and the interactive user's WSL integration. If an
 installation fails, the window retains the error and writes a private summary to
-`.local\logs\windows-install-error.log` when possible.
+`.local\logs\windows-install-error.log` when possible. A winget/Docker package failure also keeps its
+captured output in `.local\logs\winget-docker-install.log`; neither file is committed. The winget
+code `-1978335226` (`0x8A150006`) means winget's Docker installer process did not complete
+successfully. It does not mean the Londos UAC handoff failed. The improved installer checks whether a
+custom or partially registered Docker installation is already usable before treating that code as
+fatal; otherwise check the captured output, WSL 2, hardware virtualization, and pending Windows
+restart before rerunning the same installer.
 
 After installation, use one of these files:
 

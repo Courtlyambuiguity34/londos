@@ -145,12 +145,17 @@ test("full local bootstrap handles Docker while preview and server keep it optio
   expect(powershell).toContain("LONDOS_DOCKER_DESKTOP_DIR");
   expect(powershell).toContain("Windows\\CurrentVersion\\Uninstall");
   expect(powershell).toContain("Windows\\CurrentVersion\\App Paths\\Docker Desktop.exe");
+  expect(powershell).toContain("CurrentControlSet\\Services\\com.docker.service");
+  expect(powershell).toContain("Programs\\DockerDesktop");
   expect(powershell).toContain("Using the existing Docker Desktop installation");
   expect(powershell).toContain("-Verb RunAs");
   expect(powershell).toContain("DockerInstallOnly");
   expect(powershell).toContain("Test-Administrator");
   expect(powershell).toContain("Administrator permission (UAC) prompt");
   expect(powershell).toContain("windows-install-error.log");
+  expect(powershell).toContain("winget-docker-install.log");
+  expect(powershell).toContain("Test-WingetDockerRegistered");
+  expect(powershell).toContain("0x8A150006");
   expect(powershell).toContain("$null = $Roots.Add($Candidate)");
   expect(powershell.indexOf("Find-DockerInstallation")).toBeLessThan(
     powershell.indexOf("Docker.DockerDesktop"),

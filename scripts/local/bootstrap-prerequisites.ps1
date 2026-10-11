@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $ErrorLog = Join-Path $Root ".local\logs\windows-install-error.log"
+$WingetLog = Join-Path $Root ".local\logs\winget-docker-install.log"
 
 function Test-Administrator {
   $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -38,14 +39,28 @@ function Add-DockerCandidateRoot {
     [AllowNull()][string]$Value
   )
   if ([string]::IsNullOrWhiteSpace($Value)) { return }
-  $Candidate = [Environment]::ExpandEnvironmentVariables($Value.Trim().Trim('"'))
+  $Candidate = [Environment]::ExpandEnvironmentVariables($Value.Trim())
+  if ($Candidate -match '^"([^\"]+\.exe)"') {
+    $Candidate = $Matches[1]
+  } elseif ($Candidate -match '^(.+?\.exe)(?:\s|$)') {
+    $Candidate = $Matches[1]
+  }
+  $Candidate = $Candidate.Trim().Trim('"')
   $Candidate = $Candidate -replace ',\d+$', ''
   if ([string]::IsNullOrWhiteSpace($Candidate)) { return }
-  if (Test-Path -LiteralPath $Candidate -PathType Leaf) {
+  $WasFile = Test-Path -LiteralPath $Candidate -PathType Leaf
+  if ($WasFile) {
     $Candidate = Split-Path -Parent $Candidate
   }
   try { $Candidate = [IO.Path]::GetFullPath($Candidate) } catch { return }
   if (-not $Roots.Contains($Candidate)) { $null = $Roots.Add($Candidate) }
+  if ($WasFile) {
+    for ($Level = 0; $Level -lt 2; $Level++) {
+      $Candidate = Split-Path -Parent $Candidate
+      if ([string]::IsNullOrWhiteSpace($Candidate)) { break }
+      if (-not $Roots.Contains($Candidate)) { $null = $Roots.Add($Candidate) }
+    }
+  }
 }
 
 function Find-DockerInstallation {
@@ -78,12 +93,24 @@ function Find-DockerInstallation {
     }
   }
 
+  $DockerService = Get-ItemProperty `
+    -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\com.docker.service' `
+    -ErrorAction SilentlyContinue
+  if ($DockerService) { Add-DockerCandidateRoot $Roots $DockerService.ImagePath }
+
+  foreach ($ProcessName in @('Docker Desktop', 'com.docker.backend')) {
+    foreach ($Process in @(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue)) {
+      try { Add-DockerCandidateRoot $Roots $Process.Path } catch { }
+    }
+  }
+
   Add-DockerCandidateRoot $Roots (Join-Path $env:ProgramFiles 'Docker\Docker')
   if (${env:ProgramFiles(x86)}) {
     Add-DockerCandidateRoot $Roots (Join-Path ${env:ProgramFiles(x86)} 'Docker\Docker')
   }
   if ($env:LOCALAPPDATA) {
     Add-DockerCandidateRoot $Roots (Join-Path $env:LOCALAPPDATA 'Programs\Docker\Docker')
+    Add-DockerCandidateRoot $Roots (Join-Path $env:LOCALAPPDATA 'Programs\DockerDesktop')
     Add-DockerCandidateRoot $Roots (Join-Path $env:LOCALAPPDATA 'Docker')
   }
 
@@ -94,7 +121,8 @@ function Find-DockerInstallation {
       foreach ($Path in @(
         (Join-Path $Root 'docker.exe'),
         (Join-Path $Root 'resources\bin\docker.exe'),
-        (Join-Path $Root 'Docker\resources\bin\docker.exe')
+        (Join-Path $Root 'Docker\resources\bin\docker.exe'),
+        (Join-Path $Root 'bin\docker.exe')
       )) {
         if (Test-Path -LiteralPath $Path -PathType Leaf) { $Cli = $Path; break }
       }
@@ -127,28 +155,86 @@ function Find-Winget {
   return $null
 }
 
+function Test-WingetDockerRegistered {
+  param([Parameter(Mandatory = $true)][string]$Winget)
+  & $Winget list --exact --id Docker.DockerDesktop --source winget `
+    --accept-source-agreements --disable-interactivity *> $null
+  return $LASTEXITCODE -eq 0
+}
+
+function Format-NativeExitCode {
+  param([Parameter(Mandatory = $true)][int]$ExitCode)
+  $Unsigned = [BitConverter]::ToUInt32([BitConverter]::GetBytes($ExitCode), 0)
+  return ('{0} (0x{1:X8})' -f $ExitCode, $Unsigned)
+}
+
+function Invoke-WingetDockerInstall {
+  param([Parameter(Mandatory = $true)][string]$Winget)
+  $LogDirectory = Split-Path -Parent $WingetLog
+  New-Item -ItemType Directory -Force -Path $LogDirectory | Out-Null
+  $StandardOutput = "$WingetLog.stdout.tmp"
+  $StandardError = "$WingetLog.stderr.tmp"
+  Remove-Item -LiteralPath $StandardOutput, $StandardError -Force -ErrorAction SilentlyContinue
+
+  $Arguments = @(
+    'install', '--exact', '--id', 'Docker.DockerDesktop', '--source', 'winget',
+    '--accept-package-agreements', '--accept-source-agreements',
+    '--disable-interactivity', '--verbose-logs'
+  )
+  try {
+    $Process = Start-Process -FilePath $Winget -ArgumentList $Arguments -Wait -PassThru `
+      -NoNewWindow -RedirectStandardOutput $StandardOutput -RedirectStandardError $StandardError
+    $LogHeader = @(
+      'Londos Docker Desktop installation diagnostics',
+      "Time: $([DateTimeOffset]::Now.ToString('o'))",
+      "winget exit: $(Format-NativeExitCode $Process.ExitCode)",
+      ''
+    )
+    Set-Content -LiteralPath $WingetLog -Value $LogHeader -Encoding UTF8
+    if (Test-Path -LiteralPath $StandardOutput) {
+      Add-Content -LiteralPath $WingetLog -Value 'Standard output:' -Encoding UTF8
+      Get-Content -LiteralPath $StandardOutput | Add-Content -LiteralPath $WingetLog -Encoding UTF8
+    }
+    if (Test-Path -LiteralPath $StandardError) {
+      Add-Content -LiteralPath $WingetLog -Value @('', 'Standard error:') -Encoding UTF8
+      Get-Content -LiteralPath $StandardError | Add-Content -LiteralPath $WingetLog -Encoding UTF8
+    }
+    return $Process.ExitCode
+  } finally {
+    Remove-Item -LiteralPath $StandardOutput, $StandardError -Force -ErrorAction SilentlyContinue
+  }
+}
+
 function Install-DockerDesktop {
-  # WinGet error 0x8A150006 means ShellExecute could not launch the installer.
-  # A successful package download does not imply installation succeeded.
+  if (-not (Test-Administrator)) {
+    throw "The Docker-only installer must run with administrator permission."
+  }
   if (Test-DockerReady) { return }
   $Existing = Find-DockerInstallation
   if ($Existing.Cli -or $Existing.Desktop) {
-    Write-Host "Docker Desktop files already exist; skipping reinstallation."
+    Write-Host "Using the existing Docker Desktop installation found by the administrator helper."
     return
   }
   $Winget = Find-Winget
   if (-not $Winget) {
-    throw "WinGet is unavailable. Install Docker Desktop using the official interactive installer, then rerun Londos."
+    throw "Windows Package Manager (winget) is unavailable in the elevated account. Run INSTALL-WINDOWS.bat from the Windows account that owns App Installer, or install Docker Desktop manually."
   }
-  Write-Host "Attempting Docker Desktop installation through Windows Package Manager..."
-  & $Winget install --exact --id Docker.DockerDesktop --source winget `
-    --accept-package-agreements --accept-source-agreements
-  $Code = $LASTEXITCODE
-  if ($Code -ne 0) {
-    if ($Code -eq -1978335226) {
-      throw "WinGet downloaded Docker Desktop but Windows failed to launch its installer (0x8A150006). Open the downloaded official Docker Desktop installer interactively, complete setup and restart Londos. No additional download is required if the installer is already present."
+  if (Test-WingetDockerRegistered $Winget) {
+    throw "Docker Desktop is registered as installed, but its executable was not found. If it is in a custom folder, set LONDOS_DOCKER_DESKTOP_DIR to that folder and rerun. Otherwise repair Docker Desktop from Windows Installed apps."
+  }
+  Write-Host "Installing Docker Desktop through Windows Package Manager..."
+  $ExitCode = Invoke-WingetDockerInstall $Winget
+  if ($ExitCode -ne 0) {
+    $Docker = Find-DockerInstallation
+    if ($Docker.Cli -or $Docker.Desktop) {
+      Write-Warning "winget reported $(Format-NativeExitCode $ExitCode), but Docker Desktop files are present. Londos will validate and reuse them."
+      return
     }
-    throw "Docker Desktop installation did not complete (WinGet exit code $Code). Use the official interactive installer, then rerun Londos."
+    $FormattedExit = Format-NativeExitCode $ExitCode
+    if ($FormattedExit -match '0x8A150006') {
+      throw "winget's Docker installer process did not complete successfully ($FormattedExit). The underlying output is in $WingetLog. Check WSL 2/virtualization and any pending Windows restart, then rerun."
+    }
+    throw "Docker Desktop installation failed with winget exit $FormattedExit. The underlying output is in $WingetLog."
   }
 }
 
@@ -218,6 +304,9 @@ function Invoke-LondosInstall {
 }
 
 if (Test-Path -LiteralPath $ErrorLog) { Remove-Item -LiteralPath $ErrorLog -Force }
+if (-not $DockerInstallOnly -and (Test-Path -LiteralPath $WingetLog)) {
+  Remove-Item -LiteralPath $WingetLog -Force
+}
 try {
   Invoke-LondosInstall
   exit 0
