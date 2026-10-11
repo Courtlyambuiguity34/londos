@@ -128,18 +128,27 @@ function Find-Winget {
 }
 
 function Install-DockerDesktop {
-  if (-not (Test-Administrator)) {
-    throw "The Docker-only installer must run with administrator permission."
+  # WinGet error 0x8A150006 means ShellExecute could not launch the installer.
+  # A successful package download does not imply installation succeeded.
+  if (Test-DockerReady) { return }
+  $Existing = Find-DockerInstallation
+  if ($Existing.Cli -or $Existing.Desktop) {
+    Write-Host "Docker Desktop files already exist; skipping reinstallation."
+    return
   }
   $Winget = Find-Winget
   if (-not $Winget) {
-    throw "Windows Package Manager (winget) is unavailable in the elevated account. Run INSTALL-WINDOWS.bat from the Windows account that owns App Installer, or install Docker Desktop manually."
+    throw "WinGet is unavailable. Install Docker Desktop using the official interactive installer, then rerun Londos."
   }
-  Write-Host "Installing Docker Desktop through Windows Package Manager..."
+  Write-Host "Attempting Docker Desktop installation through Windows Package Manager..."
   & $Winget install --exact --id Docker.DockerDesktop --source winget `
     --accept-package-agreements --accept-source-agreements
-  if ($LASTEXITCODE -ne 0) {
-    throw "Docker Desktop installation failed with exit code $LASTEXITCODE."
+  $Code = $LASTEXITCODE
+  if ($Code -ne 0) {
+    if ($Code -eq -1978335226) {
+      throw "WinGet downloaded Docker Desktop but Windows failed to launch its installer (0x8A150006). Open the downloaded official Docker Desktop installer interactively, complete setup and restart Londos. No additional download is required if the installer is already present."
+    }
+    throw "Docker Desktop installation did not complete (WinGet exit code $Code). Use the official interactive installer, then rerun Londos."
   }
 }
 
