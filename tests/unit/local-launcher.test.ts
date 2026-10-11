@@ -93,9 +93,10 @@ test("launcher rejects a local port that would break the configured authenticati
 });
 
 test("one-click installers bootstrap the private runtime and preserve role entry points", () => {
-  expect(readFileSync(resolve(root, "INSTALL-WINDOWS.bat"), "utf8")).toContain(
-    "bootstrap-prerequisites.ps1",
-  );
+  const windowsInstaller = readFileSync(resolve(root, "INSTALL-WINDOWS.bat"), "utf8");
+  expect(windowsInstaller).toContain("bootstrap-prerequisites.ps1");
+  expect(windowsInstaller).toContain("INSTALL_EXIT=%ERRORLEVEL%");
+  expect(windowsInstaller).toContain("windows-install-error.log");
   expect(readFileSync(resolve(root, "install-linux.sh"), "utf8")).toContain(
     "bootstrap-prerequisites.sh",
   );
@@ -145,6 +146,12 @@ test("full local bootstrap handles Docker while preview and server keep it optio
   expect(powershell).toContain("Windows\\CurrentVersion\\Uninstall");
   expect(powershell).toContain("Windows\\CurrentVersion\\App Paths\\Docker Desktop.exe");
   expect(powershell).toContain("Using the existing Docker Desktop installation");
+  expect(powershell).toContain("-Verb RunAs");
+  expect(powershell).toContain("DockerInstallOnly");
+  expect(powershell).toContain("Test-Administrator");
+  expect(powershell).toContain("Administrator permission (UAC) prompt");
+  expect(powershell).toContain("windows-install-error.log");
+  expect(powershell).toContain("$null = $Roots.Add($Candidate)");
   expect(powershell.indexOf("Find-DockerInstallation")).toBeLessThan(
     powershell.indexOf("Docker.DockerDesktop"),
   );

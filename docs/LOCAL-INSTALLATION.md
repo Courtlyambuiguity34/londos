@@ -52,11 +52,17 @@ and builds the production application. Existing `.env.local`, account files and 
 volume are preserved. The installer refuses to migrate when `.env.local` points at a non-loopback
 database.
 
-You may right-click the installer and choose **Run as administrator**, but it is normally better to
-run it as the Windows account that will launch Londos and let Windows elevate only the Docker
-installation when required. Running everything elevated can create app/cache files owned by the
-administrator account. Docker Desktop may still require its normal first-run agreement and the
-interactive user's WSL integration.
+Run the installer normally. If Docker Desktop is genuinely absent, Londos now explicitly announces
+and opens one Windows Administrator permission (UAC) prompt for the Docker installation only. After
+that elevated helper finishes, dependency/database/application setup continues under your normal
+Windows account. Cancelling the prompt stops safely and does not claim Docker was installed.
+
+You may still right-click the installer and choose **Run as administrator**; the script detects that
+state and does not attempt a second elevation. Normal-user execution is recommended because running
+everything elevated can create app/cache files owned by the administrator account. Docker Desktop
+may still require its normal first-run agreement and the interactive user's WSL integration. If an
+installation fails, the window retains the error and writes a private summary to
+`.local\logs\windows-install-error.log` when possible.
 
 After installation, use one of these files:
 

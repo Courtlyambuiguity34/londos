@@ -1,11 +1,19 @@
 [CmdletBinding()]
 param(
   [ValidateSet("preview", "local", "full", "server")]
-  [string]$Mode = "local"
+  [string]$Mode = "local",
+  [switch]$DockerInstallOnly
 )
 
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$ErrorLog = Join-Path $Root ".local\logs\windows-install-error.log"
+
+function Test-Administrator {
+  $Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+  $Principal = New-Object Security.Principal.WindowsPrincipal($Identity)
+  return $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
 
 function Test-DockerReady {
   try {
@@ -37,7 +45,7 @@ function Add-DockerCandidateRoot {
     $Candidate = Split-Path -Parent $Candidate
   }
   try { $Candidate = [IO.Path]::GetFullPath($Candidate) } catch { return }
-  if (-not $Roots.Contains($Candidate)) { $Roots.Add($Candidate) }
+  if (-not $Roots.Contains($Candidate)) { $null = $Roots.Add($Candidate) }
 }
 
 function Find-DockerInstallation {
@@ -103,19 +111,74 @@ function Find-DockerInstallation {
   return [PSCustomObject]@{ Cli = $Cli; Desktop = $Desktop }
 }
 
+function Find-Winget {
+  $Command = Get-Command winget.exe -ErrorAction SilentlyContinue
+  if ($Command) { return $Command.Source }
+  if ($env:LOCALAPPDATA) {
+    $Alias = Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\winget.exe'
+    if (Test-Path -LiteralPath $Alias -PathType Leaf) { return $Alias }
+  }
+  $Package = Get-AppxPackage -Name Microsoft.DesktopAppInstaller -ErrorAction SilentlyContinue |
+    Sort-Object Version -Descending | Select-Object -First 1
+  if ($Package) {
+    $Executable = Join-Path $Package.InstallLocation 'winget.exe'
+    if (Test-Path -LiteralPath $Executable -PathType Leaf) { return $Executable }
+  }
+  return $null
+}
+
+function Install-DockerDesktop {
+  if (-not (Test-Administrator)) {
+    throw "The Docker-only installer must run with administrator permission."
+  }
+  $Winget = Find-Winget
+  if (-not $Winget) {
+    throw "Windows Package Manager (winget) is unavailable in the elevated account. Run INSTALL-WINDOWS.bat from the Windows account that owns App Installer, or install Docker Desktop manually."
+  }
+  Write-Host "Installing Docker Desktop through Windows Package Manager..."
+  & $Winget install --exact --id Docker.DockerDesktop --source winget `
+    --accept-package-agreements --accept-source-agreements
+  if ($LASTEXITCODE -ne 0) {
+    throw "Docker Desktop installation failed with exit code $LASTEXITCODE."
+  }
+}
+
+function Request-DockerDesktopInstall {
+  if (Test-Administrator) {
+    Write-Host "The installer is already running with administrator permission."
+    Install-DockerDesktop
+    return
+  }
+  Write-Host "Docker Desktop is not installed. Windows will now show an Administrator permission (UAC) prompt."
+  Write-Host "Approve only if the program shown is Windows PowerShell and this Londos installer path is correct."
+  $Arguments = @(
+    '-NoLogo',
+    '-NoProfile',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', ('"{0}"' -f $PSCommandPath),
+    '-Mode', $Mode,
+    '-DockerInstallOnly'
+  )
+  try {
+    $Process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $Arguments `
+      -Wait -PassThru
+  } catch {
+    throw "Administrator permission was cancelled or could not be requested. Docker Desktop was not installed."
+  }
+  if ($Process.ExitCode -ne 0) {
+    throw "The administrator Docker installation step failed with exit code $($Process.ExitCode). See $ErrorLog."
+  }
+}
+
 function Ensure-Docker {
   if (Test-DockerReady) { return }
   $Docker = Find-DockerInstallation
   if (-not $Docker.Cli -and -not $Docker.Desktop) {
-    $Winget = Get-Command winget.exe -ErrorAction SilentlyContinue
-    if (-not $Winget) {
-      throw "Automatic Docker Desktop installation needs Windows Package Manager (winget). Install Docker Desktop, then rerun."
-    }
-    Write-Host "Installing Docker Desktop through Windows Package Manager; Windows may request approval..."
-    & $Winget.Source install --exact --id Docker.DockerDesktop --source winget `
-      --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) { throw "Docker Desktop installation failed with exit code $LASTEXITCODE." }
+    Request-DockerDesktopInstall
     $Docker = Find-DockerInstallation
+    if (-not $Docker.Cli -and -not $Docker.Desktop) {
+      throw "Docker Desktop installation completed but its files were not found. Restart Windows if requested, or set LONDOS_DOCKER_DESKTOP_DIR to the installed folder and rerun."
+    }
   } else {
     Write-Host "Using the existing Docker Desktop installation."
   }
@@ -135,6 +198,38 @@ function Ensure-Docker {
   }
 }
 
-if ($Mode -in @("local", "full")) { Ensure-Docker }
-& (Join-Path $PSScriptRoot "run-with-node.ps1") -Bootstrap install $Mode
-exit $LASTEXITCODE
+function Invoke-LondosInstall {
+  if ($DockerInstallOnly) {
+    Install-DockerDesktop
+    return
+  }
+  if ($Mode -in @("local", "full")) { Ensure-Docker }
+  & (Join-Path $PSScriptRoot "run-with-node.ps1") -Bootstrap install $Mode
+  if ($LASTEXITCODE -ne 0) { throw "The Londos installation step failed with exit code $LASTEXITCODE." }
+}
+
+if (Test-Path -LiteralPath $ErrorLog) { Remove-Item -LiteralPath $ErrorLog -Force }
+try {
+  Invoke-LondosInstall
+  exit 0
+} catch {
+  $Directory = Split-Path -Parent $ErrorLog
+  New-Item -ItemType Directory -Force -Path $Directory | Out-Null
+  $Summary = @(
+    "Londos Windows installer failure",
+    "Time: $([DateTimeOffset]::Now.ToString('o'))",
+    "Mode: $Mode",
+    "Docker-only elevated step: $DockerInstallOnly",
+    "Message: $($_.Exception.Message)"
+  )
+  if (-not $DockerInstallOnly -and (Test-Path -LiteralPath $ErrorLog)) {
+    Add-Content -LiteralPath $ErrorLog -Value @("", "Parent installer context:", $Summary[-1]) `
+      -Encoding UTF8
+  } else {
+    Set-Content -LiteralPath $ErrorLog -Value $Summary -Encoding UTF8
+  }
+  Write-Host ""
+  Write-Host "Londos installation stopped safely: $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host "Error summary: $ErrorLog"
+  exit 1
+}
