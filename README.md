@@ -28,6 +28,10 @@ For production-mode validation, run `npm run build` then `npm run start`. Run `n
 Render plus hosted Aiven PostgreSQL is the default deployment (`DEPLOY_MODE=render`). PostgreSQL is
 the source of truth; neither MongoDB nor a browser/PWA receives `DATABASE_URL`.
 
+This hosted production default is separate from the one-click Windows default: Windows local
+development now uses native loopback PostgreSQL and no Docker. The Aiven Windows shortcuts are
+explicit and dormant until a hosted `DATABASE_URL` is configured.
+
 These Aiven official pages were checked on **2026-10-09**:
 
 - [Get started with Aiven for PostgreSQL](https://aiven.io/docs/products/postgresql/get-started)
@@ -299,6 +303,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 ## Documentation map
 
 - [One-click Windows, macOS and Linux installation](docs/LOCAL-INSTALLATION.md)
+- [Windows native PostgreSQL installation and dormant Aiven shortcuts](docs/WINDOWS-NATIVE-POSTGRESQL.md)
+- [Windows native PostgreSQL implementation evidence](docs/evidence/WINDOWS-NATIVE-POSTGRESQL-2026-10-11.md)
 - [Optional self-hosted production mode](deploy/selfhosted/README.md)
 - [Self-hosted mode verification](docs/evidence/SELFHOSTED-MODE-2026-10-09.md)
 - [PWA clients and shared-server deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md)

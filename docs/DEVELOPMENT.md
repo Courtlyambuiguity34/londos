@@ -32,7 +32,13 @@ npm run worker
 
 For iterative development use `npm run dev` and `npm run worker:dev`. The production build packages a separate `dist/worker.mjs`; its runtime dependencies remain normal production packages. `tsx` is development/test tooling, not required to run the compiled worker. The web start wrapper loads root `.env.local` before standalone changes its working directory, retaining explicit process-variable precedence.
 
-`db:local` starts pinned official PostgreSQL **18.6**, loopback port **54329**, named container `londos-development-postgres`, named persistent volume `londos-development-postgres`. It checks readiness, rejects unmarked/mismatched containers, preserves an existing `.env.local`, and generates random credentials only into ignored private files. Repeat setup is safe. `npm run db:stop` stops the container and retains its volume. The tool never deletes a volume or truncates an unknown database.
+On Windows, `db:local` starts or provisions pinned native PostgreSQL **18.6-5** through the guarded
+Windows helper; a fresh installation uses loopback port **54329**. On macOS/Linux it starts pinned
+official PostgreSQL **18.6** in the named `londos-development-postgres` container and persistent
+volume. Both paths check readiness, refuse a hosted `.env.local`, and generate random credentials
+only into ignored private files. Repeat setup is safe. `npm run db:stop` stops the container on
+macOS/Linux and deliberately leaves the Windows PostgreSQL service/data intact. Neither path deletes
+database data or truncates an unknown database.
 
 The local DB role is privileged to create isolated test databases. It is **development-only**, not a production service role. For an image upgrade: back up the explicit development volume first, verify its identity, stop/remove only that marked container without `-v`, then recreate with the reviewed image and retained volume; follow PostgreSQL upgrade instructions across major versions. Production upgrade/restore procedures remain P12 work.
 

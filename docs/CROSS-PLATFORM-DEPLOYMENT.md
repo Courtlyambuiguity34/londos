@@ -95,7 +95,8 @@ may run the worker and PostgreSQL, or reviewed paid/managed services may do so.
 ## Owned server
 
 Use `INSTALL-WINDOWS.bat`, `install-macos.command`, or `install-linux.sh` for a loopback development
-installation. Publishing an owned machine to other people is a separate server operation: use a real
+installation. Windows installs native PostgreSQL directly; macOS/Linux retain the Docker-backed
+local database. Publishing an owned machine to other people is a separate server operation: use a real
 domain and TLS, protect PostgreSQL from the public Internet, set `LONDOS_LOCAL_ADAPTERS=false`, supply
 a verified Brevo configuration, run the web and worker under process supervision, overwrite untrusted
 client-IP headers at the ingress, and implement backups/recovery. The local one-click installer does

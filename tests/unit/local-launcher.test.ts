@@ -33,6 +33,11 @@ test("local configuration guard accepts only the marked loopback database shape"
       AUTH_SECRET: 'fixture-secret-at-least-thirty-two-characters',
       AUTH_BASE_URL: 'http://127.0.0.1:3000'
     });
+    assertLocalConfiguration({
+      DATABASE_URL: 'postgresql://londos:fixture@localhost/londos_development',
+      AUTH_SECRET: 'fixture-secret-at-least-thirty-two-characters',
+      AUTH_BASE_URL: 'http://127.0.0.1:3000'
+    });
     let rejected = false;
     try {
       assertLocalConfiguration({
@@ -49,6 +54,37 @@ test("local configuration guard accepts only the marked loopback database shape"
   });
   expect(result.status, result.stderr).toBe(0);
   expect(result.stdout).toBe("");
+});
+
+test("Aiven shortcut guard requires an explicit hosted PostgreSQL configuration", () => {
+  const code = `
+    import { assertHostedConfiguration } from ${JSON.stringify(pathToFileURL(launcher).href)};
+    assertHostedConfiguration({
+      DATABASE_URL: 'postgresql://londos:fixture@hosted.example:5432/londos?sslmode=require',
+      AUTH_SECRET: 'fixture-secret-at-least-thirty-two-characters',
+      AUTH_BASE_URL: 'https://mall.example'
+    });
+    for (const DATABASE_URL of [
+      'postgresql://londos:fixture@127.0.0.1:54329/londos',
+      'mongodb+srv://hosted.example/londos',
+      'postgresql://londos:fixture@hosted.example:5432/londos'
+    ]) {
+      let rejected = false;
+      try {
+        assertHostedConfiguration({
+          DATABASE_URL,
+          AUTH_SECRET: 'fixture-secret-at-least-thirty-two-characters',
+          AUTH_BASE_URL: 'https://mall.example'
+        });
+      } catch { rejected = true; }
+      if (!rejected) process.exit(2);
+    }
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", code], {
+    encoding: "utf8",
+    cwd: root,
+  });
+  expect(result.status, result.stderr).toBe(0);
 });
 
 test("launcher derives local listening and browser origins from AUTH_BASE_URL", () => {
@@ -132,34 +168,40 @@ test("runtime bootstrap pins and verifies official Node downloads", () => {
   expect(powershell).toContain("Get-FileHash");
 });
 
-test("full local bootstrap handles Docker while preview and server keep it optional", () => {
+test("Windows local mode provisions verified native PostgreSQL while hosted mode stays explicit", () => {
   const shell = readFileSync(resolve(root, "scripts/local/bootstrap-prerequisites.sh"), "utf8");
-  const powershell = readFileSync(
+  const bootstrap = readFileSync(
     resolve(root, "scripts/local/bootstrap-prerequisites.ps1"),
     "utf8",
   );
+  const native = readFileSync(resolve(root, "scripts/local/native-postgres.ps1"), "utf8");
+  const database = readFileSync(resolve(root, "scripts/dev-database.mjs"), "utf8");
   expect(shell).toContain('if [ "$MODE" = "local" ] || [ "$MODE" = "full" ]');
   expect(shell).toContain("docker info");
-  expect(powershell).toContain('$Mode -in @("local", "full")');
-  expect(powershell).toContain("Docker.DockerDesktop");
-  expect(powershell).toContain("LONDOS_DOCKER_DESKTOP_DIR");
-  expect(powershell).toContain("Windows\\CurrentVersion\\Uninstall");
-  expect(powershell).toContain("Windows\\CurrentVersion\\App Paths\\Docker Desktop.exe");
-  expect(powershell).toContain("CurrentControlSet\\Services\\com.docker.service");
-  expect(powershell).toContain("Programs\\DockerDesktop");
-  expect(powershell).toContain("Using the existing Docker Desktop installation");
-  expect(powershell).toContain("-Verb RunAs");
-  expect(powershell).toContain("DockerInstallOnly");
-  expect(powershell).toContain("Test-Administrator");
-  expect(powershell).toContain("Administrator permission (UAC) prompt");
-  expect(powershell).toContain("windows-install-error.log");
-  expect(powershell).toContain("winget-docker-install.log");
-  expect(powershell).toContain("Test-WingetDockerRegistered");
-  expect(powershell).toContain("0x8A150006");
-  expect(powershell).toContain("$null = $Roots.Add($Candidate)");
-  expect(powershell.indexOf("Find-DockerInstallation")).toBeLessThan(
-    powershell.indexOf("Docker.DockerDesktop"),
-  );
+  expect(bootstrap).toContain('$Mode -in @("local", "full")');
+  expect(bootstrap).toContain("native-postgres.ps1");
+  expect(bootstrap).toContain("Hosted server mode selected");
+  expect(bootstrap).not.toContain("Docker.DockerDesktop");
+  expect(native).toContain('PostgresVersion = "18.6-5"');
+  expect(native).toContain("227E2BC08091B4C2B8338C7D61B11D057F895711480B006F90BFCFCD2410A58A");
+  expect(native).toContain("https://get.enterprisedb.com/postgresql/");
+  expect(native).toContain("Get-FileHash");
+  expect(native).toContain("Using the cached, checksum-verified PostgreSQL");
+  expect(native).toContain("--optionfile");
+  expect(native).toContain("listen_addresses = 'localhost'");
+  expect(native).toContain("POSTGRES_APP_USER=londos");
+  expect(native).toContain("DEPLOY_MODE = 'selfhosted'");
+  expect(native).toContain(".env.local selects a hosted database. It was preserved");
+  expect(native).toContain("END;");
+  expect(native).not.toContain("Docker.DockerDesktop");
+  expect(database).toContain('process.platform === "win32"');
+  expect(database).toContain("native-postgres.ps1");
+  const aivenInstall = readFileSync(resolve(root, "INSTALL-AIVEN-WINDOWS.bat"), "utf8");
+  const aivenStart = readFileSync(resolve(root, "START-AIVEN-WINDOWS.bat"), "utf8");
+  expect(aivenInstall).toContain('set "LONDOS_REQUIRE_HOSTED_DATABASE=true"');
+  expect(aivenInstall).toContain('INSTALL-WINDOWS.bat" server');
+  expect(aivenStart).toContain('set "LONDOS_REQUIRE_HOSTED_DATABASE=true"');
+  expect(aivenStart).toContain('START-WINDOWS.bat" server');
 });
 
 test("Windows bootstrap reuses only a checksum-verified cached Node archive", () => {

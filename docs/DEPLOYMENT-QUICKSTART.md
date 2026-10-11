@@ -25,7 +25,8 @@ Open `http://localhost:3000` **on that computer**. Browse the mall and sample sh
 
 ## 2. Run the application locally with accounts
 
-Install Docker and start its daemon. From the same checkout:
+On Windows, double-click `INSTALL-WINDOWS.bat`; it installs native PostgreSQL and performs these
+steps. On macOS/Linux, install Docker and start its daemon. From the same checkout:
 
 ```bash
 npm run db:local
@@ -98,7 +99,7 @@ Remote lifecycle/privacy/pilot acceptance and the [G5 launch obligations](launch
 
 | Option                                  | What you can do now                                | Main requirement or limit                                                                                                         |
 | --------------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Your computer                           | Free fictional preview; full development workflows | Node/npm; Docker/PostgreSQL and worker for accounts. Internet for first installation and external providers.                      |
+| Your computer                           | Free fictional preview; full development workflows | Node/npm; native PostgreSQL on Windows or Docker/PostgreSQL on macOS/Linux, plus worker for accounts. Internet for first installation and external providers. |
 | Owned server                            | Control PostgreSQL, worker and backups             | Supervision, HTTPS, protected ingress, recovery and release approval for public use.                                              |
 | Render Free web                         | Share a fictional catalogue mockup                 | Sleeping service and ephemeral filesystem; full application dependencies are separate.                                            |
 | Render with supported external services | Host the current web/worker architecture           | Reachable PostgreSQL, independent worker, verified credentials and production gates; review costs first.                          |

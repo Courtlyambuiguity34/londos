@@ -13,63 +13,54 @@ change or a global Node installation.
   official `SHASUMS256.txt` before extraction. An incomplete or altered download is rejected.
 - npm **11.x** from that runtime and every exact JavaScript dependency in `package-lock.json`, using
   `npm ci` rather than choosing newer package versions.
-- Docker Desktop through `winget` on Windows when it is absent. On macOS the installer uses the
-  checksum-controlled Homebrew cask when Homebrew is present. On supported Linux distributions it
-  uses the system `apt`, `dnf`, `yum`, `pacman`, or `zypper` package with `sudo`.
-- The pinned PostgreSQL image, a loopback-only database container, random local database/authentication
-  credentials, migrations, fictional development seed accounts, and the production application build
-  when `local` mode is selected.
+- PostgreSQL **18.6-5** directly on Windows, from EDB's official distribution and only after its
+  pinned SHA-256 digest passes. The installer creates a loopback-only Windows service, a `londos`
+  role, a `londos_development` database, and ignored random local credentials. Windows local mode
+  neither needs nor installs Docker or WSL.
+- On macOS and Linux, Docker plus the pinned PostgreSQL image, a loopback-only database container,
+  random local database/authentication credentials, migrations, fictional development seed accounts,
+  and the production application build when `local` mode is selected.
 
 The first run therefore needs Internet access, enough disk space, and permission to approve an
-operating-system package installation. Docker Desktop may show its own first-run screen. Linux may
+operating-system package installation. Linux may
 require signing out and back in after the installer adds the current account to the `docker` group;
 rerun the same installer afterward. If macOS does not already have Homebrew, install it from
 <https://brew.sh> first so the Docker package can be authenticated and managed normally. The
-installer refuses to execute an unverified Node or Docker download as a workaround.
+installer refuses to execute an unverified Node or PostgreSQL download as a workaround.
 
-A repeated installation reuses the verified private Node runtime, Docker installation, npm cache,
-database volume, and generated local configuration. It still runs `npm ci`, migrations, seed, and a
-fresh production build so that repository changes are applied reproducibly.
+A repeated installation reuses the verified private Node runtime, native Windows PostgreSQL (or the
+macOS/Linux Docker installation), npm cache, database data, and generated local configuration. It
+still runs `npm ci`, migrations, seed, and a fresh production build so repository changes are
+applied reproducibly.
 
-On Windows, Docker discovery checks the current `PATH`, Docker Desktop's registered uninstall/App
-Paths metadata, its Windows service and running process, the normal Program Files and per-user
-locations (including Docker's current per-user `Programs\DockerDesktop` layout), and then the optional
-`LONDOS_DOCKER_DESKTOP_DIR` override. Set that override to a custom Docker Desktop installation
-folder (for example `D:\Applications\Docker\Docker`) only when registry/PATH discovery is not
-available. An existing installation is started and reused; `winget` runs only when neither the
-Docker CLI nor Docker Desktop can be found. The exact Node archive is also retained in
-`.local\runtime\downloads`; the installer refreshes the small official checksum list and reuses the
-archive only after its SHA-256 checksum passes. A damaged cached archive is discarded and downloaded
-again.
+On Windows the PostgreSQL installer is cached in `.local\runtime\downloads` and rechecked against
+the pinned digest on every use. A damaged cache is deleted and downloaded again. Existing compatible
+PostgreSQL 18 is reused after a secure password prompt; set `LONDOS_POSTGRES_PORT` before installing
+if that service does not use port 5432. Londos does not uninstall or modify an existing Docker
+Desktop installation because it could contain unrelated projects and data.
 
 Keep the whole repository together. Do not copy a START file away from it.
 
 ## Windows
 
-Double-click `INSTALL-WINDOWS.bat`. It obtains Node/Docker when needed, installs locked dependencies,
-creates the private local
-PostgreSQL configuration when absent, applies migrations, creates fictional development accounts,
-and builds the production application. Existing `.env.local`, account files and the named database
-volume are preserved. The installer refuses to migrate when `.env.local` points at a non-loopback
-database.
+Double-click `INSTALL-WINDOWS.bat`. It obtains Node and native PostgreSQL when needed, installs locked
+dependencies, creates the private local PostgreSQL configuration when absent, applies migrations,
+creates fictional development accounts, and builds the production application. Existing
+`.env.local`, account files, database and unrelated settings are preserved. The installer refuses
+before installation when `.env.local` points at a non-loopback database.
 
-Run the installer normally. If Docker Desktop is genuinely absent, Londos now explicitly announces
-and opens one Windows Administrator permission (UAC) prompt for the Docker installation only. After
-that elevated helper finishes, dependency/database/application setup continues under your normal
-Windows account. Cancelling the prompt stops safely and does not claim Docker was installed.
+Run the installer normally. Londos announces and opens one Windows Administrator permission (UAC)
+prompt only when it must run the verified PostgreSQL installer or control its service. Dependency,
+database, and application setup otherwise continues under the signed-in Windows account. Cancelling
+the prompt stops safely and does not claim PostgreSQL was installed.
 
 You may still right-click the installer and choose **Run as administrator**; the script detects that
 state and does not attempt a second elevation. Normal-user execution is recommended because running
-everything elevated can create app/cache files owned by the administrator account. Docker Desktop
-may still require its normal first-run agreement and the interactive user's WSL integration. If an
-installation fails, the window retains the error and writes a private summary to
-`.local\logs\windows-install-error.log` when possible. A winget/Docker package failure also keeps its
-captured output in `.local\logs\winget-docker-install.log`; neither file is committed. The winget
-code `-1978335226` (`0x8A150006`) means winget's Docker installer process did not complete
-successfully. It does not mean the Londos UAC handoff failed. The improved installer checks whether a
-custom or partially registered Docker installation is already usable before treating that code as
-fatal; otherwise check the captured output, WSL 2, hardware virtualization, and pending Windows
-restart before rerunning the same installer.
+everything elevated can create app/cache files owned by the administrator account. If installation
+fails, the window retains the error and writes a private summary to
+`.local\logs\windows-install-error.log`; PostgreSQL installer metadata (never credentials) is in
+`.local\logs\postgresql-install.log`. Neither file is committed. See
+[Windows native PostgreSQL setup](./WINDOWS-NATIVE-POSTGRESQL.md).
 
 After installation, use one of these files:
 
@@ -83,9 +74,8 @@ After installation, use one of these files:
 The START window runs the server and worker and opens the browser after the health endpoint responds.
 The launcher now waits for `/api/ready` to confirm the web process, database, authentication and
 worker—not merely an open port. Keep it open. Press Ctrl+C to stop the processes. `STOP-WINDOWS.bat`
-stops the web/worker recorded by the launcher and the development PostgreSQL container, preserving
-its named volume. A later START click starts that database again. It does not search for or terminate
-unrelated Node/PostgreSQL processes.
+stops the web/worker recorded by the launcher. The native PostgreSQL service stays available and its
+data is preserved. It does not search for or terminate unrelated Node/PostgreSQL processes.
 
 On a headless server, set `LONDOS_NO_BROWSER=true`; the launcher prints the ready URL instead of
 calling the operating system's browser opener.
@@ -121,10 +111,16 @@ alias for `local`.
 ```
 
 - `preview` needs no database and disables private/core services explicitly.
-- `local` manages only the marked loopback PostgreSQL container on port 54329. It never deletes its
-  volume and refuses a hosted `DATABASE_URL`.
+- `local` uses native PostgreSQL on Windows and the marked loopback PostgreSQL container on macOS or
+  Linux. A fresh Windows install uses port 54329; an existing PostgreSQL 18 service may use another
+  validated loopback port. Local mode never deletes data and refuses a hosted `DATABASE_URL`.
 - `server` builds with operator-supplied environment settings but never runs migrations or seeds.
   Follow the release runbook for the separately authorized migration step.
+
+Windows also has dormant, explicit `INSTALL-AIVEN-WINDOWS.bat` and
+`START-AIVEN-WINDOWS.bat [mall|shopkeeper|landlord]` shortcuts. They require a real hosted PostgreSQL
+`DATABASE_URL` and never install local PostgreSQL, run hosted migrations, or seed hosted data. The
+ordinary Windows shortcuts remain the default.
 
 In local mode, the listening `PORT` must match the port in `AUTH_BASE_URL`; the launcher rejects a
 mismatch because authentication redirects and cookies would otherwise point at a different origin.
@@ -140,8 +136,8 @@ those files to a merchant or customer.
 
 The `local` installer is allowed to generate only private development values: a random local
 PostgreSQL password, a random authentication secret, the loopback database URL, and the loopback
-authentication origin. They are written to ignored `.local/postgres.env` and `.env.local` files and
-are never committed.
+authentication origin. On Windows they are written to ignored `.local/native-postgres.env` and
+`.env.local`; macOS/Linux use `.local/postgres.env` and `.env.local`. They are never committed.
 
 The installer does **not** invent production values. In `server` mode, copy the documented names
 from `.env.example` and supply the real `DATABASE_URL`, `AUTH_SECRET`, `AUTH_BASE_URL`, PWA origins,
@@ -153,7 +149,7 @@ Missing optional integrations must not prevent the base application from startin
 ## Other computers and phones
 
 Only the owner/operator machine or hosted platform runs the Londos server, worker and database.
-Customers and shop staff open its HTTPS address in a browser. They do not install Node, Docker, the
+Customers and shop staff open its HTTPS address in a browser. They do not install Node, PostgreSQL,
 database, or environment variables. Visit `/install` to install the Progressive Web App on Windows,
 macOS, Linux, or Android; visiting `/shopkeeper` or `/landlord` first selects that role's app name and
 starting page. Account permissions and operator MFA remain enforced by the server.

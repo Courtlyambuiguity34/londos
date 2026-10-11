@@ -3,6 +3,27 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 import { execFileSync } from "node:child_process";
 
+const command = process.argv[2] ?? "up";
+if (process.platform === "win32") {
+  if (!["up", "stop"].includes(command))
+    throw new Error("Use db:local or db:stop. This tool never deletes a database.");
+  execFileSync(
+    "powershell.exe",
+    [
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "scripts\\local\\native-postgres.ps1",
+      "-Action",
+      command,
+    ],
+    { stdio: "inherit" },
+  );
+  process.exit(0);
+}
+
 const selectorNames = new Set([
   "DOCKER_HOST",
   "DOCKER_CONTEXT",
@@ -22,7 +43,6 @@ function docker(args) {
 }
 const image = "postgres@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722";
 const container = "londos-development-postgres";
-const command = process.argv[2] ?? "up";
 if (command === "stop") {
   docker(["stop", container]);
   console.log("Development PostgreSQL stopped; its named volume is retained.");

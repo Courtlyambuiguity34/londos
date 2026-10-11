@@ -181,12 +181,40 @@ export function assertLocalConfiguration(values) {
   const database = new URL(values.DATABASE_URL);
   const auth = new URL(values.AUTH_BASE_URL);
   const loopback = new Set(["localhost", "127.0.0.1", "[::1]"]);
-  if (!loopback.has(database.hostname) || database.port !== "54329")
+  const databasePort = database.port || "5432";
+  if (
+    !["postgresql:", "postgres:"].includes(database.protocol) ||
+    !loopback.has(database.hostname) ||
+    !/^\d+$/.test(databasePort) ||
+    Number(databasePort) < 1 ||
+    Number(databasePort) > 65535
+  )
     throw new Error(
       "Local install refuses to migrate a non-local database. Use server mode and the deployment runbook for hosted databases.",
     );
   if (!loopback.has(auth.hostname))
     throw new Error("Local install requires a loopback AUTH_BASE_URL.");
+}
+
+export function assertHostedConfiguration(values) {
+  for (const key of ["DATABASE_URL", "AUTH_SECRET", "AUTH_BASE_URL"]) {
+    if (!values[key]) throw new Error(`Hosted mode is missing ${key}.`);
+  }
+  let database;
+  try {
+    database = new URL(values.DATABASE_URL);
+    new URL(values.AUTH_BASE_URL);
+  } catch {
+    throw new Error("Hosted DATABASE_URL and AUTH_BASE_URL must be valid URLs.");
+  }
+  if (!["postgresql:", "postgres:"].includes(database.protocol))
+    throw new Error("Hosted mode requires a PostgreSQL DATABASE_URL.");
+  if (new Set(["localhost", "127.0.0.1", "[::1]"]).has(database.hostname))
+    throw new Error(
+      "The Aiven shortcut requires a hosted PostgreSQL DATABASE_URL; use the default Windows launcher for native PostgreSQL.",
+    );
+  if (!["require", "verify-ca", "verify-full"].includes(database.searchParams.get("sslmode")))
+    throw new Error("The Aiven shortcut requires sslmode=require (or a stronger verified mode).");
 }
 
 function install(mode) {
@@ -201,14 +229,13 @@ function install(mode) {
     assertLocalConfiguration(loadEnvFile(envPath));
     command(npm, ["run", "db:migrate"]);
     command(npm, ["run", "db:seed"]);
-  } else if (
-    mode === "server" &&
-    !existsSync(resolve(root, ".env.local")) &&
-    !(process.env.DATABASE_URL && process.env.AUTH_SECRET && process.env.AUTH_BASE_URL)
-  ) {
-    throw new Error(
-      "Server mode needs operator-managed environment variables or .env.local. See docs/CROSS-PLATFORM-DEPLOYMENT.md.",
-    );
+  } else if (mode === "server") {
+    const values = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
+    if (!(values.DATABASE_URL && values.AUTH_SECRET && values.AUTH_BASE_URL))
+      throw new Error(
+        "Server mode needs operator-managed environment variables or .env.local. See docs/CROSS-PLATFORM-DEPLOYMENT.md.",
+      );
+    if (process.env.LONDOS_REQUIRE_HOSTED_DATABASE === "true") assertHostedConfiguration(values);
   }
   const env =
     mode === "preview"
@@ -283,6 +310,8 @@ async function start(mode, role) {
     throw new Error(`${mode} mode needs operator-managed environment variables or .env.local.`);
 
   const runtime = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
+  if (mode === "server" && process.env.LONDOS_REQUIRE_HOSTED_DATABASE === "true")
+    assertHostedConfiguration(runtime);
   const { port, healthOrigin, publicOrigin } = launchTargets(mode, runtime);
   const path = rolePath(role);
   if (await isLondosRunning(healthOrigin, mode)) {

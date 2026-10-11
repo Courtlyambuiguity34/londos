@@ -4,7 +4,7 @@ Use the current implementation branch, `feature/cross-platform-local-launchers-2
 
 ## Prerequisites
 
-The verified platform is Linux/Ubuntu or Ubuntu under WSL2, Node **24.19.0**, npm **11.9.0**, and Docker with a working local daemon. Native Windows/macOS and public deployment on the owner's computer have not been independently verified. Internet is needed to install packages/images and to contact optional providers. Redis is **not required**, including for tenancy, rent/subscriptions, scheduling or startup.
+The verified automated test platform is Linux/Ubuntu with Node **24.19.0**, npm **11.9.0**, and Docker with a working local daemon. The Windows launcher now provisions native PostgreSQL 18 directly and does not require Docker or WSL; its UAC/service path still requires verification on a real Windows machine. macOS uses Docker. Internet is needed for the first runtime/database download and optional providers. Redis is **not required**, including for tenancy, rent/subscriptions, scheduling or startup.
 
 For a new checkout:
 
@@ -16,7 +16,7 @@ npm ci --no-fund
 npm run db:local
 ```
 
-`db:local` creates a pinned PostgreSQL container on loopback port **54329**, a persistent named volume and random development credentials in ignored files. Existing files and volumes are preserved. If Docker is unavailable, correct the Docker installation first; MongoDB is not a replacement for this canonical PostgreSQL database.
+`db:local` uses native PostgreSQL on Windows and a pinned PostgreSQL container on macOS/Linux. A fresh Windows install and the container bind loopback port **54329**; an existing Windows PostgreSQL 18 service may use a configured local port. Persistent data and random credentials stay in ignored files. Docker is required only on macOS/Linux. MongoDB is not a replacement for this canonical PostgreSQL database.
 
 ## Configure, migrate and seed
 
@@ -118,6 +118,6 @@ npm run check:docs
 
 Integration tests use disposable databases; the MongoDB suite uses a disposable local MongoDB container and mock Cloudinary transport. It does not create a Redis service. The separate Redis integration file is optional to this targeted check. Chromium is needed for browser verification, not application startup.
 
-Common corrections: start Docker/PostgreSQL before migration; select `database` instead of `fixtures`; run the worker for normalized media/jobs; complete recent native MFA for operator pages; supply the MongoDB database explicitly; keep optional flags false while their credentials are missing. MongoDB Atlas also requires its least-privilege user, DNS, verified TLS, and an Atlas access rule for the deployment's approved egress. Managed Codex native TCP access is separate from HTTP allowlists; use supported environment settings and never disable TLS or allow every IP to hide a policy failure.
+Common corrections: start PostgreSQL (and Docker on macOS/Linux) before migration; select `database` instead of `fixtures`; run the worker for normalized media/jobs; complete recent native MFA for operator pages; supply the MongoDB database explicitly; keep optional flags false while their credentials are missing. MongoDB Atlas also requires its least-privilege user, DNS, verified TLS, and an Atlas access rule for the deployment's approved egress. Managed Codex native TCP access is separate from HTTP allowlists; use supported environment settings and never disable TLS or allow every IP to hide a policy failure.
 
-Stop web/worker with Ctrl-C. `npm run db:stop` stops the development container and retains the volume. Restart with `db:local`, web and worker commands. Back up the database and private configuration before upgrades. Public serving from an owned computer additionally requires reviewed ingress/TLS, least-privilege roles, reliable supervision and the remaining [G5 launch obligations](launch/G5-DECISIONS.json).
+Stop web/worker with Ctrl-C. On macOS/Linux, `npm run db:stop` stops the development container and retains its volume. On Windows it deliberately leaves the PostgreSQL service running and preserves its data. Restart with `db:local`, web and worker commands. Back up the database and private configuration before upgrades. Public serving from an owned computer additionally requires reviewed ingress/TLS, least-privilege roles, reliable supervision and the remaining [G5 launch obligations](launch/G5-DECISIONS.json).
