@@ -40,15 +40,26 @@ function Install-PrivateNode {
   New-Item -ItemType Directory -Force -Path $Downloads | Out-Null
 
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  # Refresh the small official checksum list before trusting a retained archive.
   Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/SHASUMS256.txt" -OutFile $SumsPath
-  Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Archive" -OutFile $ArchivePath
 
   $escapedArchive = [Regex]::Escape($Archive)
   $sumLine = Select-String -LiteralPath $SumsPath -Pattern "^([0-9a-fA-F]{64})\s+\*?$escapedArchive$" |
     Select-Object -First 1
   if (-not $sumLine) { throw "The official Node checksum list does not contain $Archive." }
   $Expected = $sumLine.Matches[0].Groups[1].Value.ToLowerInvariant()
+  if (-not (Test-Path -LiteralPath $ArchivePath -PathType Leaf)) {
+    Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Archive" -OutFile $ArchivePath
+  }
   $Actual = (Get-FileHash -LiteralPath $ArchivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($Actual -ne $Expected) {
+    Write-Host "The cached Node archive failed verification; downloading a clean copy..."
+    Remove-Item -LiteralPath $ArchivePath -Force
+    Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Archive" -OutFile $ArchivePath
+    $Actual = (Get-FileHash -LiteralPath $ArchivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+  } else {
+    Write-Host "Using the cached, checksum-verified Node.js archive."
+  }
   if ($Actual -ne $Expected) { throw "Node archive checksum verification failed; refusing to extract it." }
 
   if (Test-Path -LiteralPath $Staging) { Remove-Item -LiteralPath $Staging -Recurse -Force }

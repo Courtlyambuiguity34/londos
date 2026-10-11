@@ -141,4 +141,19 @@ test("full local bootstrap handles Docker while preview and server keep it optio
   expect(shell).toContain("docker info");
   expect(powershell).toContain('$Mode -in @("local", "full")');
   expect(powershell).toContain("Docker.DockerDesktop");
+  expect(powershell).toContain("LONDOS_DOCKER_DESKTOP_DIR");
+  expect(powershell).toContain("Windows\\CurrentVersion\\Uninstall");
+  expect(powershell).toContain("Windows\\CurrentVersion\\App Paths\\Docker Desktop.exe");
+  expect(powershell).toContain("Using the existing Docker Desktop installation");
+  expect(powershell.indexOf("Find-DockerInstallation")).toBeLessThan(
+    powershell.indexOf("Docker.DockerDesktop"),
+  );
+});
+
+test("Windows bootstrap reuses only a checksum-verified cached Node archive", () => {
+  const powershell = readFileSync(resolve(root, "scripts/local/run-with-node.ps1"), "utf8");
+  expect(powershell).toContain("Using the cached, checksum-verified Node.js archive");
+  expect(powershell).toContain("The cached Node archive failed verification");
+  expect(powershell).toMatch(/Test-Path[^\n]+\$ArchivePath[\s\S]+Invoke-WebRequest[^\n]+\$Archive/);
+  expect(powershell).toMatch(/Get-FileHash[\s\S]+\$Actual -ne \$Expected/);
 });

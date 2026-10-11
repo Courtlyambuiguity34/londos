@@ -31,6 +31,16 @@ A repeated installation reuses the verified private Node runtime, Docker install
 database volume, and generated local configuration. It still runs `npm ci`, migrations, seed, and a
 fresh production build so that repository changes are applied reproducibly.
 
+On Windows, Docker discovery checks the current `PATH`, Docker Desktop's registered uninstall/App
+Paths metadata, the normal Program Files and per-user locations, and then the optional
+`LONDOS_DOCKER_DESKTOP_DIR` override. Set that override to a custom Docker Desktop installation
+folder (for example `D:\Applications\Docker\Docker`) only when registry/PATH discovery is not
+available. An existing installation is started and reused; `winget` runs only when neither the
+Docker CLI nor Docker Desktop can be found. The exact Node archive is also retained in
+`.local\runtime\downloads`; the installer refreshes the small official checksum list and reuses the
+archive only after its SHA-256 checksum passes. A damaged cached archive is discarded and downloaded
+again.
+
 Keep the whole repository together. Do not copy a START file away from it.
 
 ## Windows
@@ -41,6 +51,12 @@ PostgreSQL configuration when absent, applies migrations, creates fictional deve
 and builds the production application. Existing `.env.local`, account files and the named database
 volume are preserved. The installer refuses to migrate when `.env.local` points at a non-loopback
 database.
+
+You may right-click the installer and choose **Run as administrator**, but it is normally better to
+run it as the Windows account that will launch Londos and let Windows elevate only the Docker
+installation when required. Running everything elevated can create app/cache files owned by the
+administrator account. Docker Desktop may still require its normal first-run agreement and the
+interactive user's WSL integration.
 
 After installation, use one of these files:
 
