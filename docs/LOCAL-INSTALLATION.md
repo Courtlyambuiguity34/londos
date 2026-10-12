@@ -99,6 +99,18 @@ After installation, use one of these files:
 | `START-LANDLORD-WINDOWS.bat`   | MFA-protected operator workspace at `/landlord`             |
 | `START-PREVIEW-WINDOWS.bat`    | Fictional public preview, without database/private features |
 
+The installer also packages equivalent thin `.exe` buttons in the ignored `Londos-Launchers`
+folder. Double-click `BUILD-WINDOWS-LAUNCHERS.bat` to rebuild them without reinstalling Node,
+PostgreSQL or npm packages. Keep that folder inside the Londos checkout; the executables
+intentionally delegate to these reviewed BAT files and do not contain another application/database
+copy. They are unsigned local artifacts—use an organization code-signing certificate before public
+distribution.
+
+`START-TEMPORARY-DEMO-WINDOWS.bat` (or `Londos Temporary Demo.exe`) creates an email-restricted,
+temporary Cloudflare address for the fictional preview only. It refuses to expose the full local
+core, verifies the pinned tunnel binary, and prints the temporary address in its window. See the
+[owned-server launch guide](./OWNED-SERVER-LAUNCH.md) for its limits and the stable domain path.
+
 The START window runs the server and worker and opens the browser after the health endpoint responds.
 The launcher now waits for `/api/ready` to confirm the web process, database, authentication and
 worker—not merely an open port. Keep it open. Press Ctrl+C to stop the processes. `STOP-WINDOWS.bat`

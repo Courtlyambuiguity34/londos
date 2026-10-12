@@ -32,6 +32,13 @@ remove a PostgreSQL 18 product outside `core`, while leaving its old data direct
 versions alone. It never overwrites a non-empty D-drive checkout. See
 [Windows native PostgreSQL setup](docs/WINDOWS-NATIVE-POSTGRESQL.md).
 
+After installation, Londos also creates convenient `.exe` buttons in `Londos-Launchers`. The BAT
+launchers remain the reviewed source of truth. A separate temporary-demo button can publish only the
+fictional preview through a checksum-verified, email-restricted Cloudflare Quick Tunnel. For buying
+a domain, moving Namecheap DNS to Cloudflare without breaking email, running a stable named tunnel,
+starting web/worker on boot, onboarding real shops safely and completing the production checklist,
+follow [Launching Londos from an owned Windows server](docs/OWNED-SERVER-LAUNCH.md).
+
 ## Connecting to Aiven Postgres
 
 Render plus hosted Aiven PostgreSQL is the default deployment (`DEPLOY_MODE=render`). PostgreSQL is

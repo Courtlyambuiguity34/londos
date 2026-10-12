@@ -17,6 +17,9 @@ function Invoke-LondosInstall {
   }
   & (Join-Path $PSScriptRoot "run-with-node.ps1") -Bootstrap install $Mode
   if ($LASTEXITCODE -ne 0) { throw "The Londos installation step failed with exit code $LASTEXITCODE." }
+  Write-Host "Packaging the Windows launcher executables..."
+  & (Join-Path $PSScriptRoot "build-windows-launchers.ps1")
+  if (-not $?) { throw "The Windows launcher executable packaging step failed." }
 }
 
 if (Test-Path -LiteralPath $ErrorLog) { Remove-Item -LiteralPath $ErrorLog -Force }

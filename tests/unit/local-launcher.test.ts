@@ -246,6 +246,44 @@ test("one-click installers bootstrap the private runtime and preserve role entry
   );
 });
 
+test("Windows packages thin role launchers and shares only the fixture preview", () => {
+  const bootstrap = readFileSync(
+    resolve(root, "scripts/local/bootstrap-prerequisites.ps1"),
+    "utf8",
+  );
+  const buildBatch = readFileSync(resolve(root, "BUILD-WINDOWS-LAUNCHERS.bat"), "utf8");
+  const builder = readFileSync(resolve(root, "scripts/local/build-windows-launchers.ps1"), "utf8");
+  const demoBatch = readFileSync(resolve(root, "START-TEMPORARY-DEMO-WINDOWS.bat"), "utf8");
+  const demo = readFileSync(resolve(root, "scripts/local/temporary-demo.ps1"), "utf8");
+  const gitignore = readFileSync(resolve(root, ".gitignore"), "utf8");
+
+  expect(bootstrap).toContain('build-windows-launchers.ps1")');
+  expect(buildBatch).toContain("build-windows-launchers.ps1");
+  for (const name of [
+    "Londos Mall.exe",
+    "Londos Shopkeeper.exe",
+    "Londos Landlord.exe",
+    "Londos Preview.exe",
+    "Londos Temporary Demo.exe",
+    "Stop Londos.exe",
+  ]) {
+    expect(builder).toContain(name);
+  }
+  expect(builder).toContain("UseShellExecute = true");
+  expect(builder).toContain('File.Exists(Path.Combine(candidate, "package.json"))');
+  expect(gitignore).toMatch(/^Londos-Launchers\/$/m);
+
+  expect(demoBatch).toContain("temporary-demo.ps1");
+  expect(demo).toContain("START-PREVIEW-WINDOWS.bat");
+  expect(demo).toContain("Test-SafeFixturePreview");
+  expect(demo).toContain('$State.database -eq $false');
+  expect(demo).toContain('$State.authentication -eq $false');
+  expect(demo).toContain("--allowed-mail");
+  expect(demo).toContain("2026.10.0");
+  expect(demo).toContain("86AEE4017B26625CEE8484C113558F48EFFA4CD47F7AA05FCF425604E5D2B23C");
+  expect(demo).not.toContain('Join-Path $Root "START-WINDOWS.bat"');
+});
+
 test("runtime bootstrap pins and verifies official Node downloads", () => {
   const shell = readFileSync(resolve(root, "scripts/local/run-with-node.sh"), "utf8");
   const powershell = readFileSync(resolve(root, "scripts/local/run-with-node.ps1"), "utf8");

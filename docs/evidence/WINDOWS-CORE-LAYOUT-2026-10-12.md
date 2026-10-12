@@ -60,20 +60,39 @@ database preparation, and makes later role shortcuts wait for the original proce
 Shopkeeper, and Landlord share the full local server. A fixture-preview/full-server collision now
 fails before spawning a second worker or web process and explains which window to close.
 
+The installer now finishes by compiling six thin Windows launcher executables into the ignored
+`Londos-Launchers` folder. Each executable locates the surrounding checkout and invokes one reviewed
+BAT target; it does not embed credentials, packages or a second server. A standalone builder permits
+repackaging without reinstalling requirements. These local artifacts remain unsigned until the
+operator applies an organization code-signing certificate.
+
+The temporary-demo launcher starts only `fixture-preview`, rejects an already-running full core,
+downloads Cloudflare Tunnel 2026.10.0 for Windows x64 into the ignored `core` runtime, and verifies
+SHA-256 `86aee4017b26625cee8484c113558f48effa4cd47f7aa05fcf425604e5d2b23c`. It supplies exactly one
+validated `--allowed-mail` identity. The official release artifact was downloaded independently in
+the cloud verification environment and matched that digest. Quick Tunnel output and reachability
+still require a real Windows run on the PC that owns localhost; no external link is claimed here.
+
 ## Verification performed
 
-- `npm test`: **176 tests passed across 15 files**.
-- Targeted launcher verification: **13 tests passed**.
+- `npm test`: **177 tests passed across 15 files**.
+- Targeted launcher verification: **14 tests passed**.
 - Live fixture launcher exercise: a second invocation reused the ready server; a local/preview mode
   conflict failed before PostgreSQL, worker, or second-web startup; the test process stopped cleanly.
 - `npm run lint`: passed with zero warnings.
-- `npm run check:docs`: **96 Markdown files and 734 local links resolved**.
+- `npm run check:docs`: **97 Markdown files and 739 local links resolved**.
 - `npm run build`: production Next.js web, standalone assets, and independent worker packaged.
+- `npm run check:bundle-secrets`: **1,790 packaged files scanned; passed** for all 37 configured
+  candidate values (exact-value scope).
+- Official Cloudflare Tunnel 2026.10.0 Windows x64 artifact: downloaded from its release URL,
+  identified as a PE32+ x86-64 executable, and matched the pinned SHA-256 digest.
 - Prettier for the changed TypeScript test and `git diff --check`: passed.
 - Microsoft PowerShell 7.5 parsed `native-postgres.ps1`, `run-with-node.ps1`, and
   `install-on-d.ps1` without syntax errors.
 
 The Linux verification environment cannot execute Windows registry discovery, UAC, the EDB
 installer/uninstaller, Windows service creation, or a real D-drive installation. Those operations
-remain a Windows 10 Pro platform check and are not reported as passed here. No runtime, database,
-credential, `.env.local`, or generated `core` content is committed.
+remain a Windows 10 Pro platform check and are not reported as passed here. The cloud environment
+also cannot run Windows PowerShell's `Add-Type`, so the six `.exe` artifacts must be compiled and
+clicked by the installer on the target Windows PC before public use. No runtime, executable,
+database, credential, `.env.local`, or generated `core` content is committed.

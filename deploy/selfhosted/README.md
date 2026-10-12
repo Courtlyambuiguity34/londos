@@ -1,5 +1,10 @@
 # Londos optional self-hosted mode
 
+For the Windows domain-purchase sequence, packaged local launch buttons, protected temporary demo
+link, real-shop onboarding boundary and final cutover checklist, start with the
+[owned-server launch guide](../../docs/OWNED-SERVER-LAUNCH.md). This runbook remains the detailed
+source for service supervision, PostgreSQL migration, backups and rollback.
+
 This folder is additive. Render with hosted PostgreSQL remains the default (`DEPLOY_MODE=render`).
 Self-hosting is selected only through environment values:
 
@@ -134,7 +139,7 @@ Native Task Scheduler is the supported Windows boot supervisor. Do not use `sc.e
 for Node—the process does not implement the Windows Service Control Manager protocol. A third-party
 service wrapper requires its own security and update review.
 
-## 4. Publish only the API with Cloudflare Tunnel
+## 4. Publish only the Londos web/API origin with Cloudflare Tunnel
 
 The following official documentation was checked on 2026-10-09:
 
@@ -187,10 +192,13 @@ On Windows, follow Cloudflare's current Windows service guide. It uses an elevat
 `cloudflared.exe service install`, a protected system-profile `.cloudflared` directory, and an
 explicit service `ImagePath` naming the config. Restart the service after configuration changes.
 
-Set `AUTH_BASE_URL=https://api.example.com`. Set `LONDOS_PWA_ORIGINS` to the exact Mall, Shopkeeper
-and Landlord PWA origins—at most three unique HTTPS origins. The API emits credentialed CORS headers
-only for that allowlist and still rejects browser requests marked cross-site. Use subdomains under
-the same registrable domain. Database URLs and secrets stay on the API/worker machine only.
+Set `AUTH_BASE_URL=https://api.example.com` when `api.example.com` is the chosen canonical Londos
+web/API origin. A simpler first owned-server deployment may name that same origin `app.example.com`;
+the hostname and environment value must match exactly. Set `LONDOS_PWA_ORIGINS` to the exact Mall,
+Shopkeeper and Landlord PWA origins—at most three unique HTTPS origins. The API emits credentialed
+CORS headers only for that allowlist and still rejects browser requests marked cross-site. Use
+subdomains under the same registrable domain. Database URLs and secrets stay on the API/worker
+machine only.
 
 ## 5. Protect Landlord with Cloudflare Access
 
