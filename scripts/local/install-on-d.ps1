@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $true)][string]$SourceRoot,
+  [string]$SourceRoot,
   [string]$TargetRoot = "D:\Londos"
 )
 
@@ -19,7 +19,12 @@ function ConvertTo-NormalizedFolderPath {
   }
 }
 
-$Source = ConvertTo-NormalizedFolderPath $SourceRoot "SourceRoot"
+$DerivedSourceRoot = Join-Path $PSScriptRoot "..\.."
+$Source = if ([string]::IsNullOrWhiteSpace($SourceRoot)) {
+  ConvertTo-NormalizedFolderPath $DerivedSourceRoot "Derived source root"
+} else {
+  ConvertTo-NormalizedFolderPath $SourceRoot "SourceRoot"
+}
 if (-not (Test-Path -LiteralPath (Join-Path $Source "package-lock.json") -PathType Leaf)) {
   throw "SourceRoot is not a complete Londos checkout: $Source"
 }

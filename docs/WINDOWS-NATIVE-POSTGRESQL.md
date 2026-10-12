@@ -51,8 +51,14 @@ The installer cache is `core\runtime\downloads`. PostgreSQL itself and its data 
 same ignored `core` tree; the normal installer does not reuse a PostgreSQL installation outside
 that folder. Londos recomputes its SHA-256 digest before
 execution, reuses a valid download, deletes an invalid one, and never falls back to an unverified
-package. The temporary EDB option file is access-restricted and deleted after the installer exits.
-Installation logs contain version/checksum status and exit code, not credentials.
+package. During the one-time move from the former `.local` layout, a matching cached EDB installer
+is copied into `core` only after its pinned digest passes, and the copy is verified again. A running
+PostgreSQL installation outside `core` cannot be relocated safely and therefore requires one
+uninstall/install cycle. Once `core` contains the installed service and verified cache, rerunning the
+same checkout reuses both. Extracting a fresh ZIP into a different folder does not carry ignored
+runtime/cache files and may require another download. The temporary EDB option file is
+access-restricted and deleted after the installer exits. Installation logs contain version/checksum
+status and exit code, not credentials.
 
 ## Existing or earlier PostgreSQL 18
 
@@ -122,10 +128,10 @@ PostgreSQL remains the only write authority; MongoDB remains an optional read-on
 ## Troubleshooting
 
 - **`GetFullPath` reports `Illegal characters in path`:** use the current
-  `INSTALL-WINDOWS-ON-D.bat`. Older copies passed a quoted directory ending in a backslash, which
-  could leave a literal quote in PowerShell's `SourceRoot`. The corrected launcher passes `%~dp0.`
-  and the PowerShell script safely normalizes surrounding quotes. Folder names containing spaces or
-  parentheses, such as `D:\New folder (4)\Test_Londos`, are supported.
+  `INSTALL-WINDOWS-ON-D.bat`. Older copies passed the checkout path through CMD, where quoting could
+  leave an illegal literal quote in PowerShell's `SourceRoot`. The batch file no longer passes a
+  source-path argument; PowerShell derives the checkout from its own trusted script location. Folder
+  names containing spaces or parentheses, such as `D:\New folder (4)\Test_Londos`, are supported.
 - **UAC cancelled:** rerun and approve only after confirming the cached package hash step succeeded.
 - **PostgreSQL installer fails:** inspect `.local\logs\postgresql-install.log` and current EDB Windows
   prerequisites. Update Windows and restart before retrying. No success is claimed on a nonzero exit.

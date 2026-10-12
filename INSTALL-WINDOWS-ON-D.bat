@@ -1,8 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-set "SOURCE_ROOT=%~dp0."
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\local\install-on-d.ps1" -SourceRoot "%SOURCE_ROOT%"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\local\install-on-d.ps1"
 set "INSTALL_EXIT=%ERRORLEVEL%"
 if not "%INSTALL_EXIT%"=="0" (
   echo.

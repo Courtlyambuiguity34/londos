@@ -411,6 +411,22 @@ function Install-Postgres {
   $Installer = Join-Path $Downloads "postgresql-$PostgresVersion-windows-x64.exe"
   New-Item -ItemType Directory -Force -Path $Downloads | Out-Null
   $NeedsDownload = -not (Test-Path -LiteralPath $Installer -PathType Leaf)
+  if ($NeedsDownload) {
+    $LegacyInstaller = Join-Path $LocalDirectory "runtime\downloads\postgresql-$PostgresVersion-windows-x64.exe"
+    if (Test-Path -LiteralPath $LegacyInstaller -PathType Leaf) {
+      $LegacyHash = (Get-FileHash -LiteralPath $LegacyInstaller -Algorithm SHA256).Hash.ToUpperInvariant()
+      if ($LegacyHash -eq $PostgresSha256) {
+        Copy-Item -LiteralPath $LegacyInstaller -Destination $Installer
+        $CopiedHash = (Get-FileHash -LiteralPath $Installer -Algorithm SHA256).Hash.ToUpperInvariant()
+        if ($CopiedHash -ne $PostgresSha256) {
+          Remove-Item -LiteralPath $Installer -Force -ErrorAction SilentlyContinue
+          throw "The copied legacy PostgreSQL installer failed checksum verification."
+        }
+        Write-Host "Reused the checksum-verified PostgreSQL installer from the former .local cache."
+        $NeedsDownload = $false
+      }
+    }
+  }
   if (-not $NeedsDownload) {
     $Actual = (Get-FileHash -LiteralPath $Installer -Algorithm SHA256).Hash.ToUpperInvariant()
     if ($Actual -ne $PostgresSha256) {

@@ -137,10 +137,10 @@ test("one-click installers bootstrap the private runtime and preserve role entry
   expect(windowsInstaller).toContain("INSTALL_EXIT=%ERRORLEVEL%");
   expect(windowsInstaller).toContain("windows-install-error.log");
   expect(dDriveInstaller).toContain("install-on-d.ps1");
-  expect(dDriveInstaller).toContain('set "SOURCE_ROOT=%~dp0."');
-  expect(dDriveInstaller).toContain('-SourceRoot "%SOURCE_ROOT%"');
-  expect(dDriveInstaller).not.toContain('-SourceRoot "%~dp0"');
+  expect(dDriveInstaller).not.toContain("-SourceRoot");
   expect(dDriveBootstrap).toContain('[string]$TargetRoot = "D:\\Londos"');
+  expect(dDriveBootstrap).toContain('Join-Path $PSScriptRoot "..\\.."');
+  expect(dDriveBootstrap).toContain("Derived source root");
   expect(dDriveBootstrap).toContain("ConvertTo-NormalizedFolderPath");
   expect(dDriveBootstrap).toContain("$Value.Trim().Trim('\"')");
   expect(dDriveBootstrap).toContain("$CopyExit -ge 8");
@@ -205,6 +205,14 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   expect(native).toContain("https://get.enterprisedb.com/postgresql/");
   expect(native).toContain("Get-FileHash");
   expect(native).toContain("Using the cached, checksum-verified PostgreSQL");
+  expect(native).toContain(
+    "Reused the checksum-verified PostgreSQL installer from the former .local cache",
+  );
+  expect(native).toContain(
+    'Join-Path $LocalDirectory "runtime\\downloads\\postgresql-$PostgresVersion-windows-x64.exe"',
+  );
+  expect(native).toContain("$LegacyHash -eq $PostgresSha256");
+  expect(native).toContain("$CopiedHash -ne $PostgresSha256");
   expect(native).toContain("--optionfile");
   expect(native).toContain('$CoreDirectory = Join-Path $Root "core"');
   expect(native).toContain('Join-Path $CoreDirectory "runtime\\postgresql-18"');
@@ -215,7 +223,6 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   expect(native).toContain("Get-RegisteredNonCorePostgres18");
   expect(native).toContain("Remove-RegisteredNonCorePostgres18");
   expect(native).toContain("Test-PathInsideCore");
-  expect(native).not.toContain('Join-Path $LocalDirectory "runtime');
   expect(native).not.toContain('Join-Path $LocalDirectory "data');
   expect(native).toContain("^PostgreSQL 18");
   expect(native).toContain("uninstall-postgresql.exe");
