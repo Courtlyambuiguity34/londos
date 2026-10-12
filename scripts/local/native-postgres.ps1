@@ -536,7 +536,8 @@ function Invoke-PsqlFile {
     [Parameter(Mandatory = $true)]$Credentials,
     [Parameter(Mandatory = $true)][string]$Sql
   )
-  $SqlPath = Join-Path $LocalDirectory "native-postgres-bootstrap.sql"
+  $SqlNonce = [Guid]::NewGuid().ToString("N")
+  $SqlPath = Join-Path $LocalDirectory "native-postgres-bootstrap-$PID-$SqlNonce.sql"
   Set-PrivateFile $SqlPath $Sql
   $PreviousPassword = $env:PGPASSWORD
   try {

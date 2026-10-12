@@ -82,11 +82,21 @@ test("local launcher passes generated private configuration to every child proce
   expect(result.stdout).toBe("");
 
   const source = readFileSync(launcher, "utf8");
-  expect(source).toContain('command(npm, ["run", "db:migrate"], { env });');
-  expect(source).toContain('command(npm, ["run", "db:seed"], { env });');
-  expect(source).toContain('command(npm, ["run", "build"], { env });');
-  expect(source).toContain('command(npm, ["run", "db:local"], { env: runtime });');
+  expect(source).toContain('npmCommand(["run", "db:migrate"], { env });');
+  expect(source).toContain('npmCommand(["run", "db:seed"], { env });');
+  expect(source).toContain('npmCommand(["run", "build"], { env });');
+  expect(source).toContain('npmCommand(["run", "db:local"], { env: runtime });');
   expect(source).toContain(": { ...runtime, PORT: port };");
+});
+
+test("Windows npm execution avoids deprecated shell argument concatenation", () => {
+  const source = readFileSync(launcher, "utf8");
+  expect(source).toContain(
+    'resolve(dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js")',
+  );
+  expect(source).toContain("spawn(npmProgram, npmArguments(args)");
+  expect(source).not.toContain('process.platform === "win32" ? "npm.cmd"');
+  expect(source).not.toContain('shell: process.platform === "win32"');
 });
 
 test("Aiven shortcut guard requires an explicit hosted PostgreSQL configuration", () => {
@@ -276,6 +286,9 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   expect(native).toContain("DEPLOY_MODE = 'selfhosted'");
   expect(native).toContain(".env.local selects a hosted database. It was preserved");
   expect(native).toContain("END;");
+  expect(native).toContain('$SqlNonce = [Guid]::NewGuid().ToString("N")');
+  expect(native).toContain('"native-postgres-bootstrap-$PID-$SqlNonce.sql"');
+  expect(native).not.toContain('Join-Path $LocalDirectory "native-postgres-bootstrap.sql"');
   expect(native).not.toContain("Docker.DockerDesktop");
   expect(database).toContain('process.platform === "win32"');
   expect(database).toContain("native-postgres.ps1");

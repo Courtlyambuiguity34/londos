@@ -1,13 +1,17 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 process.chdir(root);
 
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmProgram = process.platform === "win32" ? process.execPath : "npm";
+const npmEntryPoint =
+  process.platform === "win32"
+    ? resolve(dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js")
+    : null;
 const statePath = resolve(root, ".local", "londos-launcher.json");
 const rolePaths = Object.freeze({
   mall: "/",
@@ -37,13 +41,24 @@ function command(program, args, options = {}) {
     env: options.env ?? process.env,
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
     encoding: options.capture ? "utf8" : undefined,
-    shell: process.platform === "win32",
+    shell: false,
   });
   if (result.error || result.status !== 0) {
-    const label = [program, ...args.slice(0, 2)].join(" ");
+    const label = options.label ?? [program, ...args.slice(0, 2)].join(" ");
     throw new Error(`${label} failed (${result.error?.message ?? result.status}).`);
   }
   return result;
+}
+
+function npmArguments(args) {
+  return npmEntryPoint ? [npmEntryPoint, ...args] : args;
+}
+
+function npmCommand(args, options = {}) {
+  return command(npmProgram, npmArguments(args), {
+    ...options,
+    label: ["npm", ...args.slice(0, 2)].join(" "),
+  });
 }
 
 function verifyTools() {
@@ -52,7 +67,7 @@ function verifyTools() {
     throw new Error(
       `Londos requires Node.js 24.19 or newer in the 24.x line; found ${process.versions.node}.`,
     );
-  const result = command(npm, ["--version"], { capture: true });
+  const result = npmCommand(["--version"], { capture: true });
   const npmVersion = String(result.stdout).trim();
   if (Number(npmVersion.split(".")[0]) !== 11)
     throw new Error(`Londos requires npm 11.x; found ${npmVersion || "unknown"}.`);
@@ -224,18 +239,18 @@ export function assertHostedConfiguration(values) {
 function install(mode) {
   verifyTools();
   console.log("Installing the exact locked Node.js dependencies...");
-  command(npm, ["ci", "--no-fund", "--no-audit"]);
+  npmCommand(["ci", "--no-fund", "--no-audit"]);
   let env;
   if (mode === "local") {
     const envPath = resolve(root, ".env.local");
     if (existsSync(envPath)) assertLocalConfiguration(loadEnvFile(envPath));
     console.log("Preparing the private local PostgreSQL development database...");
-    command(npm, ["run", "db:local"]);
+    npmCommand(["run", "db:local"]);
     const localValues = loadEnvFile(envPath);
     assertLocalConfiguration(localValues);
     env = localSubprocessEnvironment(localValues);
-    command(npm, ["run", "db:migrate"], { env });
-    command(npm, ["run", "db:seed"], { env });
+    npmCommand(["run", "db:migrate"], { env });
+    npmCommand(["run", "db:seed"], { env });
   } else if (mode === "server") {
     const values = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
     if (!(values.DATABASE_URL && values.AUTH_SECRET && values.AUTH_BASE_URL))
@@ -246,7 +261,7 @@ function install(mode) {
     env = values;
   } else env = { ...process.env, LONDOS_CORE_ENABLED: "false", LONDOS_DATA_SOURCE: "fixtures" };
   console.log("Building the production web application and worker...");
-  command(npm, ["run", "build"], { env });
+  npmCommand(["run", "build"], { env });
   console.log(`Londos ${mode} installation and build are complete. Click a START launcher.`);
 }
 
@@ -327,7 +342,7 @@ async function start(mode, role) {
   }
   if (mode === "local") {
     console.log("Ensuring the private local PostgreSQL database is running...");
-    command(npm, ["run", "db:local"], { env: runtime });
+    npmCommand(["run", "db:local"], { env: runtime });
   }
 
   const env =
@@ -337,11 +352,11 @@ async function start(mode, role) {
   const children = [];
   let stopping = false;
   const launch = (args, label) => {
-    const child = spawn(npm, args, {
+    const child = spawn(npmProgram, npmArguments(args), {
       cwd: root,
       env,
       stdio: "inherit",
-      shell: process.platform === "win32",
+      shell: false,
       detached: process.platform !== "win32",
     });
     children.push(child);
@@ -419,7 +434,7 @@ async function stop(mode) {
     if (state) clearLauncherState(state.launcherPid);
     console.log("No running Londos launcher was recorded.");
   }
-  if (mode === "local") command(npm, ["run", "db:stop"]);
+  if (mode === "local") npmCommand(["run", "db:stop"]);
 }
 
 function help() {

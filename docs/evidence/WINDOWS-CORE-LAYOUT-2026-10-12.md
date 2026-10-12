@@ -46,10 +46,17 @@ Windows run: PostgreSQL was healthy on the recovered port, but the standalone mi
 not receive `DATABASE_URL`, `AUTH_SECRET`, or `AUTH_BASE_URL`. Local generated values deliberately
 override same-named inherited values after the loopback-only guard accepts them.
 
+A subsequent normal-user launch exposed a stale bootstrap SQL file whose ACL belonged to an earlier
+elevated run. PostgreSQL readiness now writes every bootstrap transaction to a new unpredictable,
+private filename and removes it afterward, rather than overwriting a shared path. The Windows
+launcher also executes the npm JavaScript entry point directly with the private `node.exe`; it no
+longer enables a shell merely to invoke `npm.cmd`, removing Node's `DEP0190` warning and its argument
+concatenation risk.
+
 ## Verification performed
 
-- `npm test`: **174 tests passed across 15 files**.
-- Targeted launcher verification: **11 tests passed**.
+- `npm test`: **175 tests passed across 15 files**.
+- Targeted launcher verification: **12 tests passed**.
 - `npm run lint`: passed with zero warnings.
 - `npm run check:docs`: **96 Markdown files and 734 local links resolved**.
 - `npm run build`: production Next.js web, standalone assets, and independent worker packaged.

@@ -38,6 +38,12 @@ build, web, and worker processes. For local mode, those generated loopback value
 over same-named values inherited from the Windows account, preventing an accidental migration of a
 hosted database. The launcher validates the local database URL before using it.
 
+Windows starts npm through the private `node.exe` and npm JavaScript entry point without a command
+shell. This avoids Node's `DEP0190` warning and prevents shell argument concatenation. Each database
+readiness run also uses a new short-lived, access-restricted bootstrap SQL file. Consequently, a
+stale bootstrap file created during an earlier elevated run cannot prevent a later normal-user START
+launcher; the new file is removed after PostgreSQL accepts or rejects the provisioning transaction.
+
 On Windows the PostgreSQL installer is cached in `core\runtime\downloads` and rechecked against
 the pinned digest on every use. A damaged cache is deleted and downloaded again. PostgreSQL binaries
 are installed in `core\runtime\postgresql-18`, database files in
