@@ -105,6 +105,14 @@ worker—not merely an open port. Keep it open. Press Ctrl+C to stop the process
 stops the web/worker recorded by the launcher. The native PostgreSQL service stays available and its
 data is preserved. It does not search for or terminate unrelated Node/PostgreSQL processes.
 
+`START-WINDOWS.bat`, `START-SHOPKEEPER-WINDOWS.bat`, and `START-LANDLORD-WINDOWS.bat` are three entry
+points into **one full local server** on port 3000. Once any one is starting or ready, clicking either
+of the others waits for that same server and opens only its requested route; it must not start another
+worker or web server. The fixture-only `START-PREVIEW-WINDOWS.bat` is a different mode without
+authentication or private routes. If it owns port 3000, close its window with Ctrl+C before starting
+the full local server. Use the root page of the full local server as the customer mall when testing
+Mall, Shopkeeper, and Landlord together.
+
 On a headless server, set `LONDOS_NO_BROWSER=true`; the launcher prints the ready URL instead of
 calling the operating system's browser opener.
 

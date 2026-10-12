@@ -53,10 +53,19 @@ launcher also executes the npm JavaScript entry point directly with the private 
 longer enables a shell merely to invoke `npm.cmd`, removing Node's `DEP0190` warning and its argument
 concatenation risk.
 
+The next Windows run proved native PostgreSQL readiness and worker startup, then exposed duplicate
+web startup on port 3000 when another customer/preview window was live. The launcher now recognizes
+both ready and still-starting Londos responses, claims its ignored state file atomically before
+database preparation, and makes later role shortcuts wait for the original process. Mall,
+Shopkeeper, and Landlord share the full local server. A fixture-preview/full-server collision now
+fails before spawning a second worker or web process and explains which window to close.
+
 ## Verification performed
 
-- `npm test`: **175 tests passed across 15 files**.
-- Targeted launcher verification: **12 tests passed**.
+- `npm test`: **176 tests passed across 15 files**.
+- Targeted launcher verification: **13 tests passed**.
+- Live fixture launcher exercise: a second invocation reused the ready server; a local/preview mode
+  conflict failed before PostgreSQL, worker, or second-web startup; the test process stopped cleanly.
 - `npm run lint`: passed with zero warnings.
 - `npm run check:docs`: **96 Markdown files and 734 local links resolved**.
 - `npm run build`: production Next.js web, standalone assets, and independent worker packaged.

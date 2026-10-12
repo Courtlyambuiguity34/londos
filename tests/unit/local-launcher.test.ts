@@ -153,6 +153,39 @@ test("launcher derives local listening and browser origins from AUTH_BASE_URL", 
   expect(result.status, result.stderr).toBe(0);
 });
 
+test("launcher distinguishes a shared full server from the fixture-only preview", () => {
+  const code = `
+    import { readinessMatchesMode } from ${JSON.stringify(pathToFileURL(launcher).href)};
+    const preview = { ready: true, mode: 'fixture-preview' };
+    const local = {
+      ready: true,
+      mode: 'development-core',
+      database: true,
+      authentication: true,
+      worker: 'ready'
+    };
+    const hosted = { ...local, mode: 'configured-core' };
+    if (!readinessMatchesMode(preview, 'preview')) process.exit(2);
+    if (readinessMatchesMode(preview, 'local')) process.exit(3);
+    if (!readinessMatchesMode(local, 'local')) process.exit(4);
+    if (!readinessMatchesMode(hosted, 'server')) process.exit(5);
+    if (readinessMatchesMode(local, 'preview')) process.exit(6);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", code], {
+    encoding: "utf8",
+    cwd: root,
+  });
+  expect(result.status, result.stderr).toBe(0);
+
+  const source = readFileSync(launcher, "utf8");
+  expect(source).toContain("writeFileSync(statePath, launcherStateContents(mode, port), {");
+  expect(source).toContain('flag: "wx"');
+  expect(source).toContain("const existingLauncher = claimLauncherState(mode, port);");
+  expect(source).toContain("Londos ${mode} is already starting");
+  expect(source).toContain("fixture-only preview is already using port");
+  expect(source).not.toContain("writeLauncherState(mode, port, children)");
+});
+
 test("launcher rejects a local port that would break the configured authentication origin", () => {
   const code = `
     import { launchTargets } from ${JSON.stringify(pathToFileURL(launcher).href)};

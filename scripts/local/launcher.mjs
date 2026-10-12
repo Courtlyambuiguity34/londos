@@ -107,24 +107,43 @@ function readLauncherState() {
   }
 }
 
-function writeLauncherState(mode, port, children) {
+function launcherStateContents(mode, port) {
+  return `${JSON.stringify(
+    {
+      version: 1,
+      launcherPid: process.pid,
+      childPids: [],
+      mode,
+      port,
+      startedAt: new Date().toISOString(),
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function claimLauncherState(mode, port) {
   mkdirSync(resolve(root, ".local"), { recursive: true, mode: 0o700 });
-  writeFileSync(
-    statePath,
-    `${JSON.stringify(
-      {
-        version: 1,
-        launcherPid: process.pid,
-        childPids: children.flatMap((child) => (child.pid ? [child.pid] : [])),
-        mode,
-        port,
-        startedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    )}\n`,
-    { mode: 0o600 },
-  );
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      writeFileSync(statePath, launcherStateContents(mode, port), { flag: "wx", mode: 0o600 });
+      return null;
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      const existing = readLauncherState();
+      if (existing && processRunning(existing.launcherPid)) return existing;
+      try {
+        unlinkSync(statePath);
+      } catch (unlinkError) {
+        if (unlinkError?.code !== "ENOENT")
+          throw new Error(
+            "A stale Londos launcher state file cannot be replaced. Close old START windows, then rerun the shortcut under the same Windows account that started Londos.",
+            { cause: unlinkError },
+          );
+      }
+    }
+  }
+  throw new Error("Could not claim the Londos launcher state after removing a stale record.");
 }
 
 function clearLauncherState(launcherPid = process.pid) {
@@ -141,8 +160,8 @@ function processRunning(pid) {
   try {
     process.kill(pid, 0);
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    return error?.code === "EPERM";
   }
 }
 
@@ -272,22 +291,42 @@ function productionReady() {
   );
 }
 
-async function isLondosRunning(origin, mode) {
+async function readLondosReadiness(origin) {
   try {
     const response = await fetch(`${origin}/api/ready`, { signal: AbortSignal.timeout(1_000) });
-    if (!response.ok) return false;
     const body = await response.json();
-    if (body?.ready !== true) return false;
-    if (mode === "preview") return body.mode === "fixture-preview";
-    return (
-      ["development-core", "configured-core"].includes(body.mode) &&
-      body.database === true &&
-      body.authentication === true &&
-      body.worker === "ready"
-    );
+    return ["fixture-preview", "development-core", "configured-core"].includes(body?.mode)
+      ? body
+      : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function readinessMatchesMode(readiness, mode) {
+  if (!readiness) return false;
+  if (mode === "preview") return readiness.mode === "fixture-preview";
+  return ["development-core", "configured-core"].includes(readiness.mode);
+}
+
+function readinessComplete(readiness, mode) {
+  if (!readinessMatchesMode(readiness, mode) || readiness.ready !== true) return false;
+  if (mode === "preview") return true;
+  return (
+    readiness.database === true && readiness.authentication === true && readiness.worker === "ready"
+  );
+}
+
+async function isLondosRunning(origin, mode) {
+  return readinessComplete(await readLondosReadiness(origin), mode);
+}
+
+function modeConflictMessage(port, runningMode, requestedMode) {
+  if (runningMode === "fixture-preview")
+    return `The fixture-only preview is already using port ${port}. Close its START-PREVIEW window with Ctrl+C, then run the ${requestedMode} shortcut. For a public mall that shares one server with Shopkeeper and Landlord, use START-WINDOWS.bat instead of START-PREVIEW-WINDOWS.bat.`;
+  if (requestedMode === "preview")
+    return `The full Londos server is already using port ${port}. Its public mall is available at the root URL. Close that START window before launching the separate fixture preview.`;
+  return `A Londos ${runningMode} server is already using port ${port}; close it before starting ${requestedMode} mode.`;
 }
 
 function openBrowser(url) {
@@ -309,10 +348,10 @@ function openBrowser(url) {
 
 async function waitAndOpen(healthOrigin, publicOrigin, path, mode, shouldStop = () => false) {
   for (let attempt = 0; attempt < 90; attempt++) {
-    if (shouldStop()) return;
+    if (shouldStop()) return false;
     if (await isLondosRunning(healthOrigin, mode)) {
       openBrowser(new URL(path, publicOrigin).href);
-      return;
+      return true;
     }
     await delay(500);
   }
@@ -335,11 +374,42 @@ async function start(mode, role) {
     assertHostedConfiguration(runtime);
   const { port, healthOrigin, publicOrigin } = launchTargets(mode, runtime);
   const path = rolePath(role);
-  if (await isLondosRunning(healthOrigin, mode)) {
+  const existingReadiness = await readLondosReadiness(healthOrigin);
+  if (readinessComplete(existingReadiness, mode)) {
     console.log(`Londos is already ready at ${publicOrigin}; opening ${role}.`);
     openBrowser(new URL(path, publicOrigin).href);
     return;
   }
+  if (existingReadiness) {
+    if (!readinessMatchesMode(existingReadiness, mode))
+      throw new Error(modeConflictMessage(port, existingReadiness.mode, mode));
+    console.log(`Londos ${mode} is already starting at ${publicOrigin}; waiting to open ${role}.`);
+    await waitAndOpen(healthOrigin, publicOrigin, path, mode);
+    return;
+  }
+
+  const existingLauncher = claimLauncherState(mode, port);
+  if (existingLauncher) {
+    if (existingLauncher.mode !== mode || existingLauncher.port !== port)
+      throw new Error(
+        modeConflictMessage(
+          port,
+          existingLauncher.mode === "preview" ? "fixture-preview" : existingLauncher.mode,
+          mode,
+        ),
+      );
+    console.log(`Londos ${mode} is already starting at ${publicOrigin}; waiting to open ${role}.`);
+    const opened = await waitAndOpen(healthOrigin, publicOrigin, path, mode, () =>
+      processRunning(existingLauncher.launcherPid) ? false : true,
+    );
+    if (!opened)
+      throw new Error(
+        "The existing Londos launcher stopped before the application became ready. Read its START window, then retry.",
+      );
+    return;
+  }
+  process.on("exit", () => clearLauncherState());
+
   if (mode === "local") {
     console.log("Ensuring the private local PostgreSQL database is running...");
     npmCommand(["run", "db:local"], { env: runtime });
@@ -399,8 +469,6 @@ async function start(mode, role) {
   web.on("exit", (code) => {
     if (!stopping) shutdown(code ?? 1);
   });
-  writeLauncherState(mode, port, children);
-  process.on("exit", () => clearLauncherState());
   console.log(`Londos is starting at ${publicOrigin}. This window keeps the server running.`);
   if (healthOrigin !== publicOrigin)
     console.log(`Local readiness is checked at ${healthOrigin}; AUTH_BASE_URL remains public.`);
