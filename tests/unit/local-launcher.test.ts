@@ -56,6 +56,39 @@ test("local configuration guard accepts only the marked loopback database shape"
   expect(result.stdout).toBe("");
 });
 
+test("local launcher passes generated private configuration to every child process", () => {
+  const code = `
+    import { localSubprocessEnvironment } from ${JSON.stringify(pathToFileURL(launcher).href)};
+    const environment = localSubprocessEnvironment({
+      DATABASE_URL: 'postgresql://londos:generated@127.0.0.1:54330/londos_development',
+      AUTH_SECRET: 'generated-local-secret-at-least-thirty-two-characters',
+      AUTH_BASE_URL: 'http://127.0.0.1:3000'
+    }, {
+      DATABASE_URL: 'postgresql://wrong:wrong@hosted.example/londos',
+      AUTH_SECRET: 'wrong-secret',
+      AUTH_BASE_URL: 'https://wrong.example',
+      OPTIONAL_VALUE: 'preserved'
+    });
+    if (environment.DATABASE_URL !== 'postgresql://londos:generated@127.0.0.1:54330/londos_development') process.exit(2);
+    if (environment.AUTH_SECRET !== 'generated-local-secret-at-least-thirty-two-characters') process.exit(3);
+    if (environment.AUTH_BASE_URL !== 'http://127.0.0.1:3000') process.exit(4);
+    if (environment.OPTIONAL_VALUE !== 'preserved') process.exit(5);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", code], {
+    encoding: "utf8",
+    cwd: root,
+  });
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toBe("");
+
+  const source = readFileSync(launcher, "utf8");
+  expect(source).toContain('command(npm, ["run", "db:migrate"], { env });');
+  expect(source).toContain('command(npm, ["run", "db:seed"], { env });');
+  expect(source).toContain('command(npm, ["run", "build"], { env });');
+  expect(source).toContain('command(npm, ["run", "db:local"], { env: runtime });');
+  expect(source).toContain(": { ...runtime, PORT: port };");
+});
+
 test("Aiven shortcut guard requires an explicit hosted PostgreSQL configuration", () => {
   const code = `
     import { assertHostedConfiguration } from ${JSON.stringify(pathToFileURL(launcher).href)};

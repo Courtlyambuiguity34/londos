@@ -68,6 +68,10 @@ function loadEnvFile(path) {
   return values;
 }
 
+export function localSubprocessEnvironment(values, inherited = process.env) {
+  return { ...inherited, ...values };
+}
+
 function readLauncherState() {
   if (!existsSync(statePath)) return null;
   try {
@@ -221,14 +225,17 @@ function install(mode) {
   verifyTools();
   console.log("Installing the exact locked Node.js dependencies...");
   command(npm, ["ci", "--no-fund", "--no-audit"]);
+  let env;
   if (mode === "local") {
     const envPath = resolve(root, ".env.local");
     if (existsSync(envPath)) assertLocalConfiguration(loadEnvFile(envPath));
     console.log("Preparing the private local PostgreSQL development database...");
     command(npm, ["run", "db:local"]);
-    assertLocalConfiguration(loadEnvFile(envPath));
-    command(npm, ["run", "db:migrate"]);
-    command(npm, ["run", "db:seed"]);
+    const localValues = loadEnvFile(envPath);
+    assertLocalConfiguration(localValues);
+    env = localSubprocessEnvironment(localValues);
+    command(npm, ["run", "db:migrate"], { env });
+    command(npm, ["run", "db:seed"], { env });
   } else if (mode === "server") {
     const values = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
     if (!(values.DATABASE_URL && values.AUTH_SECRET && values.AUTH_BASE_URL))
@@ -236,11 +243,8 @@ function install(mode) {
         "Server mode needs operator-managed environment variables or .env.local. See docs/CROSS-PLATFORM-DEPLOYMENT.md.",
       );
     if (process.env.LONDOS_REQUIRE_HOSTED_DATABASE === "true") assertHostedConfiguration(values);
-  }
-  const env =
-    mode === "preview"
-      ? { ...process.env, LONDOS_CORE_ENABLED: "false", LONDOS_DATA_SOURCE: "fixtures" }
-      : process.env;
+    env = values;
+  } else env = { ...process.env, LONDOS_CORE_ENABLED: "false", LONDOS_DATA_SOURCE: "fixtures" };
   console.log("Building the production web application and worker...");
   command(npm, ["run", "build"], { env });
   console.log(`Londos ${mode} installation and build are complete. Click a START launcher.`);
@@ -309,7 +313,9 @@ async function start(mode, role) {
   if (mode !== "preview" && !existsSync(resolve(root, ".env.local")) && !process.env.DATABASE_URL)
     throw new Error(`${mode} mode needs operator-managed environment variables or .env.local.`);
 
-  const runtime = { ...loadEnvFile(resolve(root, ".env.local")), ...process.env };
+  const fileValues = loadEnvFile(resolve(root, ".env.local"));
+  const runtime =
+    mode === "local" ? localSubprocessEnvironment(fileValues) : { ...fileValues, ...process.env };
   if (mode === "server" && process.env.LONDOS_REQUIRE_HOSTED_DATABASE === "true")
     assertHostedConfiguration(runtime);
   const { port, healthOrigin, publicOrigin } = launchTargets(mode, runtime);
@@ -321,13 +327,13 @@ async function start(mode, role) {
   }
   if (mode === "local") {
     console.log("Ensuring the private local PostgreSQL database is running...");
-    command(npm, ["run", "db:local"]);
+    command(npm, ["run", "db:local"], { env: runtime });
   }
 
   const env =
     mode === "preview"
       ? { ...process.env, PORT: port, LONDOS_CORE_ENABLED: "false", LONDOS_DATA_SOURCE: "fixtures" }
-      : { ...process.env, PORT: port };
+      : { ...runtime, PORT: port };
   const children = [];
   let stopping = false;
   const launch = (args, label) => {

@@ -40,11 +40,19 @@ launching EDB. It securely rewrites only the generated port to the next free val
 an explicitly requested unavailable `LONDOS_POSTGRES_PORT` fails closed. Passwords and database data
 are unchanged.
 
+The local launcher now loads the generated `.env.local` values into every database migration, seed,
+production build, web, and worker subprocess. This closes the handoff gap exposed by the first real
+Windows run: PostgreSQL was healthy on the recovered port, but the standalone migration process did
+not receive `DATABASE_URL`, `AUTH_SECRET`, or `AUTH_BASE_URL`. Local generated values deliberately
+override same-named inherited values after the loopback-only guard accepts them.
+
 ## Verification performed
 
-- `npm test`: **173 tests passed across 15 files**.
+- `npm test`: **174 tests passed across 15 files**.
+- Targeted launcher verification: **11 tests passed**.
 - `npm run lint`: passed with zero warnings.
 - `npm run check:docs`: **96 Markdown files and 734 local links resolved**.
+- `npm run build`: production Next.js web, standalone assets, and independent worker packaged.
 - Prettier for the changed TypeScript test and `git diff --check`: passed.
 - Microsoft PowerShell 7.5 parsed `native-postgres.ps1`, `run-with-node.ps1`, and
   `install-on-d.ps1` without syntax errors.

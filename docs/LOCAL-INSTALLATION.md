@@ -33,6 +33,11 @@ macOS/Linux Docker installation), npm cache, database data, and generated local 
 still runs `npm ci`, migrations, seed, and a fresh production build so repository changes are
 applied reproducibly.
 
+The local launcher loads the generated ignored `.env.local` into the migration, seed, production
+build, web, and worker processes. For local mode, those generated loopback values take precedence
+over same-named values inherited from the Windows account, preventing an accidental migration of a
+hosted database. The launcher validates the local database URL before using it.
+
 On Windows the PostgreSQL installer is cached in `core\runtime\downloads` and rechecked against
 the pinned digest on every use. A damaged cache is deleted and downloaded again. PostgreSQL binaries
 are installed in `core\runtime\postgresql-18`, database files in
