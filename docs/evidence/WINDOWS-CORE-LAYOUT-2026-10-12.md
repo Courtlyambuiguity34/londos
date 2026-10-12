@@ -23,6 +23,12 @@ PostgreSQL 18 installation in the former `.local\runtime` layout is treated as n
 removed through its registered uninstaller before the new core-contained service is installed. Old
 database data is not recursively deleted.
 
+The launcher also normalizes its source directory before PowerShell receives it. The batch file uses
+`%~dp0.` instead of passing a quoted `%~dp0` ending in `\`; this prevents Windows argument parsing
+from retaining the closing quote as an illegal path character. PowerShell additionally strips
+accidental surrounding quotes and returns a focused error for a genuinely invalid path. Spaces and
+parentheses in an extracted folder name remain supported.
+
 ## Verification performed
 
 - `npm test`: **173 tests passed across 15 files**.

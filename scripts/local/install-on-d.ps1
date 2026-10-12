@@ -5,7 +5,21 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Source = [IO.Path]::GetFullPath($SourceRoot).TrimEnd('\')
+function ConvertTo-NormalizedFolderPath {
+  param(
+    [Parameter(Mandatory = $true)][string]$Value,
+    [Parameter(Mandatory = $true)][string]$Label
+  )
+  $Candidate = $Value.Trim().Trim('"')
+  if ([string]::IsNullOrWhiteSpace($Candidate)) { throw "$Label cannot be empty." }
+  try {
+    return [IO.Path]::GetFullPath($Candidate).TrimEnd('\')
+  } catch {
+    throw "$Label contains an invalid Windows path. Extract Londos to a normal folder and rerun INSTALL-WINDOWS-ON-D.bat."
+  }
+}
+
+$Source = ConvertTo-NormalizedFolderPath $SourceRoot "SourceRoot"
 if (-not (Test-Path -LiteralPath (Join-Path $Source "package-lock.json") -PathType Leaf)) {
   throw "SourceRoot is not a complete Londos checkout: $Source"
 }
@@ -18,7 +32,7 @@ if ($SourceDrive -ieq "D:") {
   $InstallRoot = $Source
   Write-Host "Londos is already on drive D. Installing in $InstallRoot"
 } else {
-  $InstallRoot = [IO.Path]::GetFullPath($TargetRoot).TrimEnd('\')
+  $InstallRoot = ConvertTo-NormalizedFolderPath $TargetRoot "TargetRoot"
   if ([IO.Path]::GetPathRoot($InstallRoot).TrimEnd('\') -ine "D:") {
     throw "TargetRoot must be a folder on drive D."
   }

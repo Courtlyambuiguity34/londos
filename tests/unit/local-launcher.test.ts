@@ -137,7 +137,12 @@ test("one-click installers bootstrap the private runtime and preserve role entry
   expect(windowsInstaller).toContain("INSTALL_EXIT=%ERRORLEVEL%");
   expect(windowsInstaller).toContain("windows-install-error.log");
   expect(dDriveInstaller).toContain("install-on-d.ps1");
+  expect(dDriveInstaller).toContain('set "SOURCE_ROOT=%~dp0."');
+  expect(dDriveInstaller).toContain('-SourceRoot "%SOURCE_ROOT%"');
+  expect(dDriveInstaller).not.toContain('-SourceRoot "%~dp0"');
   expect(dDriveBootstrap).toContain('[string]$TargetRoot = "D:\\Londos"');
+  expect(dDriveBootstrap).toContain("ConvertTo-NormalizedFolderPath");
+  expect(dDriveBootstrap).toContain("$Value.Trim().Trim('\"')");
   expect(dDriveBootstrap).toContain("$CopyExit -ge 8");
   expect(dDriveBootstrap).toContain('(Join-Path $Source ".local")');
   expect(dDriveBootstrap).toContain('(Join-Path $Source "core")');

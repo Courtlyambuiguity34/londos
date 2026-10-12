@@ -121,6 +121,11 @@ PostgreSQL remains the only write authority; MongoDB remains an optional read-on
 
 ## Troubleshooting
 
+- **`GetFullPath` reports `Illegal characters in path`:** use the current
+  `INSTALL-WINDOWS-ON-D.bat`. Older copies passed a quoted directory ending in a backslash, which
+  could leave a literal quote in PowerShell's `SourceRoot`. The corrected launcher passes `%~dp0.`
+  and the PowerShell script safely normalizes surrounding quotes. Folder names containing spaces or
+  parentheses, such as `D:\New folder (4)\Test_Londos`, are supported.
 - **UAC cancelled:** rerun and approve only after confirming the cached package hash step succeeded.
 - **PostgreSQL installer fails:** inspect `.local\logs\postgresql-install.log` and current EDB Windows
   prerequisites. Update Windows and restart before retrying. No success is claimed on a nonzero exit.
