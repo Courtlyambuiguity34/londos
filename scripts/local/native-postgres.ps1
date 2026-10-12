@@ -279,7 +279,6 @@ function Test-LocalPortAvailable {
 }
 
 function Get-AvailablePostgresPort {
-  if ($env:LONDOS_POSTGRES_PORT) { return $env:LONDOS_POSTGRES_PORT }
   $FirstPort = [int]$PostgresPort
   foreach ($Candidate in $FirstPort..($FirstPort + 10)) {
     if (Test-LocalPortAvailable $Candidate) {
@@ -290,6 +289,48 @@ function Get-AvailablePostgresPort {
     }
   }
   throw "No free loopback PostgreSQL port was found from $PostgresPort through $($FirstPort + 10)."
+}
+
+function Save-PostgresCredentials {
+  param([Parameter(Mandatory = $true)]$Credentials)
+  $Content = @(
+    "POSTGRES_SUPERUSER=$($Credentials.POSTGRES_SUPERUSER)",
+    "POSTGRES_SUPERUSER_PASSWORD=$($Credentials.POSTGRES_SUPERUSER_PASSWORD)",
+    "POSTGRES_APP_USER=$($Credentials.POSTGRES_APP_USER)",
+    "POSTGRES_APP_PASSWORD=$($Credentials.POSTGRES_APP_PASSWORD)",
+    "POSTGRES_DB=$($Credentials.POSTGRES_DB)",
+    "POSTGRES_HOST=$($Credentials.POSTGRES_HOST)",
+    "POSTGRES_PORT=$($Credentials.POSTGRES_PORT)",
+    ''
+  ) -join "`r`n"
+  Set-PrivateFile $CredentialsPath $Content
+}
+
+function Resolve-InstallPostgresPort {
+  param([Parameter(Mandatory = $true)]$Credentials)
+  $RequestedPort = if ($env:LONDOS_POSTGRES_PORT) {
+    [string]$env:LONDOS_POSTGRES_PORT
+  } else {
+    [string]$Credentials.POSTGRES_PORT
+  }
+  if ($RequestedPort -notmatch '^\d+$' -or [int]$RequestedPort -lt 1 -or [int]$RequestedPort -gt 65535) {
+    throw "The PostgreSQL installation port must be between 1 and 65535."
+  }
+  if (Test-LocalPortAvailable ([int]$RequestedPort)) {
+    if ($Credentials.POSTGRES_PORT -ne $RequestedPort) {
+      $Credentials.POSTGRES_PORT = $RequestedPort
+      Save-PostgresCredentials $Credentials
+    }
+    return $Credentials
+  }
+  if ($env:LONDOS_POSTGRES_PORT) {
+    throw "Explicit LONDOS_POSTGRES_PORT $RequestedPort is unavailable. Stop its current listener or choose a different port."
+  }
+  $ReplacementPort = Get-AvailablePostgresPort
+  $Credentials.POSTGRES_PORT = $ReplacementPort
+  Save-PostgresCredentials $Credentials
+  Write-Host "Saved PostgreSQL port $RequestedPort is unavailable; using free loopback port $ReplacementPort instead."
+  return $Credentials
 }
 
 function Test-PostgresReady {
@@ -643,6 +684,7 @@ if (-not $Installation) {
   if ($Action -ne 'install') {
     throw "Native PostgreSQL 18 is not installed. Run INSTALL-WINDOWS.bat first."
   }
+  $Credentials = Resolve-InstallPostgresPort $Credentials
   Install-Postgres $Credentials
   $Installation = Find-PostgresInstallation
   if (-not $Installation) {

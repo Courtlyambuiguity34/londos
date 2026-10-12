@@ -34,6 +34,12 @@ downloads again only when no valid cache is available. Existing PostgreSQL softw
 still needs one uninstall/install cycle because moving a registered Windows service and database
 binaries by copying files would be unsafe.
 
+An interrupted earlier installation can leave a generated port in the private credential file while
+another service still owns that port. The installer now rechecks the saved port immediately before
+launching EDB. It securely rewrites only the generated port to the next free value in 54329–54339;
+an explicitly requested unavailable `LONDOS_POSTGRES_PORT` fails closed. Passwords and database data
+are unchanged.
+
 ## Verification performed
 
 - `npm test`: **173 tests passed across 15 files**.

@@ -91,6 +91,12 @@ set LONDOS_POSTGRES_PORT=54330
 INSTALL-WINDOWS.bat
 ```
 
+Immediately before a new EDB installation, Londos checks the selected loopback port again. If a
+saved generated port is now occupied, the installer selects the next free port from **54329–54339**,
+updates the access-restricted `.local\native-postgres.env`, and later updates `.env.local`. If an
+operator explicitly sets `LONDOS_POSTGRES_PORT` and that exact port is unavailable, installation
+stops with a focused error instead of silently ignoring the operator's choice.
+
 Londos never deletes existing databases. It creates/updates only the named local Londos role and
 database. Database creation is idempotent, and the generated SQL uses PostgreSQL's required
 `CREATE DATABASE … OWNER …` syntax. If the saved local password is wrong, move
@@ -135,6 +141,9 @@ PostgreSQL remains the only write authority; MongoDB remains an optional read-on
 - **UAC cancelled:** rerun and approve only after confirming the cached package hash step succeeded.
 - **PostgreSQL installer fails:** inspect `.local\logs\postgresql-install.log` and current EDB Windows
   prerequisites. Update Windows and restart before retrying. No success is claimed on a nonzero exit.
+- **EDB says the specified port is unavailable:** update to a revision with saved-port rechecking and
+  rerun. Londos automatically moves a generated local setting to a free port. If you explicitly set
+  `LONDOS_POSTGRES_PORT`, remove that setting or choose an unused port from 54329–54339.
 - **Service does not start:** open Windows Services, inspect PostgreSQL's own server log, check that
   the chosen port is free, and rerun. Do not expose ports 54329–54339 through the firewall.
 - **Old SQL error near `TO`:** download a revision containing the corrected

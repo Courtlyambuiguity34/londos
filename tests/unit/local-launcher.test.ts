@@ -213,6 +213,13 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   );
   expect(native).toContain("$LegacyHash -eq $PostgresSha256");
   expect(native).toContain("$CopiedHash -ne $PostgresSha256");
+  expect(native).toContain("Resolve-InstallPostgresPort");
+  expect(native).toContain("Save-PostgresCredentials");
+  expect(native).toContain("Saved PostgreSQL port $RequestedPort is unavailable");
+  expect(native).toContain("Explicit LONDOS_POSTGRES_PORT $RequestedPort is unavailable");
+  expect(native).toMatch(
+    /if \(-not \$Installation\)[\s\S]+Resolve-InstallPostgresPort \$Credentials[\s\S]+Install-Postgres \$Credentials/,
+  );
   expect(native).toContain("--optionfile");
   expect(native).toContain('$CoreDirectory = Join-Path $Root "core"');
   expect(native).toContain('Join-Path $CoreDirectory "runtime\\postgresql-18"');
