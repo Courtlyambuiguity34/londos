@@ -7,11 +7,11 @@ until an operator supplies a hosted PostgreSQL URL.
 ## Default one-click installation
 
 1. For the requested D-drive layout, double-click **`INSTALL-WINDOWS-ON-D.bat`**. When the current
-   checkout is on C, it creates a clean `D:\Londos`, excluding `.local`, `.env.local`, dependencies
-   and build output from the failed copy, then runs `D:\Londos\INSTALL-WINDOWS.bat`. It refuses to
-   merge into or overwrite a non-empty `D:\Londos`. If the checkout is already anywhere on D, it
-   installs in that existing folder without copying it.
-2. Londos detects a registered external EDB PostgreSQL 18 outside the current Londos folder and runs
+   checkout is on C, it creates a clean `D:\Londos`, excluding `.local`, `core`, `.env.local`,
+   dependencies and build output from the failed copy, then runs `D:\Londos\INSTALL-WINDOWS.bat`.
+   It refuses to merge into or overwrite a non-empty `D:\Londos`. If the checkout is already
+   anywhere on D, it installs in that existing folder without copying it.
+2. Londos detects a registered EDB PostgreSQL 18 outside the current `core` folder and runs
    its official uninstaller with Administrator permission. It does not delete the old data folder.
    Other PostgreSQL major versions are not targeted. Back up any database you need before starting.
 3. If the contained PostgreSQL 18 is absent, Londos downloads EDB PostgreSQL **18.6-5**, verifies the
@@ -24,11 +24,11 @@ until an operator supplies a hosted PostgreSQL URL.
 
 For a checkout at `D:\Londos`, the contained installation uses these locations:
 
-- PostgreSQL binaries: `D:\Londos\.local\runtime\postgresql-18`
-- PostgreSQL data: `D:\Londos\.local\data\postgresql-18`
-- verified Node and PostgreSQL downloads: `D:\Londos\.local\runtime\downloads`
-- Node runtime and npm cache: `D:\Londos\.local\runtime\node-...` and
-  `D:\Londos\.local\runtime\npm-cache`
+- PostgreSQL binaries: `D:\Londos\core\runtime\postgresql-18`
+- PostgreSQL data: `D:\Londos\core\data\postgresql-18`
+- verified Node and PostgreSQL downloads: `D:\Londos\core\runtime\downloads`
+- Node runtime and npm cache: `D:\Londos\core\runtime\node-...` and
+  `D:\Londos\core\runtime\npm-cache`
 - locked packages and builds: `D:\Londos\node_modules`, `D:\Londos\.next`, and
   `D:\Londos\dist`
 
@@ -47,25 +47,26 @@ The official distribution and command-line parameters were checked on **11 Octob
 - [EDB command-line installation](https://www.enterprisedb.com/docs/supported-open-source/postgresql/installing/windows/installing_postgresql_on_windows/installing_postgresql_using_command_line/)
 - [EDB installer parameters](https://www.enterprisedb.com/docs/supported-open-source/postgresql/installing/windows/installing_postgresql_on_windows/installing_postgresql_using_command_line/command_line_parameters/)
 
-The installer cache is `.local\runtime\downloads`. PostgreSQL itself and its data now remain below
-the same ignored `.local` tree; the normal installer does not reuse a machine-wide PostgreSQL from
-`Program Files`. Londos recomputes its SHA-256 digest before
+The installer cache is `core\runtime\downloads`. PostgreSQL itself and its data remain below the
+same ignored `core` tree; the normal installer does not reuse a PostgreSQL installation outside
+that folder. Londos recomputes its SHA-256 digest before
 execution, reuses a valid download, deletes an invalid one, and never falls back to an unverified
 package. The temporary EDB option file is access-restricted and deleted after the installer exits.
 Installation logs contain version/checksum status and exit code, not credentials.
 
 ## Existing or earlier PostgreSQL 18
 
-The default installer reuses only PostgreSQL found inside the current Londos folder. An external
-installation is not silently selected, because that would move binaries/data outside the folder.
+The default installer reuses only PostgreSQL found inside the current Londos `core` folder. Another
+installation is not silently selected, because that would move binaries/data outside `core`.
 An advanced operator may deliberately set `LONDOS_ALLOW_EXTERNAL_POSTGRES=true` and
 `LONDOS_POSTGRES_BIN`, but this is not the normal local mode.
 
-If a failed older Londos attempt installed EDB PostgreSQL 18 under `C:\Program Files`, the local
-installer now invokes that registered product's official uninstaller before installing the contained
-copy. This removes the external software and service, but Londos itself does not delete the old data
-directory. Keep or back up that data until `D:\Londos` reports `/api/ready` successfully. The action
-and exit code are written to `.local\logs\postgresql-uninstall.log`; no credentials are logged.
+If a failed older Londos attempt installed EDB PostgreSQL 18 under `C:\Program Files` or the former
+`.local\runtime` location, the local installer invokes that registered product's official
+uninstaller before installing the `core` copy. This removes the earlier software and service, but
+Londos itself does not delete the old data directory. Keep or back up that data until `D:\Londos`
+reports `/api/ready` successfully. The action and exit code are written to
+`.local\logs\postgresql-uninstall.log`; no credentials are logged.
 
 Only the exact registered PostgreSQL 18 product is selected. Other major versions and unregistered
 folders are left alone. If Windows cannot verify the product's official `uninstall-postgresql.exe`,

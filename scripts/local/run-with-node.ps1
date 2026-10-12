@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 $NodeVersion = "24.19.0"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$CoreDirectory = Join-Path $Root "core"
 
 $processor = $env:PROCESSOR_ARCHITECTURE
 if ($env:PROCESSOR_ARCHITEW6432) { $processor = $env:PROCESSOR_ARCHITEW6432 }
@@ -18,7 +19,7 @@ $NodeArch = switch ($processor.ToUpperInvariant()) {
 }
 
 $Archive = "node-v$NodeVersion-win-$NodeArch.zip"
-$Runtime = Join-Path $Root ".local\runtime\node-v$NodeVersion-win-$NodeArch"
+$Runtime = Join-Path $CoreDirectory "runtime\node-v$NodeVersion-win-$NodeArch"
 $PrivateNode = Join-Path $Runtime "node.exe"
 
 function Test-SupportedNode([string]$Path) {
@@ -33,10 +34,10 @@ function Test-SupportedNode([string]$Path) {
 
 function Install-PrivateNode {
   $BaseUrl = "https://nodejs.org/dist/v$NodeVersion"
-  $Downloads = Join-Path $Root ".local\runtime\downloads"
+  $Downloads = Join-Path $CoreDirectory "runtime\downloads"
   $ArchivePath = Join-Path $Downloads $Archive
   $SumsPath = Join-Path $Downloads "SHASUMS256-v$NodeVersion.txt"
-  $Staging = Join-Path $Root ".local\runtime\.node-$NodeVersion-$NodeArch-$PID"
+  $Staging = Join-Path $CoreDirectory "runtime\.node-$NodeVersion-$NodeArch-$PID"
   New-Item -ItemType Directory -Force -Path $Downloads | Out-Null
 
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -94,7 +95,7 @@ if ($Bootstrap) {
 }
 
 $env:Path = "$(Split-Path -Parent $NodeCommand);$env:Path"
-$NpmCache = Join-Path $Root ".local\runtime\npm-cache"
+$NpmCache = Join-Path $CoreDirectory "runtime\npm-cache"
 New-Item -ItemType Directory -Force -Path $NpmCache | Out-Null
 $env:NPM_CONFIG_CACHE = $NpmCache
 $env:NPM_CONFIG_UPDATE_NOTIFIER = "false"

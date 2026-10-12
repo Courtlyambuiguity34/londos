@@ -2,7 +2,7 @@
 
 Londos is a Node.js/Next.js application. Python `.venv` directories cannot contain or isolate its
 Node packages, so creating one would add a folder that Londos never uses. The installer provisions
-a private, pinned Node runtime under the ignored `.local/runtime` directory, installs the exact
+a private, pinned Node runtime under the ignored `core/runtime` directory, installs the exact
 committed npm lockfile into `node_modules`, then produces the standalone production web build and
 worker. START and STOP shortcuts find that private runtime, so they do not depend on a later PATH
 change or a global Node installation.
@@ -33,10 +33,10 @@ macOS/Linux Docker installation), npm cache, database data, and generated local 
 still runs `npm ci`, migrations, seed, and a fresh production build so repository changes are
 applied reproducibly.
 
-On Windows the PostgreSQL installer is cached in `.local\runtime\downloads` and rechecked against
+On Windows the PostgreSQL installer is cached in `core\runtime\downloads` and rechecked against
 the pinned digest on every use. A damaged cache is deleted and downloaded again. PostgreSQL binaries
-are installed in `.local\runtime\postgresql-18`, database files in
-`.local\data\postgresql-18`, and npm's retained cache in `.local\runtime\npm-cache`. The default
+are installed in `core\runtime\postgresql-18`, database files in
+`core\data\postgresql-18`, and npm's retained cache in `core\runtime\npm-cache`. The default
 does not reuse a machine-wide PostgreSQL installation. Before the first contained install, the local
 Windows installer now uninstalls a registered external **PostgreSQL 18** product through its official
 uninstaller. It does not delete that product's old data directory, other PostgreSQL major versions,
@@ -51,8 +51,9 @@ To keep the complete local installation on drive D, double-click `INSTALL-WINDOW
 C-drive download it creates a clean `D:\Londos` only when that target is empty, excludes partial
 credentials/dependencies/builds, and starts the installer there. If the checkout is already on D, it
 uses that folder directly. The copier never merges into or overwrites a non-empty target. Afterward,
-always use the batch files in the D-drive checkout so every retained runtime, cache, database file,
-package and build stays with that Londos folder.
+always use the batch files in the D-drive checkout. Installer-managed runtime requirements and
+database data remain in `D:\Londos\core`; packages and build output remain in their required paths
+inside the same `D:\Londos` checkout.
 
 ## Windows
 

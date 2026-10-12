@@ -132,6 +132,7 @@ test("one-click installers bootstrap the private runtime and preserve role entry
   const windowsInstaller = readFileSync(resolve(root, "INSTALL-WINDOWS.bat"), "utf8");
   const dDriveInstaller = readFileSync(resolve(root, "INSTALL-WINDOWS-ON-D.bat"), "utf8");
   const dDriveBootstrap = readFileSync(resolve(root, "scripts/local/install-on-d.ps1"), "utf8");
+  const gitignore = readFileSync(resolve(root, ".gitignore"), "utf8");
   expect(windowsInstaller).toContain("bootstrap-prerequisites.ps1");
   expect(windowsInstaller).toContain("INSTALL_EXIT=%ERRORLEVEL%");
   expect(windowsInstaller).toContain("windows-install-error.log");
@@ -139,6 +140,8 @@ test("one-click installers bootstrap the private runtime and preserve role entry
   expect(dDriveBootstrap).toContain('[string]$TargetRoot = "D:\\Londos"');
   expect(dDriveBootstrap).toContain("$CopyExit -ge 8");
   expect(dDriveBootstrap).toContain('(Join-Path $Source ".local")');
+  expect(dDriveBootstrap).toContain('(Join-Path $Source "core")');
+  expect(gitignore).toMatch(/^core\/$/m);
   expect(dDriveBootstrap).toContain("is not empty");
   expect(dDriveBootstrap).not.toMatch(/Remove-Item|rmdir|rd \/s/i);
   expect(readFileSync(resolve(root, "install-linux.sh"), "utf8")).toContain(
@@ -169,9 +172,11 @@ test("runtime bootstrap pins and verifies official Node downloads", () => {
     expect(content).toContain("24.19.0");
     expect(content).toContain("https://nodejs.org/dist/");
     expect(content).toContain("SHASUMS256");
-    expect(content).toContain(".local");
     expect(content).not.toMatch(/curl[^\n]*\|\s*(?:ba)?sh/);
   }
+  expect(shell).toContain(".local");
+  expect(powershell).toContain('$CoreDirectory = Join-Path $Root "core"');
+  expect(powershell).not.toContain(".local\\runtime");
   expect(shell).toMatch(/sha256sum|shasum/);
   expect(powershell).toContain("Get-FileHash");
 });
@@ -196,13 +201,17 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   expect(native).toContain("Get-FileHash");
   expect(native).toContain("Using the cached, checksum-verified PostgreSQL");
   expect(native).toContain("--optionfile");
-  expect(native).toContain('Join-Path $LocalDirectory "runtime\\postgresql-18"');
-  expect(native).toContain('Join-Path $LocalDirectory "data\\postgresql-18"');
+  expect(native).toContain('$CoreDirectory = Join-Path $Root "core"');
+  expect(native).toContain('Join-Path $CoreDirectory "runtime\\postgresql-18"');
+  expect(native).toContain('Join-Path $CoreDirectory "data\\postgresql-18"');
   expect(native).toContain("LONDOS_ALLOW_EXTERNAL_POSTGRES");
   expect(native).toContain("LONDOS_PRESERVE_EXTERNAL_POSTGRES");
   expect(native).toContain("londos-postgresql-18-contained");
-  expect(native).toContain("Get-RegisteredExternalPostgres18");
-  expect(native).toContain("Remove-RegisteredExternalPostgres18");
+  expect(native).toContain("Get-RegisteredNonCorePostgres18");
+  expect(native).toContain("Remove-RegisteredNonCorePostgres18");
+  expect(native).toContain("Test-PathInsideCore");
+  expect(native).not.toContain('Join-Path $LocalDirectory "runtime');
+  expect(native).not.toContain('Join-Path $LocalDirectory "data');
   expect(native).toContain("^PostgreSQL 18");
   expect(native).toContain("uninstall-postgresql.exe");
   expect(native).toContain("--mode', 'unattended");
@@ -230,7 +239,8 @@ test("Windows bootstrap reuses only a checksum-verified cached Node archive", ()
   const powershell = readFileSync(resolve(root, "scripts/local/run-with-node.ps1"), "utf8");
   expect(powershell).toContain("Using the cached, checksum-verified Node.js archive");
   expect(powershell).toContain("The cached Node archive failed verification");
-  expect(powershell).toContain(".local\\runtime\\npm-cache");
+  expect(powershell).toContain('$CoreDirectory = Join-Path $Root "core"');
+  expect(powershell).toContain('Join-Path $CoreDirectory "runtime\\npm-cache"');
   expect(powershell).toContain("$env:NPM_CONFIG_CACHE = $NpmCache");
   expect(powershell).toMatch(/Test-Path[^\n]+\$ArchivePath[\s\S]+Invoke-WebRequest[^\n]+\$Archive/);
   expect(powershell).toMatch(/Get-FileHash[\s\S]+\$Actual -ne \$Expected/);

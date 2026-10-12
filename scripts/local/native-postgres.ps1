@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $LocalDirectory = Join-Path $Root ".local"
+$CoreDirectory = Join-Path $Root "core"
 $LogDirectory = Join-Path $LocalDirectory "logs"
 $CredentialsPath = Join-Path $LocalDirectory "native-postgres.env"
 $OptionFile = Join-Path $LocalDirectory "postgresql-installer.options"
@@ -16,8 +17,8 @@ $EnvPath = Join-Path $Root ".env.local"
 $PostgresVersion = "18.6-5"
 $PostgresSha256 = "227E2BC08091B4C2B8338C7D61B11D057F895711480B006F90BFCFCD2410A58A"
 $PostgresUrl = "https://get.enterprisedb.com/postgresql/postgresql-$PostgresVersion-windows-x64.exe"
-$PostgresPrefix = [IO.Path]::GetFullPath((Join-Path $LocalDirectory "runtime\postgresql-18"))
-$PostgresData = [IO.Path]::GetFullPath((Join-Path $LocalDirectory "data\postgresql-18"))
+$PostgresPrefix = [IO.Path]::GetFullPath((Join-Path $CoreDirectory "runtime\postgresql-18"))
+$PostgresData = [IO.Path]::GetFullPath((Join-Path $CoreDirectory "data\postgresql-18"))
 $PostgresService = "londos-postgresql-18-contained"
 $PostgresPort = "54329"
 $AllowExternalPostgres = $env:LONDOS_ALLOW_EXTERNAL_POSTGRES -eq "true"
@@ -112,15 +113,15 @@ function Add-PostgresBinCandidate {
   if (-not $Candidates.Contains($Candidate)) { $null = $Candidates.Add($Candidate) }
 }
 
-function Test-PathInsideLondos {
+function Test-PathInsideCore {
   param([Parameter(Mandatory = $true)][string]$Path)
   try { $FullPath = [IO.Path]::GetFullPath($Path).TrimEnd('\') } catch { return $false }
-  $RootPath = [IO.Path]::GetFullPath($Root).TrimEnd('\')
-  return $FullPath.Equals($RootPath, [StringComparison]::OrdinalIgnoreCase) -or
-    $FullPath.StartsWith($RootPath + '\', [StringComparison]::OrdinalIgnoreCase)
+  $CorePath = [IO.Path]::GetFullPath($CoreDirectory).TrimEnd('\')
+  return $FullPath.Equals($CorePath, [StringComparison]::OrdinalIgnoreCase) -or
+    $FullPath.StartsWith($CorePath + '\', [StringComparison]::OrdinalIgnoreCase)
 }
 
-function Get-RegisteredExternalPostgres18 {
+function Get-RegisteredNonCorePostgres18 {
   $Found = New-Object 'System.Collections.Generic.List[object]'
   $Seen = @{}
   foreach ($RegistryPath in @(
@@ -134,7 +135,7 @@ function Get-RegisteredExternalPostgres18 {
       $InstallLocation = [Environment]::ExpandEnvironmentVariables(
         ([string]$Record.InstallLocation).Trim().Trim('"')
       )
-      if ($InstallLocation -and (Test-PathInsideLondos $InstallLocation)) { continue }
+      if ($InstallLocation -and (Test-PathInsideCore $InstallLocation)) { continue }
 
       $Candidates = New-Object 'System.Collections.Generic.List[string]'
       if ($InstallLocation) {
@@ -151,7 +152,7 @@ function Get-RegisteredExternalPostgres18 {
         $CandidateRoot = [IO.Path]::GetPathRoot($Candidate)
         if ($CandidateRoot -and -not $CandidateRoot.StartsWith('\\') -and
             (Split-Path -Leaf $Candidate) -ieq 'uninstall-postgresql.exe' -and
-            -not (Test-PathInsideLondos $Candidate) -and
+            -not (Test-PathInsideCore $Candidate) -and
             (Test-Path -LiteralPath $Candidate -PathType Leaf)) {
           $Uninstaller = $Candidate
           break
@@ -173,13 +174,13 @@ function Get-RegisteredExternalPostgres18 {
   return $Found
 }
 
-function Remove-RegisteredExternalPostgres18 {
-  $Products = @(Get-RegisteredExternalPostgres18)
+function Remove-RegisteredNonCorePostgres18 {
+  $Products = @(Get-RegisteredNonCorePostgres18)
   if ($Products.Count -eq 0) { return }
 
   New-Item -ItemType Directory -Force -Path $LogDirectory | Out-Null
-  Write-Host "An external PostgreSQL 18 installation was found outside this Londos folder."
-  Write-Host "Londos will uninstall that registered software before installing its contained D-drive copy."
+  Write-Host "A registered PostgreSQL 18 installation was found outside this Londos core folder."
+  Write-Host "Londos will uninstall that registered software before installing its core-contained copy."
   Write-Host "Londos does not delete the old PostgreSQL data directory; retain or back it up until the new app is verified."
   foreach ($Product in $Products) {
     Write-Host "Windows will request Administrator permission to uninstall $($Product.DisplayName)."
@@ -202,7 +203,7 @@ function Remove-RegisteredExternalPostgres18 {
       throw "External PostgreSQL uninstall failed with exit code $($Process.ExitCode). See $UninstallLog."
     }
   }
-  if (@(Get-RegisteredExternalPostgres18).Count -ne 0) {
+  if (@(Get-RegisteredNonCorePostgres18).Count -ne 0) {
     throw "External PostgreSQL 18 is still registered after uninstall. Restart Windows and rerun Londos."
   }
   Write-Host "External PostgreSQL 18 software was uninstalled successfully."
@@ -406,7 +407,7 @@ function Install-Postgres {
     throw "The verified PostgreSQL Windows installer supports x64 Windows; found $Architecture."
   }
 
-  $Downloads = Join-Path $LocalDirectory "runtime\downloads"
+  $Downloads = Join-Path $CoreDirectory "runtime\downloads"
   $Installer = Join-Path $Downloads "postgresql-$PostgresVersion-windows-x64.exe"
   New-Item -ItemType Directory -Force -Path $Downloads | Out-Null
   $NeedsDownload = -not (Test-Path -LiteralPath $Installer -PathType Leaf)
@@ -617,7 +618,7 @@ if ($Action -eq 'install' -and -not $AllowExternalPostgres) {
   if ($PreserveExternalPostgres) {
     Write-Host "LONDOS_PRESERVE_EXTERNAL_POSTGRES=true; registered external PostgreSQL 18 will be left unchanged."
   } else {
-    Remove-RegisteredExternalPostgres18
+    Remove-RegisteredNonCorePostgres18
   }
 }
 $Installation = Find-PostgresInstallation

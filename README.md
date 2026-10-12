@@ -25,10 +25,11 @@ For production-mode validation, run `npm run build` then `npm run start`. Run `n
 
 For the requested self-contained Windows installation on drive D, double-click
 `INSTALL-WINDOWS-ON-D.bat`. It safely prepares an empty `D:\Londos` and runs the installer there;
-PostgreSQL binaries/data, Node, npm cache, locked packages and builds then remain below that Londos
-folder. Before the first contained install it uses the registered EDB uninstaller to remove an
-external PostgreSQL 18 product, while leaving its old data directory and other major versions alone.
-It never overwrites a non-empty D-drive checkout. See
+PostgreSQL binaries/data, Node, verified downloads, and npm cache are installed in
+`D:\Londos\core`. Locked packages and builds remain elsewhere inside `D:\Londos`, where Node and
+Next.js require them. Before the first contained install it uses the registered EDB uninstaller to
+remove a PostgreSQL 18 product outside `core`, while leaving its old data directory and other major
+versions alone. It never overwrites a non-empty D-drive checkout. See
 [Windows native PostgreSQL setup](docs/WINDOWS-NATIVE-POSTGRESQL.md).
 
 ## Connecting to Aiven Postgres
@@ -314,6 +315,7 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [Windows native PostgreSQL installation and dormant Aiven shortcuts](docs/WINDOWS-NATIVE-POSTGRESQL.md)
 - [Windows native PostgreSQL implementation evidence](docs/evidence/WINDOWS-NATIVE-POSTGRESQL-2026-10-11.md)
 - [Windows external PostgreSQL uninstall follow-up](docs/evidence/WINDOWS-EXTERNAL-POSTGRESQL-UNINSTALL-2026-10-12.md)
+- [Windows `core` installation layout evidence](docs/evidence/WINDOWS-CORE-LAYOUT-2026-10-12.md)
 - [Optional self-hosted production mode](deploy/selfhosted/README.md)
 - [Self-hosted mode verification](docs/evidence/SELFHOSTED-MODE-2026-10-09.md)
 - [PWA clients and shared-server deployment](docs/CROSS-PLATFORM-DEPLOYMENT.md)

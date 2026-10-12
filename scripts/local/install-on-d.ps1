@@ -35,6 +35,7 @@ if ($SourceDrive -ieq "D:") {
   $ExcludedDirectories = @(
     (Join-Path $Source ".git"),
     (Join-Path $Source ".local"),
+    (Join-Path $Source "core"),
     (Join-Path $Source ".next"),
     (Join-Path $Source "node_modules"),
     (Join-Path $Source "dist"),
