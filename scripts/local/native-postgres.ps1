@@ -15,8 +15,11 @@ $EnvPath = Join-Path $Root ".env.local"
 $PostgresVersion = "18.6-5"
 $PostgresSha256 = "227E2BC08091B4C2B8338C7D61B11D057F895711480B006F90BFCFCD2410A58A"
 $PostgresUrl = "https://get.enterprisedb.com/postgresql/postgresql-$PostgresVersion-windows-x64.exe"
-$PostgresService = "londos-postgresql-18"
+$PostgresPrefix = [IO.Path]::GetFullPath((Join-Path $LocalDirectory "runtime\postgresql-18"))
+$PostgresData = [IO.Path]::GetFullPath((Join-Path $LocalDirectory "data\postgresql-18"))
+$PostgresService = "londos-postgresql-18-contained"
 $PostgresPort = "54329"
+$AllowExternalPostgres = $env:LONDOS_ALLOW_EXTERNAL_POSTGRES -eq "true"
 
 function New-HexSecret {
   param([ValidateRange(16, 128)][int]$Bytes = 32)
@@ -109,6 +112,23 @@ function Add-PostgresBinCandidate {
 
 function Find-PostgresInstallation {
   $Candidates = New-Object 'System.Collections.Generic.List[string]'
+  # The normal local mode is deliberately self-contained. Keeping this first
+  # also makes repeat installs independent of PATH and machine-wide software.
+  Add-PostgresBinCandidate $Candidates $PostgresPrefix
+  if (-not $AllowExternalPostgres) {
+    foreach ($Candidate in $Candidates) {
+      $Psql = Join-Path $Candidate "psql.exe"
+      $Ready = Join-Path $Candidate "pg_isready.exe"
+      if ((Test-Path -LiteralPath $Psql -PathType Leaf) -and
+          (Test-Path -LiteralPath $Ready -PathType Leaf)) {
+        return [PSCustomObject]@{ Bin = $Candidate; Psql = $Psql; Ready = $Ready }
+      }
+    }
+    return $null
+  }
+
+  # External discovery is dormant and must be requested explicitly. It exists
+  # only for operators who knowingly manage PostgreSQL outside the Londos tree.
   Add-PostgresBinCandidate $Candidates $env:LONDOS_POSTGRES_BIN
   $PsqlCommand = Get-Command psql.exe -ErrorAction SilentlyContinue
   if ($PsqlCommand) { Add-PostgresBinCandidate $Candidates $PsqlCommand.Source }
@@ -140,8 +160,37 @@ function Find-PostgresInstallation {
 function Get-PostgresService {
   $Exact = Get-Service -Name $PostgresService -ErrorAction SilentlyContinue
   if ($Exact) { return $Exact }
+  if (-not $AllowExternalPostgres) { return $null }
   return Get-Service -Name 'postgresql-x64-18' -ErrorAction SilentlyContinue |
     Select-Object -First 1
+}
+
+function Test-LocalPortAvailable {
+  param([Parameter(Mandatory = $true)][int]$Port)
+  $Listener = $null
+  try {
+    $Listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $Port)
+    $Listener.Start()
+    return $true
+  } catch {
+    return $false
+  } finally {
+    if ($Listener) { $Listener.Stop() }
+  }
+}
+
+function Get-AvailablePostgresPort {
+  if ($env:LONDOS_POSTGRES_PORT) { return $env:LONDOS_POSTGRES_PORT }
+  $FirstPort = [int]$PostgresPort
+  foreach ($Candidate in $FirstPort..($FirstPort + 10)) {
+    if (Test-LocalPortAvailable $Candidate) {
+      if ([string]$Candidate -ne $PostgresPort) {
+        Write-Host "Port $PostgresPort is already occupied; using loopback port $Candidate for contained PostgreSQL."
+      }
+      return [string]$Candidate
+    }
+  }
+  throw "No free loopback PostgreSQL port was found from $PostgresPort through $($FirstPort + 10)."
 }
 
 function Test-PostgresReady {
@@ -220,16 +269,16 @@ function Get-OrCreateCredentials {
   }
 
   if ($ExistingInstallation) {
-    Write-Host "PostgreSQL 18 already exists. Enter its postgres superuser password to create the isolated Londos database."
+    Write-Host "PostgreSQL 18 already exists in this Londos folder. Enter its postgres superuser password to recreate the private connection file."
     $Secure = Read-Host "PostgreSQL postgres password" -AsSecureString
     $SuperPassword = Convert-SecureStringToText $Secure
     if ([string]::IsNullOrWhiteSpace($SuperPassword) -or $SuperPassword -match '[\r\n]') {
       throw "A non-empty PostgreSQL password is required."
     }
-    $Port = if ($env:LONDOS_POSTGRES_PORT) { $env:LONDOS_POSTGRES_PORT } else { "5432" }
+    $Port = if ($env:LONDOS_POSTGRES_PORT) { $env:LONDOS_POSTGRES_PORT } else { $PostgresPort }
   } else {
     $SuperPassword = New-HexSecret 32
-    $Port = $PostgresPort
+    $Port = Get-AvailablePostgresPort
   }
   if ($Port -notmatch '^\d+$' -or [int]$Port -lt 1 -or [int]$Port -gt 65535) {
     throw "LONDOS_POSTGRES_PORT must be between 1 and 65535."
@@ -283,12 +332,11 @@ function Install-Postgres {
     throw "PostgreSQL installer checksum verification failed; refusing to execute it."
   }
 
-  $Prefix = Join-Path $env:ProgramFiles "PostgreSQL\18"
   $Options = @(
     'mode=unattended',
     'unattendedmodeui=minimal',
-    "prefix=$Prefix",
-    "datadir=$(Join-Path $Prefix 'data')",
+    "prefix=$PostgresPrefix",
+    "datadir=$PostgresData",
     "serverport=$($Credentials.POSTGRES_PORT)",
     "servicename=$PostgresService",
     'superaccount=postgres',
@@ -301,6 +349,8 @@ function Install-Postgres {
   Set-PrivateFile $OptionFile $Options
   New-Item -ItemType Directory -Force -Path $LogDirectory | Out-Null
   try {
+    Write-Host "PostgreSQL binaries: $PostgresPrefix"
+    Write-Host "PostgreSQL data: $PostgresData"
     Write-Host "Windows will request Administrator permission for the verified PostgreSQL installer."
     $Process = Start-Process -FilePath $Installer -Verb RunAs -Wait -PassThru `
       -ArgumentList @('--optionfile', ('"{0}"' -f $OptionFile))
@@ -442,7 +492,7 @@ BEGIN
   END IF;
 END;
 `$londos`$;
-SELECT format('CREATE DATABASE %I OWNER TO %I', '$($Credentials.POSTGRES_DB)', '$($Credentials.POSTGRES_APP_USER)')
+SELECT format('CREATE DATABASE %I OWNER %I', '$($Credentials.POSTGRES_DB)', '$($Credentials.POSTGRES_APP_USER)')
 WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = '$($Credentials.POSTGRES_DB)')
 \gexec
 ALTER DATABASE $($Credentials.POSTGRES_DB) OWNER TO $($Credentials.POSTGRES_APP_USER);

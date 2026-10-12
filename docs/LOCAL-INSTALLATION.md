@@ -34,12 +34,20 @@ still runs `npm ci`, migrations, seed, and a fresh production build so repositor
 applied reproducibly.
 
 On Windows the PostgreSQL installer is cached in `.local\runtime\downloads` and rechecked against
-the pinned digest on every use. A damaged cache is deleted and downloaded again. Existing compatible
-PostgreSQL 18 is reused after a secure password prompt; set `LONDOS_POSTGRES_PORT` before installing
-if that service does not use port 5432. Londos does not uninstall or modify an existing Docker
-Desktop installation because it could contain unrelated projects and data.
+the pinned digest on every use. A damaged cache is deleted and downloaded again. PostgreSQL binaries
+are installed in `.local\runtime\postgresql-18`, database files in
+`.local\data\postgresql-18`, and npm's retained cache in `.local\runtime\npm-cache`. The default
+does not reuse a machine-wide PostgreSQL installation. Londos does not uninstall or modify an
+existing PostgreSQL/Docker installation because it could contain unrelated projects and data.
 
 Keep the whole repository together. Do not copy a START file away from it.
+
+To keep the complete local installation on drive D, double-click `INSTALL-WINDOWS-ON-D.bat`. From a
+C-drive download it creates a clean `D:\Londos` only when that target is empty, excludes partial
+credentials/dependencies/builds, and starts the installer there. If the checkout is already on D, it
+uses that folder directly. The copier never merges into or overwrites a non-empty target. Afterward,
+always use the batch files in the D-drive checkout so every retained runtime, cache, database file,
+package and build stays with that Londos folder.
 
 ## Windows
 

@@ -94,6 +94,10 @@ if ($Bootstrap) {
 }
 
 $env:Path = "$(Split-Path -Parent $NodeCommand);$env:Path"
+$NpmCache = Join-Path $Root ".local\runtime\npm-cache"
+New-Item -ItemType Directory -Force -Path $NpmCache | Out-Null
+$env:NPM_CONFIG_CACHE = $NpmCache
+$env:NPM_CONFIG_UPDATE_NOTIFIER = "false"
 Set-Location $Root
 & $NodeCommand "scripts\local\launcher.mjs" @LauncherArguments
 exit $LASTEXITCODE

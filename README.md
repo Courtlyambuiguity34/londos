@@ -23,6 +23,12 @@ npm run dev
 
 For production-mode validation, run `npm run build` then `npm run start`. Run `npm run check` for the initial checks. See [DEVELOPMENT](docs/DEVELOPMENT.md) for browser tests, configuration and standalone startup.
 
+For the requested self-contained Windows installation on drive D, double-click
+`INSTALL-WINDOWS-ON-D.bat`. It safely prepares an empty `D:\Londos` and runs the installer there;
+PostgreSQL binaries/data, Node, npm cache, locked packages and builds then remain below that Londos
+folder. It never overwrites a non-empty D-drive checkout. See
+[Windows native PostgreSQL setup](docs/WINDOWS-NATIVE-POSTGRESQL.md).
+
 ## Connecting to Aiven Postgres
 
 Render plus hosted Aiven PostgreSQL is the default deployment (`DEPLOY_MODE=render`). PostgreSQL is
