@@ -11,12 +11,15 @@ until an operator supplies a hosted PostgreSQL URL.
    and build output from the failed copy, then runs `D:\Londos\INSTALL-WINDOWS.bat`. It refuses to
    merge into or overwrite a non-empty `D:\Londos`. If the checkout is already anywhere on D, it
    installs in that existing folder without copying it.
-2. The installer obtains the pinned private Node.js runtime and locked npm packages.
-3. If compatible PostgreSQL 18 is absent, Londos downloads EDB PostgreSQL **18.6-5**, verifies the
+2. Londos detects a registered external EDB PostgreSQL 18 outside the current Londos folder and runs
+   its official uninstaller with Administrator permission. It does not delete the old data folder.
+   Other PostgreSQL major versions are not targeted. Back up any database you need before starting.
+3. If the contained PostgreSQL 18 is absent, Londos downloads EDB PostgreSQL **18.6-5**, verifies the
    pinned SHA-256 digest, and asks Windows for Administrator permission to install it.
 4. Londos configures the service to listen only on localhost, creates the non-superuser `londos`
    application role and `londos_development` database, and verifies that identity.
-5. Londos safely merges the generated loopback settings into `.env.local`, then runs migrations,
+5. The installer obtains the pinned private Node.js runtime and locked npm packages.
+6. Londos safely merges the generated loopback settings into `.env.local`, then runs migrations,
    fictional development seed data, and the production build.
 
 For a checkout at `D:\Londos`, the contained installation uses these locations:
@@ -58,12 +61,21 @@ installation is not silently selected, because that would move binaries/data out
 An advanced operator may deliberately set `LONDOS_ALLOW_EXTERNAL_POSTGRES=true` and
 `LONDOS_POSTGRES_BIN`, but this is not the normal local mode.
 
-If a failed older Londos attempt already installed PostgreSQL under `C:\Program Files`, do not delete
-its data directory manually. Leave it in place while installing a clean checkout at `D:\Londos`.
-The contained installer selects the first free loopback port from **54329–54339**, so the two
-instances can coexist during verification. After the D-drive app reports `/api/ready` successfully
-and you have a reviewed backup, the earlier unused installation can be removed through Windows Apps
-by an administrator. Londos never performs that destructive uninstall automatically.
+If a failed older Londos attempt installed EDB PostgreSQL 18 under `C:\Program Files`, the local
+installer now invokes that registered product's official uninstaller before installing the contained
+copy. This removes the external software and service, but Londos itself does not delete the old data
+directory. Keep or back up that data until `D:\Londos` reports `/api/ready` successfully. The action
+and exit code are written to `.local\logs\postgresql-uninstall.log`; no credentials are logged.
+
+Only the exact registered PostgreSQL 18 product is selected. Other major versions and unregistered
+folders are left alone. If Windows cannot verify the product's official `uninstall-postgresql.exe`,
+installation stops and directs the operator to Windows Apps rather than executing an ambiguous
+command. To deliberately preserve an externally managed PostgreSQL 18 installation for one run:
+
+```bat
+set LONDOS_PRESERVE_EXTERNAL_POSTGRES=true
+INSTALL-WINDOWS.bat
+```
 
 To request a particular free contained port, set `LONDOS_POSTGRES_PORT` before running the batch:
 
@@ -86,8 +98,8 @@ publish that file.
   service. It never deletes database data.
 - Londos removes Docker from its own Windows dependency path. It intentionally does **not** uninstall
   Docker Desktop, WSL, containers, images, or volumes from the computer.
-- Londos does not automatically uninstall PostgreSQL. Use a reviewed backup and Windows Apps
-  settings only if you deliberately retire the database.
+- Before the first contained local install, Londos automatically uninstalls a registered external
+  PostgreSQL 18 product. It does not delete its old data folder or touch other major versions.
 
 ## Dormant Aiven/hosted path
 

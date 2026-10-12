@@ -37,8 +37,13 @@ On Windows the PostgreSQL installer is cached in `.local\runtime\downloads` and 
 the pinned digest on every use. A damaged cache is deleted and downloaded again. PostgreSQL binaries
 are installed in `.local\runtime\postgresql-18`, database files in
 `.local\data\postgresql-18`, and npm's retained cache in `.local\runtime\npm-cache`. The default
-does not reuse a machine-wide PostgreSQL installation. Londos does not uninstall or modify an
-existing PostgreSQL/Docker installation because it could contain unrelated projects and data.
+does not reuse a machine-wide PostgreSQL installation. Before the first contained install, the local
+Windows installer now uninstalls a registered external **PostgreSQL 18** product through its official
+uninstaller. It does not delete that product's old data directory, other PostgreSQL major versions,
+Docker Desktop, WSL, containers, images, or volumes. Back up any database you need before running the
+installer and retain the old data until Londos is verified. An advanced operator who intentionally
+needs the external PostgreSQL 18 installation may set `LONDOS_PRESERVE_EXTERNAL_POSTGRES=true` for
+that run.
 
 Keep the whole repository together. Do not copy a START file away from it.
 
@@ -60,7 +65,10 @@ before installation when `.env.local` points at a non-loopback database.
 Run the installer normally. Londos announces and opens one Windows Administrator permission (UAC)
 prompt only when it must run the verified PostgreSQL installer or control its service. Dependency,
 database, and application setup otherwise continues under the signed-in Windows account. Cancelling
-the prompt stops safely and does not claim PostgreSQL was installed.
+the prompt stops safely and does not claim PostgreSQL was installed. When an external PostgreSQL 18
+product is registered, Windows first asks for permission to run its official uninstaller and then
+asks for permission to install the contained copy. The uninstall result is recorded without
+credentials in `.local\logs\postgresql-uninstall.log`.
 
 You may still right-click the installer and choose **Run as administrator**; the script detects that
 state and does not attempt a second elevation. Normal-user execution is recommended because running

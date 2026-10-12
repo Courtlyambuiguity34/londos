@@ -199,7 +199,15 @@ test("Windows local mode provisions verified native PostgreSQL while hosted mode
   expect(native).toContain('Join-Path $LocalDirectory "runtime\\postgresql-18"');
   expect(native).toContain('Join-Path $LocalDirectory "data\\postgresql-18"');
   expect(native).toContain("LONDOS_ALLOW_EXTERNAL_POSTGRES");
+  expect(native).toContain("LONDOS_PRESERVE_EXTERNAL_POSTGRES");
   expect(native).toContain("londos-postgresql-18-contained");
+  expect(native).toContain("Get-RegisteredExternalPostgres18");
+  expect(native).toContain("Remove-RegisteredExternalPostgres18");
+  expect(native).toContain("^PostgreSQL 18");
+  expect(native).toContain("uninstall-postgresql.exe");
+  expect(native).toContain("--mode', 'unattended");
+  expect(native).toContain("Londos does not delete the old PostgreSQL data directory");
+  expect(native).not.toMatch(/Remove-Item[^\n]*(?:PostgreSQL|PostgresPrefix|PostgresData)/i);
   expect(native).toContain("CREATE DATABASE %I OWNER %I");
   expect(native).not.toContain("CREATE DATABASE %I OWNER TO %I");
   expect(native).toContain("listen_addresses = 'localhost'");
