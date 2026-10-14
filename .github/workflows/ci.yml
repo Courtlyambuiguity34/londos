@@ -58,8 +58,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-fund
-      - run: npm run test:integration
       - run: npm run build
+      # Hosted-settings integration tests exercise the actual standalone artifact.
+      - run: npm run test:integration
       - run: npm run check:bundle-secrets
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e:core

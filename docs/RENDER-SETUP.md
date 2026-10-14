@@ -2,6 +2,22 @@
 
 This is a reviewable setup guide, not evidence of a deployed production service. Use [render.web.yaml](../deploy/render.web.yaml) for the free Docker web service and [render.html](../render.html) for the offline checklist. No paid resource, DNS change or production exposure is authorized by running local verification.
 
+## Current readiness — checked 2026-10-14
+
+**Suitable for a controlled hosted staging check, not yet a complete live shop-rental launch.**
+The production web/worker artifacts build. Existing merchants can edit their catalogue and
+save, privately preview, publish and unpublish designs with local adapters disabled. The
+public database-browsing guard now permits valid hosted PostgreSQL configuration. See the
+[shop verification and remaining blockers](evidence/RENDER-SHOPS-2026-10-14.md) for tests
+actually executed and their limits.
+
+Environment values alone do **not** complete production onboarding: applications,
+provisioning, rent and several operator workflows still enforce `local_lifecycle_only`.
+Trusted ingress/client-IP handling, real account/operator provisioning, live provider
+checks and the release gates remain outstanding. Do not remove those guards or enable
+`LONDOS_LOCAL_ADAPTERS` on Render to work around them. Seeded demonstration accounts are
+not a production onboarding process.
+
 ## Supported architecture
 
 Render can host the web artifact alongside **MongoDB Atlas and Cloudinary**, but this Londos implementation also requires **reachable PostgreSQL and an independent supervised worker**. MongoDB stores optional public catalogue copies; it does not implement canonical native authentication, tenancy/rent, SQL integrity constraints, jobs or audit. Redis is optional and can remain completely absent.
@@ -18,17 +34,41 @@ A free web instance's sleeping/ephemeral behavior is not an always-on worker, da
 
 ## Prepare before the first deployment
 
-1. Select the exact reviewed commit on `feature/cross-platform-local-launchers-2026-10-09`. Run the local checks and review [current integration evidence](evidence/SERVICES-2026-10-07.md). Source changes after the old G5 packet require a new comprehensive verification candidate; do not reuse its green checks as a claim about this commit.
+1. Select the exact reviewed commit on `feature/communications-billing-2026-10-10`. Run the local checks and review [current shop evidence](evidence/RENDER-SHOPS-2026-10-14.md) and [earlier provider evidence](evidence/SERVICES-2026-10-07.md). Source changes after the old G5 packet require a new comprehensive verification candidate; do not reuse its green checks as a claim about this commit.
 2. Back up the canonical database and private configuration. Use a migrator owner separate from web/worker roles, following [the release runbook](RELEASE-RUNBOOK.md). Apply the branch's immutable migrations to the selected database, then provision reviewed runtime roles. This is not a MongoDB migration. Never run development seed/reset helpers against a remote database.
 3. Provision the independent worker/monitor and their reviewed credentials, encrypted independent backups, key recovery/current privacy authority and responder ownership. Review the remaining [G5 manifest](launch/G5-DECISIONS.json).
 4. Verify Brevo's sender and API access. `mnelsontravor@gmail.com` / `Londos` is the proposed temporary sender; an owned domain/mailbox needs its own verified sender and DNS authentication. A read-only key check does not prove inbox delivery.
-5. Review trusted-client-IP handling. Londos's security boundary expects a reviewed ingress to overwrite `x-londos-client-ip`; accepting a client-supplied value weakens abuse controls. The staging nginx configuration demonstrates the boundary, but adapting it to Render requires provider-specific review.
+5. Review trusted-client-IP handling. Londos's security boundary expects a reviewed ingress to overwrite `x-londos-client-ip`; accepting a client-supplied value weakens abuse controls. In addition, `src/server/security/auth-http.ts` currently replaces authentication request IPs with loopback, so setting a proxy header alone is not sufficient. The staging nginx configuration demonstrates an ingress boundary, but adapting and verifying both the application and edge for Render remains required.
 
 ## Create the free web service
 
 Connect the repository through Render's own account UI. Create a Docker web service on the reviewed branch/commit, or import the review-only blueprint. The Dockerfile is `deploy/Dockerfile`, build context is the repository root, health path is `/api/ready`, and automatic deployment is **off**. Do not create a Node build with a different start command accidentally; the Docker artifact includes the compiled web and independent worker/operations/migrator entry points.
 
 Store secrets through Render's server-side environment facility. Do not put values in `render.html`, the YAML, a tracked `.env`, build arguments or screenshots. Render supplies `PORT`; the image listens on `0.0.0.0`.
+
+### Import the environment template
+
+Use [deploy/.env.example](../deploy/.env.example), not the root `.env.example` (which
+intentionally retains the credential-free local preview defaults). In Render's service
+Environment settings, import/paste the entries using its `.env` import facility, or enter
+each key individually. Fill **all five blank required values**: `DATABASE_URL`,
+`AUTH_SECRET`, `AUTH_BASE_URL`, `LONDOS_BREVO_API_KEY` and `LONDOS_EMAIL_FROM`.
+Keep optional provider entries commented/unset until you deliberately enable them.
+Blank placeholders are not working credentials. Your existing private `.env.local`
+has not been overwritten and must not be uploaded or committed.
+
+Apply the settings to **both web and worker**. They need the same database, stable
+`AUTH_SECRET`, canonical `AUTH_BASE_URL` and compatible feature settings; reviewed runtime
+database roles can have different passwords/permissions. A YAML anchor is not a secret
+sharing mechanism. If your PostgreSQL provider requires a public CA certificate, upload
+it separately to both services and set `LONDOS_RUNTIME_CA_FILE` to its mounted path.
+Never disable TLS certificate verification.
+
+The [full-service blueprint](../deploy/render.full.yaml) includes a free web service and a
+**paid `starter` worker**, not a wholly free deployment. Alternatively supervise the worker
+on your own always-on machine. Migrations must run separately with the migrator role;
+the web process does not run them automatically. The root `render.yaml` remains a
+fixture-preview blueprint, not a full merchant deployment.
 
 | Setting                                       | Required value or action                                                                                                    |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +82,7 @@ Store secrets through Render's server-side environment facility. Do not put valu
 | `LONDOS_EMAIL_FROM`, `LONDOS_EMAIL_FROM_NAME` | Actual verified sender email and name.                                                                                      |
 | `LONDOS_BREVO_API_KEY`                        | Real private key, never a mock placeholder in remote authentication.                                                        |
 | `LONDOS_EMAIL_MAX_PER_HOUR` / `...PER_DAY`    | `250` / `250` conservative caps; confirm both against the current Brevo plan before enabling delivery.                      |
-| `LONDOS_MONTHLY_REPORTS_ENABLED`              | Start `false`; enable only after analytics/privacy and live-email approval.                                                  |
+| `LONDOS_MONTHLY_REPORTS_ENABLED`              | Start `false`; enable only after analytics/privacy and live-email approval.                                                 |
 | `LONDOS_REDIS_ENABLED`                        | `false`; leave `REDIS_URL` unset.                                                                                           |
 | `LONDOS_AI_REMOTE`                            | Start with `false`; remote AI requires verified bindings/models, consent, budgets and acceptance.                           |
 
