@@ -105,6 +105,33 @@ These flags do not automatically sync the catalogue, enable CDN application rend
 
 ## Start, inspect and use
 
+### Open the three interfaces
+
+The existing web deployment includes all three interfaces. Replace `YOUR-SERVICE`
+with the name of your actual Render web service:
+
+| Interface                | Address                                        |
+| ------------------------ | ---------------------------------------------- |
+| Public mall              | `https://YOUR-SERVICE.onrender.com/`           |
+| Shopkeeper               | `https://YOUR-SERVICE.onrender.com/shopkeeper` |
+| Landlord / administrator | `https://YOUR-SERVICE.onrender.com/landlord`   |
+| Sign in                  | `https://YOUR-SERVICE.onrender.com/sign-in`    |
+| Install a PWA            | `https://YOUR-SERVICE.onrender.com/install`    |
+
+No separate site upload, database or Render web service is needed for these paths.
+Keep `AUTH_BASE_URL` as the shared HTTPS origin, without `/landlord` or `/shopkeeper`.
+The header links to Shopkeeper and the footer's **Londos Management** links to Landlord.
+Shopkeepers see only shops assigned to their active memberships. Landlord access needs
+operator grants and verified MFA; opening the address or registering an ordinary
+account does not grant administrator permissions. Local demo credentials do not
+automatically exist in a new Aiven database. Production provisioning and the lifecycle
+limitations described above still apply.
+
+As of 2026-10-15, the shared header/footer display development notices only for fixture
+previews or database mode with local adapters. Hosted database mode removes those
+development labels. This presentation change does not enable payments, remove
+permission checks, turn demo records into real shops or close the production gates.
+
 Deploy the exact reviewed image/commit manually. Start the separate worker from the same compatible artifact against the same canonical database; the image supports the `worker` entry point, and `npm run worker` is available in a built owner checkout. Keep worker supervision and database migrations separate from web startup.
 
 Inspect `/api/ready` after startup: require `database=true`, `authentication=true`, a current `worker=ready` heartbeat and the expected `configured-core` mode. Readiness indicates configured native auth and schema compatibility, not live deliverability or a closed launch gate. Test public browsing and a genuine verified, MFA-protected operator/merchant workflow only after the required provisioning is complete. Public registration is not an automatically approved production onboarding path in this candidate.

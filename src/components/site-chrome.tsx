@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { Icon } from "./icon";
-import { databaseBrowsing } from "@/server/preview";
+import { previewCapabilities } from "@/server/preview";
 
 export function SiteHeader() {
+  const mode = previewCapabilities().mode;
   return (
     <>
-      <div className="preview-notice" role="region" aria-label="Preview status">
-        {databaseBrowsing()
-          ? "Development mall · Fictional merchants and sample catalogues. No payments are collected by Londos."
-          : "Preview mall · Fictional shops and illustrated products. Purchases are unavailable in this preview."}
-      </div>
+      {mode !== "database-core" ? (
+        <div className="preview-notice" role="region" aria-label="Preview status">
+          {mode === "database-development"
+            ? "Development mall · Fictional merchants and sample catalogues. No payments are collected by Londos."
+            : "Preview mall · Fictional shops and illustrated products. Purchases are unavailable in this preview."}
+        </div>
+      ) : null}
       <header className="site-header shell">
         <Link href="/" className="wordmark" aria-label="Londos home">
           londos<span aria-hidden="true">.</span>
@@ -32,6 +35,7 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const mode = previewCapabilities().mode;
   return (
     <footer className="site-footer">
       <div className="shell footer-inner">
@@ -56,12 +60,16 @@ export function SiteFooter() {
           Made for discovery.
           <br />
           Built around the shop.
-          <br />
-          <span>
-            {databaseBrowsing()
-              ? "Development mall with fictional merchants."
-              : "Read-only product preview."}
-          </span>
+          {mode !== "database-core" ? (
+            <>
+              <br />
+              <span>
+                {mode === "database-development"
+                  ? "Development mall with fictional merchants."
+                  : "Read-only product preview."}
+              </span>
+            </>
+          ) : null}
         </p>
       </div>
       <div className="shell footer-bottom">
