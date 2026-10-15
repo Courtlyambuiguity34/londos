@@ -120,7 +120,9 @@ with the name of your actual Render web service:
 
 No separate site upload, database or Render web service is needed for these paths.
 Keep `AUTH_BASE_URL` as the shared HTTPS origin, without `/landlord` or `/shopkeeper`.
-The header links to Shopkeeper and the footer's **Londos Management** links to Landlord.
+The header links to Shopkeeper only when the visitor has a current verified session
+and an active owner/staff merchant membership; guests and accounts without that
+membership do not receive the link. The footer's **Londos Management** links to Landlord.
 Shopkeepers see only shops assigned to their active memberships. Landlord access needs
 operator grants and verified MFA; opening the address or registering an ordinary
 account does not grant administrator permissions. Local demo credentials do not

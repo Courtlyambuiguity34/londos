@@ -237,3 +237,41 @@ test("hosted merchant can create a product, preview privately, publish, discover
     (await pool!.query("SELECT count(*)::int AS count FROM notification_deliveries")).rows[0].count,
   ).toBe(0);
 });
+
+test("Shopkeeper navigation requires a current verified session and active merchant membership", async () => {
+  const link = /<a\b[^>]*class="shopkeeper-link"/;
+  const guest = await request("/");
+  expect(guest.status).toBe(200);
+  expect(await guest.text()).not.toMatch(link);
+  const ownerCookie = await login(accounts.ownerA);
+  const owner = await request("/", ownerCookie);
+  expect(owner.status).toBe(200);
+  expect(await owner.text()).toMatch(link);
+  expect(owner.headers.get("cache-control")).toContain("private");
+
+  for (const account of [accounts.invitee, accounts.operator]) {
+    const nonMerchant = await request("/", await login(account));
+    expect(nonMerchant.status).toBe(200);
+    expect(await nonMerchant.text()).not.toMatch(link);
+  }
+  const staffCookie = await login(accounts.staff);
+  expect(await (await request("/", staffCookie)).text()).toMatch(link);
+  // Revoke staff rather than the sole owner: the last-owner safeguard must remain intact.
+  const userId = accounts.staff.id;
+  await pool!.query("UPDATE memberships SET status='revoked' WHERE user_id=$1", [userId]);
+  try {
+    // A valid session alone is insufficient; membership revocation takes effect immediately.
+    const revoked = await request("/", staffCookie);
+    expect(revoked.status).toBe(200);
+    expect(await revoked.text()).not.toMatch(link);
+  } finally {
+    await pool!.query("UPDATE memberships SET status='active' WHERE user_id=$1", [userId]);
+  }
+  expect(await (await request("/", staffCookie)).text()).toMatch(link);
+  expect((await request("/api/auth/sign-out", ownerCookie, "POST", {})).status).toBe(200);
+  // A replay of the old cookie cannot restore the link after sign-out.
+  const expired = await request("/", ownerCookie);
+  expect(expired.status).toBe(200);
+  expect(await expired.text()).not.toMatch(link);
+  expect(await (await request("/")).text()).not.toMatch(link);
+});

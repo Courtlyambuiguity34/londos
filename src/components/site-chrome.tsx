@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
+import { showShopkeeperNavigation } from "@/server/navigation";
 
-export function SiteHeader() {
+export async function SiteHeader() {
   const mode = previewCapabilities().mode;
+  const showShopkeeper = await showShopkeeperNavigation();
   return (
     <>
       {mode !== "database-core" ? (
@@ -22,9 +24,11 @@ export function SiteHeader() {
           <Link href="/about">Our mall</Link>
         </nav>
         <div className="header-actions">
-          <Link href="/shopkeeper" className="shopkeeper-link">
-            Shopkeeper <Icon name="external" />
-          </Link>
+          {showShopkeeper ? (
+            <Link href="/shopkeeper" className="shopkeeper-link">
+              Shopkeeper <Icon name="external" />
+            </Link>
+          ) : null}
           <Link href="/rent-a-shop" className="button button--small">
             Open your shop <Icon name="arrow" />
           </Link>
