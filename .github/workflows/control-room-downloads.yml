@@ -1,0 +1,64 @@
+name: Control Room downloadable Windows build
+on:
+  push:
+    branches: [control-room-download-build]
+permissions:
+  contents: read
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Extract Control Room source
+        shell: pwsh
+        run: Expand-Archive control-room-release/source.zip control-room-build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: control-room-build/Control-Room/package-lock.json
+      - name: Install locked dependencies
+        working-directory: control-room-build/Control-Room
+        run: npm ci
+      - name: Lint and core tests
+        working-directory: control-room-build/Control-Room
+        run: |
+          npm run check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm test
+      - name: Build frontend
+        working-directory: control-room-build/Control-Room
+        run: npm run build
+      - name: Verify actual Electron workflows on Windows
+        working-directory: control-room-build/Control-Room
+        run: npm run test:desktop
+      - name: Build Windows installer and portable executable
+        working-directory: control-room-build/Control-Room
+        run: npm run dist:win -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Assemble downloadable ZIPs and checksums
+        run: python control-room-release/package_downloads.py
+      - name: Upload and publish the Control Room release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $files = @(Get-ChildItem downloads -File | ForEach-Object FullName)
+          gh release upload control-room-download-v1.0.0 @files --clobber
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release edit control-room-download-v1.0.0 --target "$env:GITHUB_SHA" --notes-file control-room-release/release-notes.md --draft=false --prerelease --latest=false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Keep build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Control-Room-Windows-test-evidence
+          path: control-room-build/Control-Room/test-results/*.png
+          if-no-files-found: ignore
