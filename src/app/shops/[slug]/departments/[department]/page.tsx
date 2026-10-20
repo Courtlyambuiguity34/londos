@@ -1,5 +1,5 @@
 import { databaseBrowsing } from "@/server/preview";
-import { PublicShopPage, publicShopTitle } from "@/components/public-shop-page";
+import { PublicShopPage, publicShopMetadata } from "@/components/public-shop-page";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findShop, publicPreviewProducts } from "@/modules/discovery/preview-directory";
@@ -20,18 +20,16 @@ export async function generateMetadata({
   const route = await params;
   if (databaseBrowsing()) {
     const query = await searchParams;
-    return {
-      title: await publicShopTitle(
-        route.slug,
-        route.department,
-        undefined,
-        query.after === undefined
-          ? undefined
-          : typeof query.after === "string"
-            ? query.after
-            : "invalid",
-      ),
-    };
+    return publicShopMetadata(
+      route.slug,
+      route.department,
+      undefined,
+      query.after === undefined
+        ? undefined
+        : typeof query.after === "string"
+          ? query.after
+          : "invalid",
+    );
   }
   const shop = findShop(route.slug);
   const department =

@@ -1,4 +1,5 @@
 import { databaseBrowsing } from "@/server/preview";
+import { publicMetadata } from "@/server/search-indexing";
 import { CanonicalDirectory } from "@/components/canonical-directory";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,6 +8,14 @@ import { searchPreviewShops } from "@/modules/discovery/preview-directory";
 import { SearchForm } from "@/components/search-form";
 import { ShopCard } from "@/components/shop-card";
 import { Icon } from "@/components/icon";
+
+export function generateMetadata() {
+  return publicMetadata(
+    "/",
+    "Londos — A place for good shops",
+    "Discover independent shops, browse their products and services, and find your next favourite on Londos.",
+  );
+}
 
 export default function MallEntrance() {
   if (databaseBrowsing()) return <CanonicalDirectory entrance />;

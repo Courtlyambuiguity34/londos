@@ -64,6 +64,7 @@ beforeAll(async () => {
       LONDOS_CORE_ENABLED: "true",
       LONDOS_LOCAL_ADAPTERS: "false",
       LONDOS_DATA_SOURCE: "database",
+      LONDOS_SEARCH_INDEXING: "true",
       LONDOS_DATABASE_ENGINE: "postgresql",
       LONDOS_EMAIL_PROVIDER: "brevo",
       LONDOS_BREVO_API_KEY: "fictional-key-never-sent-to-a-provider",
@@ -222,7 +223,104 @@ test("hosted merchant can create a product, preview privately, publish, discover
   expect(await publicShop.text()).toContain("Hosted draft announcement");
   const publicProduct = await request(`${publicPath}/products/hosted-test-shoes`);
   expect(publicProduct.status).toBe(200);
-  expect(await publicProduct.text()).toContain("34,500");
+  const productHTML = await publicProduct.text();
+  expect(productHTML).toContain("34,500");
+  expect(productHTML).toContain(
+    `rel="canonical" href="${canonicalOrigin}${publicPath}/products/hosted-test-shoes"`,
+  );
+  expect(productHTML).toContain('name="robots" content="index, follow"');
+  expect(productHTML).toContain(
+    'property="og:title" content="Hosted test shoes — Annette Fashion House"',
+  );
+  const productMap = async () => (await request("/sitemaps/products/0.xml")).text();
+  expect(await productMap()).toContain(`${publicPath}/products/hosted-test-shoes`);
+  // All entries must observe the same public eligibility, not just the HTML page.
+  for (const [table, column, hidden, visible] of [
+    ["shop_moderation", "state", "suspended", "clear"],
+    ["tenancies", "state", "closed", "active"],
+    ["shop_publication", "state", "temporarily_closed", "active"],
+  ]) {
+    await pool!.query(`UPDATE ${table} SET ${column}=$1 WHERE shop_id=$2`, [hidden, seedIds.shopA]);
+    try {
+      for (const kind of ["shops", "departments", "products"])
+        expect(await (await request(`/sitemaps/${kind}/0.xml`)).text()).not.toContain(publicPath);
+      expect((await request(publicPath)).status).toBe(404);
+    } finally {
+      await pool!.query(`UPDATE ${table} SET ${column}=$1 WHERE shop_id=$2`, [
+        visible,
+        seedIds.shopA,
+      ]);
+    }
+  }
+  await pool!.query("UPDATE departments SET archived=true WHERE id=$1", [departmentId]);
+  try {
+    expect(await productMap()).not.toContain("hosted-test-shoes");
+    expect(await (await request(`${publicPath}/products/hosted-test-shoes`)).text()).toContain(
+      'name="robots" content="noindex, nofollow"',
+    );
+  } finally {
+    await pool!.query("UPDATE departments SET archived=false WHERE id=$1", [departmentId]);
+  }
+  await pool!.query(
+    "UPDATE products SET availability='archived' WHERE shop_id=$1 AND slug='hosted-test-shoes'",
+    [seedIds.shopA],
+  );
+  try {
+    expect(await productMap()).not.toContain("hosted-test-shoes");
+  } finally {
+    await pool!.query(
+      "UPDATE products SET availability='available' WHERE shop_id=$1 AND slug='hosted-test-shoes'",
+      [seedIds.shopA],
+    );
+  }
+  expect(await productMap()).toContain("hosted-test-shoes");
+  // Exercise a real second sitemap shard, well beyond the 32-product shop view.
+  // These fictional rows live only in this disposable database.
+  await pool!.query(
+    `INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability)
+     SELECT gen_random_uuid(),s.id,s.merchant_id,$2,'product','Index test '||n,'index-bulk-'||n,'UGX','available'
+     FROM shops s CROSS JOIN generate_series(1,5001) n WHERE s.id=$1`,
+    [seedIds.shopA, departmentId],
+  );
+  await pool!.query(
+    `INSERT INTO departments(id,shop_id,merchant_id,name,slug,position)
+     SELECT gen_random_uuid(),s.id,s.merchant_id,'Index department '||n,'index-department-'||n,1000+n
+     FROM shops s CROSS JOIN generate_series(1,101) n WHERE s.id=$1`,
+    [seedIds.shopA],
+  );
+  try {
+    expect(await (await request("/sitemap.xml")).text()).toContain("/sitemaps/products/1.xml");
+    const first = await productMap(),
+      second = await (await request("/sitemaps/products/1.xml")).text();
+    expect([...first.matchAll(/<loc>/g)]).toHaveLength(5000);
+    const bulk = [...(first + second).matchAll(/\/products\/index-bulk-\d+</g)].map((m) => m[0]);
+    expect(bulk).toHaveLength(5001);
+    expect(new Set(bulk).size).toBe(5001);
+    const deepDepartment = `${publicPath}/departments/index-department-101`;
+    expect(await (await request("/sitemaps/departments/0.xml")).text()).toContain(deepDepartment);
+    const deepHTML = await (await request(deepDepartment)).text();
+    expect(deepHTML).toContain(`rel="canonical" href="${canonicalOrigin}${deepDepartment}"`);
+    expect(deepHTML).toContain("Index department 101");
+  } finally {
+    await pool!.query("DELETE FROM products WHERE shop_id=$1 AND slug LIKE 'index-bulk-%'", [
+      seedIds.shopA,
+    ]);
+    await pool!.query(
+      "DELETE FROM departments WHERE shop_id=$1 AND slug LIKE 'index-department-%'",
+      [seedIds.shopA],
+    );
+  }
+  await pool!.query(
+    `INSERT INTO shop_operations(shop_id,merchant_id,paused,reason,changed_by)
+     SELECT id,merchant_id,true,'Index isolation test',$2 FROM shops WHERE id=$1`,
+    [seedIds.shopA, accounts.operator.id],
+  );
+  try {
+    expect(await productMap()).not.toContain(publicPath);
+    expect((await request(publicPath)).status).toBe(404);
+  } finally {
+    await pool!.query("DELETE FROM shop_operations WHERE shop_id=$1", [seedIds.shopA]);
+  }
   const search = await request("/search?q=Hosted%20test%20shoes");
   expect(search.status).toBe(200);
   expect(await search.text()).toContain("Annette Fashion House");
@@ -232,10 +330,45 @@ test("hosted merchant can create a product, preview privately, publish, discover
   });
   expect(unpublish.status).toBe(200);
   expect((await request(publicPath)).status).toBe(404);
+  expect(await productMap()).not.toContain(publicPath);
   // No worker runs in this test, so fictional email settings cannot send any mail.
   expect(
     (await pool!.query("SELECT count(*)::int AS count FROM notification_deliveries")).rows[0].count,
   ).toBe(0);
+});
+
+test("runtime sitemap discovery uses the configured domain and keeps private/search pages noindex", async () => {
+  const robots = await request("/robots.txt");
+  expect(robots.status).toBe(200);
+  const rules = await robots.text();
+  expect(rules).toContain(`Sitemap: ${canonicalOrigin}/sitemap.xml`);
+  expect(rules).toContain("Disallow: /shopkeeper");
+  expect(rules).toContain("Disallow: /landlord");
+  const index = await request("/sitemap.xml");
+  expect(index.status).toBe(200);
+  expect(index.headers.get("cache-control")).toContain("no-store");
+  const xml = await index.text();
+  expect(xml).toContain(`${canonicalOrigin}/sitemaps/pages/0.xml`);
+  expect(xml).not.toContain(origin);
+  const pages = await (await request("/sitemaps/pages/0.xml")).text();
+  expect(pages).toContain(`${canonicalOrigin}/categories/fashion`);
+  expect(pages).not.toContain("shopkeeper");
+  expect(pages).not.toContain("landlord");
+  for (const path of [
+    "/sitemaps/users/0.xml",
+    "/sitemaps/products/99999.xml",
+    "/sitemaps/pages/1.xml",
+    "/sitemaps/products/01.xml",
+  ])
+    expect((await request(path)).status).toBe(404);
+  for (const path of ["/sign-in", "/search?q=shoes"])
+    expect(await (await request(path)).text()).toContain(
+      'name="robots" content="noindex, nofollow"',
+    );
+  for (const path of ["/", "/categories/fashion"])
+    expect(await (await request(path)).text()).toContain(
+      `rel="canonical" href="${canonicalOrigin}${path}"`,
+    );
 });
 
 test("Shopkeeper navigation requires a current verified session and active merchant membership", async () => {

@@ -9,7 +9,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Londos — A place for good shops", template: "%s | Londos" },
   description:
-    "Discover independent shops, enter their world, and find something that feels like you. Londos digital mall preview.",
+    "Discover independent shops, enter their world, and find something that feels like you on Londos.",
   manifest: "/pwa/public/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Londos", statusBarStyle: "default" },
   icons: {

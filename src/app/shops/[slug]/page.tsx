@@ -1,5 +1,5 @@
 import { databaseBrowsing } from "@/server/preview";
-import { PublicShopPage, publicShopTitle } from "@/components/public-shop-page";
+import { PublicShopPage, publicShopMetadata } from "@/components/public-shop-page";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  if (databaseBrowsing()) return { title: await publicShopTitle(slug) };
+  if (databaseBrowsing()) return publicShopMetadata(slug);
   const shop = findShop(slug);
   return { title: shop?.previewState === "open" ? shop.name : "Shop unavailable" };
 }

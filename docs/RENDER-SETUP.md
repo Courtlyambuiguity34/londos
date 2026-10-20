@@ -1,5 +1,10 @@
 # Initial Render setup and deployment usage
 
+For a purchased domain and public shop/product discovery, follow
+[Public search indexing and your domain](SEARCH-INDEXING-AND-DOMAINS.md).
+Adding an environment variable alone does not connect DNS. Indexing is an explicit
+runtime opt-in after the real catalogue and verified HTTPS domain are ready.
+
 This is a reviewable setup guide, not evidence of a deployed production service. Use [render.web.yaml](../deploy/render.web.yaml) for the free Docker web service and [render.html](../render.html) for the offline checklist. No paid resource, DNS change or production exposure is authorized by running local verification.
 
 ## Current readiness — checked 2026-10-14

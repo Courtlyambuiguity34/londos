@@ -1,4 +1,5 @@
 import { databaseBrowsing } from "@/server/preview";
+import { publicMetadata } from "@/server/search-indexing";
 import { CanonicalDirectory } from "@/components/canonical-directory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -14,6 +15,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const category = findCategory(slug);
+  if (category && databaseBrowsing())
+    return publicMetadata(`/categories/${category.slug}`, category.name, category.description);
   return { title: findCategory(slug)?.name ?? "Category not found" };
 }
 

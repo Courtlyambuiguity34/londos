@@ -93,9 +93,12 @@ export async function assemble(
     )
   ).rows as PublicDepartment[];
   const selectedDepartment = destination.department
-    ? (departments.find(
-        (d) => d.id === destination.department || d.slug === destination.department,
-      ) ?? null)
+    ? ((
+        await client.query<PublicDepartment>(
+          "SELECT id,name,slug FROM departments WHERE shop_id=$1 AND archived=false AND (id::text=$2 OR slug=$2) LIMIT 1",
+          [row.id, destination.department],
+        )
+      ).rows[0] ?? null)
     : null;
   const sources = specification.spaces.flatMap((s) =>
     s.type === "department" || s.type === "collection"
