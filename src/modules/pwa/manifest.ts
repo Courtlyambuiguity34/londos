@@ -37,15 +37,21 @@ export function pwaManifest(surface: PwaSurface) {
     scope: "/",
     display: "standalone",
     orientation: "any",
-    background_color: "#fffaf1",
-    theme_color: "#16382b",
+    background_color: "#faf8f2",
+    theme_color: "#364636",
     icons: [
-      { src: "/pwa/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/app-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       {
-        src: "/pwa/icon-512.png",
+        src: "/brand/app-icon-512.png",
         sizes: "512x512",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "any",
+      },
+      {
+        src: "/brand/app-icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
     shortcuts: [

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
 import { showShopkeeperNavigation } from "@/server/navigation";
@@ -17,7 +18,15 @@ export async function SiteHeader() {
       ) : null}
       <header className="site-header shell">
         <Link href="/" className="wordmark" aria-label="Londos home">
-          londos<span aria-hidden="true">.</span>
+          <Image
+            src="/brand/londos-logo.png"
+            alt=""
+            width={1200}
+            height={400}
+            className="brand-logo"
+            priority
+            unoptimized
+          />
         </Link>
         <nav aria-label="Main navigation" className="main-nav">
           <Link href="/search">Explore shops</Link>
@@ -44,8 +53,15 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="shell footer-inner">
         <div>
-          <Link href="/" className="wordmark">
-            londos<span aria-hidden="true">.</span>
+          <Link href="/" className="wordmark" aria-label="Londos home">
+            <Image
+              src="/brand/londos-logo.png"
+              alt=""
+              width={1200}
+              height={400}
+              className="brand-logo"
+              unoptimized
+            />
           </Link>
           <p>
             A place for good shops.

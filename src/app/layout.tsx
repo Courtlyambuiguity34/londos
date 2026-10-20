@@ -12,11 +12,14 @@ export const metadata: Metadata = {
     "Discover independent shops, enter their world, and find something that feels like you. Londos digital mall preview.",
   manifest: "/pwa/public/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Londos", statusBarStyle: "default" },
-  icons: { apple: "/pwa/icon-192.png" },
+  icons: {
+    icon: { url: "/brand/favicon-64.png", sizes: "64x64", type: "image/png" },
+    apple: "/brand/apple-touch-icon.png",
+  },
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { themeColor: "#16382b" };
+export const viewport: Viewport = { themeColor: "#364636" };
 
 export const dynamic = "force-dynamic";
 

@@ -18,7 +18,7 @@ test("each Londos audience gets a distinct install identity and safe start route
   for (const manifest of manifests) {
     expect(manifest.scope).toBe("/");
     expect(manifest.display).toBe("standalone");
-    expect(manifest.icons.map((icon) => icon.sizes)).toEqual(["192x192", "512x512"]);
+    expect(manifest.icons.map((icon) => icon.sizes)).toEqual(["192x192", "512x512", "512x512"]);
   }
   expect(isPwaSurface("landlord")).toBe(true);
   expect(isPwaSurface("operator-without-permission")).toBe(false);

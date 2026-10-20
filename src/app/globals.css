@@ -137,15 +137,14 @@ p {
   border-bottom: 1px solid var(--line);
 }
 .wordmark {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 39px;
-  line-height: 1;
-  letter-spacing: -2.3px;
-  display: inline-block;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
 }
-.wordmark span {
-  color: var(--orange);
+.brand-logo {
+  width: 210px;
+  height: 70px;
+  object-fit: contain;
 }
 .main-nav {
   display: flex;
@@ -684,8 +683,9 @@ p {
   padding-block: 43px;
   gap: 40px;
 }
-.footer-inner .wordmark {
-  font-size: 32px;
+.footer-inner .brand-logo {
+  width: 195px;
+  height: 65px;
 }
 .footer-inner p {
   font-size: 11px;
@@ -1455,10 +1455,13 @@ p {
   }
   .site-header {
     min-height: 76px;
-    gap: 15px;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-block: 10px;
   }
-  .wordmark {
-    font-size: 33px;
+  .site-header .brand-logo {
+    width: 126px;
+    height: 42px;
   }
   .main-nav {
     margin-left: auto;
