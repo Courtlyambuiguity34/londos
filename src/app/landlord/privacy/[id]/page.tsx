@@ -13,7 +13,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <section className="shell page-section account-page">
       <p className="eyebrow">Assigned privacy reviewer</p>
-      <h1>Review {value.request.kind} erasure</h1>
+      <h1>Review {value.request.kind} request</h1>
       <PrivacyReview initial={JSON.parse(JSON.stringify(value))} />
       <Link href="/landlord/privacy">Privacy review queue</Link>
     </section>

@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { coreConfigured, coreConfig } from "./config";
+import { coreConfigured } from "./config";
 import { database } from "./db/pool";
 import { checkOrigin, privateResponse } from "./http";
 import { consumeBudget } from "./security/budget";
@@ -10,10 +10,9 @@ export async function reportRequest(request: Request, work: () => Promise<unknow
   const respond = (data: unknown, status = 200) =>
     corsResponse(request, privateResponse(data, status));
   try {
-    if (!coreConfigured() || !coreConfig().localAdapters)
-      return respond({ error: "core_unavailable" }, 503);
+    if (!coreConfigured()) return respond({ error: "core_unavailable" }, 503);
     checkOrigin(request);
-    // No client IP headers are trusted in the loopback development adapter.
+    // A bounded global budget does not trust caller-supplied IP headers.
     await consumeBudget(database(), "trust:network", 60);
     return respond(await work());
   } catch (error) {

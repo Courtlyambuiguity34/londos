@@ -106,8 +106,22 @@ export function serviceConfigurationStatus(): ServiceStatus[] {
 }
 export async function readServiceConfiguration(pool: Pool, actor: Actor) {
   await requireOperator(pool, actor, "operations", true);
+  const worker = (
+    await pool.query(
+      "SELECT EXISTS(SELECT 1 FROM worker_heartbeats WHERE state='running' AND seen_at>now()-interval '30 seconds') AS ready",
+    )
+  ).rows[0].ready;
   return {
     verification: "configuration only; no provider request made",
-    services: serviceConfigurationStatus(),
+    services: [
+      ...serviceConfigurationStatus(),
+      {
+        name: "Background worker",
+        status: worker ? "configured" : "warning",
+        message: worker
+          ? "A worker has a recent heartbeat. Review failed delivery jobs if email is delayed."
+          : "No recent worker heartbeat. Verification and recovery emails remain queued until an independent worker runs against this database.",
+      },
+    ],
   };
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 async function send(path: string, body: Record<string, unknown>) {
   const response = await fetch(`/api/auth/${path}`, {
     method: "POST",
@@ -142,13 +143,30 @@ export function RegistrationForm() {
           acceptTerms: data.acceptTerms === "on",
         }),
       });
-      if (!response.ok) throw new Error();
+      if (!response.ok) {
+        const reference = response.headers.get("x-request-id");
+        const message =
+          response.status === 422
+            ? "Check your name, email address, password length and agreement to the terms."
+            : response.status === 429
+              ? "Too many attempts. Please wait a minute before trying again."
+              : response.status === 403
+                ? "This page could not verify your request. Reload Londos using its main website address and try again."
+                : "Account services are temporarily unavailable. Your details may be correct. Please try again shortly.";
+        setMessage(
+          message +
+            (reference && /^[a-f0-9-]{36}$/.test(reference)
+              ? ` Support reference: ${reference}`
+              : ""),
+        );
+        return;
+      }
       setEmail(data.email ?? "");
       setMessage(
         "Check your email for the Londos verification link. You cannot sign in until verification succeeds.",
       );
     } catch {
-      setMessage("Registration could not be completed. Check the fields and try again shortly.");
+      setMessage("We could not reach Londos. Check your internet connection and try again.");
     } finally {
       setPending(false);
     }
@@ -209,8 +227,15 @@ export function RegistrationForm() {
           required
         />
         <label className="checkbox-label">
-          <input type="checkbox" name="acceptTerms" required /> I will provide accurate business
-          information and accept that shop approval and payment verification are separate reviews.
+          <input type="checkbox" name="acceptTerms" required /> I agree to the{" "}
+          <Link href="/terms" target="_blank" rel="noopener">
+            Terms of use
+          </Link>{" "}
+          and have read the{" "}
+          <Link href="/privacy" target="_blank" rel="noopener">
+            Privacy policy
+          </Link>{" "}
+          (opens in a new tab so your form stays here).
         </label>
         <button className="button" disabled={pending}>
           {pending ? "Creating…" : "Create account and verify email"}

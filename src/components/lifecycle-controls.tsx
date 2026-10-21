@@ -154,6 +154,17 @@ export function CreateApplicationForm({
           </option>
         ))}
       </select>
+      <p>
+        Before saving, read the{" "}
+        <Link href="/terms" target="_blank" rel="noopener">
+          Terms of use
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" target="_blank" rel="noopener">
+          Privacy policy
+        </Link>
+        . These open in a new tab so your application stays here.
+      </p>
       <button className="button" disabled={pending}>
         {pending ? "Saving…" : "Create application draft"}
       </button>

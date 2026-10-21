@@ -318,6 +318,8 @@ Londos may recommend safer/better practices, but should not force one checkout m
 
 ## Documentation map
 
+- [First permanent hosted accounts, migrations and troubleshooting](docs/HOSTED-ACCOUNTS.md)
+
 - [One-click Windows, macOS and Linux installation](docs/LOCAL-INSTALLATION.md)
 - [Windows native PostgreSQL installation and dormant Aiven shortcuts](docs/WINDOWS-NATIVE-POSTGRESQL.md)
 - [Windows native PostgreSQL implementation evidence](docs/evidence/WINDOWS-NATIVE-POSTGRESQL-2026-10-11.md)

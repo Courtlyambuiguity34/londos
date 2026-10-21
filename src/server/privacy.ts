@@ -22,8 +22,8 @@ import {
 export const privacyPolicyId = "91000000-0000-4000-8000-000000000001";
 const closed = ["completed", "denied", "cancelled"];
 type Queryable = Pool | PoolClient;
-function localPrivacy() {
-  if (!coreConfig().localAdapters) throw new AccessError(403, "local_privacy_only");
+function privacyAccessConfiguration() {
+  coreConfig();
 }
 export function privacyErasureEnabled() {
   try {
@@ -66,7 +66,7 @@ async function requestRow(db: Queryable, id: string) {
   return row;
 }
 export async function privacyOwnerAccess(db: Queryable, actor: Actor, merchantId: string) {
-  localPrivacy();
+  privacyAccessConfiguration();
   z.uuid().parse(merchantId);
   await requireMerchant(db, actor, merchantId, "membership");
 }
@@ -133,6 +133,14 @@ async function held(db: Queryable, row: PrivacyRow) {
 }
 type Plan = { eligible: boolean; reason: string; records: number; hash: string };
 async function plan(db: PoolClient, row: PrivacyRow): Promise<Plan> {
+  if (!coreConfig().localAdapters)
+    return {
+      eligible: false,
+      reason:
+        "This request requires manual review. Automatic erasure is disabled; retained records and external copies need separate assessment.",
+      records: 0,
+      hash: hash({ id: row.id, version: row.version }),
+    };
   const policy = (
     await db.query(
       "SELECT terminal_days FROM privacy_policies WHERE id=$1 AND development_only=true",
@@ -276,8 +284,9 @@ export async function privacyInventory(pool: Pool, actor: Actor, merchantId: str
     return {
       merchantId,
       erasureEnabled: privacyErasureEnabled(),
-      policy:
-        "Development manual review; 30 days after closure/rejection; protected history retained. No automatic deletion or approved live legal policy.",
+      policy: coreConfig().localAdapters
+        ? "Development manual review; 30 days after closure/rejection; protected history retained. No automatic deletion or approved live legal policy."
+        : "Manual privacy review. Requests do not automatically delete records. Your reviewer will assess access, retention and any further action needed.",
       shops,
       enquiries,
       applications,
@@ -350,7 +359,7 @@ export async function ownerPrivacyCommand(
         v.key,
         fingerprint,
         v.reason,
-        privacyPolicyId,
+        coreConfig().localAdapters ? privacyPolicyId : "91000000-0000-4000-8000-000000000002",
       ],
     );
     await history(
@@ -370,7 +379,7 @@ export async function privacyOperatorAccess(
   id: string,
   scoped = true,
 ) {
-  localPrivacy();
+  privacyAccessConfiguration();
   await requireOperator(db, actor, "privacy", true);
   const row = await requestRow(db, id);
   if (
@@ -402,7 +411,7 @@ async function operatorLock(db: PoolClient, actor: Actor, id: string, scoped = t
   return privacyOperatorAccess(db, actor, id, scoped);
 }
 export async function privacyQueue(pool: Pool, actor: Actor) {
-  localPrivacy();
+  privacyAccessConfiguration();
   await requireOperator(pool, actor, "privacy", true);
   const rows = (
     await pool.query(
@@ -533,6 +542,13 @@ export async function commandPrivacy(
       await update(db, row, "requested", v.explanation);
       await db.query("DELETE FROM operator_privacy_scopes WHERE case_id=$1", [id]);
       await db.query("UPDATE privacy_requests SET assigned_user=NULL WHERE id=$1", [id]);
+    } else if (v.action === "resolve") {
+      if (row.state === "approved" || (await held(db, row)))
+        throw new AccessError(409, "privacy_request_not_resolvable");
+      await db.query(
+        "UPDATE privacy_requests SET state='completed',version=version+1,public_reason=$3,result=$2,approval_session=NULL,approval_until=NULL,approval_hash=NULL,updated_at=clock_timestamp() WHERE id=$1",
+        [id, { manualReviewCompleted: true, primaryDataErased: false }, v.explanation],
+      );
     } else if (v.action === "deny") {
       await update(db, row, "denied", v.explanation);
     } else {

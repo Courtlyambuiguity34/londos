@@ -125,7 +125,7 @@ export function PrivacyReview({ initial }: { initial: Awaited<ReturnType<typeof 
   return (
     <>
       <p className="notice">
-        {r.kind} · {r.state}. Local primary erasure is{" "}
+        {r.kind} · {r.state}. Automatic deletion is{" "}
         {data.erasureEnabled ? "enabled for reviewed fictional records" : "disabled"}.
       </p>
       <h2>Owner's request</h2>
@@ -151,10 +151,19 @@ export function PrivacyReview({ initial }: { initial: Awaited<ReturnType<typeof 
           Primary SQL erasure verified; backup and external-copy obligations remain.
         </p>
       ) : null}
+      {r.result.manualReviewCompleted === true ? (
+        <p className="notice">Manual review completed. This action did not delete data.</p>
+      ) : null}
       {!done ? (
         <form className="account-form" onSubmit={command}>
           <label htmlFor="privacy-action">Review decision</label>
           <select id="privacy-action" name="action" defaultValue="deny">
+            <option
+              value="resolve"
+              disabled={r.state === "approved" || data.holds.some((h) => !h.released_at)}
+            >
+              Complete manual review (does not delete data)
+            </option>
             <option value="deny">Retain data / deny erasure</option>
             <option value="hold">Place a retention hold</option>
             <option value="unassign">Release assignment for another reviewer</option>

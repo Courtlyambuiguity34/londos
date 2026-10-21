@@ -1,52 +1,54 @@
 "use client";
-
-import { useEffect, useState } from "react";
-
-interface InstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
+import { useState, useSyncExternalStore } from "react";
+import {
+  installSnapshot,
+  serverInstallSnapshot,
+  subscribeInstall,
+  updateInstall,
+} from "@/modules/pwa/install-prompt";
 export function PwaInstallButton() {
-  const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-  useEffect(() => {
-    const capture = (event: Event) => {
-      event.preventDefault();
-      setPrompt(event as InstallPromptEvent);
-    };
-    const complete = () => {
-      setInstalled(true);
-      setPrompt(null);
-    };
-    window.addEventListener("beforeinstallprompt", capture);
-    window.addEventListener("appinstalled", complete);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", capture);
-      window.removeEventListener("appinstalled", complete);
-    };
-  }, []);
+  const { prompt, installed } = useSyncExternalStore(
+    subscribeInstall,
+    installSnapshot,
+    serverInstallSnapshot,
+  );
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
   return (
     <div className="pwa-install-action">
       <button
         className="button"
         type="button"
-        disabled={!prompt || installed}
+        disabled={!prompt || installed || pending}
         onClick={async () => {
           if (!prompt) return;
-          await prompt.prompt();
-          await prompt.userChoice;
-          setPrompt(null);
+          setPending(true);
+          try {
+            await prompt.prompt();
+            const choice = await prompt.userChoice;
+            setMessage(
+              choice.outcome === "accepted"
+                ? "Installation requested. Follow your browser’s instructions to finish."
+                : "You can install later from your browser menu.",
+            );
+          } catch {
+            setMessage("Use your browser’s Install app or Add to Home Screen menu instead.");
+          } finally {
+            updateInstall(null);
+            setPending(false);
+          }
         }}
       >
-        {installed ? "Londos installed" : "Install Londos"}
+        {installed ? "Londos is installed" : pending ? "Opening installation…" : "Install Londos"}
       </button>
-      {!prompt && !installed ? (
-        <p>
-          If this button is unavailable, use your browser menu and choose{" "}
-          <strong>Install app</strong> or <strong>Add to Home Screen</strong>.
-        </p>
-      ) : null}
+      <p role="status">
+        {message ||
+          (!prompt && !installed
+            ? "Use the instructions below if your browser does not offer an install button."
+            : installed
+              ? "Open Londos from your home screen or app launcher."
+              : "Install for quick access. No app store is needed.")}
+      </p>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { database } from "@/server/db/pool";
 import { PostgresSearch, type DiscoveryResult } from "@/server/discovery";
 import { SearchForm } from "./search-form";
 import { EmptyState } from "./empty-state";
+import { randomUUID } from "node:crypto";
+import { failureCategory } from "@/server/diagnostics";
 export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
   const href = `/shops/${result.slug}${result.department_slug ? `/departments/${result.department_slug}` : ""}`;
   return (
@@ -55,6 +57,15 @@ export async function CanonicalDirectory({
     const invalid =
       failure instanceof Error &&
       (failure.name === "ZodError" || ("code" in failure && failure.code === "invalid_cursor"));
+    const reference = invalid ? null : randomUUID();
+    if (reference)
+      console.error(
+        JSON.stringify({
+          event: "discovery.failed",
+          reference,
+          category: failureCategory(failure),
+        }),
+      );
     return (
       <section className="shell page-section">
         <SearchForm query={query.slice(0, 80)} maxLength={80} />
@@ -70,6 +81,7 @@ export async function CanonicalDirectory({
             action="Start a new search"
           />
         </div>
+        {reference ? <p className="status-message">Support reference: {reference}</p> : null}
       </section>
     );
   }
@@ -139,7 +151,7 @@ export async function CanonicalDirectory({
         ) : (
           <EmptyState
             title="No shops matched this search."
-            description="Try a broader word or another category. Eligible shops appear when merchants publish them."
+            description="Try another name or category, or check back as more shops open."
           />
         )}
         {result.nextCursor ? (

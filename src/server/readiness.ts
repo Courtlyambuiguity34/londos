@@ -48,7 +48,7 @@ export async function readiness() {
   } catch {
     return {
       ready: false,
-      mode: "development-core",
+      mode: process.env.LONDOS_LOCAL_ADAPTERS === "true" ? "development-core" : "configured-core",
       database: false,
       authentication: false,
       worker: "unknown",

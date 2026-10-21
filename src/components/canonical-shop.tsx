@@ -459,14 +459,9 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             Merchant terms apply to purchases and fulfilment. A contact action is not a confirmed
             sale.
           </p>
-          {!view.privatePreview && development ? (
+          {!view.privatePreview ? (
             <Link prefetch={false} href={`/report/${view.shop.id}`}>
               Report a concern about this shop
-            </Link>
-          ) : null}
-          {!view.privatePreview && !development ? (
-            <Link prefetch={false} href="/report">
-              Reporting information
             </Link>
           ) : null}
         </aside>

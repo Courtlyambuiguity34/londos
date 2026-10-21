@@ -14,8 +14,8 @@ const messages: Record<string, string> = {
   attachment_already_saved: "An attachment is already saved. It cannot be replaced.",
   moderation_changed_externally:
     "Moderation changed outside this workflow. Escalate before making another decision.",
-  appeal_already_pending: "An appeal is already pending or the local appeal limit was reached.",
-  report_capacity: "The local reporting queue is full. Try again later.",
+  appeal_already_pending: "An appeal is already pending or the appeal limit was reached.",
+  report_capacity: "The reporting queue is full. Try again later.",
 };
 async function checked(response: Response) {
   if (!response.ok) {
@@ -134,13 +134,12 @@ export function PublicReportForm({ shopId }: { shopId: string }) {
           accept="image/jpeg,image/png,image/webp"
         />
         <p>
-          Up to 2 MiB. Use fictional development evidence. Do not include passwords, identity
-          documents or payment credentials. Your report and image are private to authorized trust
-          reviewers.
+          Up to 2 MiB. Do not include passwords, identity documents or payment credentials. Your
+          report and image are private to authorized trust reviewers.
         </p>
         <label className="checkbox-label">
-          <input type="checkbox" required /> I reviewed this concern and understand it is a local
-          development report.
+          <input type="checkbox" required /> I have checked this report and believe the information
+          is accurate.
         </label>
       </fieldset>
       <button className="button" disabled={pending || done} type="submit">
@@ -418,7 +417,7 @@ export function OwnerTrustPanel({ shopId, initial }: { shopId: string; initial: 
       <p>Current shop moderation: {view.moderation.state}.</p>
       <p>
         Reporter details and private investigation evidence are not shared. Review the explanation
-        and submit relevant fictional information if you disagree.
+        and submit relevant information if you disagree.
       </p>
       <button
         className="button button--outline"

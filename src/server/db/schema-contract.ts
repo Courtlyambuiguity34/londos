@@ -1,3 +1,3 @@
 // Readiness must require the deployed code's migration, not just a row count.
-// Migration 020 proves both independently developed 019 migrations were applied.
-export const requiredMigration = "020_combined_feature_contract.sql";
+// Migration 024 adds permanent account receipts, consent and hosted privacy policy.
+export const requiredMigration = "024_hosted_accounts_and_privacy.sql";

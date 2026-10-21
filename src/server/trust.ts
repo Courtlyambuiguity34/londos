@@ -1,15 +1,10 @@
+import { coreConfig } from "./config";
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
 import { imageVariants } from "./media";
-import {
-  localLifecycle,
-  reasonInput,
-  currentVersion,
-  notifyOwners,
-  fingerprint,
-} from "./lifecycle-common";
+import { reasonInput, currentVersion, notifyOwners, fingerprint } from "./lifecycle-common";
 import {
   requireOperator,
   requireShop,
@@ -111,7 +106,7 @@ async function noSelf(db: Pool | PoolClient, actor: Actor, merchantId: string) {
     throw new AccessError(403, "conflict_of_interest");
 }
 export async function submitReport(pool: Pool, input: z.infer<typeof reportInput>) {
-  localLifecycle();
+  coreConfig();
   const v = reportInput.parse(input),
     hash = fingerprint(v);
   return transaction(pool, async (client) => {
@@ -157,7 +152,7 @@ export async function submitReport(pool: Pool, input: z.infer<typeof reportInput
   });
 }
 export async function attachmentAuthority(db: Pool | PoolClient, key: string, capability: string) {
-  localLifecycle();
+  coreConfig();
   z.uuid().parse(key);
   reportInput.shape.capability.parse(capability);
   const row = (
@@ -207,7 +202,7 @@ export async function attachReportImage(
   });
 }
 export async function trustAccess(db: Pool | PoolClient, actor: Actor, id: string) {
-  localLifecycle();
+  coreConfig();
   z.uuid().parse(id);
   await requireOperator(db, actor, "moderation", true);
   const row = (
@@ -226,7 +221,7 @@ export async function claimTrustCase(
   id: string,
   input: z.infer<typeof trustClaimInput>,
 ) {
-  localLifecycle();
+  coreConfig();
   z.uuid().parse(id);
   const v = trustClaimInput.parse(input);
   return transaction(pool, async (client) => {
@@ -251,7 +246,7 @@ export async function claimTrustCase(
   });
 }
 export async function trustQueue(pool: Pool, actor: Actor, page = 0) {
-  localLifecycle();
+  coreConfig();
   pageInput.parse(page);
   await requireOperator(pool, actor, "moderation");
   return (
@@ -450,7 +445,7 @@ export async function decideTrustCase(
   });
 }
 export async function ownerTrustAccess(db: Pool | PoolClient, actor: Actor, shopId: string) {
-  localLifecycle();
+  coreConfig();
   const shop = await requireShop(db, actor, shopId, "sensitive");
   await requireMerchant(db, actor, shop.merchant_id, "membership");
   return shop;

@@ -29,7 +29,7 @@ export const privacyClaim = z
   .strict();
 export const privacyCommand = z
   .object({
-    action: z.enum(["approve", "deny", "hold", "release", "unassign"]),
+    action: z.enum(["approve", "deny", "hold", "release", "unassign", "resolve"]),
     version: z.number().int().positive(),
     reason: z.string().trim().min(5).max(500),
     explanation: z.string().trim().min(5).max(500),

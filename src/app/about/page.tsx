@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "A mall built around the shop" };
 export default function AboutPage() {
   const hosted = previewCapabilities().mode === "database-core";
   return (
-    <div className="shell page-section">
+    <div className="shell page-section about-page">
       <section className="about-hero">
         <div>
           <p className="eyebrow">A place for independent business</p>
@@ -58,6 +58,41 @@ export default function AboutPage() {
           </article>
         ))}
       </div>
+      <section className="how-to-use" aria-labelledby="how-londos-works">
+        <p className="eyebrow">Find it. Explore it. Make a connection.</p>
+        <h2 id="how-londos-works">How to use Londos</h2>
+        <ol className="how-to-steps">
+          <li>
+            <h3>Find a shop</h3>
+            <p>
+              Search for a product, service or shop name, or choose a category. You don’t need an
+              account to browse.
+            </p>
+          </li>
+          <li>
+            <h3>Explore their collection</h3>
+            <p>
+              Open a shop to see its departments, products, prices and contact options. Share its
+              page link on WhatsApp so someone else can find it.
+            </p>
+          </li>
+          <li>
+            <h3>Talk to the merchant</h3>
+            <p>
+              Use the contact options the shop offers. Agree on availability, delivery and payment
+              before buying.
+            </p>
+          </li>
+        </ol>
+        <div className="button-row">
+          <Link className="button" href="/search">
+            Explore shops
+          </Link>
+          <Link className="button button--outline" href="/install">
+            Add Londos to your device
+          </Link>
+        </div>
+      </section>
       <div className="notice">
         <strong>{hosted ? "Buying from a shop" : "About this preview"}</strong>
         <p>
@@ -75,6 +110,10 @@ export default function AboutPage() {
         </p>
         <Link href="/report">How to report a shop concern</Link>
       </section>
+      <nav className="button-row" aria-label="Londos policies">
+        <Link href="/terms">Terms of use</Link>
+        <Link href="/privacy">Privacy policy</Link>
+      </nav>
     </div>
   );
 }

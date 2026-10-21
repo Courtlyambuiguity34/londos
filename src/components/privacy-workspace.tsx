@@ -91,8 +91,8 @@ export function PrivacyWorkspace({ initial }: { initial: Inventory }) {
   return (
     <>
       <p className="notice">
-        {data.policy} Local primary erasure is{" "}
-        {data.erasureEnabled ? "enabled for reviewed fictional records" : "disabled"}.
+        {data.policy} Automatic deletion is{" "}
+        {data.erasureEnabled ? "enabled for reviewed development records" : "disabled"}.
       </p>
       <p>
         Customer enquiry content, private investigation, other members' identities and account

@@ -6,6 +6,7 @@ import { boundedBody, privateResponse } from "@/server/http";
 import { registerShopkeeper, registrationInput } from "@/server/registration";
 import { AccessError } from "@/server/security/errors";
 import { corsResponse, requireAcceptedOrigin } from "@/server/security/origin";
+import { failureCategory } from "@/server/diagnostics";
 
 export async function POST(request: Request) {
   const requestId = randomUUID();
@@ -22,7 +23,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof AccessError) return respond({ error: error.code }, error.status);
     if (error instanceof z.ZodError) return respond({ error: "invalid_input" }, 422);
-    console.error(JSON.stringify({ event: "registration.failed", requestId }));
+    console.error(
+      JSON.stringify({ event: "registration.failed", requestId, category: failureCategory(error) }),
+    );
     return respond({ error: "service_unavailable" }, 503);
   }
 }

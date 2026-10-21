@@ -76,7 +76,8 @@ export function SiteFooter() {
           <Link href="/rent-a-shop">Become a shopkeeper</Link>
           <Link href="/about">About Londos</Link>
           <Link href="/install">Install Londos</Link>
-          <Link href="/landlord">Londos Management</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms of use</Link>
         </nav>
         <p className="footer-note">
           Made for discovery.

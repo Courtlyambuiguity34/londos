@@ -7,31 +7,37 @@ export const metadata: Metadata = { title: "Install Londos" };
 export default function InstallPage() {
   return (
     <section className="shell page-section prose-page">
-      <p className="eyebrow">Windows · macOS · Linux · Android</p>
+      <p className="eyebrow">Your mall, one tap away</p>
       <h1>Install Londos from your browser.</h1>
       <p>
-        The installable app connects to the same authoritative Londos server as the website. It
-        contains no database password, API key or operator secret, and server-side permissions still
-        decide what each signed-in account may access.
+        Add Londos to your phone or computer for quick access to your favourite shops. You can also
+        keep using this website without installing anything. An internet connection is needed to
+        browse current products and send enquiries.
       </p>
       <PwaInstallButton />
-      <h2>Choose the right starting workspace</h2>
+      <h2>How to install</h2>
       <ul>
         <li>
-          <Link href="/">Mall</Link> for customers and public browsing.
+          <strong>Android:</strong> open Londos in Chrome. Tap Install Londos above, or use the
+          browser menu and choose Install app or Add to Home screen.
         </li>
         <li>
-          <Link href="/shopkeeper">Shopkeeper</Link> for merchants and authorized shop staff.
+          <strong>iPhone or iPad:</strong> open Londos in Safari, tap Share, then Add to Home
+          Screen.
         </li>
         <li>
-          <Link href="/landlord">Londos Management</Link> for scoped, MFA-protected operators.
+          <strong>Windows, macOS or Linux:</strong> use Chrome or Edge and choose Install from the
+          address bar or browser menu. On supported Safari versions, choose File → Add to Dock.
         </li>
       </ul>
       <p>
-        To install a role-specific app, open that workspace first and then use the browser’s install
-        command. The application needs a network connection to the Londos server; private data is
-        not cached for offline use.
+        If your browser does not offer installation, bookmark Londos instead. All shopping features
+        remain available in the browser. Installing does not create an account or grant access to a
+        private workspace.
       </p>
+      <Link className="button button--outline" href="/">
+        Back to the mall
+      </Link>
     </section>
   );
 }

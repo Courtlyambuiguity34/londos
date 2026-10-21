@@ -261,7 +261,7 @@ test("011→012 upgrade preserves shop fields/moderation and does not seed moder
     ).rows,
   ).toEqual(baseline);
   expect(defaultModerationGrants).toBe(0);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(24);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(25);
 });
 test("anonymous retry races create one immutable report/case, with uniform unknown-target receipt", async () => {
   const s = await shop(),
@@ -779,5 +779,29 @@ test("R2 moderation scope revoked during the moderation-row lock prevents suspen
     await locker.query("ROLLBACK");
     locker.release();
     await pending;
+  }
+});
+
+test("hosted trust review retains scoped MFA, private evidence and independent decisions", async () => {
+  const old = process.env.LONDOS_LOCAL_ADAPTERS;
+  process.env.LONDOS_LOCAL_ADAPTERS = "false";
+  try {
+    const s = await shop(),
+      c = await newCase(s.id);
+    await expect(readTrustCase(pool, actors.operator!, c.id)).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(claim(c.id, actors.ownerA!)).rejects.toMatchObject({ status: 403 });
+    await claim(c.id);
+    expect((await readTrustCase(pool, actors.operator!, c.id)).case.state).toBe("open");
+    await decision(c.id, "review");
+    await expect(decision(c.id, "reinstate")).rejects.toMatchObject({
+      code: "independent_review_required",
+    });
+    await expect(readTrustEvidence(pool, actors.ownerB!, c.id)).rejects.toMatchObject({
+      status: 403,
+    });
+  } finally {
+    process.env.LONDOS_LOCAL_ADAPTERS = old;
   }
 });

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -223,9 +223,9 @@ test("hosted merchant can create a product, preview privately, publish, discover
   const shopHTML = await publicShop.text();
   expect(shopHTML).toContain("Hosted draft announcement");
   expect(shopHTML).not.toContain("This development mall uses fictional merchants");
-  expect(shopHTML).not.toContain(`href="/report/${seedIds.shopA}"`);
+  expect(shopHTML).toContain(`href="/report/${seedIds.shopA}"`);
   expect(shopHTML).not.toContain("this deployment");
-  expect(shopHTML).toContain('href="/report">Reporting information');
+
   const publicProduct = await request(`${publicPath}/products/hosted-test-shoes`);
   expect(publicProduct.status).toBe(200);
   const productHTML = await publicProduct.text();
@@ -427,7 +427,7 @@ test("hosted pages use customer wording and do not offer guarded application for
   expect(about).toContain("Buying from a shop");
   expect(about).toContain("Londos does not collect payment for purchases from shops");
   const report = await (await request("/report")).text();
-  expect(report).toContain("Online concern reporting is currently unavailable");
+  expect(report).toContain("authorised Londos reviewers");
   expect(report).not.toContain("<form");
   const rent = await (await request("/rent-a-shop")).text();
   expect(rent).toContain("Shopkeeper sign in");
@@ -451,4 +451,133 @@ test("hosted pages use customer wording and do not offer guarded application for
   const blocked = await request("/api/workspace/applications", cookie);
   expect(blocked.status).toBe(403);
   expect(await blocked.json()).toMatchObject({ error: "local_lifecycle_only" });
+});
+
+test("empty published catalogue is not treated as a search outage", async () => {
+  const previous = (await pool!.query("SELECT shop_id,state FROM shop_publication")).rows;
+  await pool!.query("UPDATE shop_publication SET state='unpublished'");
+  try {
+    for (const path of ["/", "/search?q=shoes"]) {
+      const response = await request(path);
+      expect(response.status).toBe(200);
+      const html = await response.text();
+      expect(html).toContain("No shops matched this search");
+      expect(html).not.toContain("Search is temporarily unavailable");
+    }
+  } finally {
+    for (const row of previous)
+      await pool!.query("UPDATE shop_publication SET state=$2 WHERE shop_id=$1", [
+        row.shop_id,
+        row.state,
+      ]);
+  }
+});
+
+test("hosted registration validates fields and queues verification without granting privileges", async () => {
+  const input = {
+    name: "Hosted account check",
+    email: `hosted-${randomUUID()}@londos.invalid`,
+    password: "Test-only-long-password-42",
+    acceptTerms: true,
+  };
+  const response = await request("/api/register", "", "POST", input);
+  expect(response.status).toBe(202);
+  expect(await response.json()).toEqual({ accepted: true });
+  const user = (
+    await pool!.query('SELECT id,"emailVerified" FROM "user" WHERE email=$1', [input.email])
+  ).rows[0];
+  expect(user.emailVerified).toBe(false);
+  expect(
+    (await pool!.query("SELECT 1 FROM operator_grants WHERE user_id=$1", [user.id])).rowCount,
+  ).toBe(0);
+  expect(
+    (
+      await pool!.query(
+        "SELECT 1 FROM account_policy_acceptances WHERE user_id=$1 AND policy_version='2026-10-21'",
+        [user.id],
+      )
+    ).rowCount,
+  ).toBe(1);
+  expect(
+    (
+      await pool!.query(
+        "SELECT 1 FROM jobs WHERE payload->>'to'=$1 AND payload->>'template'='email-verification'",
+        [input.email],
+      )
+    ).rowCount,
+  ).toBeGreaterThan(0);
+  expect(
+    (
+      await request("/api/auth/sign-in/email", "", "POST", {
+        email: input.email,
+        password: input.password,
+      })
+    ).status,
+  ).toBe(403);
+  expect((await request("/api/register", "", "POST", input)).status).toBe(202);
+  expect(
+    (await request("/api/register", "", "POST", { ...input, acceptTerms: false })).status,
+  ).toBe(422);
+  expect((await request("/api/register", "", "POST", { ...input, password: "short" })).status).toBe(
+    422,
+  );
+});
+
+test("hosted reports accept private intake and protect its evidence and review", async () => {
+  const input = {
+    key: randomUUID(),
+    shopId: seedIds.shopA,
+    capability: randomBytes(32).toString("base64url"),
+    category: "privacy",
+    message: "Fictional report used only for hosted verification.",
+  };
+  expect((await request(`/report/${seedIds.shopA}`)).status).toBe(200);
+  const response = await request("/api/guest/reports", "", "POST", input);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ received: true });
+  expect((await request("/api/guest/reports", "", "POST", input)).status).toBe(200);
+  expect((await pool!.query("SELECT 1 FROM trust_reports WHERE id=$1", [input.key])).rowCount).toBe(
+    1,
+  );
+  const id = (await pool!.query("SELECT id FROM trust_cases WHERE report_id=$1", [input.key]))
+    .rows[0].id;
+  expect((await request(`/api/operator/trust/${id}`)).status).toBe(401);
+  expect((await request(`/api/operator/trust/${id}`, await login(accounts.ownerA))).status).toBe(
+    403,
+  );
+  const crossSite = await fetch(`${origin}/api/guest/reports`, {
+    method: "POST",
+    headers: { origin: "https://attacker.invalid", "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  expect(crossSite.status).toBe(403);
+  expect(
+    (
+      await request("/api/guest/reports", "", "POST", {
+        ...input,
+        key: randomUUID(),
+        shopId: randomUUID(),
+      })
+    ).status,
+  ).toBe(200);
+});
+
+test("readiness rejects an outdated hosted schema without mislabelling it development", async () => {
+  await pool!.query(
+    "UPDATE schema_migrations SET name='test-hidden-024' WHERE name='024_hosted_accounts_and_privacy.sql'",
+  );
+  try {
+    const response = await request("/api/ready");
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      ready: false,
+      mode: "configured-core",
+      database: false,
+    });
+  } finally {
+    await pool!.query(
+      "UPDATE schema_migrations SET name='024_hosted_accounts_and_privacy.sql' WHERE name='test-hidden-024'",
+    );
+  }
+  expect((await request("/api/ready")).status).toBe(200);
 });

@@ -7,6 +7,16 @@ runtime opt-in after the real catalogue and verified HTTPS domain are ready.
 
 This is a reviewable setup guide, not evidence of a deployed production service. Use [render.web.yaml](../deploy/render.web.yaml) for the free Docker web service and [render.html](../render.html) for the offline checklist. No paid resource, DNS change or production exposure is authorized by running local verification.
 
+## 22 October follow-up
+
+See [first permanent accounts and troubleshooting](HOSTED-ACCOUNTS.md) before deploying
+this candidate: migration 024 is required. Hosted reporting and non-destructive privacy
+review/export are now supported; automated hosted erasure remains disabled. New optional
+bootstrap variables can provision the first permanent landlord and a separate shopkeeper
+on web startup, with email verification and landlord MFA. Existing users are never reset
+or automatically promoted. Application/rent lifecycle restrictions described below still
+apply. The older readiness notes are historical, not a claim that these new paths are local-only.
+
 ## Current readiness — checked 2026-10-14
 
 **Suitable for a controlled hosted staging check, not yet a complete live shop-rental launch.**

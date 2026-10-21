@@ -1161,6 +1161,75 @@ p {
   gap: 45px;
   align-items: center;
 }
+.about-page .about-hero > * {
+  min-width: 0;
+}
+.about-page .about-hero img {
+  width: 100%;
+  height: auto;
+  max-width: 620px;
+}
+.about-page .about-hero h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  overflow-wrap: anywhere;
+}
+.about-page .about-hero p:not(.eyebrow),
+.about-page .principle-grid p {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.how-to-use {
+  margin-block: 3rem;
+}
+.how-to-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  padding-left: 1.4rem;
+  margin-block: 1.5rem;
+}
+.how-to-steps li {
+  padding-inline: 0.4rem;
+}
+.how-to-steps p {
+  margin-top: 0.75rem;
+}
+.policy-page,
+.prose-page {
+  overflow-wrap: anywhere;
+}
+.policy-page h2,
+.prose-page h2 {
+  margin-top: 2rem;
+}
+.policy-page p,
+.policy-page li,
+.prose-page li {
+  line-height: 1.75;
+  margin-block: 0.75rem;
+}
+.sign-in-logo {
+  width: min(100%, 240px);
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+.sign-in-page > .text-button {
+  display: block;
+  margin-block: 1rem;
+}
+@media (max-width: 700px) {
+  .how-to-steps {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .about-page .button-row {
+    flex-wrap: wrap;
+  }
+  .about-page .button {
+    white-space: normal;
+    text-align: center;
+  }
+}
 .about-hero h1 {
   margin-top: 19px;
   font-size: 54px;

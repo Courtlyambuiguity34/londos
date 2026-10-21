@@ -233,7 +233,7 @@ async function assigned(id: string) {
 }
 async function command(
   id: string,
-  action: "approve" | "deny" | "hold" | "release" | "unassign",
+  action: "approve" | "deny" | "hold" | "release" | "unassign" | "resolve",
   reason = "PRIVATE_REVIEW_REASON_SENTINEL",
 ) {
   const r = (await pool.query("SELECT version FROM privacy_requests WHERE id=$1", [id])).rows[0];
@@ -288,7 +288,7 @@ test("014 upgrade preserves original enquiry fields/default grants and unknown c
   ).rows[0];
   expect(row.closed_at.getTime()).toBeGreaterThan(Date.now() - 60000);
   expect(row.erased_at).toBeNull();
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(24);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(25);
   await expect(
     pool.query("UPDATE privacy_policies SET terminal_days=1 WHERE id=$1", [privacyPolicyId]),
   ).rejects.toThrow();
@@ -1053,4 +1053,49 @@ test("a captured observation waiting behind erasure cannot recreate erased shop 
   expect((await pool.query("SELECT 1 FROM pilot_metrics WHERE shop_id=$1", [shop])).rowCount).toBe(
     0,
   );
+});
+
+test("hosted privacy supports scoped export and manual review but cannot erase production data", async () => {
+  const old = process.env.LONDOS_LOCAL_ADAPTERS;
+  process.env.LONDOS_LOCAL_ADAPTERS = "false";
+  try {
+    const id = await request("history");
+    expect(
+      (await pool.query("SELECT policy_id FROM privacy_requests WHERE id=$1", [id])).rows[0]
+        .policy_id,
+    ).toBe("91000000-0000-4000-8000-000000000002");
+    expect((await privacyInventory(pool, actors.ownerA!, merchant)).erasureEnabled).toBe(false);
+    await expect(privacyInventory(pool, actors.ownerB!, merchant)).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(readPrivacy(pool, actors.operator!, id)).rejects.toMatchObject({ status: 404 });
+    await assigned(id);
+    expect((await readPrivacy(pool, actors.operator!, id)).target.eligible).toBe(false);
+    await expect(command(id, "approve")).rejects.toMatchObject({ code: "local_erasure_disabled" });
+    await exportPrivacy(pool, actors.ownerA!, merchant, {
+      section: "shops",
+      after: null,
+      confirm: true,
+    });
+    await command(id, "hold");
+    expect((await readPrivacy(pool, actors.operator!, id)).request.state).toBe("held");
+    await expect(command(id, "resolve")).rejects.toMatchObject({
+      code: "privacy_request_not_resolvable",
+    });
+    await command(id, "release");
+    await command(id, "resolve");
+    const final = await readPrivacy(pool, actors.operator!, id);
+    expect(final.request.state).toBe("completed");
+    expect(final.request.result).toEqual({ manualReviewCompleted: true, primaryDataErased: false });
+    expect(
+      (
+        await pool.query(
+          "SELECT 1 FROM jobs WHERE kind='privacy.erase' AND payload->>'caseId'=$1",
+          [id],
+        )
+      ).rowCount,
+    ).toBe(0);
+  } finally {
+    process.env.LONDOS_LOCAL_ADAPTERS = old;
+  }
 });

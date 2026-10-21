@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 // Standalone changes its working directory; load the root server configuration
 // before spawning it. Explicit process variables retain precedence.
@@ -27,10 +27,25 @@ if (!existsSync(".next/standalone/server.js")) {
   console.error("Run npm run build before starting the production preview.");
   process.exit(1);
 }
+if (
+  Object.keys(process.env).some(
+    (key) =>
+      /^LONDOS_BOOTSTRAP_(ADMIN|SHOPKEEPER)_(EMAIL|PASSWORD|NAME)$/.test(key) && process.env[key],
+  )
+) {
+  const result = spawnSync(process.execPath, ["dist/bootstrap.mjs"], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  if (result.status !== 0) process.exit(1);
+}
+const runtimeEnv = { ...process.env };
+for (const key of Object.keys(runtimeEnv))
+  if (key.startsWith("LONDOS_BOOTSTRAP_")) delete runtimeEnv[key];
 const child = spawn(process.execPath, [".next/standalone/server.js"], {
   stdio: "inherit",
   env: {
-    ...process.env,
+    ...runtimeEnv,
     PORT: port,
     HOSTNAME: deployMode === "selfhosted" ? "127.0.0.1" : "0.0.0.0",
     NODE_USE_ENV_PROXY:
