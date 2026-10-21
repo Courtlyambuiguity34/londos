@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import Link from "next/link";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { listShops } from "@/server/workspace";
@@ -14,13 +14,18 @@ export default async function ShopkeeperPage() {
     shops = await listShops(database(), actor);
   return (
     <section className="shell page-section account-page">
-      <p className="eyebrow">Private development workspace</p>
+      <p className="eyebrow">Your private workspace</p>
       <h1>Your shops.</h1>
       <p>
         Manage your catalogue, contacts and shop design here. Only explicitly published eligible
-        shops appear in database browsing. This development environment uses fictional businesses
-        and does not collect live rent payments.
+        shops appear in the mall.
       </p>
+      {coreConfig().localAdapters ? (
+        <p>
+          This development environment uses fictional businesses and does not collect live rent
+          payments.
+        </p>
+      ) : null}
       <ul className="workspace-list">
         {shops.map((shop) => (
           <li key={shop.id}>

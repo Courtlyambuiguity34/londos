@@ -465,7 +465,9 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             </Link>
           ) : null}
           {!view.privatePreview && !development ? (
-            <p>Online concern reporting is not available on this deployment.</p>
+            <Link prefetch={false} href="/report">
+              Reporting information
+            </Link>
           ) : null}
         </aside>
       </div>

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@/components/icon";
+import { previewCapabilities } from "@/server/preview";
 
 export const metadata: Metadata = { title: "A mall built around the shop" };
 
 export default function AboutPage() {
+  const hosted = previewCapabilities().mode === "database-core";
   return (
     <div className="shell page-section">
       <section className="about-hero">
@@ -57,19 +59,19 @@ export default function AboutPage() {
         ))}
       </div>
       <div className="notice">
-        <strong>About this preview</strong>
+        <strong>{hosted ? "Buying from a shop" : "About this preview"}</strong>
         <p>
-          This development mall uses fictional shops, products and prices. Londos does not collect
-          payments here. Where a shop enables enquiries, a receipt does not confirm a purchase.
+          {hosted
+            ? "Contact the merchant to agree on availability, payment and delivery. Londos does not collect payment for purchases from shops. An enquiry receipt does not confirm a purchase."
+            : "This development mall uses fictional shops, products and prices. Londos does not collect payments here. Where a shop enables enquiries, a receipt does not confirm a purchase."}
         </p>
       </div>
       <section id="report" className="notice">
         <h2>Report a concern</h2>
         <p>
-          Configured local shops provide a private “Report a concern” form for scoped platform
-          review. Do not send a platform concern through a merchant enquiry. Use fictional
-          information; live support, emergency assistance and dispute resolution are unavailable
-          here.
+          Merchant enquiries go to the shop, not to Londos management. Read our reporting
+          information before sharing a platform concern. Never include passwords or payment
+          credentials in a message.
         </p>
         <Link href="/report">How to report a shop concern</Link>
       </section>

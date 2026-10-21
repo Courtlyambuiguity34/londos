@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
+import { ApplicationsUnavailable } from "@/components/applications-unavailable";
+import { sessionState } from "@/server/security/authorization";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { listApplications } from "@/server/applications";
@@ -11,8 +13,10 @@ export default async function Page({
   searchParams: Promise<{ offset?: string }>;
 }) {
   if (!coreConfigured()) notFound();
-  const actor = await pageActor("/shopkeeper"),
-    offset = Number((await searchParams).offset ?? 0),
+  const actor = await pageActor("/shopkeeper");
+  await sessionState(database(), actor);
+  if (!coreConfig().localAdapters) return <ApplicationsUnavailable />;
+  const offset = Number((await searchParams).offset ?? 0),
     rows = await listApplications(database(), actor, offset);
   return (
     <section className="shell page-section account-page">

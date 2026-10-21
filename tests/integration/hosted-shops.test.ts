@@ -224,7 +224,8 @@ test("hosted merchant can create a product, preview privately, publish, discover
   expect(shopHTML).toContain("Hosted draft announcement");
   expect(shopHTML).not.toContain("This development mall uses fictional merchants");
   expect(shopHTML).not.toContain(`href="/report/${seedIds.shopA}"`);
-  expect(shopHTML).toContain("Online concern reporting is not available on this deployment.");
+  expect(shopHTML).not.toContain("this deployment");
+  expect(shopHTML).toContain('href="/report">Reporting information');
   const publicProduct = await request(`${publicPath}/products/hosted-test-shoes`);
   expect(publicProduct.status).toBe(200);
   const productHTML = await publicProduct.text();
@@ -411,4 +412,43 @@ test("Shopkeeper navigation requires a current verified session and active merch
   expect(expired.status).toBe(200);
   expect(await expired.text()).not.toMatch(link);
   expect(await (await request("/")).text()).not.toMatch(link);
+});
+
+test("hosted pages use customer wording and do not offer guarded application forms", async () => {
+  for (const path of ["/", "/about", "/rent-a-shop", "/report"]) {
+    const response = await request(path);
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).not.toMatch(
+      /development mall|fictional shops|About this preview|this deployment|Pilot pricing/i,
+    );
+  }
+  const about = await (await request("/about")).text();
+  expect(about).toContain("Buying from a shop");
+  expect(about).toContain("Londos does not collect payment for purchases from shops");
+  const report = await (await request("/report")).text();
+  expect(report).toContain("Online concern reporting is currently unavailable");
+  expect(report).not.toContain("<form");
+  const rent = await (await request("/rent-a-shop")).text();
+  expect(rent).toContain("Shopkeeper sign in");
+  expect(rent).not.toContain("Apply for a shop");
+
+  const cookie = await login(accounts.ownerA);
+  const workspace = await (await request("/shopkeeper", cookie)).text();
+  expect(workspace).toContain("Your private workspace");
+  expect(workspace).not.toMatch(/development environment|fictional businesses/i);
+  for (const path of ["/shopkeeper/applications", "/shopkeeper/applications/new"]) {
+    expect((await request(path)).status).toBe(307);
+    const response = await request(path, cookie);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("private");
+    const html = await response.text();
+    expect(html).toContain("New shop applications are currently closed");
+    expect(html).not.toContain("<form");
+  }
+  // Presentation changes cannot grant operator access or bypass lifecycle guards.
+  expect((await request("/landlord", cookie)).status).toBe(403);
+  const blocked = await request("/api/workspace/applications", cookie);
+  expect(blocked.status).toBe(403);
+  expect(await blocked.json()).toMatchObject({ error: "local_lifecycle_only" });
 });

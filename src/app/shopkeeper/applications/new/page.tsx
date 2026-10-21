@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
+import { ApplicationsUnavailable } from "@/components/applications-unavailable";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { sessionState } from "@/server/security/authorization";
@@ -9,6 +10,7 @@ export default async function Page() {
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/shopkeeper");
   await sessionState(database(), actor);
+  if (!coreConfig().localAdapters) return <ApplicationsUnavailable />;
   const merchants = (
     await database().query(
       "SELECT m.id,m.name FROM merchants m JOIN memberships g ON g.merchant_id=m.id WHERE g.user_id=$1 AND g.role='owner' AND g.status='active' ORDER BY m.name,m.id LIMIT 50",
