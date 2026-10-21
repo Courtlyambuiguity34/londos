@@ -20,6 +20,7 @@ scripts/release/**
 !scripts/release/monitor.ts
 !scripts/release/migrate.ts
 !scripts/release/roles.ts
+!scripts/release/bootstrap.ts
 !migrations/
 !migrations/*.sql
 !deploy/
