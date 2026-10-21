@@ -264,7 +264,7 @@ export async function shopRent(pool: Pool, actor: Actor, shopId: string, offset 
   await requireShop(pool, actor, shopId, "finance");
   const tenancy = (
     await pool.query(
-      "SELECT t.state,t.version,t.period_start,t.period_end,c.policy_id FROM tenancies t LEFT JOIN rent_contracts c ON c.shop_id=t.shop_id WHERE t.shop_id=$1",
+      "SELECT t.state,t.version,t.period_start,t.period_end,c.policy_id,p.grace_days FROM tenancies t LEFT JOIN rent_contracts c ON c.shop_id=t.shop_id LEFT JOIN rent_policies p ON p.id=c.policy_id WHERE t.shop_id=$1",
       [shopId],
     )
   ).rows[0] as {
@@ -273,6 +273,7 @@ export async function shopRent(pool: Pool, actor: Actor, shopId: string, offset 
     period_start: Date | null;
     period_end: Date | null;
     policy_id: string | null;
+    grace_days: number | null;
   };
   const invoices = (
     await pool.query(

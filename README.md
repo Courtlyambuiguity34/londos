@@ -330,6 +330,7 @@ Londos may recommend safer/better practices, but should not force one checkout m
 - [First local installation and usage](docs/LOCAL-FIRST-SETUP.md)
 - [Initial Render setup](docs/RENDER-SETUP.md) and [offline checklist](render.html)
 - [Public shop/product indexing and connecting your domain](docs/SEARCH-INDEXING-AND-DOMAINS.md)
+- [Deep audit response and tested application improvements](docs/AUDIT-RESPONSE-2026-10-21.md)
 - [Branded communications, registration, promotions and manual billing](docs/COMMUNICATIONS-AND-MANUAL-BILLING.md)
 - [Communications and manual-billing verification](docs/evidence/COMMUNICATIONS-2026-10-10.md)
 - [Cloudinary media storage and MongoDB linkage](docs/CLOUDINARY-MEDIA.md)

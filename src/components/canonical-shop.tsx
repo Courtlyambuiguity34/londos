@@ -9,6 +9,8 @@ import { ReadyImage } from "./ready-image";
 import { EmptyState } from "./empty-state";
 import { SearchForm } from "./search-form";
 import { spaceProducts, type ShopSpace } from "@/modules/shop-design/specification";
+import { shopContactActions } from "@/modules/shop-design/contact-actions";
+import { coreConfig } from "@/server/config";
 
 export function CanonicalProduct({
   product,
@@ -60,48 +62,23 @@ export function CanonicalProduct({
 function Contacts({ view }: { view: ShopView }) {
   const c = view.contact;
   if (!c) return <p>Contact details will appear when the shop provides them.</p>;
-  const enabled = (action: (typeof view.specification.actions)[number]) =>
-    view.specification.actions.includes(action);
+  const actions = shopContactActions(view);
   return (
     <div className="canonical-contacts">
       <div className="button-row">
-        {enabled("call") && c.phone ? (
-          <a className="button" href={`tel:${c.phone}`} data-pilot-contact="call">
-            Call shop
-          </a>
-        ) : null}
-        {enabled("whatsapp") && c.whatsapp ? (
+        {actions.map((action, index) => (
           <a
-            className="button"
-            href={`https://wa.me/${c.whatsapp.slice(1)}`}
-            data-pilot-contact="whatsapp"
-            target="_blank"
-            rel="noopener noreferrer"
+            key={action.kind}
+            className={index === 0 ? "button" : "button button--outline"}
+            href={action.href}
+            data-pilot-contact={action.kind}
+            {...(action.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
-            WhatsApp shop
+            {action.label}
           </a>
-        ) : null}
-        {enabled("enquiry") && c.enquiries_enabled && !view.privatePreview ? (
-          <Link
-            prefetch={false}
-            className="button button--outline"
-            href={`/contact/${view.shop.id}`}
-            data-pilot-contact="enquiry"
-          >
-            Enquire with the shop
-          </Link>
-        ) : null}
-        {c.website ? (
-          <a
-            href={c.website}
-            data-pilot-contact="website"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Merchant website
-          </a>
-        ) : null}
+        ))}
       </div>
+      {!actions.length ? <p>This shop has not enabled a contact method yet.</p> : null}
       {c.delivery_instructions ? <p>{c.delivery_instructions}</p> : null}
       {c.payment_instructions ? <p>{c.payment_instructions}</p> : null}
       <p>
@@ -151,16 +128,18 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
             <a className="button" href="#shop-collections">
               Browse collection
             </a>
-          ) : space.cta === "whatsapp" && view.contact?.whatsapp ? (
+          ) : space.cta === "whatsapp" &&
+            shopContactActions(view).some((action) => action.kind === "whatsapp") ? (
             <a
               className="button"
-              href={"https://wa.me/" + view.contact.whatsapp.slice(1)}
+              href={shopContactActions(view).find((action) => action.kind === "whatsapp")!.href}
               target="_blank"
               rel="noopener noreferrer"
             >
               WhatsApp shop
             </a>
-          ) : space.cta === "enquiry" && view.contact?.enquiries_enabled && !view.privatePreview ? (
+          ) : space.cta === "enquiry" &&
+            shopContactActions(view).some((action) => action.kind === "enquiry") ? (
             <Link className="button" href={"/contact/" + view.shop.id}>
               Enquire with the shop
             </Link>
@@ -245,6 +224,7 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
 }
 
 export function CanonicalShop({ view, proposal = false }: { view: ShopView; proposal?: boolean }) {
+  const development = coreConfig().localAdapters;
   const c = view.contact,
     actions = view.specification.actions,
     presentation = view.specification.presentation,
@@ -345,7 +325,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           </header>
         ) : null}
         {!view.privatePreview ? <SearchForm shopId={view.shop.id} maxLength={80} /> : null}
-        {view.applicationReviewed ? (
+        {view.applicationReviewed && development ? (
           <p className="notice">
             Development application reviewed. This fictional local review does not guarantee
             identity, products or payments.
@@ -468,15 +448,24 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           </section>
         ) : null}
         <aside className="shop-contact-note">
-          <p>This development mall uses fictional merchants. No payment is collected by Londos.</p>
+          {development ? (
+            <p>
+              This development mall uses fictional merchants. No payment is collected by Londos.
+            </p>
+          ) : (
+            <p>Londos does not collect payment for purchases from shops.</p>
+          )}
           <p>
             Merchant terms apply to purchases and fulfilment. A contact action is not a confirmed
             sale.
           </p>
-          {!view.privatePreview ? (
+          {!view.privatePreview && development ? (
             <Link prefetch={false} href={`/report/${view.shop.id}`}>
               Report a concern about this shop
             </Link>
+          ) : null}
+          {!view.privatePreview && !development ? (
+            <p>Online concern reporting is not available on this deployment.</p>
           ) : null}
         </aside>
       </div>

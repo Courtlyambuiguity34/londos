@@ -18,26 +18,70 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
     throw error;
   });
   const shop = setup.shop;
+  const steps = [
+    {
+      label: "Add a department",
+      done: setup.departments,
+      href: `/shopkeeper/shops/${shop.id}/catalogue`,
+    },
+    {
+      label: "Add three products or services",
+      done: setup.product_count >= 3,
+      href: `/shopkeeper/shops/${shop.id}/catalogue`,
+    },
+    {
+      label: "Choose how customers contact you",
+      done: setup.contacts,
+      href: `/shopkeeper/shops/${shop.id}/catalogue`,
+    },
+    {
+      label: "Save and preview your design",
+      done: setup.design,
+      href: `/shopkeeper/shops/${shop.id}/design`,
+    },
+    {
+      label: "Publish your shop",
+      done: setup.publication === "active",
+      href: `/shopkeeper/shops/${shop.id}/design`,
+    },
+  ];
+  const completed = steps.filter((step) => step.done).length;
   return (
     <section className="shell page-section account-page">
       <p className="eyebrow">Private shop profile</p>
       <h1>{shop.name}</h1>
       <p>
-        Changes save to your shop. They appear in database browsing when your shop is published; the
-        fictional fixture preview is separate.
+        Changes save to this shop. Public catalogue changes appear when your shop is published and
+        eligible for browsing. Preview your design before publishing it.
       </p>
       <h2>Shop setup progress</h2>
-      <ul>
-        <li>Departments: {setup.departments ? "Ready" : "Add your first department"}</li>
-        <li>Catalogue: {setup.products ? "Ready" : "Add a product or service"}</li>
-        <li>Contacts: {setup.contacts ? "Configured" : "Choose how customers contact you"}</li>
-        <li>Design: {setup.design ? "Draft saved" : "Save and preview a shop design"}</li>
-        <li>Publication: {setup.publication}</li>
-        <li>
-          Tenancy: {setup.tenancy}; moderation: {setup.moderation}; administrative access:{" "}
-          {setup.paused ? "paused" : "clear"}
-        </li>
-      </ul>
+      <p>
+        {completed} of {steps.length} suggested steps complete. Three products is a suggestion, not
+        a publication requirement. Choose the contact actions in your design too.
+      </p>
+      <progress value={completed} max={steps.length} aria-label="Shop setup progress" />
+      <ol className="setup-checklist">
+        {steps.map((step) => (
+          <li key={step.label}>
+            <span>{step.done ? "Complete" : "Next step"}</span>
+            <Link href={step.href}>{step.label}</Link>
+          </li>
+        ))}
+      </ol>
+      <details>
+        <summary>Current shop status and restrictions</summary>
+        <ul>
+          <li>Departments: {setup.departments ? "Ready" : "Add your first department"}</li>
+          <li>Catalogue: {setup.products ? "Ready" : "Add a product or service"}</li>
+          <li>Contacts: {setup.contacts ? "Configured" : "Choose how customers contact you"}</li>
+          <li>Design: {setup.design ? "Draft saved" : "Save and preview a shop design"}</li>
+          <li>Publication: {setup.publication}</li>
+          <li>
+            Tenancy: {setup.tenancy}; moderation: {setup.moderation}; administrative access:{" "}
+            {setup.paused ? "paused" : "clear"}
+          </li>
+        </ul>
+      </details>
       <h2>Shop profile</h2>
       <ProfileForm key={shop.version} shop={shop} />
       <Link className="button" href={`/shopkeeper/shops/${shop.id}/catalogue`}>

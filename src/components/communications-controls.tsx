@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { listCommunications } from "@/server/communications";
+import { campaignCtaError } from "@/modules/communications/cta";
 
 type Data = Awaited<ReturnType<typeof listCommunications>>;
 
@@ -60,7 +61,14 @@ export function CommunicationsControls({ initial }: { initial: Data }) {
   async function campaign(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget),
-      audience = String(form.get("audience"));
+      audience = String(form.get("audience")),
+      ctaLabel = String(form.get("ctaLabel") ?? "").trim(),
+      ctaPath = String(form.get("ctaPath") ?? "").trim();
+    const ctaError = campaignCtaError(ctaLabel, ctaPath);
+    if (ctaError) {
+      setMessage(ctaError);
+      return;
+    }
     await work(
       () =>
         send("/api/operator/communications", "POST", {
@@ -69,9 +77,7 @@ export function CommunicationsControls({ initial }: { initial: Data }) {
           audience,
           ...(audience === "new_shops" ? { newShopDays: Number(form.get("newShopDays")) } : {}),
           ...(audience === "specific_shops" ? { shopIds: form.getAll("shopIds").map(String) } : {}),
-          ...(form.get("ctaLabel") && form.get("ctaPath")
-            ? { ctaLabel: String(form.get("ctaLabel")), ctaPath: String(form.get("ctaPath")) }
-            : {}),
+          ...(ctaLabel && ctaPath ? { ctaLabel, ctaPath } : {}),
           confirm: form.get("confirm") === "on",
         }),
       "Campaign queued. Delivery will obey the configured Brevo limits.",
@@ -230,9 +236,14 @@ export function CommunicationsControls({ initial }: { initial: Data }) {
           id="cta-path"
           name="ctaPath"
           placeholder="/shopkeeper"
-          pattern="/[A-Za-z0-9/_?=&.\-]*"
+          aria-describedby="campaign-link-help"
           maxLength={301}
         />
+        <p id="campaign-link-help">
+          Use a path on Londos, for example /shopkeeper or /shopkeeper/applications. Add both fields
+          for a button. Check that the destination exists and is available to your recipients before
+          queuing.
+        </p>
         <label className="checkbox-label">
           <input type="checkbox" name="confirm" required /> Queue this message for the selected
           audience

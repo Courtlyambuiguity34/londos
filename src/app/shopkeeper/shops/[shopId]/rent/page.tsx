@@ -6,6 +6,7 @@ import { pageActor } from "@/server/page-actor";
 import { shopRent } from "@/server/rent";
 import { RenewalButton } from "@/components/lifecycle-controls";
 import { InvoiceList } from "@/components/invoice-list";
+import { tenancyLabels, rentGraceDeadline } from "@/modules/rent-presentation";
 export const metadata = { title: "Rent and tenancy" };
 export default async function Page({
   params,
@@ -19,14 +20,25 @@ export default async function Page({
     { shopId } = await params,
     offset = Number((await searchParams).offset ?? 0),
     data = await shopRent(database(), actor, shopId, offset);
+  const deadline = rentGraceDeadline(data.tenancy.period_end, data.tenancy.grace_days);
   return (
     <section className="shell page-section account-page">
       <h1>Rent and tenancy</h1>
       <p>
-        Tenancy: <strong>{data.tenancy.state}</strong>
+        Tenancy: <strong>{tenancyLabels[data.tenancy.state] ?? data.tenancy.state}</strong>
       </p>
       {data.tenancy.period_end ? (
         <p>Coverage ends: {new Date(data.tenancy.period_end).toISOString()}</p>
+      ) : null}
+      {deadline && ["due", "grace"].includes(data.tenancy.state) ? (
+        <p>
+          Grace deadline:{" "}
+          <time dateTime={deadline.toISOString()}>
+            {deadline.toLocaleString("en-UG", { timeZone: "Africa/Kampala" })} (East Africa Time)
+          </time>
+          . Submit your reference for review before this deadline; submitting a claim does not
+          extend coverage.
+        </p>
       ) : null}
       <p>
         Closure retains your catalogue and layout. Renewal preserves any separate moderation

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { readApplication } from "@/server/applications";
 import type { readInvoice, RentPolicy } from "@/server/rent";
 import { formatMinorMoney, formatSignedMinorMoney } from "@/modules/money";
+import { claimLabels, invoiceStatus } from "@/modules/rent-presentation";
 
 type ApplicationData = Awaited<ReturnType<typeof readApplication>>;
 type InvoiceData = Awaited<ReturnType<typeof readInvoice>>;
@@ -571,7 +572,13 @@ export function InvoicePanel({
     <div className="lifecycle-panel">
       <p className="development-disclosure">
         Manual invoice · Londos does not collect money in this form. A submitted payment reference
-        cannot activate or renew a shop until an MFA-protected finance operator verifies it.
+        cannot activate or renew a shop until an MFA-protected finance operator verifies it. A claim
+        is evidence, not confirmation of payment.
+      </p>
+      <p>
+        <strong>
+          Invoice status: {invoiceStatus(i.amount_minor, i.credited_minor, data.claims)}
+        </strong>
       </p>
       <dl className="lifecycle-summary">
         <dt>Reference</dt>
@@ -667,7 +674,7 @@ export function InvoicePanel({
               <li key={claim.id}>
                 <strong>
                   {claim.reference} · {formatMinorMoney(claim.amount_minor, claim.currency)} ·{" "}
-                  {claim.state}
+                  {claimLabels[claim.state] ?? claim.state}
                 </strong>
                 <span>{claim.note}</span>
                 {claim.review_reason ? <span>Review: {claim.review_reason}</span> : null}

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
 import { showShopkeeperNavigation } from "@/server/navigation";
+import { MobileNavigation } from "./mobile-navigation";
 
 export async function SiteHeader() {
   const mode = previewCapabilities().mode;
@@ -42,6 +43,7 @@ export async function SiteHeader() {
             Open your shop <Icon name="arrow" />
           </Link>
         </div>
+        <MobileNavigation showShopkeeper={showShopkeeper} />
       </header>
     </>
   );

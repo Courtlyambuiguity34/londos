@@ -220,7 +220,11 @@ test("hosted merchant can create a product, preview privately, publish, discover
   const publishedState = await published.json();
   const publicShop = await request(publicPath);
   expect(publicShop.status).toBe(200);
-  expect(await publicShop.text()).toContain("Hosted draft announcement");
+  const shopHTML = await publicShop.text();
+  expect(shopHTML).toContain("Hosted draft announcement");
+  expect(shopHTML).not.toContain("This development mall uses fictional merchants");
+  expect(shopHTML).not.toContain(`href="/report/${seedIds.shopA}"`);
+  expect(shopHTML).toContain("Online concern reporting is not available on this deployment.");
   const publicProduct = await request(`${publicPath}/products/hosted-test-shoes`);
   expect(publicProduct.status).toBe(200);
   const productHTML = await publicProduct.text();

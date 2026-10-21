@@ -47,6 +47,7 @@ export function PublicReportForm({ shopId }: { shopId: string }) {
     file = useRef<File | null>(null);
   const [pending, setPending] = useState(false),
     [received, setReceived] = useState(false),
+    [reference, setReference] = useState(""),
     [done, setDone] = useState(false),
     [error, setError] = useState(""),
     [status, setStatus] = useState("");
@@ -79,6 +80,7 @@ export function PublicReportForm({ shopId }: { shopId: string }) {
           message: data.get("message"),
         });
         setReceived(true);
+        setReference(receipt.current.key);
         setStatus("Report received. A receipt does not promise a decision or response time.");
       }
       if (file.current) {
@@ -145,6 +147,37 @@ export function PublicReportForm({ shopId }: { shopId: string }) {
         {pending ? "Sending…" : received ? "Retry private image" : "Send concern"}
       </button>
       <p role="status">{status}</p>
+      {received && reference ? (
+        <section className="report-receipt" aria-label="Submission receipt">
+          <h2>Your submission receipt</h2>
+          <p>
+            Submission reference: <code className="break-anywhere">{reference}</code>
+          </p>
+          <p>
+            Keep a copy for correspondence. This is not a public tracking link or a decision about
+            the shop.
+          </p>
+          <button
+            type="button"
+            className="button button--outline"
+            onClick={() => {
+              const content = `Londos concern submission\nReference: ${reference}\nReceipt acknowledged. This does not promise a decision or response time.\n`;
+              const url = URL.createObjectURL(
+                new Blob([content], { type: "text/plain;charset=utf-8" }),
+              );
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "londos-submission-receipt.txt";
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
+          >
+            Save receipt
+          </button>
+        </section>
+      ) : null}
       <ErrorText text={error} />
       <p>
         No customer account is required. Keep this page open to retry an attachment; closing it

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { validCampaignPath } from "../modules/communications/cta";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
@@ -74,10 +75,7 @@ export const campaignInput = z
       .max(50)
       .regex(/^[^\r\n]+$/)
       .optional(),
-    ctaPath: z
-      .string()
-      .regex(/^\/[A-Za-z0-9/_?=&.-]{0,300}$/)
-      .optional(),
+    ctaPath: z.string().refine(validCampaignPath, "invalid_londos_path").optional(),
     audience: z.enum(["all_shops", "new_shops", "specific_shops"]),
     newShopDays: z.number().int().min(1).max(365).optional(),
     shopIds: z.array(z.uuid()).max(500).optional(),
