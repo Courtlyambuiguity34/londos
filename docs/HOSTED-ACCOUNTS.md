@@ -132,6 +132,14 @@ even with Brevo enabled. That text was not a configuration reading. The correcte
 acknowledges recovery requests without claiming delivery and displays a support reference.
 Actual provider selection is shown by `worker.started` and the readiness/service diagnostics.
 
+The Brevo adapter now sends the job's bare UUID as `headers.idempotencyKey`. The earlier
+`londos-` prefix violated Brevo's UUID requirement and could reject verification/recovery
+messages with HTTP 400. See [Brevo's idempotency contract](https://developers.brevo.com/docs/heterogenous-versions-batch-emails),
+checked 22 October 2026. The existing durable attempt record and no-blind-resend policy
+remain enforced beyond the provider's limited idempotency window. After deploying this
+correction, request one fresh link. Do not clear or replay old failed delivery records;
+their payload fingerprints and outcomes remain protected. No migration is needed.
+
 `job.failed` now includes the job kind. Before this diagnostic update, `handler_failed`
 did not identify why Brevo failed; historic failures cannot recover a discarded HTTP
 response. New provider attempts log only job ID, outcome, HTTP status and fixed labels.

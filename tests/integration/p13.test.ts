@@ -438,7 +438,13 @@ test("accepted Brevo delivery uses fixed HTTPS, plain text and durable identity;
     calls++;
     expect(url).toBe("https://api.brevo.com/v3/smtp/email");
     expect(init!.redirect).toBe("error");
-    expect(JSON.parse(init!.body as string).headers.idempotencyKey).toBe(`londos-${job.id}`);
+    const idempotencyKey = JSON.parse(init!.body as string).headers.idempotencyKey;
+    // Provider contract: prefixed UUIDs are rejected rather than accepted by the mock.
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey)
+    )
+      return Response.json({ code: "out_of_range" }, { status: 400 });
+    expect(idempotencyKey).toBe(job.id);
     return Response.json({ messageId: "<fixture-brevo-reference>" }, { status: 201 });
   };
   const adapter = new BrevoNotifications(pool, settings, transport);

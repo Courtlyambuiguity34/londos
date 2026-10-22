@@ -259,7 +259,8 @@ export class BrevoNotifications implements NotificationAdapter {
       subject: rendered.subject,
       textContent: rendered.text,
       htmlContent: rendered.html,
-      headers: { idempotencyKey: `londos-${key}` },
+      // Brevo requires a UUID; a namespace prefix invalidates the provider key.
+      headers: { idempotencyKey: key },
     };
     const fingerprint = createHash("sha256")
       .update(JSON.stringify([messageSchema.parse(message), payload]))
