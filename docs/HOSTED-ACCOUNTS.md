@@ -27,7 +27,50 @@ administrator password is supplied.
 5. Run an independent worker against the same database and origin (`node dist/worker.mjs`
    in a checkout, or image command `worker`). Verification mail is queued in PostgreSQL;
    a running web server and a Brevo key alone do not send it. Check `/api/ready` for
-   `worker: ready`. A free web service is not an always-on worker.
+   `worker: ready`. Alternatively, enable the explicit embedded option below. A free web
+   service is not an always-on worker, even when a worker runs inside its container.
+
+## Embedded worker and sign-in troubleshooting from your phone
+
+If you have no separate worker, set `LONDOS_EMBEDDED_WORKER=true` on the Docker **web**
+service and redeploy. Keep the Docker command `web`. The default is false, preserving
+separate-worker deployments. Migration and bootstrap finish before web and worker start.
+`release.embedded_worker_started` records that the worker process was spawned; also look
+for `worker.started` with `adapters: brevo` and a ready worker heartbeat. Either child
+exiting unexpectedly stops the other, so the container can restart rather than leaving
+a healthy-looking site with a dead worker. Standalone `worker`, `migrate`, `bootstrap`,
+`monitor`, and `worker-health` commands keep their original arguments and exit status.
+
+The embedded worker uses the same database/secret/CA/Brevo settings as the web process.
+Do not enable it in addition to a separate worker unless you deliberately want both.
+Free Render web suspension stops both processes: email and scheduled work wait until
+the container resumes. Staying on a page does not guarantee uptime. For dependable
+delivery use an always-on worker. An email quota deferral, provider rejection or unknown
+delivery outcome must not be bypassed by resetting durable delivery records.
+
+`bootstrap.complete` means the accounts were created (or already existed), **not** that
+their email was delivered or verified. New permanent accounts deliberately require email
+verification. To sign in:
+
+1. Use the exact website origin configured by `AUTH_BASE_URL`.
+2. Use the password entered when that account was first created. Changing a bootstrap
+   environment password later does not change the saved password. Use **Recover your
+   account** if you have forgotten it; never delete the bootstrap receipt to reset it.
+3. Open the newest verification email. If it expired or never arrived, enter your email
+   on the sign-in page and choose **Resend verification email**. This does not require
+   registration again or knowing the password. Requests are rate limited, and unknown
+   addresses get the same public acknowledgement.
+4. Check inbox and spam. The acknowledgement means the request was handled, not that
+   Brevo delivered it. When sign-in returns `EMAIL_NOT_VERIFIED`, the page now explains
+   verification instead of showing a generic failure. Invalid password and temporary
+   service failures have different safe instructions.
+5. After verification, sign in. Landlord MFA and assigned-shop permissions still apply.
+
+If email is still missing, check `worker.started` uses `brevo` (not `local-private-sink`),
+and review Brevo's transactional email activity and verified sender in its dashboard.
+Check the configured daily quota and whether jobs log `job.failed` or `job.deferred`.
+The browser displays a safe request reference for supported failures; match it to
+`authentication.failed` in server logs. Never share passwords, tokens or connection URLs.
 
 The production health contract now requires migration 024, preventing an older schema
 from being mistaken for a compatible one. Bootstrap does not perform migrations itself.
@@ -102,8 +145,8 @@ After successful provisioning:
 
 1. Remove all bootstrap keys from Render and restart. The accounts remain in PostgreSQL.
    The web child process does not inherit bootstrap secrets even on the provisioning run.
-2. Open the email verification links. If a link expires, use the verification resend
-   action on registration. An unverified account cannot sign in.
+2. Open the email verification links. If a link expires, enter your email on the sign-in
+   page and use **Resend verification email**. An unverified account cannot sign in.
 3. Landlord: open `/sign-in?next=/landlord`, sign in, open Account security, enable and
    verify your authenticator, keep backup codes privately, then open `/landlord`.
 4. Shopkeeper: open `/shopkeeper` and sign in. This role receives a new merchant and one

@@ -1,19 +1,36 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { authenticationFeedback } from "@/modules/auth/feedback";
+class AuthenticationRequestError extends Error {
+  constructor(
+    message: string,
+    readonly verificationRequired: boolean,
+  ) {
+    super(message);
+  }
+}
 async function send(path: string, body: Record<string, unknown>) {
-  const response = await fetch(`/api/auth/${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = (await response.json()) as Record<string, unknown>;
-  if (!response.ok)
-    throw new Error(
-      response.status === 429
-        ? "Too many attempts. Wait a minute before trying again."
-        : "The request could not be completed. Check your details and try again.",
+  let response: Response;
+  try {
+    response = await fetch(`/api/auth/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("We could not reach Londos. Check your connection and try again.");
+  }
+  const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!response.ok) {
+    const feedback = authenticationFeedback(response.status, data);
+    const reference = response.headers.get("x-request-id");
+    throw new AuthenticationRequestError(
+      feedback.message +
+        (reference && /^[a-f0-9-]{36}$/.test(reference) ? ` Support reference: ${reference}` : ""),
+      feedback.verificationRequired,
     );
+  }
   return data;
 }
 function fields(event: FormEvent<HTMLFormElement>) {
@@ -29,17 +46,22 @@ export function SignInForm({
   const [challenge, setChallenge] = useState(false),
     [backup, setBackup] = useState(false),
     [error, setError] = useState(""),
-    [pending, setPending] = useState(false);
+    [pending, setPending] = useState(false),
+    [email, setEmail] = useState(""),
+    [verificationRequired, setVerificationRequired] = useState(false),
+    [notice, setNotice] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     const data = fields(event);
     setError("");
+    setNotice("");
+    setVerificationRequired(false);
     setPending(true);
     try {
       const result = await send(
         challenge ? `two-factor/${backup ? "verify-backup-code" : "verify-totp"}` : "sign-in/email",
         challenge
           ? { code: data.code, trustDevice: false }
-          : { email: data.email, password: data.password },
+          : { email: data.email?.trim().toLowerCase(), password: data.password },
       );
       if (result.twoFactorRedirect === true) {
         setChallenge(true);
@@ -47,7 +69,34 @@ export function SignInForm({
       }
       window.location.assign(destination);
     } catch (error) {
+      setVerificationRequired(
+        error instanceof AuthenticationRequestError && error.verificationRequired,
+      );
       setError(error instanceof Error ? error.message : "Sign-in failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function resend() {
+    setError("");
+    setNotice("");
+    const address = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+      setError("Enter your email address above to request a verification link.");
+      return;
+    }
+    setPending(true);
+    try {
+      const callback = new URL("/sign-in", window.location.origin);
+      callback.searchParams.set("next", destination);
+      await send("send-verification-email", { email: address, callbackURL: callback.href });
+      setNotice(
+        "If this account is awaiting verification, a new email has been requested. Check your inbox and spam folder. Delivery may take a few minutes; requesting a link does not sign you in.",
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "A verification link could not be requested.",
+      );
     } finally {
       setPending(false);
     }
@@ -83,6 +132,8 @@ export function SignInForm({
             autoComplete="username"
             required
             maxLength={254}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
           <label htmlFor="password">Password</label>
           <input
@@ -99,6 +150,23 @@ export function SignInForm({
       <button className="button" disabled={pending}>
         {pending ? "Checking…" : challenge ? "Verify and sign in" : "Sign in"}
       </button>
+      {!challenge ? (
+        <>
+          <button
+            type="button"
+            className="text-button"
+            disabled={pending}
+            onClick={() => void resend()}
+          >
+            {verificationRequired ? "Send a new verification email" : "Resend verification email"}
+          </button>
+          <p className="muted">
+            Already created an account? Verify its email first. If you changed a setup password
+            after the account was created, use account recovery to reset the saved password.
+          </p>
+        </>
+      ) : null}
+      {notice ? <p role="status">{notice}</p> : null}
     </form>
   );
 }

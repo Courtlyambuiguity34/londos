@@ -5,6 +5,7 @@ import { consumeBudget } from "./budget";
 import { resolveActor, requireStepUp } from "./authorization";
 import { AccessError } from "./errors";
 import { corsResponse, requireAcceptedOrigin } from "./origin";
+import { failureCategory } from "../diagnostics";
 
 const allowed = new Set([
   "/sign-in/email",
@@ -39,8 +40,13 @@ export async function authenticationRequest(
   readBody: (request: Request) => Promise<unknown>,
 ) {
   const path = new URL(request.url).pathname.replace(/^\/api\/auth/, "");
+  const requestId = randomUUID();
   const resetCallback = /^\/reset-password\/[A-Za-z0-9_-]{16,128}$/.test(path);
-  const respond = (data: unknown, status: number) => corsResponse(request, response(data, status));
+  const respond = (data: unknown, status: number) => {
+    const result = response(data, status);
+    result.headers.set("X-Request-ID", requestId);
+    return corsResponse(request, result);
+  };
   if (!allowed.has(path) && !resetCallback) return respond({ error: "endpoint_unavailable" }, 404);
   if (resetCallback && request.method !== "GET")
     return respond({ error: "method_unavailable" }, 405);
@@ -52,6 +58,7 @@ export async function authenticationRequest(
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
         throw new AccessError(422, "invalid_input");
       body = parsed as Record<string, unknown>;
+      if (typeof body.email === "string") body.email = body.email.trim().toLowerCase();
       if (path === "/change-password") body.revokeOtherSessions = true;
       await consumeBudget(pool, "auth:global", 300);
       if (typeof body.email === "string") {
@@ -107,11 +114,17 @@ export async function authenticationRequest(
     if (result.status >= 400) result.headers.delete("Set-Cookie");
     result.headers.set("Cache-Control", "private, no-store, max-age=0");
     result.headers.set("Vary", "Cookie");
-    result.headers.set("X-Request-ID", randomUUID());
+    result.headers.set("X-Request-ID", requestId);
     return corsResponse(request, result);
   } catch (error) {
     if (error instanceof AccessError) return respond({ error: error.code }, error.status);
-    console.error(JSON.stringify({ event: "authentication.failed", requestId: randomUUID() }));
+    console.error(
+      JSON.stringify({
+        event: "authentication.failed",
+        requestId,
+        category: failureCategory(error),
+      }),
+    );
     return respond({ error: "service_unavailable" }, 503);
   }
 }

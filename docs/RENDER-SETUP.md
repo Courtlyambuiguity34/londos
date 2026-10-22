@@ -81,7 +81,12 @@ Never disable TLS certificate verification.
 
 The [full-service blueprint](../deploy/render.full.yaml) includes a free web service and a
 **paid `starter` worker**, not a wholly free deployment. Alternatively supervise the worker
-on your own always-on machine. Migrations normally run separately with the migrator role.
+on your own always-on machine. An explicit `LONDOS_EMBEDDED_WORKER=true` on the Docker web
+service runs web and worker together; leave the command as `web`. This defaults to false
+and needs no separate worker service. Free web suspension also stops its worker, delaying
+verification mail and scheduled jobs. It is not equivalent to always-on background processing.
+See [embedded worker and sign-in](HOSTED-ACCOUNTS.md#embedded-worker-and-sign-in-troubleshooting-from-your-phone).
+Migrations normally run separately with the migrator role.
 For a phone-only upgrade without Shell, the Docker web entry supports the explicit,
 default-off `LONDOS_MIGRATE_ON_START=true` fallback described in
 [hosted accounts](HOSTED-ACCOUNTS.md#phone-only-render-upgrade-without-shell).

@@ -3,8 +3,12 @@ import Image from "next/image";
 import { SignInForm } from "@/components/auth-controls";
 import { coreConfigured } from "@/server/config";
 export const metadata = { title: "Sign in" };
-export default async function Page({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const next = (await searchParams).next;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; error?: string }>;
+}) {
+  const { next, error } = await searchParams;
   const destination = next === "/landlord" || next === "/security" ? next : "/shopkeeper";
   return (
     <section className="shell page-section account-page sign-in-page">
@@ -27,7 +31,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
           : "Sign in to manage your shops, update products and connect with customers. Your account gives you access only to your assigned shops."}
       </p>
       {coreConfigured() ? (
-        <SignInForm destination={destination} />
+        <>
+          {error ? (
+            <p role="alert">
+              This verification link could not be used. It may have expired. Request a fresh
+              verification email below, then open the newest link.
+            </p>
+          ) : null}
+          <SignInForm destination={destination} />
+        </>
       ) : (
         <p>Account services are not configured in this public preview.</p>
       )}

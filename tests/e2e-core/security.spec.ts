@@ -23,6 +23,57 @@ async function login(
   await page.getByLabel("Password", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
+test("seeded-style unverified sign-in explains verification and offers a working resend", async ({
+  page,
+  request,
+  baseURL,
+}) => {
+  const email = `verification-${randomUUID()}@londos.invalid`;
+  const password = "Browser-test-verification-password-unique";
+  const registration = await request.post("/api/register", {
+    headers: { origin: baseURL! },
+    data: { name: "Verification browser test", email, password, acceptTerms: true },
+  });
+  expect(registration.status()).toBe(202);
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/sign-in?next=/landlord");
+    await page.getByLabel("Email", { exact: true }).fill(email.toUpperCase());
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "Verify your email before signing in",
+    );
+    await page.getByRole("button", { name: "Send a new verification email" }).click();
+    await expect(page.getByRole("status")).toContainText("a new email has been requested");
+    const jobs = (
+      await pool.query(
+        "SELECT payload FROM jobs WHERE payload->>'to'=$1 ORDER BY created_at DESC",
+        [email],
+      )
+    ).rows;
+    expect(jobs).toHaveLength(2);
+    const callback = new URL(jobs[0].payload.url).searchParams.get("callbackURL");
+    expect(callback).toBe(`${baseURL}/sign-in?next=%2Flandlord`);
+    await page.goto(jobs[0].payload.url);
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Flandlord/);
+    await page.getByLabel("Email", { exact: true }).fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(/\/landlord/);
+    expect((await page.request.get("/api/operator/shops")).status()).toBe(403);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.goto("/sign-in?error=TOKEN_EXPIRED");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "Request a fresh verification email",
+    );
+  } finally {
+    await pool.end();
+  }
+});
 test("R2 stalled JSON receives a bounded 408 from the compiled authentication endpoint", async ({
   baseURL,
   request,

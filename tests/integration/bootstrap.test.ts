@@ -9,6 +9,7 @@ import { bootstrapAccounts } from "../../src/server/bootstrap-accounts";
 import { createAuth } from "../../src/server/security/auth";
 import { coreConfig } from "../../src/server/config";
 import { resolveActor, requireOperator } from "../../src/server/security/authorization";
+import { authenticationRequest } from "../../src/server/security/auth-http";
 const parent = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
 const name = `londos_test_${randomUUID().replaceAll("-", "")}`;
 let pool: Pool;
@@ -131,4 +132,67 @@ test("packaged bootstrap entry runs safely with existing receipts", async () => 
   expect(result.stdout).toContain('"created":0');
   expect(result.stdout).not.toContain(env.LONDOS_BOOTSTRAP_ADMIN_EMAIL);
   expect(result.stdout).not.toContain(env.LONDOS_BOOTSTRAP_ADMIN_PASSWORD);
+});
+
+test("seeded shopkeeper can resend verification and sign in through the protected HTTP adapter", async () => {
+  const config = coreConfig();
+  const auth = createAuth(pool, config);
+  const post = (path: string, body: Record<string, unknown>) =>
+    authenticationRequest(
+      new Request(`${config.baseURL}/api/auth/${path}`, {
+        method: "POST",
+        headers: { origin: config.baseURL, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+      auth,
+      pool,
+      (request) => request.json(),
+    );
+  const credentials = {
+    email: ` ${env.LONDOS_BOOTSTRAP_SHOPKEEPER_EMAIL.toUpperCase()} `,
+    password: env.LONDOS_BOOTSTRAP_SHOPKEEPER_PASSWORD,
+  };
+  const wrong = await post("sign-in/email", { ...credentials, password: "wrong-test-password" });
+  expect(wrong.status).toBe(401);
+  expect((await wrong.json()).code).toBe("INVALID_EMAIL_OR_PASSWORD");
+  const blocked = await post("sign-in/email", credentials);
+  expect(blocked.status).toBe(403);
+  expect((await blocked.json()).code).toBe("EMAIL_NOT_VERIFIED");
+  expect(blocked.headers.get("set-cookie")).toBeNull();
+  const callbackURL = `${config.baseURL}/sign-in?next=/shopkeeper`;
+  const sent = await post("send-verification-email", { email: credentials.email, callbackURL });
+  const unknown = await post("send-verification-email", {
+    email: "unknown@londos.invalid",
+    callbackURL,
+  });
+  expect(sent.status).toBe(200);
+  expect(unknown.status).toBe(sent.status);
+  expect(await unknown.json()).toEqual(await sent.json());
+  const message = (
+    await pool.query(
+      "SELECT payload FROM jobs WHERE payload->>'to'=$1 AND dedupe_key LIKE 'email-verification:%' ORDER BY created_at DESC LIMIT 1",
+      [env.LONDOS_BOOTSTRAP_SHOPKEEPER_EMAIL],
+    )
+  ).rows[0];
+  expect(message).toBeDefined();
+  const verification = await authenticationRequest(
+    new Request(message.payload.url),
+    auth,
+    pool,
+    (r) => r.json(),
+  );
+  expect(verification.status).toBe(302);
+  expect(verification.headers.get("location")).toBe(callbackURL);
+  const login = await post("sign-in/email", credentials);
+  expect(login.status).toBe(200);
+  expect(login.headers.get("set-cookie")).toBeTruthy();
+  const user = (
+    await pool.query('SELECT id,"emailVerified" FROM "user" WHERE email=$1', [
+      env.LONDOS_BOOTSTRAP_SHOPKEEPER_EMAIL,
+    ])
+  ).rows[0];
+  expect(user.emailVerified).toBe(true);
+  expect(
+    (await pool.query("SELECT 1 FROM operator_grants WHERE user_id=$1", [user.id])).rowCount,
+  ).toBe(0);
 });
