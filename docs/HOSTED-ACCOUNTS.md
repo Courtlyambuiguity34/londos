@@ -286,3 +286,24 @@ the owner must verify the operator/contact details, applicable legal obligations
 retention/processor arrangements before treating them as legal sign-off.
 
 Verification and complete file list: [hosted feedback evidence](evidence/HOSTED-FEEDBACK-2026-10-22.md).
+
+## Email branding preview and verification (22 October 2026)
+
+The shared Brevo email template is implemented in `src/server/jobs/brevo.ts`; focused checks live in `tests/unit/p13.test.ts`. The offline preview script is `scripts/preview-email.ts`. It uses fictional recipient data and does **not** send email. The preview uses the sample origin `https://londos.onrender.com`; this is a display fixture, not proof of a live domain or successful delivery.
+
+From the repository root, with the Node and npm versions required by `package.json`, install dependencies and run:
+
+```sh
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run check:docs
+npm run build
+npx playwright install chromium
+npx tsx scripts/preview-email.ts --check
+```
+
+The preview creates `docs/previews/email-branding.html` and, when Chromium checks pass, mobile and desktop PNG screenshots in the same directory. Its checks cover 320, 390 and 1280 pixel widths, blocked external images, button dimensions, logo decoding and automated WCAG accessibility checks. Review actual email-client rendering separately: a Chromium preview cannot establish compatibility with Gmail, Outlook or every mail app. Ensure `public/brand/londos-logo.png` is shipped at `/brand/londos-logo.png` on the actual deployed origin. Keep previews fictional; never insert real reset links, invitation tokens or credentials into generated artifacts.
+
+**Verification status:** The above commands are the required local/CI verification procedure, not a claim that they passed. On 22 October 2026, an attempted independent checkout failed because the execution environment could not resolve `github.com`. The test suite, production build, Playwright preview and screenshot inspection were therefore **not independently executed or certified** in that environment. Record command output and the source commit before approving deployment.
