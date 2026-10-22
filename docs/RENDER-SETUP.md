@@ -81,8 +81,11 @@ Never disable TLS certificate verification.
 
 The [full-service blueprint](../deploy/render.full.yaml) includes a free web service and a
 **paid `starter` worker**, not a wholly free deployment. Alternatively supervise the worker
-on your own always-on machine. Migrations must run separately with the migrator role;
-the web process does not run them automatically. The root `render.yaml` remains a
+on your own always-on machine. Migrations normally run separately with the migrator role.
+For a phone-only upgrade without Shell, the Docker web entry supports the explicit,
+default-off `LONDOS_MIGRATE_ON_START=true` fallback described in
+[hosted accounts](HOSTED-ACCOUNTS.md#phone-only-render-upgrade-without-shell).
+Disable it after the reviewed upgrade. The root `render.yaml` remains a
 fixture-preview blueprint, not a full merchant deployment.
 
 | Setting                                       | Required value or action                                                                                                    |
@@ -137,7 +140,7 @@ No separate site upload, database or Render web service is needed for these path
 Keep `AUTH_BASE_URL` as the shared HTTPS origin, without `/landlord` or `/shopkeeper`.
 The header links to Shopkeeper only when the visitor has a current verified session
 and an active owner/staff merchant membership; guests and accounts without that
-membership do not receive the link. The footer's **Londos Management** links to Landlord.
+membership do not receive the link. Public navigation does not advertise Landlord; use `/landlord` directly.
 Shopkeepers see only shops assigned to their active memberships. Landlord access needs
 operator grants and verified MFA; opening the address or registering an ordinary
 account does not grant administrator permissions. Local demo credentials do not
@@ -149,7 +152,7 @@ previews or database mode with local adapters. Hosted database mode removes thos
 development labels. This presentation change does not enable payments, remove
 permission checks, turn demo records into real shops or close the production gates.
 
-Deploy the exact reviewed image/commit manually. Start the separate worker from the same compatible artifact against the same canonical database; the image supports the `worker` entry point, and `npm run worker` is available in a built owner checkout. Keep worker supervision and database migrations separate from web startup.
+Deploy the exact reviewed image/commit manually. Start the separate worker from the same compatible artifact against the same canonical database; the image supports the `worker` entry point, and `npm run worker` is available in a built owner checkout. Keep worker supervision separate and prefer controlled migration runs; the explicit phone-only startup option above is a fallback, not the default.
 
 Inspect `/api/ready` after startup: require `database=true`, `authentication=true`, a current `worker=ready` heartbeat and the expected `configured-core` mode. Readiness indicates configured native auth and schema compatibility, not live deliverability or a closed launch gate. Test public browsing and a genuine verified, MFA-protected operator/merchant workflow only after the required provisioning is complete. Public registration is not an automatically approved production onboarding path in this candidate.
 

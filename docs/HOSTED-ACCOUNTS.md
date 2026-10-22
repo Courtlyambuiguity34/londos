@@ -31,6 +31,45 @@ administrator password is supplied.
 
 The production health contract now requires migration 024, preventing an older schema
 from being mistaken for a compatible one. Bootstrap does not perform migrations itself.
+If you cannot run a separate migration command, use the explicit Docker entry option below.
+
+## Phone-only Render upgrade, without Shell
+
+This fallback is for the Docker deployment using `deploy/Dockerfile` and its normal `web`
+command. It is disabled by default and does not apply to the local `npm run start` launcher.
+It does not require a terminal, a new service, or an HTTP migration endpoint.
+
+1. Confirm the web service uses the correct Aiven `DATABASE_URL`. Its database role must
+   own the application's schema or otherwise have the necessary migration permissions.
+   A restricted web role cannot perform this step; do not grant broad permissions blindly.
+   Preserve a backup of existing important data before upgrading. The migration runner
+   applies pending checked-in SQL; it does not run development reset or seed commands.
+2. In Render on your phone, open the **web service → Environment** and add:
+
+   ```dotenv
+   LONDOS_MIGRATE_ON_START=true
+   ```
+
+3. Keep the existing database, authentication and Brevo settings, plus the valid bootstrap
+   account settings if you need those accounts created. Save and deploy the commit that
+   includes this option, or use **Manual Deploy → Deploy latest commit**. Keep the normal
+   Docker command `web`; no custom shell command is needed.
+4. Startup runs the migrator first, then optional account bootstrap, then the web server.
+   Look for `{"event":"release.migration","result":"passed"}`, followed by
+   `bootstrap.complete` if bootstrap is configured. A migration failure prevents both
+   bootstrap and web startup. Do not use a missing flag or remove safeguards to bypass it.
+5. After success, set `LONDOS_MIGRATE_ON_START=false` (or remove it). Remove the bootstrap
+   account keys after `bootstrap.complete`, then save/redeploy. Accounts and database data
+   remain. Use the worker for verification email, then verify the accounts and enrol MFA.
+
+The existing advisory lock prevents simultaneous migrators; checksums prevent modified
+historical migrations from being silently reapplied. Repeated starts skip completed SQL.
+Each migration is transactional, but the entire sequence is not one transaction: earlier
+successful migrations remain if a later one fails. This option is not a backup or rollback.
+It uses `DATABASE_URL` and the configured CA, with no additional credential defaults.
+Worker starts never run migrations, even if the flag was copied into their environment.
+Use separately controlled migrations for later planned releases; leaving this flag on
+would authorize pending migrations at every future web restart.
 
 ## Create the first landlord and a separate shopkeeper
 

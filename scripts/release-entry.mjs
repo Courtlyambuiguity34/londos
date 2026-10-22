@@ -34,6 +34,24 @@ try {
     if (!existsSync(process.env.LONDOS_RUNTIME_CA_FILE)) throw new Error("Missing runtime CA");
     process.env.NODE_EXTRA_CA_CERTS = process.env.LONDOS_RUNTIME_CA_FILE;
   }
+  // Explicit fallback for owners without a deployment shell/job. The existing
+  // migrator locks concurrent runs, verifies checksums and applies pending SQL.
+  // Never run this in worker mode or make it the default for future releases.
+  if (mode === "web") {
+    const migrateOnStart = process.env.LONDOS_MIGRATE_ON_START;
+    if (migrateOnStart !== undefined && !["true", "false"].includes(migrateOnStart))
+      throw new Error("Invalid startup migration setting");
+    if (migrateOnStart === "true") {
+      const migrationEnv = { ...process.env };
+      for (const key of Object.keys(migrationEnv))
+        if (key.startsWith("LONDOS_BOOTSTRAP_")) delete migrationEnv[key];
+      const result = spawnSync(process.execPath, ["dist/migrate.mjs"], {
+        stdio: "inherit",
+        env: migrationEnv,
+      });
+      if (result.status !== 0) process.exit(1);
+    }
+  }
   if (
     mode === "web" &&
     Object.keys(process.env).some(
@@ -48,6 +66,7 @@ try {
     if (result.status !== 0) process.exit(1);
   }
   const childEnv = { ...process.env };
+  delete childEnv.LONDOS_MIGRATE_ON_START;
   for (const key of Object.keys(childEnv))
     if (key.startsWith("LONDOS_BOOTSTRAP_")) delete childEnv[key];
   const child = spawn(process.execPath, commands[mode], {
