@@ -61,12 +61,20 @@ export function createAuth(pool: Pool, config: ReturnType<typeof coreConfig>, bo
     emailVerification: {
       sendOnSignUp: true,
       autoSignInAfterVerification: false,
-      sendVerificationEmail: async ({ user, url }) => {
-        await enqueue(pool, {
+      sendVerificationEmail: async ({ user, url }, request) => {
+        const jobId = await enqueue(pool, {
           kind: "notification.local",
           key: `email-verification:${randomUUID()}`,
           payload: { to: user.email, template: "email-verification", url },
         });
+        const reference = request?.headers.get("x-londos-request-id");
+        console.info(
+          JSON.stringify({
+            event: "verification.queued",
+            jobId,
+            ...(reference && /^[a-f0-9-]{36}$/.test(reference) ? { requestId: reference } : {}),
+          }),
+        );
       },
     },
     // The loopback server has one network identity; the HTTP adapter adds an

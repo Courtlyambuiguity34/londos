@@ -10,7 +10,11 @@ class AuthenticationRequestError extends Error {
     super(message);
   }
 }
-async function send(path: string, body: Record<string, unknown>) {
+async function send(
+  path: string,
+  body: Record<string, unknown>,
+  onAccepted?: (reference: string) => void,
+) {
   let response: Response;
   try {
     response = await fetch(`/api/auth/${path}`, {
@@ -31,6 +35,8 @@ async function send(path: string, body: Record<string, unknown>) {
       feedback.verificationRequired,
     );
   }
+  const reference = response.headers.get("x-request-id");
+  onAccepted?.(reference && /^[a-f0-9-]{36}$/.test(reference) ? reference : "");
   return data;
 }
 function fields(event: FormEvent<HTMLFormElement>) {
@@ -89,9 +95,14 @@ export function SignInForm({
     try {
       const callback = new URL("/sign-in", window.location.origin);
       callback.searchParams.set("next", destination);
-      await send("send-verification-email", { email: address, callbackURL: callback.href });
-      setNotice(
-        "If this account is awaiting verification, a new email has been requested. Check your inbox and spam folder. Delivery may take a few minutes; requesting a link does not sign you in.",
+      await send(
+        "send-verification-email",
+        { email: address, callbackURL: callback.href },
+        (reference) =>
+          setNotice(
+            "Your request was received. If this account needs verification, Londos will queue an email. This does not confirm delivery. Check your inbox and spam folder; requesting a link does not sign you in." +
+              (reference ? ` Resend support reference: ${reference}` : ""),
+          ),
       );
     } catch (error) {
       setError(

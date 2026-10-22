@@ -102,6 +102,8 @@ export async function authenticationRequest(
     headers.delete("x-forwarded-for");
     headers.delete("x-real-ip");
     headers.set("x-londos-client-ip", "127.0.0.1");
+    // Overwrite caller input: only this server-generated reference may reach callbacks.
+    headers.set("x-londos-request-id", requestId);
     // Loopback-only X1: ignore client-supplied IPs. Deployment must configure a trusted edge.
     const forwarded = new Request(request.url, {
       method: request.method,
@@ -109,6 +111,14 @@ export async function authenticationRequest(
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     const result = await authentication.handler(forwarded);
+    if (path === "/send-verification-email" && request.method === "POST")
+      console.info(
+        JSON.stringify({
+          event: "verification.request",
+          requestId,
+          httpStatus: result.status,
+        }),
+      );
     // An after-hook can reject a session after the library prepared its cookies.
     // Failed authentication must never deliver those credentials to the client.
     if (result.status >= 400) result.headers.delete("Set-Cookie");

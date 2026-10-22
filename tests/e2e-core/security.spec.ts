@@ -45,8 +45,23 @@ test("seeded-style unverified sign-in explains verification and offers a working
     await expect(page.getByRole("main").getByRole("alert")).toContainText(
       "Verify your email before signing in",
     );
+    const resendResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/auth/send-verification-email") &&
+        response.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Send a new verification email" }).click();
-    await expect(page.getByRole("status")).toContainText("a new email has been requested");
+    const reference = (await resendResponse).headers()["x-request-id"];
+    expect(reference).toMatch(/^[a-f0-9-]{36}$/);
+    await expect(page.getByRole("status")).toContainText("This does not confirm delivery");
+    await expect(page.getByRole("status")).toContainText(`Resend support reference: ${reference}`);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "Verify your email before signing in",
+    );
+    await expect(
+      page.getByText(`Resend support reference: ${reference}`, { exact: false }),
+    ).toHaveCount(0);
     const jobs = (
       await pool.query(
         "SELECT payload FROM jobs WHERE payload->>'to'=$1 ORDER BY created_at DESC",

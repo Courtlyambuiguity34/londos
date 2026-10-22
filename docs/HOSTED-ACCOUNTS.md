@@ -69,8 +69,9 @@ verification. To sign in:
 If email is still missing, check `worker.started` uses `brevo` (not `local-private-sink`),
 and review Brevo's transactional email activity and verified sender in its dashboard.
 Check the configured daily quota and whether jobs log `job.failed` or `job.deferred`.
-The browser displays a safe request reference for supported failures; match it to
-`authentication.failed` in server logs. Never share passwords, tokens or connection URLs.
+The browser displays a safe request reference for supported failures. Internal exceptions
+produce `authentication.failed`; expected library rejections such as unverified email do
+not necessarily emit that event. Never share passwords, tokens or connection URLs.
 
 ### Worker ready but no verification email
 
@@ -78,6 +79,29 @@ The sign-in page acknowledges a request without revealing whether an address exi
 That is not an inbox-delivery receipt. `bootstrap.complete` and `/api/ready` are not
 email-delivery receipts either. In Render Logs, inspect the events after requesting
 one fresh verification message (do not repeatedly request links):
+
+The resend acknowledgement now includes a **Resend support reference**, distinct from the
+reference for a later failed sign-in. From your phone, copy that resend reference and search
+Render Logs for it after deploying this update:
+
+1. `verification.request` records the HTTP result. A 200 acknowledges handling only:
+   unknown and already-verified addresses intentionally get the same public response.
+2. `verification.queued` with the same `requestId` confirms a verification job was inserted
+   and supplies its `jobId`. Search for that job ID to find worker/delivery events below.
+3. A 200 with no matching queued event, in complete logs from this release, means the
+   library did not enqueue a new email for that request. Check the exact entered address
+   against the account used for sign-in; do not recreate accounts or change bootstrap passwords.
+4. A queued event without worker activity means delivery has not been demonstrated. Check
+   worker availability and the same database configuration; maintenance events alone cannot
+   confirm that particular job was processed.
+5. No matching request event may mean the wrong time range, an older deployed version, or
+   an early rejected request. Check the latest deploy commit and the exact time of the resend;
+   the support reference on an email-not-verified sign-in is not the resend reference.
+
+Only generated references, job IDs and status are logged. Addresses, passwords and action
+links are excluded. These events are private operational logs, never a public account lookup.
+The acknowledgement explicitly says it does not confirm delivery and clears on another
+sign-in attempt. No new environment variables, migrations or terminal access are needed.
 
 | Event/category | Meaning and next step |
 | --- | --- |

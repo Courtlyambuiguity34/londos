@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { beforeAll, afterAll, test, expect } from "vitest";
+import { beforeAll, afterAll, afterEach, test, expect, vi } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
 import { migrate } from "../../src/server/db/migrate";
@@ -12,6 +12,7 @@ import { resolveActor, requireOperator } from "../../src/server/security/authori
 import { authenticationRequest } from "../../src/server/security/auth-http";
 const parent = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
 const name = `londos_test_${randomUUID().replaceAll("-", "")}`;
+afterEach(() => vi.restoreAllMocks());
 let pool: Pool;
 const env = {
   LONDOS_BOOTSTRAP_ADMIN_NAME: "Test landlord",
@@ -135,13 +136,18 @@ test("packaged bootstrap entry runs safely with existing receipts", async () => 
 });
 
 test("seeded shopkeeper can resend verification and sign in through the protected HTTP adapter", async () => {
+  const log = vi.spyOn(console, "info").mockImplementation(() => {});
   const config = coreConfig();
   const auth = createAuth(pool, config);
   const post = (path: string, body: Record<string, unknown>) =>
     authenticationRequest(
       new Request(`${config.baseURL}/api/auth/${path}`, {
         method: "POST",
-        headers: { origin: config.baseURL, "content-type": "application/json" },
+        headers: {
+          origin: config.baseURL,
+          "content-type": "application/json",
+          "x-londos-request-id": "11111111-1111-4111-8111-111111111111",
+        },
         body: JSON.stringify(body),
       }),
       auth,
@@ -167,14 +173,31 @@ test("seeded shopkeeper can resend verification and sign in through the protecte
   });
   expect(sent.status).toBe(200);
   expect(unknown.status).toBe(sent.status);
-  expect(await unknown.json()).toEqual(await sent.json());
+  const acknowledgement = await sent.json();
+  expect(await unknown.json()).toEqual(acknowledgement);
   const message = (
     await pool.query(
-      "SELECT payload FROM jobs WHERE payload->>'to'=$1 AND dedupe_key LIKE 'email-verification:%' ORDER BY created_at DESC LIMIT 1",
+      "SELECT id,payload FROM jobs WHERE payload->>'to'=$1 AND dedupe_key LIKE 'email-verification:%' ORDER BY created_at DESC LIMIT 1",
       [env.LONDOS_BOOTSTRAP_SHOPKEEPER_EMAIL],
     )
   ).rows[0];
   expect(message).toBeDefined();
+  const events = () => log.mock.calls.map(([line]) => JSON.parse(String(line)));
+  expect(events()).toContainEqual({
+    event: "verification.queued",
+    jobId: message.id,
+    requestId: sent.headers.get("x-request-id"),
+  });
+  expect(events().filter((event) => event.event === "verification.queued")).toHaveLength(1);
+  for (const result of [sent, unknown]) {
+    expect(result.headers.get("x-request-id")).toMatch(/^[a-f0-9-]{36}$/);
+    expect(result.headers.get("x-request-id")).not.toBe("11111111-1111-4111-8111-111111111111");
+    expect(events()).toContainEqual({
+      event: "verification.request",
+      requestId: result.headers.get("x-request-id"),
+      httpStatus: 200,
+    });
+  }
   const verification = await authenticationRequest(
     new Request(message.payload.url),
     auth,
@@ -183,6 +206,21 @@ test("seeded shopkeeper can resend verification and sign in through the protecte
   );
   expect(verification.status).toBe(302);
   expect(verification.headers.get("location")).toBe(callbackURL);
+  const alreadyVerified = await post("send-verification-email", {
+    email: credentials.email,
+    callbackURL,
+  });
+  expect(alreadyVerified.status).toBe(200);
+  expect(await alreadyVerified.json()).toEqual(acknowledgement);
+  expect(events().filter((event) => event.event === "verification.queued")).toHaveLength(1);
+  const diagnostics = JSON.stringify(events());
+  for (const privateValue of [
+    env.LONDOS_BOOTSTRAP_SHOPKEEPER_EMAIL,
+    credentials.password,
+    message.payload.url,
+    "unknown@londos.invalid",
+  ])
+    expect(diagnostics).not.toContain(privateValue);
   const login = await post("sign-in/email", credentials);
   expect(login.status).toBe(200);
   expect(login.headers.get("set-cookie")).toBeTruthy();
