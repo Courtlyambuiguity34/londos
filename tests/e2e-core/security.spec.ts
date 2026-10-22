@@ -165,10 +165,27 @@ test("notification reset links work in the browser, private referrers stay empty
 }) => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/recover");
     await page.getByLabel("Account email", { exact: true }).fill(accounts.invitee.email);
+    const recoveryResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/auth/request-password-reset") &&
+        response.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Request recovery", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("If this account can recover");
+    const reference = (await recoveryResponse).headers()["x-request-id"];
+    expect(reference).toMatch(/^[a-f0-9-]{36}$/);
+    await expect(page.getByRole("status")).toContainText(
+      `Recovery support reference: ${reference}`,
+    );
+    await expect(page.getByRole("status")).toContainText("This does not confirm delivery");
+    await expect(page.getByRole("status")).not.toContainText("development environment");
+    await expect(page.getByRole("status")).not.toContainText("local notification sink");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     const url = (
       await pool.query(
         "SELECT payload->>'url' AS url FROM jobs WHERE payload->>'template'='password-reset' AND payload->>'to'=$1 ORDER BY created_at DESC LIMIT 1",

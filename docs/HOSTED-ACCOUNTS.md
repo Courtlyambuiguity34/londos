@@ -107,7 +107,7 @@ sign-in attempt. No new environment variables, migrations or terminal access are
 | --- | --- |
 | `worker.started`, `adapters: brevo` | Correct adapter selected; it does not prove provider access. |
 | `notification.delivery`, HTTP 201, `provider_accepted_not_delivery_confirmed` | Brevo accepted the API request. Check Brevo transactional email activity for delivered, deferred, bounced or blocked status, then the recipient's inbox/spam. |
-| HTTP 401, `provider_api_key_rejected` | Check the active Brevo **API key** in `LONDOS_BREVO_API_KEY`; an SMTP password is not this API credential. Replace it privately if invalid/revoked. |
+| HTTP 401, `provider_api_key_rejected` | This status-based category does not distinguish an invalid key from Brevo IP restrictions. Check Brevo's authorised IP settings and API key status. Use an **API key**, not an SMTP password; replace it privately only if invalid/revoked. |
 | HTTP 403, `provider_access_denied` | Check Brevo account/API permissions, transactional sending activation and provider access restrictions. |
 | HTTP 400, `provider_request_rejected` | Brevo rejected the request. Check its dashboard and ensure `LONDOS_EMAIL_FROM` is an active verified sender; HTTP 400 alone does not prove which field was rejected. |
 | HTTP 429, `provider_rate_limited` | Brevo rejected for provider rate/quota limits. Check the provider allowance; do not raise local limits beyond it. |
@@ -116,6 +116,21 @@ sign-in attempt. No new environment variables, migrations or terminal access are
 | `job.failed`, `email_origin_mismatch` | The queued action URL differs from the configured origin, for example after a domain change. Confirm the canonical `AUTH_BASE_URL` and request a new link on that origin; do not rewrite queued tokens. |
 | `job.failed`, `delivery_requires_reconciliation` | A prior attempt already has a rejected/uncertain durable record. Subsequent processing does not blindly resend it. Review the original `notification.delivery` event and Brevo activity. |
 | `job.failed`, `database_permission_denied` / `database_schema_missing` | Check worker runtime grants or the selected database's migrations; the job may have failed before contacting Brevo. |
+
+Brevo can reject API requests with HTTP 401 and an explicit **unrecognised IP** message.
+Review [Brevo authorised IPs](https://app.brevo.com/security/authorised_ips) and authorise
+only the outbound addresses for the service that sends email. Render and this development
+environment have different outbound addresses; authorising one does not authorise the other.
+Use Render's listed outbound addresses for the appropriate service/region. Do not use your
+phone's IP, the website's inbound address, or disable all restrictions as a shortcut.
+An observed development egress IP may change. Confirm the current address before authorising.
+After correcting provider access, request one fresh verification link and follow its
+reference; do not erase or blindly replay old rejected/uncertain delivery records.
+
+The recovery page previously showed a hard-coded development notification-sink statement
+even with Brevo enabled. That text was not a configuration reading. The corrected page
+acknowledges recovery requests without claiming delivery and displays a support reference.
+Actual provider selection is shown by `worker.started` and the readiness/service diagnostics.
 
 `job.failed` now includes the job kind. Before this diagnostic update, `handler_failed`
 did not identify why Brevo failed; historic failures cannot recover a discarded HTTP

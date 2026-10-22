@@ -342,19 +342,31 @@ export function RecoveryForm({ token }: { token?: string }) {
     setPending(true);
     setMessage("");
     try {
+      let reference = "";
       await send(
         token ? "reset-password" : "request-password-reset",
         token
           ? { token, newPassword: data.password }
-          : { email: data.email, redirectTo: `${window.location.origin}/recover` },
+          : {
+              email: data.email?.trim().toLowerCase(),
+              redirectTo: `${window.location.origin}/recover`,
+            },
+        (value) => {
+          reference = value;
+        },
       );
       setMessage(
         token
           ? "Password updated. Sign in with your new password."
-          : "If this account can recover, instructions will be sent. This development environment uses a private local notification sink.",
+          : "If this account can recover, an email has been requested. This does not confirm delivery. Check your inbox and spam folder. Recovery links expire and can be used once." +
+              (reference ? ` Recovery support reference: ${reference}` : ""),
       );
-    } catch {
-      setMessage("The request could not be completed. Recovery links expire and can be used once.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "The request could not be completed. Recovery links expire and can be used once.",
+      );
     } finally {
       setPending(false);
     }
