@@ -37,95 +37,102 @@ export default async function LandlordPage() {
         )
       ).rows as { state: string; count: number }[])
     : [];
+  const can = (permission: string) => grants.some((grant) => grant.permission === permission);
+  const canAny = (...permissions: string[]) => permissions.some(can);
+  const groups = [
+    {
+      title: "Shops and tenants",
+      description: "Review new merchants and manage existing mall spaces.",
+      links: [
+        { href: "/landlord/applications", label: "Review applications", description: "Assess shop applications", allowed: can("review") },
+        { href: "/landlord/operations", label: "Mall and shop operations", description: "Manage active shop operations", allowed: can("operations") },
+        { href: "/landlord/rent", label: "Rent reconciliation", description: "Review manual rent records", allowed: can("finance") },
+      ],
+    },
+    {
+      title: "Finance and exceptions",
+      description: "Follow up on financial records and operational costs.",
+      links: [
+        { href: "/landlord/rent-exceptions", label: "Outstanding rent and corrections", description: "Resolve exceptions and discrepancies", allowed: can("finance") },
+        { href: "/landlord/costs", label: "Resources and costs", description: "Review reported operating costs", allowed: can("costs") },
+      ],
+    },
+    {
+      title: "Trust, safety and support",
+      description: "Resolve incidents, appeals and sensitive requests with the required permissions.",
+      links: [
+        { href: "/landlord/incidents", label: "Incidents and recovery", description: "Handle assigned incidents", allowed: canAny("recovery", "support", "moderation", "finance", "review") },
+        { href: "/landlord/trust", label: "Shop concerns and appeals", description: "Review moderation decisions", allowed: can("moderation") },
+        { href: "/landlord/privacy", label: "Privacy review", description: "Handle assigned privacy requests", allowed: can("privacy") },
+      ],
+    },
+    {
+      title: "Growth and insights",
+      description: "Understand mall activity and communicate with merchants.",
+      links: [
+        { href: "/landlord/analytics", label: "Pilot analytics", description: "Review available business signals", allowed: can("analytics") },
+        { href: "/landlord/communications", label: "Communications and promotions", description: "Manage approved messages and campaigns", allowed: can("operations") },
+      ],
+    },
+    {
+      title: "Administration",
+      description: "Configure services and manage your operator account.",
+      links: [
+        { href: "/landlord/services", label: "Service configuration", description: "Inspect configuration and warnings", allowed: can("operations") },
+        { href: "/landlord/demo-accounts", label: "Demonstration accounts", description: "Manage development accounts", allowed: can("operations") },
+        { href: "/security", label: "Account security", description: "Manage MFA and security settings", allowed: true },
+      ],
+    },
+  ];
   return (
-    <section className="shell page-section account-page">
-      <p className="eyebrow">MFA-protected operator workspace</p>
-      <h1>Care for the mall.</h1>
-      <p>
-        Current permissions: {grants.map((grant) => grant.permission).join(", ")}. Application
-        review and manual rent reconciliation use scoped records and recent MFA. Live collection
-        remains disabled.
+    <section className="shell page-section account-page landlord-hub">
+      <p className="eyebrow">Londos · secure management workspace</p>
+      <h1>Manage your mall with clarity.</h1>
+      <p className="landlord-intro">
+        Start with shops and tenants, then handle rent, support and growth. Your tools are
+        grouped by responsibility, and only actions permitted for your account are shown.
       </p>
-      {counts.length ? (
-        <>
-          <h2>Durable jobs</h2>
-          <ul>
-            {counts.map((row) => (
-              <li key={row.state}>
-                {row.state}: {row.count}
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-      <div className="account-links">
-        {grants.some((g) => g.permission === "costs") ? (
-          <Link className="button" href="/landlord/costs">
-            Resource and cost reporting
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "privacy") ? (
-          <Link className="button" href="/landlord/privacy">
-            Privacy review assignments
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "analytics") ? (
-          <Link className="button" href="/landlord/analytics">
-            Pilot analytics
-          </Link>
-        ) : null}
-        {grants.some((g) =>
-          ["recovery", "support", "moderation", "finance", "review"].includes(g.permission),
-        ) ? (
-          <Link className="button" href="/landlord/incidents">
-            Incident assignments and recovery
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "moderation") ? (
-          <Link className="button" href="/landlord/trust">
-            Review shop concerns and appeals
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "review") ? (
-          <Link className="button" href="/landlord/applications">
-            Review applications
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "finance") ? (
-          <Link className="button" href="/landlord/rent">
-            Reconcile development rent
-          </Link>
-        ) : null}
-        <Link className="button" href="/security">
-          Account security
-        </Link>
-        {grants.some((g) => g.permission === "operations") ? (
-          <Link className="button" href="/landlord/communications">
-            Communications and promotions
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "operations") ? (
-          <Link className="button" href="/landlord/services">
-            Service configuration and warnings
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "operations") ? (
-          <Link className="button" href="/landlord/demo-accounts">
-            Demonstration accounts
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "operations") ? (
-          <Link className="button" href="/landlord/operations">
-            Mall and shop operations
-          </Link>
-        ) : null}
-        {grants.some((g) => g.permission === "finance") ? (
-          <Link className="button button--outline" href="/landlord/rent-exceptions">
-            Outstanding rent and corrections
-          </Link>
-        ) : null}
-        <SignOutButton />
+      <div className="landlord-status" role="status">
+        <div><strong>Protected workspace</strong><span>Multi-factor authentication enabled</span></div>
+        <div><strong>{grants.length} permissions</strong><span>Scoped operator access</span></div>
+        {can("jobs") ? <div><strong>{counts.reduce((sum, item) => sum + item.count, 0)} jobs</strong><span>Across all recorded states</span></div> : null}
       </div>
+      <nav className="landlord-jump" aria-label="Management sections">
+        {groups.filter((group) => group.links.some((link) => link.allowed)).map((group, index) => (
+          <a key={group.title} href={`#management-${index}`}>{group.title}</a>
+        ))}
+      </nav>
+      <div className="landlord-sections">
+        {groups.map((group, index) => {
+          const links = group.links.filter((link) => link.allowed);
+          if (!links.length) return null;
+          return (
+            <section className="landlord-group" id={`management-${index}`} key={group.title} aria-labelledby={`management-heading-${index}`}>
+              <div className="landlord-group-heading">
+                <h2 id={`management-heading-${index}`}>{group.title}</h2>
+                <p>{group.description}</p>
+              </div>
+              <div className="landlord-action-grid">
+                {links.map((link) => (
+                  <Link className="landlord-action" href={link.href} key={link.href}>
+                    <strong>{link.label}</strong>
+                    <span>{link.description}</span>
+                    <span className="landlord-action-arrow" aria-hidden="true">→</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      {can("jobs") && counts.length > 0 ? (
+        <details className="landlord-jobs">
+          <summary>Background job details</summary>
+          <ul>{counts.map((item) => <li key={item.state}>{item.state}: {item.count}</li>)}</ul>
+        </details>
+      ) : null}
+      <p className="landlord-caution">Rent reconciliation is manual. Live collection is not enabled.</p>
+      <div className="landlord-signout"><SignOutButton /></div>
     </section>
   );
 }
