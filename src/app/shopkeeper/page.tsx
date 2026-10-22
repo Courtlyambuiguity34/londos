@@ -13,9 +13,9 @@ export default async function ShopkeeperPage() {
   const actor = await pageActor("/shopkeeper"),
     shops = await listShops(database(), actor);
   return (
-    <section className="shell page-section account-page">
-      <p className="eyebrow">Your private workspace</p>
-      <h1>Your shops.</h1>
+    <section className="shell page-section account-page merchant-portal">
+      <p className="eyebrow">Londos merchant workspace</p>
+      <h1>Welcome to your shops.</h1>
       <p>
         Manage your catalogue, contacts and shop design here. Only explicitly published eligible
         shops appear in the mall.
@@ -26,7 +26,7 @@ export default async function ShopkeeperPage() {
           payments.
         </p>
       ) : null}
-      <ul className="workspace-list">
+      <h2>Your shops <span className="merchant-count">({shops.length})</span></h2>\n      <ul className="workspace-list merchant-shop-grid">
         {shops.map((shop) => (
           <li key={shop.id}>
             <Link href={`/shopkeeper/shops/${shop.id}`}>{shop.name}</Link>
@@ -34,8 +34,8 @@ export default async function ShopkeeperPage() {
           </li>
         ))}
       </ul>
-      {shops.length === 0 ? <p>No shops are available to your current membership.</p> : null}
-      <div className="account-links">
+      {shops.length === 0 ? <div className="merchant-empty"><h3>No shops yet</h3><p>You have no shops linked to your account. Review your applications or accept a team invitation to get started.</p><Link className="button" href="/shopkeeper/applications">View applications</Link></div> : null}
+      <h2>Account and team tools</h2>\n      <div className="account-links merchant-tools">
         <Link className="button" href="/shopkeeper/applications">
           Your applications
         </Link>
