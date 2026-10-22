@@ -2541,3 +2541,30 @@ button:disabled {
 .merchant-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 16px; }
 .merchant-portal a:focus-visible, .merchant-portal button:focus-visible { outline: 3px solid #af4d28; outline-offset: 3px; }
 @media (max-width: 600px) { .merchant-shop-grid > li { padding: 20px; } .merchant-tools > a { width: 100%; text-align: center; } }
+
+
+/* Landlord management: workflow-based, permission-aware dashboard */
+.landlord-hub { max-width: 1160px; }
+.landlord-hub > h1 { max-width: 22ch; line-height: 1.12; }
+.landlord-intro { max-width: 72ch; }
+.landlord-status { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0; }
+.landlord-status > div { display: flex; flex: 1 1 180px; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--paper, #faf8f2); }
+.landlord-status span { color: var(--muted); font-size: .9rem; }
+.landlord-jump { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 34px; }
+.landlord-jump a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: inherit; }
+.landlord-sections { display: grid; gap: 32px; }
+.landlord-group { scroll-margin-top: 24px; }
+.landlord-group-heading h2 { margin-bottom: 6px; }
+.landlord-group-heading p { color: var(--muted); margin-top: 0; }
+.landlord-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+.landlord-action { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 140px; padding: 22px 44px 22px 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper, #faf8f2); text-decoration: none; color: inherit; transition: border-color .18s ease, transform .18s ease; }
+.landlord-action:hover { transform: translateY(-2px); border-color: currentColor; }
+.landlord-action strong { font-size: 1.08rem; }
+.landlord-action > span:not(.landlord-action-arrow) { color: var(--muted); }
+.landlord-action-arrow { position: absolute; right: 20px; top: 20px; font-size: 1.3rem; }
+.landlord-hub a:focus-visible { outline: 3px solid #af4d28; outline-offset: 3px; }
+.landlord-jobs { margin: 28px 0; }
+.landlord-caution { margin-top: 28px; color: var(--muted); }
+.landlord-signout { margin-top: 18px; }
+@media (max-width: 600px) { .landlord-status > div { flex-basis: 100%; } .landlord-action { min-height: 120px; } }
+@media (prefers-reduced-motion: reduce) { .landlord-action { transition: none; } .landlord-action:hover { transform: none; } }
