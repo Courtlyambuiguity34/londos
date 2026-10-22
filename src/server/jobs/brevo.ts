@@ -4,6 +4,7 @@ import { z } from "zod";
 import { transaction } from "../db/pool";
 import { coreConfig } from "../config";
 import { messageSchema, type NotificationAdapter } from "./adapters";
+import { providerResponseCategory } from "./notification-diagnostics";
 
 const settings = z
   .object({
@@ -286,6 +287,7 @@ export class BrevoNotifications implements NotificationAdapter {
     if (!start) return;
     let outcome: "accepted" | "uncertain" | "rejected" = "uncertain",
       reference: string | null = null;
+    let httpStatus: number | null = null;
     try {
       signal.throwIfAborted();
       const response = await this.transport("https://api.brevo.com/v3/smtp/email", {
@@ -299,6 +301,7 @@ export class BrevoNotifications implements NotificationAdapter {
         },
         body: JSON.stringify(payload),
       });
+      httpStatus = response.status;
       if (response.status >= 400 && response.status < 500) {
         outcome = "rejected";
         await response.body?.cancel().catch(() => {});
@@ -340,6 +343,22 @@ export class BrevoNotifications implements NotificationAdapter {
     await this.pool.query(
       "UPDATE notification_deliveries SET state=$2,provider_reference=$3,updated_at=clock_timestamp() WHERE job_id=$1 AND state='attempting'",
       [key, outcome, reference],
+    );
+    // Accepted means Brevo accepted the API request, not inbox delivery. Retain no
+    // response body, recipient, sender, message ID, API key or action URL in logs.
+    console.log(
+      JSON.stringify({
+        time: new Date().toISOString(),
+        event: "notification.delivery",
+        provider: "brevo",
+        jobId: key,
+        outcome,
+        httpStatus,
+        category:
+          outcome === "accepted"
+            ? "provider_accepted_not_delivery_confirmed"
+            : providerResponseCategory(httpStatus),
+      }),
     );
     if (outcome !== "accepted") throw new Error("delivery_requires_reconciliation");
   }

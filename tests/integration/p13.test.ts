@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, test, expect } from "vitest";
+import { beforeAll, afterAll, test, expect, vi } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
@@ -355,6 +355,67 @@ const settings: BrevoSettings = {
   senderName: "Londos",
   baseURL: "https://mall.merchant.tld",
 };
+test.each([
+  [201, "accepted", "provider_accepted_not_delivery_confirmed"],
+  [400, "rejected", "provider_request_rejected"],
+  [401, "rejected", "provider_api_key_rejected"],
+  [403, "rejected", "provider_access_denied"],
+  [429, "rejected", "provider_rate_limited"],
+  [503, "uncertain", "provider_server_error"],
+  [null, "uncertain", "provider_network_or_timeout"],
+] as const)(
+  "Brevo %s emits safe delivery diagnostics without private data or duplicate sends",
+  async (status, outcome, category) => {
+    const job = await notification();
+    let calls = 0;
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      const adapter = new BrevoNotifications(pool, settings, async () => {
+        calls++;
+        if (status === null) throw new Error("PRIVATE-network-error");
+        return status === 201
+          ? Response.json({ messageId: "PRIVATE-provider-reference" }, { status })
+          : new Response("PRIVATE-response-body", { status });
+      });
+      const deliver = () =>
+        adapter.deliver(job.id, job.payload, new AbortController().signal, {
+          leaseToken: job.lease_token,
+        });
+      if (status === 201) {
+        await deliver();
+        await deliver();
+      } else {
+        await expect(deliver()).rejects.toThrow("delivery_requires_reconciliation");
+        await expect(deliver()).rejects.toThrow("delivery_requires_reconciliation");
+      }
+      expect(calls).toBe(1);
+      expect(log).toHaveBeenCalledTimes(1);
+      const text = log.mock.calls[0]![0] as string;
+      expect(JSON.parse(text)).toMatchObject({
+        event: "notification.delivery",
+        provider: "brevo",
+        jobId: job.id,
+        outcome,
+        category,
+        httpStatus: status,
+      });
+      for (const privateValue of [
+        "PRIVATE-",
+        "merchant@",
+        "sender@",
+        "business.tld",
+        "merchant.tld",
+      ])
+        expect(text).not.toContain(privateValue);
+      expect(
+        (await pool.query("SELECT state FROM notification_deliveries WHERE job_id=$1", [job.id]))
+          .rows[0].state,
+      ).toBe(outcome);
+    } finally {
+      log.mockRestore();
+    }
+  },
+);
 async function notification() {
   const payload = {
       template: "email-verification",

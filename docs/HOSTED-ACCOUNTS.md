@@ -72,6 +72,35 @@ Check the configured daily quota and whether jobs log `job.failed` or `job.defer
 The browser displays a safe request reference for supported failures; match it to
 `authentication.failed` in server logs. Never share passwords, tokens or connection URLs.
 
+### Worker ready but no verification email
+
+The sign-in page acknowledges a request without revealing whether an address exists.
+That is not an inbox-delivery receipt. `bootstrap.complete` and `/api/ready` are not
+email-delivery receipts either. In Render Logs, inspect the events after requesting
+one fresh verification message (do not repeatedly request links):
+
+| Event/category | Meaning and next step |
+| --- | --- |
+| `worker.started`, `adapters: brevo` | Correct adapter selected; it does not prove provider access. |
+| `notification.delivery`, HTTP 201, `provider_accepted_not_delivery_confirmed` | Brevo accepted the API request. Check Brevo transactional email activity for delivered, deferred, bounced or blocked status, then the recipient's inbox/spam. |
+| HTTP 401, `provider_api_key_rejected` | Check the active Brevo **API key** in `LONDOS_BREVO_API_KEY`; an SMTP password is not this API credential. Replace it privately if invalid/revoked. |
+| HTTP 403, `provider_access_denied` | Check Brevo account/API permissions, transactional sending activation and provider access restrictions. |
+| HTTP 400, `provider_request_rejected` | Brevo rejected the request. Check its dashboard and ensure `LONDOS_EMAIL_FROM` is an active verified sender; HTTP 400 alone does not prove which field was rejected. |
+| HTTP 429, `provider_rate_limited` | Brevo rejected for provider rate/quota limits. Check the provider allowance; do not raise local limits beyond it. |
+| `job.deferred`, `provider_quota` | Londos deferred the message before making a provider request because its configured hourly/daily budget was used. Wait for the budget window. |
+| `provider_server_error` / `provider_network_or_timeout` / `provider_response_invalid` | Delivery outcome is uncertain. Check Brevo activity before requesting another message; a timeout does not prove nothing was sent. |
+| `job.failed`, `email_origin_mismatch` | The queued action URL differs from the configured origin, for example after a domain change. Confirm the canonical `AUTH_BASE_URL` and request a new link on that origin; do not rewrite queued tokens. |
+| `job.failed`, `delivery_requires_reconciliation` | A prior attempt already has a rejected/uncertain durable record. Subsequent processing does not blindly resend it. Review the original `notification.delivery` event and Brevo activity. |
+| `job.failed`, `database_permission_denied` / `database_schema_missing` | Check worker runtime grants or the selected database's migrations; the job may have failed before contacting Brevo. |
+
+`job.failed` now includes the job kind. Before this diagnostic update, `handler_failed`
+did not identify why Brevo failed; historic failures cannot recover a discarded HTTP
+response. New provider attempts log only job ID, outcome, HTTP status and fixed labels.
+No raw response bodies, addresses, message IDs, keys or action URLs are logged. Do not
+delete delivery records or bypass verification to make an account accessible. After
+correcting a confirmed rejection, request one fresh verification link, then use the
+newest email. Resends remain subject to both local and provider limits.
+
 The production health contract now requires migration 024, preventing an older schema
 from being mistaken for a compatible one. Bootstrap does not perform migrations itself.
 If you cannot run a separate migration command, use the explicit Docker entry option below.

@@ -10,6 +10,7 @@ import { claim, acknowledge, heartbeat, fail, defer } from "../server/jobs/queue
 import { handle } from "../server/jobs/handlers";
 import { schedule } from "../server/jobs/scheduler";
 import { withinDeadline } from "../server/jobs/deadline";
+import { notificationFailureCategory } from "../server/jobs/notification-diagnostics";
 loadLocalEnv();
 const localAdapters = coreConfig().localAdapters;
 const pool = database(),
@@ -65,7 +66,14 @@ try {
           ? "unsupported_job"
           : "handler_failed";
       await fail(pool, job, code);
-      log("job.failed", { jobId: job.id, code }); // Never include payloads, credentials or provider errors.
+      log("job.failed", {
+        jobId: job.id,
+        kind: job.kind,
+        code,
+        ...(job.kind === "notification.local"
+          ? { category: notificationFailureCategory(error) }
+          : {}),
+      }); // Never include payloads, credentials or provider errors.
     } finally {
       globalThis.clearTimeout(timeout);
       globalThis.clearInterval(pulse);
