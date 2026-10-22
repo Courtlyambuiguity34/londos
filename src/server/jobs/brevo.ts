@@ -60,11 +60,16 @@ function paragraphs(value: string) {
     .join("");
 }
 function brandedHTML(input: {
+  origin: string;
   preview: string;
   heading: string;
   body: string;
   action?: { label: string; url: string };
 }) {
+  const home = escapeHTML(new URL("/", input.origin).href);
+  const logo = escapeHTML(new URL("/brand/londos-logo.png", input.origin).href);
+  const privacy = escapeHTML(new URL("/privacy", input.origin).href);
+  const terms = escapeHTML(new URL("/terms", input.origin).href);
   const button = input.action
     ? `<p style="margin:24px 0"><a href="${escapeHTML(input.action.url)}" style="background:#4338ca;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;display:inline-block;font-weight:700">${escapeHTML(input.action.label)}</a></p>`
     : "";
