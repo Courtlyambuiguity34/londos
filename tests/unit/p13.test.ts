@@ -329,6 +329,26 @@ test("Brevo action links are fixed-origin native-auth routes and messages contai
     ),
   ).toThrow();
 });
+test.each(["email-verification", "password-reset"] as const)(
+  "%s emails use website branding and canonical assets without changing the secure action",
+  (template) => {
+    const origin = "https://custom.londos.example:8443";
+    const url = `${origin}/api/auth/${template === "password-reset" ? "reset-password/opaque" : "verify-email"}?token=fixture-only&callbackURL=/sign-in`;
+    const message = brevoMessage({ template, to: "owner@example.org", url }, origin);
+    expect(message.html).toContain(`src="${origin}/brand/londos-logo.png"`);
+    expect(message.html).toContain('alt="Londos — Digital Mall"');
+    expect(message.html).toContain(`href="${origin}/privacy"`);
+    expect(message.html).toContain(`href="${origin}/terms"`);
+    expect(message.html).toContain(`href="${url.replaceAll("&", "&amp;")}"`);
+    expect(message.text).toContain(url);
+    expect(message.text).not.toContain("<table");
+    const destinations = [...message.html.matchAll(/(?:href|src)="([^"]+)"/g)].map(
+      ([, destination]) => new URL(destination!),
+    );
+    expect(destinations.every((destination) => destination.origin === origin)).toBe(true);
+    expect(message.html).not.toMatch(/#4338ca|#f5f3ff|<script|<iframe|<form/i);
+  },
+);
 test("Londos HTML campaigns escape operator content and monthly reports identify aggregate counts", () => {
   const origin = "https://mall.example.org";
   const campaign = brevoMessage(
