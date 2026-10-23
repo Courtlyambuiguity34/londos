@@ -1,3 +1,4 @@
+import { humanQueueState } from "@/modules/rent-presentation";
 import Link from "next/link";
 import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
@@ -32,7 +33,7 @@ export default async function Page({
         {rows.map((a) => (
           <li key={a.id}>
             <Link href={`/shopkeeper/applications/${a.id}`}>{a.business_name}</Link>
-            <span aria-label={`Application status: ${a.state.replaceAll("_", " ")}`}>{a.state.replaceAll("_", " ")}</span>
+            <span aria-label={`Application status: ${humanQueueState(a.state)}`}>{humanQueueState(a.state)}</span>
             {a.provisioned_shop_id ? (
               <Link href={`/shopkeeper/shops/${a.provisioned_shop_id}`}>Manage provisioned shop</Link>
             ) : null}
