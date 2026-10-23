@@ -34,7 +34,7 @@ export default async function Page({
           <li key={a.id}>
             {coreConfig().localAdapters ? (
               <Link href={`/shopkeeper/applications/${a.id}`}>{a.business_name}</Link>
-            ) : <span>{a.business_name}</span>}
+            ) : <Link href={`/shopkeeper/applications/status/${a.id}`}>{a.business_name}</Link>}
             <span aria-label={`Application status: ${a.state.replaceAll("_", " ")}`}>{a.state.replaceAll("_", " ")}</span>
             {a.provisioned_shop_id ? (
               <Link href={`/shopkeeper/shops/${a.provisioned_shop_id}`}>Manage provisioned shop</Link>
