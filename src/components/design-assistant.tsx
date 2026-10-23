@@ -1,3 +1,4 @@
+import { designAssistantStatusMessage } from "@/modules/design-assistant-status";
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -10,7 +11,7 @@ const explain = (p: Proposal) =>
     : p.status === "applied"
       ? "Applied as a new draft. Publication still requires your separate review and confirmation."
       : p.status === "running"
-        ? "Preparing a proposal…"
+        ? designAssistantStatusMessage("thinking")
         : p.status === "cancelled"
           ? "Proposal cancelled. Already admitted provider usage is not refunded."
           : p.status === "rejected"
@@ -37,7 +38,7 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
     [warning, setWarning] = useState(false),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(
-      "Describe a design change. Simple supported edits need no provider.",
+      designAssistantStatusMessage("idle"),
     );
   const retry = useRef<{ signature: string; body: unknown } | null>(null);
   const refresh = useCallback(async () => {
