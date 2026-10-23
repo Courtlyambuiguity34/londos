@@ -1,5 +1,5 @@
 import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
-import { humanQueueState } from "@/modules/rent-presentation";
+import { humanQueueState, CLAIM_IS_NOT_PAYMENT } from "@/modules/rent-presentation";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
@@ -24,6 +24,7 @@ export default async function Page({
         Claim an application to obtain scoped access. Claiming and consequential changes require
         recent MFA. Duplicate-name signals are advisory and are never an automatic rejection.
       </p>
+      <p className="portal-rent-disclaimer" role="note">{CLAIM_IS_NOT_PAYMENT}</p>
       <ul className="workspace-list">
         {rows.map((a) => (
           <li key={a.id}>
