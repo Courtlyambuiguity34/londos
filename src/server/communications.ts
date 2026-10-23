@@ -25,6 +25,10 @@ export const paymentSettingsInput = z
     supportPhone: z.preprocess((value) => (value === "" ? null : value), phone.nullable()),
     mobileMoneyPhone: z.preprocess((value) => (value === "" ? null : value), phone.nullable()),
     mobileMoneyName: optionalText(120),
+    mtnMomoPhone: z.preprocess((v) => v === "" ? null : v, phone.nullable()),
+    mtnMomoName: optionalText(120),
+    airtelMoneyPhone: z.preprocess((v) => v === "" ? null : v, phone.nullable()),
+    airtelMoneyName: optionalText(120),
     bankName: optionalText(120),
     bankAccountName: optionalText(120),
     bankAccountNumber: optionalText(80),
@@ -35,10 +39,14 @@ export const paymentSettingsInput = z
   .superRefine((value, context) => {
     if (Boolean(value.mobileMoneyPhone) !== Boolean(value.mobileMoneyName))
       context.addIssue({ code: "custom", message: "mobile_money_pair_required" });
+    if (Boolean(value.mtnMomoPhone) !== Boolean(value.mtnMomoName))
+      context.addIssue({ code: "custom", message: "mtn_pair_required" });
+    if (Boolean(value.airtelMoneyPhone) !== Boolean(value.airtelMoneyName))
+      context.addIssue({ code: "custom", message: "airtel_pair_required" });
     const bank = [value.bankName, value.bankAccountName, value.bankAccountNumber];
     if (bank.some(Boolean) && !bank.every(Boolean))
       context.addIssue({ code: "custom", message: "bank_details_complete_required" });
-    if (!value.mobileMoneyPhone && !value.bankName)
+    if (!value.mobileMoneyPhone && !value.mtnMomoPhone && !value.airtelMoneyPhone && !value.bankName)
       context.addIssue({ code: "custom", message: "payment_method_required" });
   });
 
@@ -48,6 +56,10 @@ export type PaymentSettings = {
   support_phone: string | null;
   mobile_money_phone: string | null;
   mobile_money_name: string | null;
+  mtn_momo_phone: string | null;
+  mtn_momo_name: string | null;
+  airtel_money_phone: string | null;
+  airtel_money_name: string | null;
   bank_name: string | null;
   bank_account_name: string | null;
   bank_account_number: string | null;
@@ -182,7 +194,7 @@ export async function updatePaymentSettings(
     await db.query(
       `INSERT INTO payment_settings(singleton,version,support_email,support_phone,mobile_money_phone,mobile_money_name,bank_name,bank_account_name,bank_account_number,updated_by)
        VALUES(true,$1,$2,$3,$4,$5,$6,$7,$8,$9)
-       ON CONFLICT(singleton) DO UPDATE SET version=excluded.version,support_email=excluded.support_email,support_phone=excluded.support_phone,mobile_money_phone=excluded.mobile_money_phone,mobile_money_name=excluded.mobile_money_name,bank_name=excluded.bank_name,bank_account_name=excluded.bank_account_name,bank_account_number=excluded.bank_account_number,updated_by=excluded.updated_by,updated_at=clock_timestamp()`,
+       ON CONFLICT(singleton) DO UPDATE SET version=excluded.version,support_email=excluded.support_email,support_phone=excluded.support_phone,mobile_money_phone=excluded.mobile_money_phone,mobile_money_name=excluded.mobile_money_name,bank_name=excluded.bank_name,bank_account_name=excluded.bank_account_name,bank_account_number=excluded.bank_account_number,mtn_momo_phone=excluded.mtn_momo_phone,mtn_momo_name=excluded.mtn_momo_name,airtel_money_phone=excluded.airtel_money_phone,airtel_money_name=excluded.airtel_money_name,updated_by=excluded.updated_by,updated_at=clock_timestamp()`,
       [
         next,
         value.supportEmail,
@@ -192,6 +204,10 @@ export async function updatePaymentSettings(
         value.bankName,
         value.bankAccountName,
         value.bankAccountNumber,
+        value.mtnMomoPhone,
+        value.mtnMomoName,
+        value.airtelMoneyPhone,
+        value.airtelMoneyName,
         actor.userId,
       ],
     );
@@ -419,7 +435,7 @@ async function scheduleMonthlyReports(db: PoolClient, now: Date) {
 async function scheduleRentReminders(db: PoolClient, now: Date) {
   if (process.env.LONDOS_RENT_REMINDERS_ENABLED !== "true") return 0;
   const settings = await currentPaymentSettings(db);
-  if (!settings?.mobile_money_phone || !settings.mobile_money_name) return 0;
+  if (!settings || !((settings.mtn_momo_phone && settings.mtn_momo_name) || (settings.airtel_money_phone && settings.airtel_money_name) || (settings.mobile_money_phone && settings.mobile_money_name))) return 0;
   const rows = (
     await db.query(
       `SELECT i.id AS invoice_id,i.merchant_id,i.shop_id,i.currency,
@@ -451,7 +467,9 @@ async function scheduleRentReminders(db: PoolClient, now: Date) {
       `Invoice: ${row.invoice_reference}`,
       `Invoice total: ${row.currency} ${row.amount_minor}`,
       `Due date: ${due.toISOString().slice(0, 10)}`,
-      `MTN/Airtel mobile money contact: ${settings.mobile_money_phone} (${settings.mobile_money_name}).`,
+      ...(settings.mtn_momo_phone && settings.mtn_momo_name ? [`MTN MoMo: ${settings.mtn_momo_phone} (${settings.mtn_momo_name}).`] : []),
+      ...(settings.airtel_money_phone && settings.airtel_money_name ? [`Airtel Money: ${settings.airtel_money_phone} (${settings.airtel_money_name}).`] : []),
+      ...(settings.mobile_money_phone && settings.mobile_money_name ? [`Other mobile money: ${settings.mobile_money_phone} (${settings.mobile_money_name}).`] : []),
       "When paying directly, enter your business/shop name as the payment reason.",
       "Keep the transaction reference and submit it for review. A submitted claim is not confirmation of payment.",
       "If you have already paid, please contact support and do not pay twice.",
