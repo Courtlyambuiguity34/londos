@@ -6,13 +6,13 @@ export function shopContactActions(
   const c = view.contact;
   if (!c) return [];
   const enabled = view.specification.actions;
-  return [
+  const actions = [
     ...(enabled.includes("whatsapp") && c.whatsapp
       ? [
           {
             kind: "whatsapp",
             label: "WhatsApp shop",
-            href: `https://wa.me/${c.whatsapp.slice(1)}`,
+            href: `https://wa.me/${c.whatsapp.replace(/^\\+/, "").replace(/\\s/g, "")}`,
             external: true,
           },
         ]
@@ -34,4 +34,5 @@ export function shopContactActions(
       ? [{ kind: "website", label: "Merchant website", href: c.website, external: true }]
       : []),
   ];
+  return actions.map((action,index)=>({...action,primary:index===0}));
 }
