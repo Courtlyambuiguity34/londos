@@ -6,8 +6,8 @@ export function ShopPublicLink({slug,shopName,published,absoluteBase,compact=fal
   const path = `/shops/${encodeURIComponent(slug)}`;
   const [status,setStatus] = useState("");
   async function copyLink() {
-    const url = absoluteBase ? new URL(path,absoluteBase).href : new URL(path,window.location.origin).href;
     try {
+      const url = absoluteBase ? new URL(path,absoluteBase).href : new URL(path,window.location.origin).href;
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
       else {
         const input=document.createElement("textarea");
