@@ -22,8 +22,9 @@ export default async function Page({
     <section className="shell page-section account-page">
       <h1>Your applications</h1>
       <p>
-        Review the status of your existing shop applications. New applications and hosted approvals
-        remain unavailable until the secure onboarding workflow is enabled.
+        {coreConfig().localAdapters
+          ? "Review your applications, submit verification evidence and respond to reviewers. Use fictional business details in local development."
+          : "Review existing application statuses. New applications and hosted approvals remain unavailable until secure onboarding is enabled."}
       </p>
       {coreConfig().localAdapters ? (
         <Link className="button" href="/shopkeeper/applications/new">Start an application</Link>
