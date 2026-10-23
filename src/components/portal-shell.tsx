@@ -13,6 +13,7 @@ export function PortalShell({ kind, title, subtitle, links, children }: {
 }) {
   const homeHref = kind === "landlord" ? "/landlord" : "/shopkeeper";
   const isHome = !currentPath || currentPath === homeHref;
+  const safeLinks=links.filter(item=>kind==="shopkeeper" ? !(item.href==="/landlord"||item.href.startsWith("/landlord/")) : !(item.href==="/shopkeeper"||item.href.startsWith("/shopkeeper/")));
   return (
     <div className={`portal-shell portal-shell--${kind}`}>
       <aside className="portal-sidebar" aria-label={kind === "landlord" ? "Landlord navigation" : "Shopkeeper navigation"}>
@@ -23,7 +24,7 @@ export function PortalShell({ kind, title, subtitle, links, children }: {
         </div>
         <nav className="portal-nav" aria-label="Workspace tools">
           <Link className={isHome ? "portal-nav-link portal-nav-link--current" : "portal-nav-link"} href={homeHref} aria-current={isHome ? "page" : undefined}>Home</Link>
-          {links.map((item) => { const active = Boolean(currentPath) && (currentPath === item.href || currentPath?.startsWith(`${item.href}/`)); return <Link className={active ? "portal-nav-link portal-nav-link--current" : "portal-nav-link"} aria-current={active ? "page" : undefined} href={item.href} key={item.href}>{item.label}</Link>; })}
+          {safeLinks.map((item) => { const active = Boolean(currentPath) && (currentPath === item.href || currentPath?.startsWith(`${item.href}/`)); return <Link className={active ? "portal-nav-link portal-nav-link--current" : "portal-nav-link"} aria-current={active ? "page" : undefined} href={item.href} key={item.href}>{item.label}</Link>; })}
         </nav>
         <Link className="portal-back" href="/">← Back to Londos mall</Link>
       </aside>
