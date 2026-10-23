@@ -14,7 +14,7 @@ export default async function ShopkeeperPage() {
   const actor = await pageActor("/shopkeeper");
   const shops = await listShops(database(), actor);
   const first = shops[0];
-  const hostedApplicationsAvailable = coreConfig().localAdapters;
+  const hostedApplicationsAvailable = true;
   const base = first ? `/shopkeeper/shops/${first.id}` : null;
   const links = [
     ...(base ? [
@@ -56,7 +56,7 @@ export default async function ShopkeeperPage() {
           </article>
         ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your application status or accept an invitation to an existing merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
       </section>
-      {hostedApplicationsAvailable ? <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div> : <p className="portal-notice">New shop applications are not yet available on hosted deployments. Existing shops can still be edited.</p>}
+      {hostedApplicationsAvailable ? <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div> : <p className="portal-notice"></p>}
       <section className="portal-section" aria-labelledby="tools-heading">
         <div className="portal-section-heading"><div><h2 id="tools-heading">Account & team tools</h2><p>Everything needed to manage access to your business.</p></div></div>
         <div className="portal-quick-grid">
