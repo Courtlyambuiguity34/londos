@@ -1,0 +1,3 @@
+export type DesignAssistantPhase="idle"|"thinking"|"proposal"|"preview"|"applying"|"expired"|"error";
+export const designAssistantCopy:Record<DesignAssistantPhase,string>={idle:"Describe a change or edit the design manually.",thinking:"Working on a proposal…",proposal:"Proposal ready. Preview before applying; applying saves a draft only.",preview:"Private preview — not live until separately published.",applying:"Saving draft…",expired:"This proposal expired. Request a new one or edit manually.",error:"Assistant unavailable. Try again or edit manually."};
+export function designAssistantStatusMessage(phase:DesignAssistantPhase){return designAssistantCopy[phase]}
