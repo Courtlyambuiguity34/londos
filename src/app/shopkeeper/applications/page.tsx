@@ -24,11 +24,9 @@ export default async function Page({
       <p>
         {coreConfig().localAdapters
           ? "Review your applications, submit verification evidence and respond to reviewers. Use fictional business details in local development."
-          : "Review existing application statuses. New applications and hosted approvals remain unavailable until secure onboarding is enabled."}
+          : "Review existing application statuses. Submit a new application or track an existing one. Approval is reviewed by authorized Londos staff."}
       </p>
-      {coreConfig().localAdapters ? (
-        <Link className="button" href="/shopkeeper/applications/new">Start an application</Link>
-      ) : null}
+      <Link className="button" href="/shopkeeper/applications/new">Start an application</Link>
       <ul className="workspace-list">
         {rows.map((a) => (
           <li key={a.id}>
