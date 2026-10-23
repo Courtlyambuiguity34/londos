@@ -1,3 +1,4 @@
+import { DesignManualPathNotice } from "@/components/design-manual-path-notice";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { DesignWorkspace } from "@/components/design-workspace";
@@ -25,6 +26,7 @@ export default async function Page({
     <ShopWorkspaceShell shop={shop} section="design" title="Design & publish" subtitle="Preview privately and publish when ready."><section className="portal-section account-page">
       <h1>{shop.name}: shop design</h1>
       <DesignWorkspace shopId={shopId} />
+      <DesignManualPathNotice shopId={shopId} />
     </section></ShopWorkspaceShell>
   );
 }
