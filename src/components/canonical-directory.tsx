@@ -1,3 +1,4 @@
+import { publicShopHref } from "@/modules/discovery/shop-continuity";
 import Link from "next/link";
 import { renderPilotContext } from "@/server/analytics";
 import { PilotObserver } from "./pilot-observer";
@@ -9,7 +10,7 @@ import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
 export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
-  const href = `/shops/${result.slug}${result.department_slug ? `/departments/${result.department_slug}` : ""}`;
+  const href = publicShopHref({shopSlug:result.slug,departmentSlug:result.department_slug});
   return (
     <article className="shop-card tone-clay">
       <div className="shop-card-body">
