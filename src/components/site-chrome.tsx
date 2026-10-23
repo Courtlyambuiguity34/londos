@@ -2,12 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
-import { showShopkeeperNavigation } from "@/server/navigation";
+import { workspaceAccess, requestPathname, isWorkspacePath } from "@/server/navigation";
 import { MobileNavigation } from "./mobile-navigation";
 
 export async function SiteHeader() {
+  const pathname=await requestPathname();
+  if(isWorkspacePath(pathname)) return null;
   const mode = previewCapabilities().mode;
-  const showShopkeeper = await showShopkeeperNavigation();
+  const access=await workspaceAccess();
   return (
     <>
       {mode !== "database-core" ? (
@@ -34,22 +36,26 @@ export async function SiteHeader() {
           <Link href="/about">Our mall</Link>
         </nav>
         <div className="header-actions">
-          {showShopkeeper ? (
+          {access.shopkeeper ? (
             <Link href="/shopkeeper" className="shopkeeper-link">
               Shopkeeper <Icon name="external" />
             </Link>
           ) : null}
-          <Link href="/rent-a-shop" className="button button--small">
+          {access.landlord ? <Link href="/landlord" className="shopkeeper-link">Management <Icon name="external" /></Link> : null}
+          {(!access.landlord || access.shopkeeper) ? <Link href="/rent-a-shop" className="button button--small">
             Open your shop <Icon name="arrow" />
-          </Link>
+          </Link> : null}
         </div>
-        <MobileNavigation showShopkeeper={showShopkeeper} />
+        <MobileNavigation showShopkeeper={access.shopkeeper} showLandlord={access.landlord} showRentCta={!access.landlord || access.shopkeeper} />
       </header>
     </>
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const pathname=await requestPathname();
+  if(isWorkspacePath(pathname)) return null;
+  const access=await workspaceAccess();
   const mode = previewCapabilities().mode;
   return (
     <footer className="site-footer">
@@ -73,7 +79,7 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/search">Explore the mall</Link>
-          <Link href="/rent-a-shop">Become a shopkeeper</Link>
+          {(!access.landlord || access.shopkeeper) ? <Link href="/rent-a-shop">Become a shopkeeper</Link> : null}
           <Link href="/about">About Londos</Link>
           <Link href="/install">Install Londos</Link>
           <Link href="/privacy">Privacy</Link>
