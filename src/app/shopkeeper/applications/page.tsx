@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { coreConfigured, coreConfig } from "@/server/config";
 import { sessionState } from "@/server/security/authorization";
@@ -19,7 +20,7 @@ export default async function Page({
   const offset = Number.isSafeInteger(parsedOffset) && parsedOffset >= 0 && parsedOffset <= 10000 ? parsedOffset : 0;
   const rows = await listApplications(database(), actor, offset);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="shopkeeper" title="Shop applications" subtitle="Track and manage your shop requests." currentPath="/shopkeeper/applications"><section className="portal-section account-page">
       <h1>Your applications</h1>
       <p>
         {coreConfig().localAdapters
@@ -46,6 +47,6 @@ export default async function Page({
         {rows.length === 20 ? <Link href={`?offset=${offset + 20}`}>Next applications</Link> : null}
         <Link href="/shopkeeper">Your shops</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
