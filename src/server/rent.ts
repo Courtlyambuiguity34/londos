@@ -599,7 +599,7 @@ export async function reconcileInvoice(
     if (
       (
         await client.query(
-          "SELECT 1 FROM rent_events WHERE source='local-manual' AND source_reference=$1",
+          "SELECT 1 FROM rent_events WHERE source IN ('local-manual','operator-verified') AND source_reference=$1",
           [v.reference],
         )
       ).rowCount
@@ -610,7 +610,7 @@ export async function reconcileInvoice(
     if (total > due) throw new AccessError(409, "amount_exceeds_balance");
     const eventId = randomUUID();
     await client.query(
-      "INSERT INTO rent_events(id,invoice_id,merchant_id,currency,amount_minor,kind,source,source_reference,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6,'local-manual',$7,$8,$9)",
+      "INSERT INTO rent_events(id,invoice_id,merchant_id,currency,amount_minor,kind,source,source_reference,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6,$10,$7,$8,$9)",
       [
         eventId,
         id,
@@ -621,6 +621,7 @@ export async function reconcileInvoice(
         v.reference,
         actor.userId,
         v.reason,
+        coreConfig().localAdapters ? "local-manual" : "operator-verified",
       ],
     );
     let shopId = invoice.shop_id;
