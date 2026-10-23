@@ -173,7 +173,6 @@ export async function invoiceAccess(
   id: string,
   mode: "owner" | "finance",
 ) {
-  localLifecycle();
   z.uuid().parse(id);
   if (mode === "finance") await requireOperator(db, actor, "finance");
   const row = (
@@ -257,7 +256,6 @@ export async function applicationInvoices(
   ).rows as Invoice[];
 }
 export async function shopRent(pool: Pool, actor: Actor, shopId: string, offset = 0) {
-  localLifecycle();
   z.uuid().parse(shopId);
   z.number().int().min(0).max(10000).parse(offset);
   await requireShop(pool, actor, shopId, "finance");
@@ -289,7 +287,6 @@ export async function requestRenewal(
   version: number,
   now = new Date(),
 ) {
-  localLifecycle();
   z.number().int().positive().parse(version);
   return transaction(pool, async (client) => {
     const shop = await requireShop(client, actor, shopId, "finance");
