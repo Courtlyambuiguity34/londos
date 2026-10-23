@@ -6,10 +6,11 @@ import { auth } from "./security/auth";
 import { resolveActor, sessionState } from "./security/authorization";
 import { AccessError } from "./security/errors";
 
-export async function showShopkeeperNavigation(): Promise<boolean> {
-  if (!coreConfigured()) return false;
+export type WorkspaceAccess = { shopkeeper: boolean; landlord: boolean };
+export async function workspaceAccess(): Promise<WorkspaceAccess> {
+  if (!coreConfigured()) return {shopkeeper:false,landlord:false};
   const requestHeaders = await headers();
-  if (!requestHeaders.get("cookie")) return false;
+  if (!requestHeaders.get("cookie")) return {shopkeeper:false,landlord:false};
   try {
     const actor = await resolveActor(auth(), requestHeaders);
     const pool = database();
@@ -19,9 +20,16 @@ export async function showShopkeeperNavigation(): Promise<boolean> {
       "SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' AND role IN ('owner','staff') LIMIT 1",
       [actor.userId],
     );
-    return Boolean(membership.rowCount);
+    const grants = await pool.query("SELECT 1 FROM operator_grants WHERE user_id=$1 LIMIT 1",[actor.userId]);
+    return {shopkeeper:Boolean(membership.rowCount),landlord:Boolean(grants.rowCount)};
   } catch (error) {
-    if (error instanceof AccessError) return false;
+    if (error instanceof AccessError) return {shopkeeper:false,landlord:false};
     throw error;
   }
 }
+
+export async function showShopkeeperNavigation(){return (await workspaceAccess()).shopkeeper;}
+export async function requestPathname(){const value=(await headers()).get("x-londos-pathname")??"";return value.startsWith("/")?value:"";}
+export function isShopkeeperPath(p:string){return p==="/shopkeeper"||p.startsWith("/shopkeeper/");}
+export function isLandlordPath(p:string){return p==="/landlord"||p.startsWith("/landlord/");}
+export function isWorkspacePath(p:string){return isShopkeeperPath(p)||isLandlordPath(p);}
