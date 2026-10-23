@@ -48,8 +48,9 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
     },
   ];
   const completed = steps.filter((step) => step.done).length;
+  const next=steps.find(step=>!step.done);
   return (
-    <ShopWorkspaceShell shop={shop} section="overview" title={`${shop.name} · Overview`} subtitle="Complete your shop setup, manage your business and share your storefront."><section className="portal-section account-page">
+    <ShopWorkspaceShell shop={shop} section="overview" title={`${shop.name} · Overview`} subtitle="Complete your shop setup, manage your business and share your storefront." published={setup.publication==="active"} banner={<div className="portal-next-step"><div><p className="portal-next-step__label">Setup {completed}/{steps.length}</p><strong>{next ? `Next: ${next.label}` : "Suggested setup complete"}</strong><p>{next ? "Continue with the next suggested step. Three products is guidance, not a publication requirement." : "Keep your catalogue updated and share your shop link with customers."}</p></div><div className="portal-next-step__actions"><Link className="portal-primary" href={next ? next.href : `/shopkeeper/shops/${shop.id}/catalogue`}>{next ? "Continue →" : "Manage catalogue →"}</Link></div></div>}><section className="portal-section account-page">
       <p className="eyebrow">Private shop profile</p>
       <h1>{shop.name}</h1>
       <p>
