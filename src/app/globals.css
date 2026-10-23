@@ -2617,3 +2617,10 @@ button:disabled {
 .portal-shell .portal-heading h1,.portal-shell .portal-section-heading h2 { font-family:var(--serif); font-weight:400; }
 .portal-shell .portal-primary { border-radius:var(--radius); }
 .portal-shell .portal-shop-card,.portal-shell .portal-stat,.portal-shell .portal-quick-grid a { background:var(--white); }
+
+/* Public shop links */
+.shop-public-link{margin:1rem 0;padding:1rem;border:1px solid var(--line,#ddd);border-radius:8px;min-width:0}
+.shop-public-link--compact{padding:.65rem;margin:.5rem 0}
+.shop-public-link__row,.shop-public-link__actions{display:flex;gap:.65rem;align-items:center;flex-wrap:wrap}
+.shop-public-link__path{overflow-wrap:anywhere;word-break:break-word;flex:1;min-width:12rem}
+.shop-public-link__status{font-size:.875rem}
