@@ -14,13 +14,12 @@ export async function workspaceAccess(): Promise<WorkspaceAccess> {
   try {
     const actor = await resolveActor(auth(), requestHeaders);
     const pool = database();
-    await sessionState(pool, actor);
+    await sessionState(pool, actor, true);
     // Membership is read per request, never taken from client flags or cached role cookies.
-    const membership = await pool.query(
-      "SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' AND role IN ('owner','staff') LIMIT 1",
-      [actor.userId],
-    );
-    const grants = await pool.query("SELECT 1 FROM operator_grants WHERE user_id=$1 LIMIT 1",[actor.userId]);
+    const [membership,grants] = await Promise.all([
+      pool.query("SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' AND role IN ('owner','staff') LIMIT 1",[actor.userId]),
+      pool.query("SELECT 1 FROM operator_grants WHERE user_id=$1 LIMIT 1",[actor.userId]),
+    ]);
     return {shopkeeper:Boolean(membership.rowCount),landlord:Boolean(grants.rowCount)};
   } catch (error) {
     if (error instanceof AccessError) return {shopkeeper:false,landlord:false};
