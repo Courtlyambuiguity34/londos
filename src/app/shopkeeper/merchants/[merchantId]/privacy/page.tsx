@@ -1,3 +1,4 @@
+import { PrivacyHonestyNotice } from "@/components/privacy-honesty-notice";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "@/server/db/pool";
@@ -14,6 +15,7 @@ export default async function Page({ params }: { params: Promise<{ merchantId: s
     <section className="shell page-section account-page">
       <p className="eyebrow">Fresh owner access</p>
       <h1>Business data and privacy</h1>
+      <PrivacyHonestyNotice />
       <PrivacyWorkspace initial={JSON.parse(JSON.stringify(result))} />
       <Link href="/shopkeeper">Your shops</Link>
     </section>
