@@ -91,7 +91,7 @@ export default async function LandlordPage() {
     try {
       const result = await database().query(sql);
       const count = result.rows[0]?.count;
-      return typeof count === "number" ? count : typeof count === "string" && /^\\d+$/.test(count) ? Number(count) : null;
+      return typeof count === "number" ? count : typeof count === "string" && /^[0-9]+$/.test(count) ? Number(count) : null;
     } catch { return null; }
   }
   const [applicationCount,rentCount,incidentCount,trustCount,privacyCount]=await Promise.all([
