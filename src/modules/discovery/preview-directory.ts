@@ -1,3 +1,4 @@
+import {publicShopHref,sortByContinuity} from "./shop-continuity";
 import { categories, products, shops } from "../catalogue/fixtures";
 import type { PreviewProduct, PreviewShop } from "../catalogue/types";
 
@@ -78,15 +79,13 @@ export function searchPreviewShops(
       department ?? shop.departments.find((d) => d.slug === matching[0]?.departmentSlug);
     results.push({
       shop,
-      href: contextDepartment
-        ? `/shops/${shop.slug}/departments/${contextDepartment.slug}`
-        : `/shops/${shop.slug}`,
+      href: publicShopHref({shopSlug:shop.slug,departmentSlug:contextDepartment?.slug}),
       context: contextDepartment?.name ?? null,
       matchingProducts: matching.length,
     });
     if (results.length === limit) break;
   }
-  return { query, results, error: null };
+  return { query, results:sortByContinuity(results), error: null };
 }
 
 export function formatUgx(amount: number | null): string {
