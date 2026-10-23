@@ -1,3 +1,4 @@
+import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -20,7 +21,7 @@ export default async function Page({
     days = Number((await searchParams).days ?? 30);
   const result = await readShopPilot(database(), actor, id, [7, 30, 90].includes(days) ? days : 30);
   return (
-    <section className="shell page-section account-page">
+    <ShopWorkspaceShell shop={result.shop} section="analytics" title="Shop analytics" subtitle="Explore visits and customer interest. These figures are not sales or payments."><section className="portal-section account-page">
       <p className="eyebrow">Private owner aggregates</p>
       <h1>Analytics for {result.shop.name}</h1>
       <nav className="filter-chips" aria-label="Analytics window">
@@ -32,6 +33,6 @@ export default async function Page({
       </nav>
       <PilotSummary {...result} />
       <Link href={`/shopkeeper/shops/${id}`}>Shop workspace</Link>
-    </section>
+    </section></ShopWorkspaceShell>
   );
 }
