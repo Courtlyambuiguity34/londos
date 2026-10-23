@@ -414,11 +414,74 @@ async function scheduleMonthlyReports(db: PoolClient, now: Date) {
   return rows.length;
 }
 
+/** Daily rent reminders are informational only. A payment claim never credits an
+ * invoice until independently verified by an authorized finance workflow. */
+async function scheduleRentReminders(db: PoolClient, now: Date) {
+  if (process.env.LONDOS_RENT_REMINDERS_ENABLED !== "true") return 0;
+  const settings = await currentPaymentSettings(db);
+  if (!settings?.mobile_money_phone || !settings.mobile_money_name) return 0;
+  const rows = (
+    await db.query(
+      `SELECT i.id AS invoice_id,i.merchant_id,i.shop_id,i.currency,
+         i.amount_minor::text AS amount_minor, i.period_end,
+         rs.reference AS invoice_reference,
+         coalesce(s.name,a.business_name) AS business_name,
+         u.email
+       FROM invoices i
+       JOIN rent_invoice_state rs ON rs.invoice_id=i.id
+       JOIN applications a ON a.id=i.application_id
+       LEFT JOIN shops s ON s.id=i.shop_id
+       JOIN memberships m ON m.merchant_id=i.merchant_id
+         AND m.role='owner' AND m.status='active'
+       JOIN "user" u ON u.id=m.user_id AND u."emailVerified"=true
+       WHERE i.period_end < $1::timestamptz + interval '7 days'
+         AND coalesce((SELECT sum(e.amount_minor) FROM rent_events e
+           WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)
+           < i.amount_minor
+       ORDER BY i.period_end,i.id,u.id LIMIT 100`,
+      [now],
+    )
+  ).rows;
+  let scheduled = 0;
+  for (const row of rows) {
+    const due = new Date(row.period_end);
+    const overdue = due.getTime() < now.getTime();
+    const body = [
+      `Londos rent ${overdue ? "overdue" : "due soon"} for ${row.business_name}.`,
+      `Invoice: ${row.invoice_reference}`,
+      `Invoice total: ${row.currency} ${row.amount_minor}`,
+      `Due date: ${due.toISOString().slice(0, 10)}`,
+      `MTN/Airtel mobile money contact: ${settings.mobile_money_phone} (${settings.mobile_money_name}).`,
+      "When paying directly, enter your business/shop name as the payment reason.",
+      "Keep the transaction reference and submit it for review. A submitted claim is not confirmation of payment.",
+      "If you have already paid, please contact support and do not pay twice.",
+      `Support: ${settings.support_email}`,
+    ].join("\\n");
+    const jobId = await enqueue(db, {
+      kind: "notification.local",
+      key: `rent-reminder:${now.toISOString().slice(0, 10)}:${row.invoice_id}:${row.email}`,
+      merchantId: row.merchant_id,
+      ...(row.shop_id ? { shopId: row.shop_id } : {}),
+      payload: {
+        template: "campaign",
+        to: row.email,
+        subject: `Londos rent reminder: ${row.business_name}`,
+        body,
+        ctaLabel: "View your Londos account",
+        ctaPath: "/shopkeeper",
+      },
+    });
+    if (jobId) scheduled++;
+  }
+  return scheduled;
+}
+
 export async function scheduleCommunications(db: PoolClient, now: Date) {
   const campaigns = await scheduleCampaigns(db);
   const reports = await scheduleMonthlyReports(db, now);
+  const rentReminders = await scheduleRentReminders(db, now);
   await db.query(
     "DELETE FROM email_quota_windows WHERE bucket_start<clock_timestamp()-interval '8 days'",
   );
-  return { campaigns, reports };
+  return { campaigns, reports, rentReminders };
 }
