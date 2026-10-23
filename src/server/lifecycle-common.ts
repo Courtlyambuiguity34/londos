@@ -35,7 +35,8 @@ export async function applicationAccess(
   id: string,
   mode: "owner" | "review" | "finance",
 ) {
-  localLifecycle();
+  // Read-only application access uses the same scoped membership and operator checks
+  // in both hosted and local environments. Mutations retain their own lifecycle gates.
   z.uuid().parse(id);
   if (mode !== "owner") await requireOperator(db, actor, mode);
   const row = (
