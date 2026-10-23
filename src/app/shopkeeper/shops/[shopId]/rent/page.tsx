@@ -10,7 +10,7 @@ import { pageActor } from "@/server/page-actor";
 import { shopRent } from "@/server/rent";
 import { RenewalButton } from "@/components/lifecycle-controls";
 import { InvoiceList } from "@/components/invoice-list";
-import { tenancyLabels, rentGraceDeadline } from "@/modules/rent-presentation";
+import { tenancyLabels, rentGraceDeadline, CLAIM_IS_NOT_PAYMENT } from "@/modules/rent-presentation";
 export const metadata = { title: "Rent and tenancy" };
 export default async function Page({
   params,
@@ -32,7 +32,7 @@ export default async function Page({
   const deadline = rentGraceDeadline(data.tenancy.period_end, data.tenancy.grace_days);
   return (
     <ShopWorkspaceShell shop={shop} section="rent" title="Rent & tenancy" subtitle="Your rent status, invoices and payment claims."><section className="portal-section account-page">
-      <div className="portal-rent-status" role="status"><p className="portal-next-step__label">Where things stand</p><strong>{tenancyLabels[state]??state}</strong><p>{plainStatus}</p><p>Payment claims are reviewed manually. Submitting a reference does not confirm payment or extend coverage.</p></div>
+      <div className="portal-rent-status" role="status"><p className="portal-next-step__label">Where things stand</p><strong>{tenancyLabels[state]??state}</strong><p>{plainStatus}</p><p>{CLAIM_IS_NOT_PAYMENT}</p></div>
       <p>
         Tenancy: <strong>{tenancyLabels[data.tenancy.state] ?? data.tenancy.state}</strong>
       </p>
