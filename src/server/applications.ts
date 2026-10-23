@@ -55,6 +55,7 @@ export async function createApplication(
   actor: Actor,
   input: z.infer<typeof createApplicationInput>,
 ) {
+  localLifecycle();
   const value = createApplicationInput.parse(input),
     hash = fingerprint(value);
   return transaction(pool, async (client) => {
