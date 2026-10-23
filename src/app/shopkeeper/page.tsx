@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import { PortalShell } from "@/components/portal-shell";
+import { ShopPublicLink } from "@/components/shop-public-link";
 import { coreConfigured, coreConfig } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
@@ -13,6 +14,7 @@ export default async function ShopkeeperPage() {
   if (!coreConfigured()) return <WorkspaceGateway kind="shopkeeper" />;
   const actor = await pageActor("/shopkeeper");
   const shops = await listShops(database(), actor);
+  const absoluteBase = coreConfig().baseURL;
   const first = shops[0];
   const hostedApplicationsAvailable = true;
   const base = first ? `/shopkeeper/shops/${first.id}` : null;
@@ -47,6 +49,7 @@ export default async function ShopkeeperPage() {
             <span className="portal-pill">{shop.role}</span>
             <h3>{shop.name}</h3>
             <p>Update your storefront and manage shop activity.</p>
+            <ShopPublicLink slug={shop.slug} absoluteBase={absoluteBase} compact />
             <div className="portal-card-actions">
               <Link className="portal-primary" href={`/shopkeeper/shops/${shop.id}`}>Edit shop →</Link>
               <Link href={`/shopkeeper/shops/${shop.id}/catalogue`}>Products</Link>
