@@ -2624,3 +2624,19 @@ button:disabled {
 .shop-public-link__row,.shop-public-link__actions{display:flex;gap:.65rem;align-items:center;flex-wrap:wrap}
 .shop-public-link__path{overflow-wrap:anywhere;word-break:break-word;flex:1;min-width:12rem}
 .shop-public-link__status{font-size:.875rem}
+
+/* Guided merchant and landlord workspace banners */
+.portal-topbar-actions{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:center}
+.portal-banner{padding:0 clamp(18px,3vw,45px);background:var(--paper,#faf8f2);border-bottom:1px solid var(--line,#dedfd3)}
+.portal-next-step{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem 1.5rem;align-items:center;max-width:1550px;margin:auto;padding:1.1rem 0 1.25rem}
+.portal-next-step__label{margin:0 0 .25rem;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green,#364636)}
+.portal-next-step strong{display:block;font-size:1.05rem;margin-bottom:.25rem}
+.portal-next-step p{margin:0;max-width:40rem;font-size:.9rem}
+.portal-next-step__actions{display:flex;flex-wrap:wrap;gap:.65rem 1rem;align-items:center}
+.portal-today{max-width:1550px;margin:auto;padding:1rem 0 1.25rem}
+.portal-today__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;margin-top:.5rem}
+.portal-today__card{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line,#dedfd3);border-radius:12px;background:var(--white,#fff);text-decoration:none;color:inherit;min-height:72px}
+.portal-today__card:hover{border-color:var(--orange,#af4d28)}
+.portal-today__card strong{font-size:.95rem}
+.portal-today__card span{font-size:.8rem;color:var(--muted,#62675b)}
+@media(max-width:850px){.portal-banner{padding-left:16px;padding-right:16px}}
