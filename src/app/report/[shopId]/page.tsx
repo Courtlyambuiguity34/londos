@@ -18,6 +18,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
         threats, contact the appropriate emergency services.
       </p>
       <PublicReportForm shopId={shopId.data} />
+      <p className="notice">After submitting, keep the reference number displayed by the form for follow-up. A report is reviewed privately and does not automatically suspend a shop.</p>
     </section>
   );
 }
