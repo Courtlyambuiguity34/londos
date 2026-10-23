@@ -136,8 +136,8 @@ export async function issueInvoice(
   now: Date,
 ) {
   const policy = (
-    await client.query("SELECT * FROM rent_policies WHERE id=$1 AND development_only=true", [
-      policyId,
+    await client.query("SELECT * FROM rent_policies WHERE id=$1 AND development_only=$2", [
+      policyId, coreConfig().localAdapters,
     ])
   ).rows[0] as RentPolicy | undefined;
   if (!policy) throw new AccessError(422, "policy_unavailable");
