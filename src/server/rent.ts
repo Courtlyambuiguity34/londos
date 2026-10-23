@@ -1,3 +1,4 @@
+import { coreConfig } from "./config";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
@@ -113,16 +114,15 @@ export async function listPolicies(pool: Pool, actor: Actor) {
     .rows as RentPolicy[];
 }
 export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<typeof policyInput>) {
-  localLifecycle();
   const v = policyInput.parse(input);
   return transaction(pool, async (client) => {
     await requireOperator(client, actor, "finance", true);
     const id = randomUUID();
     await client.query(
-      "INSERT INTO rent_policies(id,label,currency,amount_minor,period_days,grace_days,mall_capacity,development_only) VALUES($1,$2,'UGX',$3,$4,$5,$6,true)",
-      [id, v.label, v.amountMinor, v.periodDays, v.graceDays, v.mallCapacity],
+      "INSERT INTO rent_policies(id,label,currency,amount_minor,period_days,grace_days,mall_capacity,development_only) VALUES($1,$2,'UGX',$3,$4,$5,$6,$7)",
+      [id, v.label, v.amountMinor, v.periodDays, v.graceDays, v.mallCapacity, coreConfig().localAdapters],
     );
-    await audit(client, actor, "rent.policy.created", id, undefined, { developmentOnly: true });
+    await audit(client, actor, "rent.policy.created", id, undefined, { developmentOnly: coreConfig().localAdapters });
     return { id };
   });
 }
