@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import Link from "next/link";
+import { PortalShell } from "@/components/portal-shell";
 import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
@@ -84,10 +85,12 @@ export default async function LandlordPage() {
       ],
     },
   ];
+  const navigation = groups.flatMap((group) => group.links.filter((link) => link.allowed).map((link) => ({ href: link.href, label: link.label })));
   return (
-    <section className="shell page-section account-page landlord-hub">
+    <PortalShell kind="landlord" title="Manage your mall with clarity." subtitle="Shops, tenants, finance, support and growth — organized around your work." links={navigation}>
+    <section className="landlord-hub">
       <p className="eyebrow">Londos · secure management workspace</p>
-      <h1>Manage your mall with clarity.</h1>
+
       <p className="landlord-intro">
         Start with shops and tenants, then handle rent, support and growth. Your tools are
         grouped by responsibility, and only actions permitted for your account are shown.
@@ -134,5 +137,6 @@ export default async function LandlordPage() {
       <p className="landlord-caution">Rent reconciliation is manual. Live collection is not enabled.</p>
       <div className="landlord-signout"><SignOutButton /></div>
     </section>
+    </PortalShell>
   );
 }
