@@ -1,3 +1,4 @@
+import { PrivacyHonestyNotice } from "@/components/privacy-honesty-notice";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { database } from "@/server/db/pool";
@@ -15,6 +16,7 @@ export default async function Page() {
       <p className="eyebrow">Native fresh MFA and explicit privacy authority</p>
       <h1>Privacy reviews</h1>
       <PrivacyQueue initial={JSON.parse(JSON.stringify(rows))} />
+      <PrivacyHonestyNotice />
       <Link href="/landlord">Operator workspace</Link>
     </section>
   );
