@@ -2654,3 +2654,15 @@ button:disabled {
 .portal-today__count{display:inline-flex;align-items:center;justify-content:center;min-width:1.5rem;margin-left:.4rem;padding:.1rem .45rem;border-radius:999px;background:var(--orange,#af4d28);color:#fff;font-size:.75rem;font-weight:700;vertical-align:middle}
 .portal-shell .account-page{max-width:none;margin:0;padding:0}
 .portal-shell .account-page>h1:first-child{display:none}
+
+/* Workspace command search */
+.portal-search-trigger{cursor:pointer;border:1px solid currentColor;border-radius:8px;background:transparent;padding:.4rem .65rem}
+.portal-search-trigger kbd{font-size:.7rem;margin-left:.5rem}
+.command-palette{position:fixed;inset:0;z-index:1100;display:flex;align-items:flex-start;justify-content:center;padding:12vh 1rem 1rem}
+.command-palette__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);border:0;cursor:pointer}
+.command-palette__panel{position:relative;width:min(100%,560px);max-height:76vh;overflow:auto;background:var(--paper,#fff);color:var(--ink,#222);border-radius:14px;padding:1.25rem;box-shadow:0 16px 45px rgba(0,0,0,.25)}
+.command-palette__panel input{width:100%;padding:.8rem;border:1px solid #999;border-radius:8px;margin:.5rem 0}
+.command-palette__panel ul{padding:0;margin:0;list-style:none}
+.command-palette__panel li button{display:flex;flex-direction:column;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid #ddd;padding:.7rem;cursor:pointer}
+.command-palette__panel li button:hover{background:rgba(0,0,0,.05)}
+.command-palette__panel li span{font-size:.75rem;opacity:.7}
