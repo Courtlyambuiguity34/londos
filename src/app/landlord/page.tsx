@@ -1,3 +1,4 @@
+import { operatorQueueCounts } from "@/server/operator-queue-counts";
 import type { Metadata } from "next";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import Link from "next/link";
@@ -86,21 +87,8 @@ export default async function LandlordPage() {
       ],
     },
   ];
-  // Best-effort dashboard counts: a missing optional queue must never break the dashboard.
-  async function queueCount(sql: string): Promise<number | null> {
-    try {
-      const result = await database().query(sql);
-      const count = result.rows[0]?.count;
-      return typeof count === "number" ? count : typeof count === "string" && /^[0-9]+$/.test(count) ? Number(count) : null;
-    } catch { return null; }
-  }
-  const [applicationCount,rentCount,incidentCount,trustCount,privacyCount]=await Promise.all([
-    can("review") ? queueCount("SELECT count(*)::int AS count FROM shop_applications WHERE state IN ('submitted','in_review','claimed')") : Promise.resolve(null),
-    can("finance") ? queueCount("SELECT count(*)::int AS count FROM tenancies WHERE state IN ('due','grace')") : Promise.resolve(null),
-    canAny("recovery","support","moderation","finance","review") ? queueCount("SELECT count(*)::int AS count FROM incidents WHERE state IN ('open','assigned','investigating')") : Promise.resolve(null),
-    can("moderation") ? queueCount("SELECT count(*)::int AS count FROM shop_reports WHERE state IN ('open','assigned','under_review')") : Promise.resolve(null),
-    can("privacy") ? queueCount("SELECT count(*)::int AS count FROM privacy_requests WHERE state IN ('open','assigned','in_progress')") : Promise.resolve(null),
-  ]);
+  const queueCounts = await operatorQueueCounts(database(),can,canAny);
+  const {applications:applicationCount,rentAttention:rentCount,incidents:incidentCount,trust:trustCount,privacy:privacyCount}=queueCounts;
   const today = [
     {href:"/landlord/applications",label:"Applications",hint:"Review shop requests",allowed:can("review"),count:applicationCount},
     {href:"/landlord/rent",label:"Rent desk",hint:"Due or grace tenancies",allowed:can("finance"),count:rentCount},
