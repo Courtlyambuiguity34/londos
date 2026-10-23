@@ -120,7 +120,7 @@ export async function createApplication(
   });
 }
 export async function listApplications(pool: Pool, actor: Actor, offset = 0) {
-  localLifecycle();
+  // Listing is scoped to active owner memberships and does not mutate application state.
   await sessionState(pool, actor);
   z.number().int().min(0).max(10000).parse(offset);
   return (
