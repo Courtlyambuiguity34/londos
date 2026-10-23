@@ -14,6 +14,7 @@ export default async function ShopkeeperPage() {
   const actor = await pageActor("/shopkeeper");
   const shops = await listShops(database(), actor);
   const first = shops[0];
+  const hostedApplicationsAvailable = coreConfig().localAdapters;
   const base = first ? `/shopkeeper/shops/${first.id}` : null;
   const links = [
     ...(base ? [
@@ -26,7 +27,7 @@ export default async function ShopkeeperPage() {
         { href: `${base}/costs`, label: "Business costs" },
       ] : []),
     ] : []),
-    { href: "/shopkeeper/applications", label: "Applications" },
+    { href: "/shopkeeper/applications", label: "Shop applications" },
     { href: "/shopkeeper/team", label: "Teams" },
     { href: "/shopkeeper/invitations", label: "Invitations" },
   ];
@@ -39,7 +40,7 @@ export default async function ShopkeeperPage() {
         <div className="portal-stat"><span>Workspace</span><strong className="portal-stat-text">Ready</strong><small>Choose a shop to get started</small></div>
       </div>
       <section className="portal-section" aria-labelledby="shop-heading">
-        <div className="portal-section-heading"><div><h2 id="shop-heading">Your shops</h2><p>Choose a shop to manage its products, branding and customer contacts.</p></div><Link className="portal-primary" href="/shopkeeper/applications">Your applications →</Link></div>
+        <div className="portal-section-heading"><div><h2 id="shop-heading">Your shops</h2><p>Choose a shop to manage its products, branding and customer contacts.</p></div><Link className="portal-primary" href="/shopkeeper/applications">Application status →</Link></div>
         {shops.length ? <div className="portal-card-grid">{shops.map((shop) => (
           <article className="portal-shop-card" key={shop.id}>
             <div className="portal-shop-avatar" aria-hidden="true">{shop.name.slice(0, 1).toUpperCase()}</div>
@@ -47,13 +48,14 @@ export default async function ShopkeeperPage() {
             <h3>{shop.name}</h3>
             <p>Update your storefront and manage shop activity.</p>
             <div className="portal-card-actions">
-              <Link className="portal-primary" href={`/shopkeeper/shops/${shop.id}`}>Open workspace →</Link>
+              <Link className="portal-primary" href={`/shopkeeper/shops/${shop.id}`}>Edit shop →</Link>
               <Link href={`/shopkeeper/shops/${shop.id}/catalogue`}>Products</Link>
               <Link href={`/shopkeeper/shops/${shop.id}/design`}>Design</Link>
             </div>
           </article>
         ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your applications or accept an invitation to join a merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
       </section>
+      {hostedApplicationsAvailable ? <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div> : <p className="portal-notice">New shop applications are not yet available on hosted deployments. Existing shops can still be edited.</p>}
       <section className="portal-section" aria-labelledby="tools-heading">
         <div className="portal-section-heading"><div><h2 id="tools-heading">Account & team tools</h2><p>Everything needed to manage access to your business.</p></div></div>
         <div className="portal-quick-grid">
