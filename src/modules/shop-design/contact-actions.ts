@@ -12,7 +12,7 @@ export function shopContactActions(
           {
             kind: "whatsapp",
             label: "Message on WhatsApp",
-            href: `https://wa.me/${c.whatsapp.replace(/^\\+/, "").replace(/\\s/g, "")}`,
+            href: `https://wa.me/${c.whatsapp.replace(/^\+/, "").replace(/\s/g, "")}`,
             external: true,
           },
         ]
