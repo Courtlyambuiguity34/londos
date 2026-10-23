@@ -11,20 +11,20 @@ export function shopContactActions(
       ? [
           {
             kind: "whatsapp",
-            label: "WhatsApp shop",
+            label: "Message on WhatsApp",
             href: `https://wa.me/${c.whatsapp.replace(/^\\+/, "").replace(/\\s/g, "")}`,
             external: true,
           },
         ]
       : []),
     ...(enabled.includes("call") && c.phone
-      ? [{ kind: "call", label: "Call shop", href: `tel:${c.phone}`, external: false }]
+      ? [{ kind: "call", label: "Call the shop", href: `tel:${c.phone}`, external: false }]
       : []),
     ...(enabled.includes("enquiry") && c.enquiries_enabled && !view.privatePreview
       ? [
           {
             kind: "enquiry",
-            label: "Enquire with the shop",
+            label: "Send an enquiry",
             href: `/contact/${view.shop.id}`,
             external: false,
           },
