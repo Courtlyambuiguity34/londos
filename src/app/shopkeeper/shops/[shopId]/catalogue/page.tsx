@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { CatalogueWorkspace } from "@/components/catalogue-workspace";
 import { coreConfigured } from "@/server/config";
+import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { readShop } from "@/server/workspace";
@@ -18,7 +19,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
     throw error;
   });
   return (
-    <section className="shell page-section account-page">
+    <ShopWorkspaceShell shop={shop} section="catalogue" title="Products & contacts" subtitle="Manage products, images and how customers contact you."><section className="portal-section account-page">
       <p className="eyebrow">Private catalogue</p>
       <h1>{shop.name}</h1>
       <p>
@@ -28,6 +29,6 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
         Shop profile
       </Link>
       <CatalogueWorkspace shopId={shop.id} />
-    </section>
+    </section></ShopWorkspaceShell>
   );
 }
