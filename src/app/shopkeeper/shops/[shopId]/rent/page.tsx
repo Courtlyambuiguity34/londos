@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
+import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
+import { readShop } from "@/server/workspace";
+import { AccessError } from "@/server/security/errors";
+import { z } from "zod";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { shopRent } from "@/server/rent";
@@ -20,10 +24,15 @@ export default async function Page({
     { shopId } = await params,
     offset = Number((await searchParams).offset ?? 0),
     data = await shopRent(database(), actor, shopId, offset);
+  const parsed=z.uuid().safeParse(shopId);
+  if (!parsed.success) notFound();
+  const shop=await readShop(database(),actor,parsed.data).catch(error=>{if(error instanceof AccessError && error.status===404) notFound();throw error;});
+  const state=data.tenancy.state;
+  const plainStatus=state==="active"?"Your rent coverage is active.":state==="due"?"Rent is due. Submit your payment reference for operator review.":state==="grace"?"Your rent is in its grace period. Submit a payment reference promptly.":state==="suspended"?"Your tenancy is suspended. Contact mall management.":`Current status: ${tenancyLabels[state]??state}.`;
   const deadline = rentGraceDeadline(data.tenancy.period_end, data.tenancy.grace_days);
   return (
-    <section className="shell page-section account-page">
-      <h1>Rent and tenancy</h1>
+    <ShopWorkspaceShell shop={shop} section="rent" title="Rent & tenancy" subtitle="Your rent status, invoices and payment claims."><section className="portal-section account-page">
+      <div className="portal-rent-status" role="status"><p className="portal-next-step__label">Where things stand</p><strong>{tenancyLabels[state]??state}</strong><p>{plainStatus}</p><p>Payment claims are reviewed manually. Submitting a reference does not confirm payment or extend coverage.</p></div>
       <p>
         Tenancy: <strong>{tenancyLabels[data.tenancy.state] ?? data.tenancy.state}</strong>
       </p>
@@ -62,6 +71,6 @@ export default async function Page({
       <p>
         <Link href={`/shopkeeper/shops/${shopId}`}>Shop workspace</Link>
       </p>
-    </section>
+    </section></ShopWorkspaceShell>
   );
 }
