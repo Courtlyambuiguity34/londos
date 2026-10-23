@@ -456,7 +456,7 @@ async function scheduleRentReminders(db: PoolClient, now: Date) {
       "Keep the transaction reference and submit it for review. A submitted claim is not confirmation of payment.",
       "If you have already paid, please contact support and do not pay twice.",
       `Support: ${settings.support_email}`,
-    ].join("\\n");
+    ].join("\n");
     const jobId = await enqueue(db, {
       kind: "notification.local",
       key: `rent-reminder:${now.toISOString().slice(0, 10)}:${row.invoice_id}:${row.email}`,
