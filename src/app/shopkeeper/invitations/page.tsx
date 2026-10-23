@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
 import { pageActor } from "@/server/page-actor";
@@ -8,7 +9,7 @@ export default async function Page() {
   if (!coreConfigured()) notFound();
   await pageActor("/shopkeeper");
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="shopkeeper" title="Invitations" subtitle="Join an existing merchant team." currentPath="/shopkeeper/invitations"><section className="portal-section account-page">
       <h1>Accept a merchant invitation</h1>
       <p>
         Sign in using the invited email, then enter the token from your private invitation.
@@ -17,6 +18,6 @@ export default async function Page() {
       </p>
       <AcceptInvitationForm />
       <Link href="/shopkeeper">Your shops</Link>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
