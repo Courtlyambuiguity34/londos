@@ -6,6 +6,7 @@ import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { sessionState } from "@/server/security/authorization";
+import { workspaceAccess } from "@/server/navigation";
 import { SignOutButton } from "@/components/auth-controls";
 import { redirect } from "next/navigation";
 
@@ -20,16 +21,16 @@ export default async function LandlordPage() {
       [actor.userId],
     )
   ).rows as { permission: string }[];
-  if (!grants.length)
+  if (!grants.length) {
+    const access=await workspaceAccess();
     return (
       <section className="shell page-section">
         <h1>Operator access is unavailable.</h1>
         <p>Your current account has no operator permissions.</p>
-        <Link href="/shopkeeper" className="button">
-          Shopkeeper
-        </Link>
+        {access.shopkeeper ? <Link href="/shopkeeper" className="button">Shopkeeper</Link> : <Link href="/" className="button">Return to mall</Link>}
       </section>
     );
+  }
   if (!session.mfa_enabled || !session.verified_at) redirect("/security");
   const counts = grants.some((grant) => grant.permission === "jobs")
     ? ((
