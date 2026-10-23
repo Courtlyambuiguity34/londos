@@ -49,6 +49,10 @@ export function CommunicationsControls({ initial }: { initial: Data }) {
           supportPhone: String(form.get("supportPhone")),
           mobileMoneyPhone: String(form.get("mobileMoneyPhone")),
           mobileMoneyName: String(form.get("mobileMoneyName")),
+          mtnMomoPhone: String(form.get("mtnMomoPhone")),
+          mtnMomoName: String(form.get("mtnMomoName")),
+          airtelMoneyPhone: String(form.get("airtelMoneyPhone")),
+          airtelMoneyName: String(form.get("airtelMoneyName")),
           bankName: String(form.get("bankName")),
           bankAccountName: String(form.get("bankAccountName")),
           bankAccountNumber: String(form.get("bankAccountNumber")),
@@ -151,6 +155,16 @@ export function CommunicationsControls({ initial }: { initial: Data }) {
           maxLength={120}
           defaultValue={settings?.mobile_money_name ?? ""}
         />
+        <h3>MTN MoMo account</h3>
+        <label htmlFor="mtn-momo-phone">MTN collection number</label>
+        <input id="mtn-momo-phone" name="mtnMomoPhone" type="tel" pattern="\\+[1-9][0-9]{7,14}" defaultValue={settings?.mtn_momo_phone ?? ""} />
+        <label htmlFor="mtn-momo-name">MTN registered account name</label>
+        <input id="mtn-momo-name" name="mtnMomoName" maxLength={120} defaultValue={settings?.mtn_momo_name ?? ""} />
+        <h3>Airtel Money account</h3>
+        <label htmlFor="airtel-money-phone">Airtel collection number</label>
+        <input id="airtel-money-phone" name="airtelMoneyPhone" type="tel" pattern="\\+[1-9][0-9]{7,14}" defaultValue={settings?.airtel_money_phone ?? ""} />
+        <label htmlFor="airtel-money-name">Airtel registered account name</label>
+        <input id="airtel-money-name" name="airtelMoneyName" maxLength={120} defaultValue={settings?.airtel_money_name ?? ""} />
         <label htmlFor="bank-name">Bank name (optional)</label>
         <input
           id="bank-name"
