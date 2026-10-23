@@ -35,7 +35,6 @@ export async function applicationAccess(
   id: string,
   mode: "owner" | "review" | "finance",
 ) {
-  localLifecycle();
   z.uuid().parse(id);
   if (mode !== "owner") await requireOperator(db, actor, mode);
   const row = (
