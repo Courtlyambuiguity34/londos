@@ -24,5 +24,5 @@ export function invoiceStatus(amount: string, credited: string, claims: { state:
 }
 
 export const queueSlaLabels:Record<string,string>={submitted:"Waiting review",in_review:"In review",claimed:"Claimed by a reviewer",approved:"Approved",rejected:"Rejected",provisioned:"Shop provisioned",due:"Rent due",grace:"In grace",open:"Open",assigned:"Assigned",investigating:"Investigating",under_review:"Under review",in_progress:"In progress",resolved:"Resolved",closed:"Closed"};
-export function humanQueueState(state:string):string{const key=state.toLowerCase().replace(/\\s+/g,"_");return queueSlaLabels[key]??state.replaceAll("_"," ")}
+export function humanQueueState(state:string):string{const key=state.toLowerCase().replace(/\s+/g,"_");return queueSlaLabels[key]??state.replaceAll("_"," ")}
 export const CLAIM_IS_NOT_PAYMENT="A claim is evidence you paid — not automatic confirmation. Coverage updates only after an operator accepts the claim.";
