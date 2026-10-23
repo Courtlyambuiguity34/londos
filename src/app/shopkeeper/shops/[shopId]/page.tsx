@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ProfileForm } from "@/components/profile-form";
+import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
 import { ShopPublicLink } from "@/components/shop-public-link";
 import { database } from "@/server/db/pool";
 import { coreConfigured, coreConfig } from "@/server/config";
@@ -48,7 +49,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
   ];
   const completed = steps.filter((step) => step.done).length;
   return (
-    <section className="shell page-section account-page">
+    <ShopWorkspaceShell shop={shop} section="overview" title={`${shop.name} · Overview`} subtitle="Complete your shop setup, manage your business and share your storefront."><section className="portal-section account-page">
       <p className="eyebrow">Private shop profile</p>
       <h1>{shop.name}</h1>
       <p>
@@ -130,6 +131,6 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           </Link>
         </>
       ) : null}
-    </section>
+    </section></ShopWorkspaceShell>
   );
 }
