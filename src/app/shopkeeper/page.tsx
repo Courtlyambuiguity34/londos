@@ -37,7 +37,7 @@ export default async function ShopkeeperPage() {
       <div className="portal-stat-grid">
         <div className="portal-stat"><span>Accessible shops</span><strong>{shops.length}</strong><small>Shops linked to your membership</small></div>
         <div className="portal-stat"><span>Your role</span><strong className="portal-stat-text">{first?.role ?? "No shop"}</strong><small>Permissions vary by shop</small></div>
-        <div className="portal-stat"><span>Workspace</span><strong className="portal-stat-text">Ready</strong><small>Choose a shop to get started</small></div>
+        <div className="portal-stat"><span>Workspace</span><strong className="portal-stat-text">{shops.length ? "Manage shops" : "No shop assigned"}</strong><small>{shops.length ? "Choose a shop to get started" : "Shop provisioning is required"}</small></div>
       </div>
       <section className="portal-section" aria-labelledby="shop-heading">
         <div className="portal-section-heading"><div><h2 id="shop-heading">Your shops</h2><p>Choose a shop to manage its products, branding and customer contacts.</p></div><Link className="portal-primary" href="/shopkeeper/applications">Application status →</Link></div>
@@ -50,10 +50,11 @@ export default async function ShopkeeperPage() {
             <div className="portal-card-actions">
               <Link className="portal-primary" href={`/shopkeeper/shops/${shop.id}`}>Edit shop →</Link>
               <Link href={`/shopkeeper/shops/${shop.id}/catalogue`}>Products</Link>
-              <Link href={`/shopkeeper/shops/${shop.id}/design`}>Design</Link>
+              <Link href={`/shopkeeper/shops/${shop.id}/design`}>Design &amp; publish</Link>
+              <Link href={`/shopkeeper/shops/${shop.id}/rent`}>Rent status</Link>
             </div>
           </article>
-        ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your applications or accept an invitation to join a merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
+        ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your application status or accept an invitation to an existing merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
       </section>
       {hostedApplicationsAvailable ? <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div> : <p className="portal-notice">New shop applications are not yet available on hosted deployments. Existing shops can still be edited.</p>}
       <section className="portal-section" aria-labelledby="tools-heading">
