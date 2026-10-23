@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { WorkspaceCommandPalette } from "@/components/workspace-command-palette";
 
 export type PortalLink = { href: string; label: string; description?: string };
-export function PortalShell({ kind, title, subtitle, links, children }: {
+export function PortalShell({ kind, title, subtitle, links, children, currentPath, banner }: {
   kind: "shopkeeper" | "landlord";
   title: string;
   subtitle: string;
@@ -31,6 +32,7 @@ export function PortalShell({ kind, title, subtitle, links, children }: {
       <div className="portal-main">
         <header className="portal-topbar">
           <span>{kind === "landlord" ? "Landlord dashboard" : "Shopkeeper dashboard"}</span>
+          <WorkspaceCommandPalette items={[{href:homeHref,label:"Home"},...safeLinks]} />
           <div className="portal-topbar-actions"><Link href="/">Mall</Link><Link href="/security">Account &amp; security</Link></div>
         </header>
         {banner ? <div className="portal-banner">{banner}</div> : null}
