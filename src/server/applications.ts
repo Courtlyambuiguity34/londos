@@ -308,7 +308,6 @@ export async function applicationQueue(
   permission: "review" | "finance",
   offset = 0,
 ) {
-  localLifecycle();
   await requireOperator(pool, actor, permission);
   z.number().int().min(0).max(10000).parse(offset);
   return (
