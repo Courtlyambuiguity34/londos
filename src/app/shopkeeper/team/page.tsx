@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { coreConfigured } from "@/server/config";
@@ -17,7 +18,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
       .parse((await searchParams).page ?? 0),
     merchants = await ownedMerchants(database(), actor, page);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="shopkeeper" title="Merchant teams" subtitle="Manage the teams and businesses you own." currentPath="/shopkeeper/team"><section className="portal-section account-page">
       <h1>Your merchant teams</h1>
       <p>Owners manage team membership and shop permissions with recent authentication.</p>
       <ul className="workspace-list">
@@ -35,6 +36,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
         ) : null}
         <Link href="/shopkeeper">Your shops</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
