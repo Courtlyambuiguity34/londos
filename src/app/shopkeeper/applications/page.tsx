@@ -14,8 +14,10 @@ export default async function Page({
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/shopkeeper");
   await sessionState(database(), actor);
-  const offset = Number((await searchParams).offset ?? 0),
-    rows = await listApplications(database(), actor, offset);
+  const rawOffset = (await searchParams).offset ?? "0";
+  const parsedOffset = Number(rawOffset);
+  const offset = Number.isSafeInteger(parsedOffset) && parsedOffset >= 0 && parsedOffset <= 10000 ? parsedOffset : 0;
+  const rows = await listApplications(database(), actor, offset);
   return (
     <section className="shell page-section account-page">
       <h1>Your applications</h1>
