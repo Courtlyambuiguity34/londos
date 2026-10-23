@@ -2568,3 +2568,47 @@ button:disabled {
 .landlord-signout { margin-top: 18px; }
 @media (max-width: 600px) { .landlord-status > div { flex-basis: 100%; } .landlord-action { min-height: 120px; } }
 @media (prefers-reduced-motion: reduce) { .landlord-action { transition: none; } .landlord-action:hover { transform: none; } }
+
+
+/* Dashboard visual system: green sidebar, warm canvas, compact merchant cards */
+.portal-shell { display:grid; grid-template-columns:240px minmax(0,1fr); min-height:calc(100vh - 100px); background:#f7f7f3; color:#172319; font-family:Arial,Helvetica,sans-serif; }
+.portal-sidebar { background:linear-gradient(155deg,#122e1b,#183c25); color:#fff; padding:24px 15px; display:flex; flex-direction:column; gap:24px; min-width:0; }
+.portal-brand { font-size:25px; font-weight:800; letter-spacing:-.06em; padding:5px 12px; }
+.portal-sidebar-context { display:flex; gap:12px; align-items:center; padding:14px 10px; border-top:1px solid #ffffff2c; border-bottom:1px solid #ffffff2c; }
+.portal-sidebar-context strong,.portal-sidebar-context small { display:block; }
+.portal-sidebar-context strong { font-size:13px; } .portal-sidebar-context small { color:#c0d5c3; font-size:11px; }
+.portal-context-icon { width:38px; height:38px; display:grid; place-items:center; border-radius:50%; background:#dcebd9; color:#183c25; font-size:22px; }
+.portal-nav { display:flex; flex-direction:column; gap:5px; }
+.portal-nav-link { padding:11px 13px; border-radius:9px; color:#e6efe5; font-size:13px; line-height:1.5; }
+.portal-nav-link:hover,.portal-nav-link--current { background:#386c40; color:white; }
+.portal-back { margin-top:auto; border-top:1px solid #ffffff2c; padding:20px 12px 5px; font-size:12px; color:#d3e5d4; }
+.portal-main { min-width:0; } .portal-topbar { display:flex; align-items:center; justify-content:space-between; gap:15px; background:white; border-bottom:1px solid #e5e8e0; padding:16px 28px; font-size:13px; font-weight:700; }
+.portal-topbar a { color:#375c3d; font-weight:500; }
+.portal-content { padding:32px clamp(18px,3vw,45px) 60px; max-width:1550px; margin:auto; }
+.portal-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:26px; }
+.portal-heading h1 { font-family:Arial,Helvetica,sans-serif; font-size:clamp(26px,3vw,38px); font-weight:750; letter-spacing:-.045em; line-height:1.2; }
+.portal-heading p:not(.portal-kicker) { color:#65716a; margin-top:8px; font-size:14px; }
+.portal-kicker { color:#3e7347; font-size:11px; text-transform:uppercase; font-weight:700; letter-spacing:.1em; margin-bottom:8px; }
+.portal-stat-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:32px; }
+.portal-stat { background:white; border:1px solid #e3e8df; border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:7px; box-shadow:0 4px 15px #17341b08; }
+.portal-stat > span { color:#4b5c4e; font-size:13px; }.portal-stat > strong { font-size:30px; line-height:1.2; }.portal-stat .portal-stat-text { font-size:22px; text-transform:capitalize; }.portal-stat > small { color:#697a6c; }
+.portal-section { margin:30px 0 36px; }.portal-section-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:17px; }
+.portal-section-heading h2 { font-family:Arial,Helvetica,sans-serif; font-size:21px; font-weight:750; letter-spacing:-.03em; }.portal-section-heading p { color:#68756b; font-size:13px; margin-top:5px; }
+.portal-primary { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:9px 15px; border-radius:8px; background:#215a2c; color:white; font-weight:700; font-size:12px; }
+.portal-primary:hover { background:#173f21; }
+.portal-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr)); gap:16px; }
+.portal-shop-card { background:white; border:1px solid #e1e6df; border-radius:14px; padding:23px; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.portal-shop-avatar { width:50px; height:50px; border-radius:12px; display:grid; place-items:center; background:#e4efe0; color:#215a2c; font-size:24px; font-weight:700; }
+.portal-pill { background:#eaf4e8; color:#22582e; border-radius:99px; padding:4px 10px; text-transform:capitalize; font-size:11px; }
+.portal-shop-card h3 { font-size:19px; }.portal-shop-card p { font-size:13px; color:#69756c; }
+.portal-card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:auto; font-size:12px; }
+.portal-card-actions > a:not(.portal-primary) { color:#205d2e; text-decoration:underline; text-underline-offset:3px; }
+.portal-quick-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px; }
+.portal-quick-grid a { background:white; border:1px solid #e1e6df; border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:10px; }
+.portal-quick-grid strong { font-size:14px; }.portal-quick-grid span { color:#52715a; font-size:12px; }
+.portal-empty,.portal-notice { background:white; border:1px solid #e1e6df; border-radius:12px; padding:24px; }.portal-notice { margin-bottom:24px; }
+.portal-empty p { margin:10px 0 18px; }.portal-signout { margin-top:35px; }
+.portal-shell .landlord-hub { max-width:none; }.portal-shell .landlord-action { background:white; border-color:#e1e6df; }.portal-shell .landlord-status > div { background:white; border-color:#e1e6df; }
+.portal-shell a:focus-visible { outline:3px solid #d18b39; outline-offset:3px; }
+@media(max-width:850px){ .portal-shell { grid-template-columns:minmax(0,1fr); }.portal-sidebar { padding:13px 16px; gap:10px; }.portal-sidebar-context,.portal-back { display:none; }.portal-brand { font-size:20px; }.portal-nav { flex-direction:row; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin; }.portal-nav-link { flex:none; white-space:nowrap; }.portal-content { padding:22px 16px 45px; }.portal-topbar { padding:12px 16px; }.portal-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px){ .portal-stat-grid { grid-template-columns:1fr; }.portal-section-heading { align-items:flex-start; flex-direction:column; }.portal-heading h1 { font-size:26px; }.portal-card-actions { gap:10px; } }
