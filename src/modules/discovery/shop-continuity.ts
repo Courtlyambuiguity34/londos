@@ -1,0 +1,4 @@
+export type ContinuityMatch={shopSlug:string;departmentSlug?:string|null;productSlug?:string|null};
+export function publicShopHref(m:ContinuityMatch){const base=`/shops/${encodeURIComponent(m.shopSlug)}`;return m.productSlug?`${base}/products/${encodeURIComponent(m.productSlug)}`:m.departmentSlug?`${base}/departments/${encodeURIComponent(m.departmentSlug)}`:base}
+export function continuityScore(href:string){return href.includes("/products/")?2:href.includes("/departments/")?1:0}
+export function sortByContinuity<T extends {href:string}>(items:readonly T[]){return [...items].sort((a,b)=>continuityScore(b.href)-continuityScore(a.href))}
