@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ProfileForm } from "@/components/profile-form";
+import { ShopPublicLink } from "@/components/shop-public-link";
 import { database } from "@/server/db/pool";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
 import { pageActor } from "@/server/page-actor";
 import { AccessError } from "@/server/security/errors";
 import { readSetup } from "@/server/workspace";
@@ -54,6 +55,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
         Changes save to this shop. Public catalogue changes appear when your shop is published and
         eligible for browsing. Preview your design before publishing it.
       </p>
+      <ShopPublicLink slug={shop.slug} shopName={shop.name} published={setup.publication === "active"} absoluteBase={coreConfig().baseURL} />
       <h2>Shop setup progress</h2>
       <p>
         {completed} of {steps.length} suggested steps complete. Three products is a suggestion, not
