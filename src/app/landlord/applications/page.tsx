@@ -1,3 +1,5 @@
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
+import { humanQueueState } from "@/modules/rent-presentation";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
@@ -16,7 +18,7 @@ export default async function Page({
     offset = Number((await searchParams).offset ?? 0),
     rows = await applicationQueue(database(), actor, "review", offset);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="landlord" title="Application review" subtitle="Review assigned work and follow up on requests." currentPath="/landlord/applications"><section className="portal-section account-page">
       <h1>Application review queue</h1>
       <p>
         Claim an application to obtain scoped access. Claiming and consequential changes require
@@ -28,7 +30,7 @@ export default async function Page({
             <div>
               <strong>{a.business_name}</strong>
               <p>
-                {a.state.replaceAll("_", " ")}
+                {humanQueueState(a.state)}
                 {a.possible_duplicate ? " · Possible duplicate business name" : ""}
               </p>
             </div>
@@ -50,6 +52,6 @@ export default async function Page({
         {rows.length === 20 ? <Link href={`?offset=${offset + 20}`}>Next applications</Link> : null}
         <Link href="/landlord">Management workspace</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
