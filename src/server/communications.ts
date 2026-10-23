@@ -192,8 +192,8 @@ export async function updatePaymentSettings(
     if ((previous?.version ?? 0) !== value.version) throw new AccessError(409, "stale_version");
     const next = value.version + 1;
     await db.query(
-      `INSERT INTO payment_settings(singleton,version,support_email,support_phone,mobile_money_phone,mobile_money_name,bank_name,bank_account_name,bank_account_number,updated_by)
-       VALUES(true,$1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `INSERT INTO payment_settings(singleton,version,support_email,support_phone,mobile_money_phone,mobile_money_name,bank_name,bank_account_name,bank_account_number,mtn_momo_phone,mtn_momo_name,airtel_money_phone,airtel_money_name,updated_by)
+       VALUES(true,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT(singleton) DO UPDATE SET version=excluded.version,support_email=excluded.support_email,support_phone=excluded.support_phone,mobile_money_phone=excluded.mobile_money_phone,mobile_money_name=excluded.mobile_money_name,bank_name=excluded.bank_name,bank_account_name=excluded.bank_account_name,bank_account_number=excluded.bank_account_number,mtn_momo_phone=excluded.mtn_momo_phone,mtn_momo_name=excluded.mtn_momo_name,airtel_money_phone=excluded.airtel_money_phone,airtel_money_name=excluded.airtel_money_name,updated_by=excluded.updated_by,updated_at=clock_timestamp()`,
       [
         next,
