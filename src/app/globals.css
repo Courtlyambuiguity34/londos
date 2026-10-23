@@ -2640,3 +2640,12 @@ button:disabled {
 .portal-today__card strong{font-size:.95rem}
 .portal-today__card span{font-size:.8rem;color:var(--muted,#62675b)}
 @media(max-width:850px){.portal-banner{padding-left:16px;padding-right:16px}}
+
+/* Unified shop workspace refinements */
+.portal-friendly-lead{max-width:66ch;line-height:1.65;color:var(--muted,#62675b);margin-bottom:1rem}
+.portal-rent-status{border:1px solid var(--line,#ddd);border-left:4px solid var(--orange,#b45d35);background:var(--white,#fff);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.portal-rent-status strong{display:block;font-size:1.3rem;margin:.25rem 0}
+.portal-rent-status p{margin:.4rem 0;line-height:1.5}
+.portal-next-step--compact{gap:1rem}
+.portal-next-step--compact .shop-public-link{margin:0}
+@media(max-width:700px){.portal-rent-status{padding:.85rem}.portal-next-step--compact{align-items:stretch}}
