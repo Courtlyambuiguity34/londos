@@ -16,7 +16,6 @@ export default async function ShopkeeperPage() {
   const shops = await listShops(database(), actor);
   const absoluteBase = coreConfig().baseURL;
   const first = shops[0];
-  const hostedApplicationsAvailable = true;
   const base = first ? `/shopkeeper/shops/${first.id}` : null;
   const links = [
     ...(base ? [
@@ -34,7 +33,7 @@ export default async function ShopkeeperPage() {
     { href: "/shopkeeper/invitations", label: "Invitations" },
   ];
   return (
-    <PortalShell kind="shopkeeper" title="Your business, all in one place." subtitle="Manage your shops, products, design and business tools." links={links}>
+    <PortalShell kind="shopkeeper" title="Your business, all in one place." subtitle="Manage your shops, products, design and business tools." links={links} currentPath="/shopkeeper" banner={<div className="portal-next-step"><div><p className="portal-next-step__label">Suggested next step</p><strong>{first ? "Keep your shop ready for customers" : "Open your first shop space"}</strong><p>{first ? "Update products, refine your shop design, then share your storefront link." : "Apply for a shop space or accept an invitation to an existing merchant team."}</p></div><div className="portal-next-step__actions"><Link className="portal-primary" href={first ? `/shopkeeper/shops/${first.id}/catalogue` : "/shopkeeper/applications/new"}>{first ? "Manage catalogue →" : "Apply for a shop →"}</Link><Link href={first ? `/shopkeeper/shops/${first.id}/design` : "/shopkeeper/invitations"}>{first ? "Shop design" : "View invitations"}</Link></div></div>}>
       {coreConfig().localAdapters ? <p className="portal-notice">Local development mode uses fictional businesses. Live rent collection is disabled.</p> : null}
       <div className="portal-stat-grid">
         <div className="portal-stat"><span>Accessible shops</span><strong>{shops.length}</strong><small>Shops linked to your membership</small></div>
@@ -59,7 +58,7 @@ export default async function ShopkeeperPage() {
           </article>
         ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your application status or accept an invitation to an existing merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
       </section>
-      {hostedApplicationsAvailable ? <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div> : <p className="portal-notice"></p>}
+      <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div>
       <section className="portal-section" aria-labelledby="tools-heading">
         <div className="portal-section-heading"><div><h2 id="tools-heading">Account & team tools</h2><p>Everything needed to manage access to your business.</p></div></div>
         <div className="portal-quick-grid">
