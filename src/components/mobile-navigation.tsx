@@ -4,7 +4,7 @@ import Link from "next/link";
 import { categories } from "@/modules/catalogue/fixtures";
 
 // Native disclosure remains usable before hydration and without JavaScript.
-export function MobileNavigation({ showShopkeeper }: { showShopkeeper: boolean }) {
+export function MobileNavigation({ showShopkeeper,showLandlord=false,showRentCta=true }: { showShopkeeper: boolean;showLandlord?:boolean;showRentCta?:boolean }) {
   const details = useRef<HTMLDetailsElement>(null);
   return (
     <details
@@ -28,12 +28,10 @@ export function MobileNavigation({ showShopkeeper }: { showShopkeeper: boolean }
       >
         <Link href="/search">Explore shops</Link>
         <Link href="/about">Our mall</Link>
-        <Link href="/rent-a-shop">Open your shop</Link>
-        {showShopkeeper ? (
-          <Link href="/shopkeeper">Shopkeeper</Link>
-        ) : (
-          <Link href="/sign-in">Sign in</Link>
-        )}
+        {showRentCta ? <Link href="/rent-a-shop">Open your shop</Link> : null}
+        {showShopkeeper ? <Link href="/shopkeeper">Shopkeeper</Link> : null}
+        {showLandlord ? <Link href="/landlord">Management</Link> : null}
+        {!showShopkeeper && !showLandlord ? <Link href="/sign-in">Sign in</Link> : null}
         <p className="mobile-navigation-title">Categories</p>
         <div className="mobile-category-links">
           {categories.map((category) => (
