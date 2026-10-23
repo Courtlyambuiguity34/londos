@@ -85,9 +85,10 @@ export default async function LandlordPage() {
       ],
     },
   ];
+  const today = [{href:"/landlord/applications",label:"Applications",hint:"Review shop requests",allowed:can("review")},{href:"/landlord/rent",label:"Rent desk",hint:"Check submitted rent claims",allowed:can("finance")},{href:"/landlord/incidents",label:"Incidents",hint:"Support and recovery cases",allowed:canAny("recovery","support","moderation","finance","review")},{href:"/landlord/trust",label:"Trust queue",hint:"Concerns and appeals",allowed:can("moderation")},{href:"/landlord/privacy",label:"Privacy",hint:"Privacy requests",allowed:can("privacy")}].filter(item=>item.allowed);
   const navigation = groups.flatMap((group) => group.links.filter((link) => link.allowed).map((link) => ({ href: link.href, label: link.label })));
   return (
-    <PortalShell kind="landlord" title="Manage your mall with clarity." subtitle="Shops, tenants, finance, support and growth — organized around your work." links={navigation}>
+    <PortalShell kind="landlord" title="Manage your mall with clarity." subtitle="Shops, tenants, finance, support and growth — organized around your work." links={navigation} currentPath="/landlord" banner={today.length ? <div className="portal-today" aria-label="Today’s work"><p className="portal-next-step__label">Today · quick access</p><div className="portal-today__grid">{today.map(item=><Link key={item.href} href={item.href} className="portal-today__card"><strong>{item.label}</strong><span>{item.hint}</span></Link>)}</div></div> : null}>
     <section className="landlord-hub">
       <p className="eyebrow">Londos · secure management workspace</p>
 
