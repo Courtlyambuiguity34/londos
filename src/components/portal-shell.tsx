@@ -23,7 +23,7 @@ export function PortalShell({ kind, title, subtitle, links, children, currentPat
           <span className="portal-context-icon" aria-hidden="true">{kind === "landlord" ? "▦" : "▣"}</span>
           <div><strong>{kind === "landlord" ? "Mall management" : "Merchant workspace"}</strong><small>{kind === "landlord" ? "Operator" : "Shopkeeper"}</small></div>
         </div>
-        <nav className="portal-nav" aria-label="Workspace tools">
+        <nav className="portal-nav" aria-label={kind === "landlord" ? "Management sections" : "Merchant sections"}>
           <Link className={isHome ? "portal-nav-link portal-nav-link--current" : "portal-nav-link"} href={homeHref} aria-current={isHome ? "page" : undefined}>Home</Link>
           {safeLinks.map((item) => { const active = Boolean(currentPath) && (currentPath === item.href || currentPath?.startsWith(`${item.href}/`)); return <Link className={active ? "portal-nav-link portal-nav-link--current" : "portal-nav-link"} aria-current={active ? "page" : undefined} href={item.href} key={item.href}>{item.label}</Link>; })}
         </nav>
@@ -31,9 +31,17 @@ export function PortalShell({ kind, title, subtitle, links, children, currentPat
       </aside>
       <div className="portal-main">
         <header className="portal-topbar">
-          <span>{kind === "landlord" ? "Landlord dashboard" : "Shopkeeper dashboard"}</span>
-          <WorkspaceCommandPalette items={[{href:homeHref,label:"Home"},...safeLinks]} />
-          <div className="portal-topbar-actions"><Link href="/">Mall</Link><Link href="/security">Account &amp; security</Link></div>
+          <div className="portal-topbar-identity">
+            <span className="portal-topbar-eyebrow">{kind === "landlord" ? "Londos administration" : "Londos for merchants"}</span>
+            <strong>{kind === "landlord" ? "Management overview" : "Shopkeeper workspace"}</strong>
+          </div>
+          <div className="portal-topbar-controls">
+            <WorkspaceCommandPalette items={[{href:homeHref,label:"Home"},...safeLinks]} />
+            <nav className="portal-topbar-actions" aria-label="Quick links">
+              <Link href="/" className="portal-topbar-mall">Visit mall</Link>
+              <Link href="/security" className="portal-topbar-account" aria-label="Account and security" title="Account and security">Account <span aria-hidden="true">↗</span></Link>
+            </nav>
+          </div>
         </header>
         {banner ? <div className="portal-banner">{banner}</div> : null}
         <div className="portal-content">
