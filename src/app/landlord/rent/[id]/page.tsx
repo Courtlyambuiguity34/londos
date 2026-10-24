@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
@@ -19,7 +20,7 @@ export default async function Page({
     offset = Number((await searchParams).offset ?? 0),
     invoices = await applicationInvoices(database(), actor, id, "finance", offset);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="landlord" title="Application rent records" subtitle="Review linked invoices and independently verified payments." currentPath="/landlord/rent"><section className="portal-section account-page">
       <h1>Application rent records</h1>
       <p>
         Verify each receipt independently before recording a development payment or waiver. Live
@@ -33,6 +34,6 @@ export default async function Page({
       <p>
         <Link href="/landlord/rent">Finance queue</Link>
       </p>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
