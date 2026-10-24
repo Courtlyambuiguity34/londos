@@ -2,11 +2,9 @@ import type { Pool } from "pg";
 import { z } from "zod";
 import type { Job } from "./queue";
 import { transaction } from "../db/pool";
-import { localLifecycle } from "../lifecycle-common";
 import { syncTenancy } from "../rent";
 
 export async function handleRentTick(pool: Pool, job: Job, signal: AbortSignal, now?: Date) {
-  localLifecycle();
   const payload = z.object({ shopId: z.uuid() }).strict().parse(job.payload);
   if (payload.shopId !== job.shop_id || !job.merchant_id || job.schema_version !== 1)
     throw new Error("unsupported_job");
