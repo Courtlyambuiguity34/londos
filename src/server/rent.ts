@@ -129,7 +129,7 @@ export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<type
     return { id };
   });
 }
-export type IssueInvoiceOptions = { amountMinor?: string; periodDays?: number; description?: string; dueAt?: Date };
+export type IssueInvoiceOptions = { amountMinor?: string | undefined; periodDays?: number | undefined; description?: string | undefined; dueAt?: Date | undefined };
 export async function issueInvoice(
   client: PoolClient,
   actor: Actor,
