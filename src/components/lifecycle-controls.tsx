@@ -586,6 +586,7 @@ export function InvoicePanel({
         currency: "UGX",
         reference: String(f.get("reference")),
         note: String(f.get("note")),
+        paymentMethod: String(f.get("paymentMethod")),
         confirm: f.get("confirm") === "on",
       });
       form.reset();
@@ -713,6 +714,15 @@ export function InvoicePanel({
               defaultValue={remaining}
               required
             />
+            <label htmlFor="claim-method">Payment method</label>
+            <select id="claim-method" name="paymentMethod" required defaultValue="">
+              <option value="" disabled>Select method</option>
+              <option value="mtn_momo">MTN Mobile Money</option>
+              <option value="airtel_money">Airtel Money</option>
+              <option value="bank_transfer">Bank transfer</option>
+              <option value="cash">Cash</option>
+              <option value="other">Other</option>
+            </select>
             <label htmlFor="claim-reference">Transaction or bank reference</label>
             <input id="claim-reference" name="reference" minLength={6} maxLength={80} required />
             <label htmlFor="claim-note">Payment note</label>
