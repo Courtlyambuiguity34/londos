@@ -12,6 +12,14 @@ type InvoiceData = Awaited<ReturnType<typeof readInvoice>>;
 function messageFor(code: string) {
   const messages: Record<string, string> = {
     stale_version: "This record changed. Reload it before trying again.",
+    policy_unavailable: "The selected rent policy is not available in this environment. Ask the landlord to configure an active production rent policy.",
+    policy_required: "Select a rent policy before approving the application.",
+    application_not_reviewing: "This application is no longer in the review stage. Reload to see its latest status.",
+    insufficient_permissions: "This account does not have permission to approve applications.",
+    operator_permission_required: "This account needs application review permission.",
+    development_only: "This action is limited to development mode. Configure the live rent workflow instead.",
+    invalid_request: "Some review fields are invalid. Check the selected decision, reason and rent policy.",
+
     fresh_authentication_required:
       "Please verify your account again in Account security, or sign out and sign in, then retry.",
     mfa_required: "Verify MFA in Account security before continuing.",
@@ -34,7 +42,7 @@ function messageFor(code: string) {
   };
   return (
     messages[code] ??
-    "The change was not confirmed. Check your access and the fields, then reload the record."
+    `The change was not confirmed (error: ${code}). Check your permissions and application status, then reload.`
   );
 }
 async function send(url: string, method: string, body: unknown) {
@@ -395,7 +403,7 @@ export function ApplicationPanel({
             <option value="approved">Approve and issue first invoice</option>
             <option value="rejected">Reject application</option>
           </select>
-          <label htmlFor="rent-policy">Development rent policy</label>
+          <label htmlFor="rent-policy">Rent policy for approved applications</label>
           <select id="rent-policy" name="policyId">
             {policies.map((p) => (
               <option value={p.id} key={p.id}>
