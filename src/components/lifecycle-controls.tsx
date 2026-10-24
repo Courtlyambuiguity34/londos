@@ -641,8 +641,13 @@ export function InvoicePanel({
         </strong>
       </p>
       <dl className="lifecycle-summary">
-        <dt>Reference</dt>
+        <dt>Invoice number</dt>
         <dd className="break-anywhere">{i.reference}</dd>
+        <dt>Issued on</dt>
+        <dd><time dateTime={new Date(i.issued_at).toISOString()}>{new Date(i.issued_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}</time></dd>
+        <dt>Linked application</dt>
+        <dd><Link href={`/${operator ? "landlord" : "shopkeeper"}/applications/${i.application_id}`}>View application</Link></dd>
+        {i.shop_id ? <><dt>Linked shop</dt><dd><Link href={`/shopkeeper/shops/${i.shop_id}/rent`}>View shop rent history</Link></dd></> : null}
         <dt>Amount</dt>
         <dd>{formatMinorMoney(i.amount_minor, i.currency)}</dd>
         <dt>Recorded credit</dt>
