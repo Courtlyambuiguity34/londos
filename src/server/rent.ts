@@ -130,7 +130,7 @@ export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<type
       const pgCode = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
       const constraint = typeof error === "object" && error !== null && "constraint" in error ? String(error.constraint) : "";
       if (pgCode === "23514" && constraint === "rent_policies_development_only_check")
-        throw new AccessError(503, "policy_environment_blocked");
+        throw new AccessError(409, "policy_environment_blocked");
       throw error;
     }
     await audit(client, actor, "rent.policy.created", id, undefined, { developmentOnly: coreConfig().localAdapters });
