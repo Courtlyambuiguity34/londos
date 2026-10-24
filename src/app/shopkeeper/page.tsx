@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import { PortalShell } from "@/components/portal-shell";
@@ -13,6 +14,13 @@ export const metadata: Metadata = { title: "Shopkeeper dashboard" };
 export default async function ShopkeeperPage() {
   if (!coreConfigured()) return <WorkspaceGateway kind="shopkeeper" />;
   const actor = await pageActor("/shopkeeper");
+  // Operator-only accounts belong in the management workspace, not merchant onboarding.
+  // An account that also owns shops may intentionally use either workspace.
+  const [operatorAccess, merchantAccess] = await Promise.all([
+    database().query("SELECT 1 FROM operator_grants WHERE user_id=$1 LIMIT 1", [actor.userId]),
+    database().query("SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' LIMIT 1", [actor.userId]),
+  ]);
+  if (operatorAccess.rowCount && !merchantAccess.rowCount) redirect("/landlord");
   const shops = await listShops(database(), actor);
   const absoluteBase = coreConfig().baseURL;
   const first = shops[0];
