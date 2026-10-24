@@ -933,7 +933,7 @@ export async function reverseCredit(
     const effectiveNow = now ?? new Date();
     const original = (
       await client.query(
-        "SELECT id,amount_minor::text FROM rent_events WHERE id=$1 AND invoice_id=$2 AND source='local-manual' AND kind IN ('payment','waiver')",
+        "SELECT id,amount_minor::text FROM rent_events WHERE id=$1 AND invoice_id=$2 AND source IN ('local-manual','operator-verified') AND kind IN ('payment','waiver')",
         [v.eventId, id],
       )
     ).rows[0];
