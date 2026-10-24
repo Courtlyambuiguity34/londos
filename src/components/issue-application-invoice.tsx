@@ -37,7 +37,7 @@ export function IssueApplicationInvoice({ applicationId, policies }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const body = await response.json() as { id?: string; error?: string };
+      const result = await response.json() as { id?: string; error?: string };
       if (!response.ok) {
         const messages: Record<string, string> = {
           initial_invoice_already_issued: "This application already has its first invoice.",
@@ -50,7 +50,7 @@ export function IssueApplicationInvoice({ applicationId, policies }: {
           invalid_due_date: "The payment due date cannot be in the past.",
           invalid_input: "Check the invoice fields and retry.",
         };
-        throw new Error(messages[body.error ?? ""] ?? `Invoice could not be issued (${body.error ?? response.status}).`);
+        throw new Error(messages[result.error ?? ""] ?? `Invoice could not be issued (${result.error ?? response.status}).`);
       }
       setMessage("Invoice issued. Open it below to review the payment instructions.");
       form.reset();
