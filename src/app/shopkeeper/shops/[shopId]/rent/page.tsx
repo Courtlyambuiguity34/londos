@@ -36,6 +36,9 @@ export default async function Page({
       <p>
         Tenancy: <strong>{tenancyLabels[data.tenancy.state] ?? data.tenancy.state}</strong>
       </p>
+      {data.tenancy.period_start ? (
+        <p>Current paid coverage began: <time dateTime={new Date(data.tenancy.period_start).toISOString()}>{new Date(data.tenancy.period_start).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}</time></p>
+      ) : null}
       {data.tenancy.period_end ? (
         <p>Coverage ends: {new Date(data.tenancy.period_end).toISOString()}</p>
       ) : null}
@@ -61,6 +64,8 @@ export default async function Page({
           the complete local rent workflow.
         </p>
       )}
+      <h2>Invoices and verified rental periods</h2>
+      <p>Each invoice belongs to this shop and its original application. The next due date depends on the agreed rental policy and verified coverage, not an assumed monthly schedule.</p>
       <InvoiceList invoices={data.invoices} />
       {offset > 0 ? (
         <Link href={`?offset=${Math.max(0, offset - 20)}`}>Previous invoices</Link>
