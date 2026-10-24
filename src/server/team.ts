@@ -1,7 +1,6 @@
 import type { Pool } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
-import { localLifecycle } from "./lifecycle-common";
 import { requireMerchant, sessionState, type Actor } from "./security/authorization";
 import {
   invite,
@@ -56,7 +55,6 @@ export type TeamView = {
   next: boolean;
 };
 export async function ownedMerchants(pool: Pool, actor: Actor, page = 0) {
-  localLifecycle();
   z.number().int().min(0).max(500).parse(page);
   await sessionState(pool, actor);
   return (
@@ -72,7 +70,6 @@ export async function readTeam(
   merchantId: string,
   page = 0,
 ): Promise<TeamView> {
-  localLifecycle();
   z.number().int().min(0).max(500).parse(page);
   return transaction(pool, async (client) => {
     await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
@@ -125,7 +122,6 @@ export async function teamCommand(
   merchantId: string,
   input: z.infer<typeof teamCommandInput>,
 ) {
-  localLifecycle();
   const v = teamCommandInput.parse(input);
   switch (v.action) {
     case "invite":
