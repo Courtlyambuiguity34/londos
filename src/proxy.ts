@@ -38,7 +38,12 @@ function unavailable(status: number) {
   );
 }
 export async function proxy(request: NextRequest) {
-  if (!coreConfigured()) return NextResponse.next();
+  // Preserve the pathname header previously supplied by middleware.ts.
+  // Forward it to route handlers and server components on every matched request.
+  const headers = new Headers(request.headers);
+  headers.set("x-londos-pathname", request.nextUrl.pathname);
+  const nextWithPathname = () => NextResponse.next({ request: { headers } });
+  if (!coreConfigured()) return nextWithPathname();
   try {
     if (request.nextUrl.pathname.startsWith("/api/")) {
       if (request.method !== "OPTIONS" || !acceptedRequestOrigin(request))
@@ -163,7 +168,7 @@ export async function proxy(request: NextRequest) {
         invoice[1] === "shopkeeper" ? "owner" : "finance",
       );
     }
-    return NextResponse.next();
+    return nextWithPathname();
   } catch (error) {
     if (error instanceof AccessError) {
       if (error.status === 401) {
@@ -187,6 +192,7 @@ export const config = {
       source: "/api/:path*",
       has: [{ type: "header", key: "access-control-request-method" }],
     },
+    "/((?!_next/static|_next/image|favicon.ico|brand/|illustrations/|pwa/).*)",
     "/shopkeeper/:path*",
     "/landlord/:path*",
     "/security",
