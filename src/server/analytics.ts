@@ -263,7 +263,7 @@ export async function readShopPilot(pool: Pool, actor: Actor, shopId: string, wi
     return {
       policy,
       days,
-      shop: { name: shop.name },
+      shop: { id: shopId, name: shop.name, slug: shop.slug },
       observations: await counters(db, days, shopId),
       canonical: await activity(db, days, shopId),
     };
