@@ -155,7 +155,6 @@ export async function claimOperations(
   });
 }
 export async function mallOccupancy(pool: Pool, actor: Actor, page = 0) {
-  localLifecycle();
   pageInput.parse(page);
   await requireOperator(pool, actor, "operations");
   return (
@@ -172,7 +171,6 @@ export async function mallOccupancy(pool: Pool, actor: Actor, page = 0) {
   }[];
 }
 export async function operationsQueue(pool: Pool, actor: Actor, page = 0) {
-  localLifecycle();
   pageInput.parse(page);
   await requireOperator(pool, actor, "operations");
   return (
@@ -266,7 +264,6 @@ export async function commandOperations(
   });
 }
 export async function rentExceptions(pool: Pool, actor: Actor, page = 0) {
-  localLifecycle();
   pageInput.parse(page);
   await requireOperator(pool, actor, "finance");
   return (
