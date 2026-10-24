@@ -60,7 +60,7 @@ export async function workspaceRequest(request: Request, work: (actor: Actor) =>
   } catch (error) {
     if (error instanceof AccessError) return respond({ error: error.code }, error.status);
     if (error instanceof z.ZodError) return respond({ error: "invalid_input" }, 422);
-    console.error(JSON.stringify({ event: "request.failed", requestId }));
+    console.error(JSON.stringify({ event: "request.failed", requestId, method: request.method, route: new URL(request.url).pathname, errorType: error instanceof Error ? error.name : "unknown", databaseCode: typeof error === "object" && error !== null && "code" in error && typeof error.code === "string" ? error.code : undefined, constraint: typeof error === "object" && error !== null && "constraint" in error && typeof error.constraint === "string" ? error.constraint : undefined }));
     return respond({ error: "service_unavailable" }, 503);
   }
 }
