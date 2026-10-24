@@ -111,7 +111,7 @@ const invoiceColumns =
   "i.id,i.merchant_id,i.application_id,i.shop_id,i.created_at AS issued_at,i.currency,i.amount_minor::text,i.period_start,i.period_end,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
 export async function listPolicies(pool: Pool, actor: Actor, permission: "review" | "finance" = "review") {
   await requireOperator(pool, actor, permission);
-  return (await pool.query("SELECT * FROM rent_policies ORDER BY created_at DESC,id LIMIT 50"))
+  return (await pool.query("SELECT * FROM rent_policies WHERE development_only=$1 ORDER BY created_at DESC,id LIMIT 50", [coreConfig().localAdapters]))
     .rows as RentPolicy[];
 }
 export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<typeof policyInput>) {
