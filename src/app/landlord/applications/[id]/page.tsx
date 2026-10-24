@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
@@ -13,13 +14,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     data = await readApplication(database(), actor, (await params).id, "review"),
     policies = await listPolicies(database(), actor);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="landlord" title={`Review ${data.application.business_name}`} subtitle="Verify evidence and record an application decision." currentPath="/landlord/applications"><section className="portal-section account-page">
       <h1>Review {data.application.business_name}</h1>
       <ApplicationPanel initial={data} operator policies={policies} />
       <div className="button-row">
         <Link href="/landlord/applications">Application queue</Link>
         <Link href="/landlord/rent">Finance queue</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
