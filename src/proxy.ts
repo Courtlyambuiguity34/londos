@@ -50,6 +50,10 @@ export async function proxy(request: NextRequest) {
         return new NextResponse(null, { status: 403 });
       return corsResponse(request, new NextResponse(null, { status: 204 }));
     }
+    // Public pages only need pathname propagation, not workspace authorization.
+    if (!request.nextUrl.pathname.startsWith("/shopkeeper") &&
+        !request.nextUrl.pathname.startsWith("/landlord") &&
+        request.nextUrl.pathname !== "/security") return nextWithPathname();
     const actor = await resolveActor(auth(), request.headers),
       path = request.nextUrl.pathname;
     const shop = /^\/shopkeeper\/shops\/([^/]+)(?:\/.*)?$/.exec(path);
