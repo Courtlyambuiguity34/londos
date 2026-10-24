@@ -79,7 +79,7 @@ export function searchPreviewShops(
       department ?? shop.departments.find((d) => d.slug === matching[0]?.departmentSlug);
     results.push({
       shop,
-      href: publicShopHref({shopSlug:shop.slug,departmentSlug:contextDepartment?.slug}),
+      href: publicShopHref({shopSlug:shop.slug,departmentSlug:contextDepartment?.slug ?? null}),
       context: contextDepartment?.name ?? null,
       matchingProducts: matching.length,
     });
