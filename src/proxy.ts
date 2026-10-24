@@ -46,7 +46,10 @@ export async function proxy(request: NextRequest) {
   if (!coreConfigured()) return nextWithPathname();
   try {
     if (request.nextUrl.pathname.startsWith("/api/")) {
-      if (request.method !== "OPTIONS" || !acceptedRequestOrigin(request))
+      // Only CORS preflight is handled here. Actual API requests must reach
+      // their route handlers, which enforce authentication and origin checks.
+      if (request.method !== "OPTIONS") return nextWithPathname();
+      if (!acceptedRequestOrigin(request))
         return new NextResponse(null, { status: 403 });
       return corsResponse(request, new NextResponse(null, { status: 204 }));
     }
