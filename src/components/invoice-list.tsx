@@ -19,10 +19,20 @@ export function InvoiceList({
             {i.reference}
           </Link>
           <span>
+            {i.shop_id ? "Shop renewal" : "Approved application"} · issued{" "}
+            <time dateTime={new Date(i.issued_at).toISOString()}>
+              {new Date(i.issued_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}
+            </time>
+            {" · "}
             {formatMinorMoney(i.amount_minor, i.currency)} ·{" "}
             {BigInt(i.credited_minor) === BigInt(i.amount_minor)
               ? "fully credited"
               : "balance outstanding"}
+          </span>
+          <span>
+            {i.finalized
+              ? `Verified coverage: ${new Date(i.period_start).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })} – ${new Date(i.period_end).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}`
+              : "Coverage starts only after full payment is independently verified"}
           </span>
         </li>
       ))}
