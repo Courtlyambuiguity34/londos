@@ -20,6 +20,12 @@ export default function ErrorPage({
         <button type="button" className="button" onClick={reset}>
           Try again
         </button>
+        <Link href="/landlord" className="button button--outline">
+          Management home
+        </Link>
+        <Link href="/shopkeeper" className="button button--outline">
+          Shopkeeper home
+        </Link>
         <Link href="/" className="button button--outline">
           Return to the mall
         </Link>
