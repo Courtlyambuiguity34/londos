@@ -25,7 +25,17 @@ export function CreateRentPolicy() {
         }),
       });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error("Unable to create rent policy: " + (result.error ?? response.status));
+      if (!response.ok) {
+        const code = result.error ?? String(response.status);
+        const messages: Record<string, string> = {
+          permission_denied: "Your account requires the finance operator grant.",
+          mfa_required: "Enable and verify two-factor authentication in Account security.",
+          fresh_authentication_required: "Your security verification expired. Verify again in Account security, then retry.",
+          invalid_input: "Check the rent amount, period, grace days and capacity.",
+          service_unavailable: "The server could not save this policy. Provide the request reference to the developer.",
+        };
+        throw new Error((messages[code] ?? "Unable to create rent policy: " + code) + " (reference: " + (response.headers.get("X-Request-ID") ?? "unavailable") + ")");
+      }
       setMessage("Rent policy created. It will now appear in the invoice selector.");
       router.refresh();
     } catch (error) {
