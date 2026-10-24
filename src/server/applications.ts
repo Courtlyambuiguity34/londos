@@ -389,14 +389,16 @@ export async function reviewApplication(
     currentVersion(row.version, value.version);
     if (row.state !== "reviewing") throw new AccessError(409, "application_not_reviewing");
     if (value.decision === "approved") {
-      if (!value.policyId) throw new AccessError(422, "policy_required");
+
       if (
         !(await client.query("SELECT 1 FROM application_evidence WHERE application_id=$1", [id]))
           .rowCount
       )
         throw new AccessError(422, "verification_evidence_required");
-      const { issueInvoice } = await import("./rent");
-      await issueInvoice(client, actor, row, value.policyId, "initial", null, now);
+      if (value.policyId) {
+        const { issueInvoice } = await import("./rent");
+        await issueInvoice(client, actor, row, value.policyId, "initial", null, now);
+      }
     }
     await client.query(
       "UPDATE applications SET state=$2,review_reason=$3,policy_id=$4,version=version+1,updated_at=now() WHERE id=$1",
