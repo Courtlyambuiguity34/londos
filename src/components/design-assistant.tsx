@@ -1,5 +1,6 @@
-import { designAssistantStatusMessage } from "@/modules/design-assistant-status";
 "use client";
+
+import { designAssistantStatusMessage } from "@/modules/design-assistant-status";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { assistantStatus, readAssistantRequest } from "@/server/ai-design/service";
