@@ -168,6 +168,29 @@ export async function issueInvoice(
   });
   return { id, reference };
 }
+export const issueApplicationInvoiceInput = z.object({
+  policyId: z.uuid(),
+  confirm: z.literal(true),
+}).strict();
+
+export async function issueApplicationInvoice(pool: Pool, actor: Actor, applicationId: string, input: z.infer<typeof issueApplicationInvoiceInput>, now = new Date()) {
+  const value = issueApplicationInvoiceInput.parse(input);
+  return transaction(pool, async (client) => {
+    await requireOperator(client, actor, "finance", true);
+    const application = await applicationAccess(client, actor, applicationId, "finance");
+    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [application.merchant_id]);
+    if (application.state !== "approved") throw new AccessError(409, "application_not_approved");
+    const existing = await client.query("SELECT 1 FROM invoices WHERE application_id=$1 AND shop_id IS NULL LIMIT 1", [applicationId]);
+    if (existing.rowCount) throw new AccessError(409, "initial_invoice_already_issued");
+    const issued = await issueInvoice(client, actor, application, value.policyId, "initial", null, now);
+    await client.query("UPDATE applications SET policy_id=$2,updated_at=now() WHERE id=$1", [applicationId, value.policyId]);
+    await notifyOwners(client, application.merchant_id, `invoice:${issued.id}`, {
+      template: "invoice-issued", applicationId, invoiceId: issued.id,
+    });
+    return issued;
+  });
+}
+
 export async function invoiceAccess(
   db: Pool | PoolClient,
   actor: Actor,
