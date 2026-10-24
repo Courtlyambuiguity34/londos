@@ -95,6 +95,7 @@ export type Invoice = {
   merchant_id: string;
   application_id: string;
   shop_id: string | null;
+  issued_at: Date;
   currency: string;
   amount_minor: string;
   period_start: Date;
@@ -107,7 +108,7 @@ export type Invoice = {
   credited_minor: string;
 };
 const invoiceColumns =
-  "i.id,i.merchant_id,i.application_id,i.shop_id,i.currency,i.amount_minor::text,i.period_start,i.period_end,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
+  "i.id,i.merchant_id,i.application_id,i.shop_id,i.created_at AS issued_at,i.currency,i.amount_minor::text,i.period_start,i.period_end,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
 export async function listPolicies(pool: Pool, actor: Actor) {
   await requireOperator(pool, actor, "review");
   return (await pool.query("SELECT * FROM rent_policies ORDER BY created_at DESC,id LIMIT 50"))
