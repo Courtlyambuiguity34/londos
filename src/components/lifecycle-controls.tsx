@@ -154,17 +154,23 @@ export function CreateApplicationForm({
           </option>
         ))}
       </select>
-      <p>
-        Before saving, read the{" "}
-        <Link href="/terms" target="_blank" rel="noopener">
-          Terms of use
-        </Link>{" "}
-        and{" "}
-        <Link href="/privacy" target="_blank" rel="noopener">
-          Privacy policy
-        </Link>
-        . These open in a new tab so your application stays here.
-      </p>
+      <fieldset className="application-policy-consent">
+        <legend>Before creating your application</legend>
+        <p>Read these two separate documents. Each opens in a new tab:</p>
+        <p>
+          <Link className="application-policy-link" href="/terms" target="_blank" rel="noopener noreferrer">
+            <span aria-hidden="true">↗ </span>Read Terms of Use
+          </Link>
+          {" · "}
+          <Link className="application-policy-link" href="/privacy" target="_blank" rel="noopener noreferrer">
+            <span aria-hidden="true">↗ </span>Read Privacy Policy
+          </Link>
+        </p>
+        <label className="checkbox-label">
+          <input name="acceptPolicies" type="checkbox" required />
+          I have read and agree to the Terms of Use and acknowledge the Privacy Policy.
+        </label>
+      </fieldset>
       <button className="button" disabled={pending}>
         {pending ? "Saving…" : "Create application draft"}
       </button>
@@ -183,7 +189,9 @@ export function ApplicationPanel({
 }) {
   const [data, setData] = useState(initial),
     [pending, setPending] = useState(false),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [preview, setPreview] = useState<{ slot: number; url: string } | null>(null),
+    [previewPending, setPreviewPending] = useState(false);
   const router = useRouter();
   const a = data.application,
     base = `/api/${operator ? "operator" : "workspace"}/applications/${a.id}`,
@@ -205,6 +213,36 @@ export function ApplicationPanel({
       setMessage(e instanceof Error ? e.message : "The service is unavailable.");
     } finally {
       setPending(false);
+    }
+  }
+  async function openEvidence(slot: number) {
+    setMessage("");
+    setPreviewPending(true);
+    try {
+      const response = await fetch(`${base}/evidence/${slot}`, { cache: "no-store" });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        if (body.error === "fresh_authentication_required" || body.error === "mfa_required") {
+          setMessage("For your privacy, viewing this image requires recent account verification. Open Account security, verify your identity, then return here to preview it.");
+        } else {
+          setMessage(messageFor(body.error ?? "service_unavailable"));
+        }
+        return;
+      }
+      const blob = await response.blob();
+      if (!blob.type.startsWith("image/")) {
+        setMessage("The image preview could not be opened. Please try again.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      setPreview((previous) => {
+        if (previous) URL.revokeObjectURL(previous.url);
+        return { slot, url };
+      });
+    } catch {
+      setMessage("The private image could not be loaded. Check your connection and retry.");
+    } finally {
+      setPreviewPending(false);
     }
   }
   async function save(e: FormEvent<HTMLFormElement>) {
@@ -287,15 +325,26 @@ export function ApplicationPanel({
         <ul>
           {data.evidence.map((e) => (
             <li key={e.slot}>
-              <a href={`${base}/evidence/${e.slot}`} target="_blank" rel="noreferrer">
-                Open private image {e.slot}
-              </a>
+              <button type="button" className="button button--outline" disabled={previewPending} onClick={() => void openEvidence(e.slot)}>
+                {previewPending ? "Loading preview…" : `Preview private image ${e.slot}`}
+              </button>
             </li>
           ))}
         </ul>
       ) : (
         <p>No evidence uploaded.</p>
       )}
+      {preview ? (
+        <div className="application-image-preview" role="region" aria-label={`Private image ${preview.slot} preview`}>
+          {/* Blob URL is created from an authenticated image response and never persisted. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview.url} alt={`Private verification image ${preview.slot}`} style={{ maxWidth: "100%", height: "auto" }} />
+          <button type="button" className="button button--outline" onClick={() => {
+            URL.revokeObjectURL(preview.url);
+            setPreview(null);
+          }}>Close preview</button>
+        </div>
+      ) : null}
       {!operator && editable ? (
         <>
           <form className="account-form" onSubmit={upload}>
