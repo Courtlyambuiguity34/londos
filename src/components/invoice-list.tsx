@@ -38,6 +38,6 @@ export function InvoiceList({
       ))}
     </ul>
   ) : (
-    <p>No rent invoices yet. Approval issues the first invoice before a shop is provisioned.</p>
+    <p>No rent invoices yet. An administrator can issue the first invoice from the Rent desk after approving the application.</p>
   );
 }
