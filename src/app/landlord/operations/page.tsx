@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { coreConfigured } from "@/server/config";
@@ -19,7 +20,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
     malls = await mallOccupancy(database(), actor, page),
     shops = await operationsQueue(database(), actor, page);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="landlord" title="Mall and shop operations" subtitle="Review occupancy and scoped shop operations." currentPath="/landlord/operations"><section className="portal-section account-page">
       <h1>Mall and shop operations</h1>
       <p>
         Planning occupancy counts all assigned shops. Claim a scoped investigation before reading
@@ -66,6 +67,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
         ) : null}
         <Link href="/landlord">Landlord</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
