@@ -292,7 +292,7 @@ export function ApplicationPanel({
           decision,
           reason: String(f.get("reason")),
           confirm: f.get("confirm") === "on",
-          ...(decision === "approved" ? { policyId: String(f.get("policyId")) } : {}),
+          ...(decision === "approved" && String(f.get("policyId")) ? { policyId: String(f.get("policyId")) } : {}),
         }),
       "Review decision saved.",
     );
@@ -400,11 +400,12 @@ export function ApplicationPanel({
           <label htmlFor="review-decision">Decision</label>
           <select id="review-decision" name="decision">
             <option value="needs_information">Request more information</option>
-            <option value="approved">Approve and issue first invoice</option>
+            <option value="approved">Approve application (invoice separately)</option>
             <option value="rejected">Reject application</option>
           </select>
           <label htmlFor="rent-policy">Rent policy for approved applications</label>
           <select id="rent-policy" name="policyId">
+            <option value="">Issue invoice later from Rent desk</option>
             {policies.map((p) => (
               <option value={p.id} key={p.id}>
                 {p.label} · {formatMinorMoney(p.amount_minor, p.currency)}
