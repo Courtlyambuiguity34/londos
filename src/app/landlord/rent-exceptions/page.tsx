@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { coreConfigured } from "@/server/config";
@@ -18,7 +19,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
       .parse((await searchParams).page ?? 0),
     rows = await rentExceptions(database(), actor, page);
   return (
-    <section className="shell page-section account-page">
+    <AccountWorkspaceShell kind="landlord" title="Rent administration" subtitle="Review scoped financial records." currentPath="/landlord/rent"><section className="portal-section account-page">
       <h1>Outstanding rent and corrections</h1>
       <p>
         Only obligations in your claimed finance scope appear. Corrected finalized obligations are
@@ -49,6 +50,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
         <Link href="/landlord/rent">Claim development rent records</Link>
         <Link href="/landlord">Landlord</Link>
       </div>
-    </section>
+    </section></AccountWorkspaceShell>
   );
 }
