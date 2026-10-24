@@ -96,6 +96,8 @@ export type Invoice = {
   application_id: string;
   shop_id: string | null;
   issued_at: Date;
+  description: string | null;
+  due_at: Date | null;
   currency: string;
   amount_minor: string;
   period_start: Date;
@@ -108,7 +110,7 @@ export type Invoice = {
   credited_minor: string;
 };
 const invoiceColumns =
-  "i.id,i.merchant_id,i.application_id,i.shop_id,i.created_at AS issued_at,i.currency,i.amount_minor::text,i.period_start,i.period_end,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
+  "i.id,i.merchant_id,i.application_id,i.shop_id,i.created_at AS issued_at,i.currency,i.amount_minor::text,i.period_start,i.period_end,i.description,i.due_at,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
 export async function listPolicies(pool: Pool, actor: Actor, permission: "review" | "finance" = "review") {
   await requireOperator(pool, actor, permission);
   return (await pool.query("SELECT * FROM rent_policies WHERE development_only=$1 ORDER BY created_at DESC,id LIMIT 50", [coreConfig().localAdapters]))
@@ -127,6 +129,7 @@ export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<type
     return { id };
   });
 }
+export type IssueInvoiceOptions = { amountMinor?: string; periodDays?: number; description?: string; dueAt?: Date };
 export async function issueInvoice(
   client: PoolClient,
   actor: Actor,
@@ -135,6 +138,7 @@ export async function issueInvoice(
   kind: "initial" | "renewal",
   shopId: string | null,
   now: Date,
+  options: IssueInvoiceOptions = {},
 ) {
   const policy = (
     await client.query("SELECT * FROM rent_policies WHERE id=$1 AND development_only=$2", [
@@ -142,19 +146,27 @@ export async function issueInvoice(
     ])
   ).rows[0] as RentPolicy | undefined;
   if (!policy) throw new AccessError(422, "policy_unavailable");
+  const amountMinor = options.amountMinor ?? policy.amount_minor;
+  const periodDays = options.periodDays ?? policy.period_days;
+  if (!/^[1-9][0-9]{0,19}$/.test(String(amountMinor))) throw new AccessError(422, "invalid_amount");
+  if (!Number.isInteger(periodDays) || periodDays < 1 || periodDays > 366) throw new AccessError(422, "invalid_period");
+  const dueAt = options.dueAt ?? new Date(now.getTime() + 7 * day);
+  if (!Number.isFinite(dueAt.getTime()) || dueAt.getTime() < now.getTime()) throw new AccessError(422, "invalid_due_date");
   const id = randomUUID(),
     reference = `LON-${id.replaceAll("-", "").toUpperCase()}`;
   await client.query(
-    "INSERT INTO invoices(id,merchant_id,application_id,shop_id,currency,amount_minor,period_start,period_end) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+    "INSERT INTO invoices(id,merchant_id,application_id,shop_id,currency,amount_minor,period_start,period_end,description,due_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
     [
       id,
       application.merchant_id,
       application.id,
       shopId,
       policy.currency,
-      policy.amount_minor,
+      amountMinor,
       now,
-      new Date(now.getTime() + policy.period_days * day),
+      new Date(now.getTime() + periodDays * day),
+      options.description ?? null,
+      dueAt,
     ],
   );
   await client.query(
@@ -170,6 +182,10 @@ export async function issueInvoice(
 }
 export const issueApplicationInvoiceInput = z.object({
   policyId: z.uuid(),
+  amountMinor: z.string().regex(/^[1-9][0-9]{0,19}$/).optional(),
+  periodDays: z.number().int().min(1).max(366).optional(),
+  description: z.string().trim().min(1).max(1000).optional(),
+  dueAt: z.string().datetime().optional(),
   confirm: z.literal(true),
 }).strict();
 
@@ -182,7 +198,10 @@ export async function issueApplicationInvoice(pool: Pool, actor: Actor, applicat
     if (application.state !== "approved") throw new AccessError(409, "application_not_approved");
     const existing = await client.query("SELECT 1 FROM invoices WHERE application_id=$1 AND shop_id IS NULL LIMIT 1", [applicationId]);
     if (existing.rowCount) throw new AccessError(409, "initial_invoice_already_issued");
-    const issued = await issueInvoice(client, actor, application, value.policyId, "initial", null, now);
+    const issued = await issueInvoice(client, actor, application, value.policyId, "initial", null, now, {
+      amountMinor: value.amountMinor, periodDays: value.periodDays, description: value.description,
+      dueAt: value.dueAt ? new Date(value.dueAt) : undefined,
+    });
     await client.query("UPDATE applications SET policy_id=$2,updated_at=now() WHERE id=$1", [applicationId, value.policyId]);
     await notifyOwners(client, application.merchant_id, `invoice:${issued.id}`, {
       template: "invoice-issued", applicationId, invoiceId: issued.id,
