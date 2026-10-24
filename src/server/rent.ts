@@ -121,10 +121,18 @@ export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<type
   return transaction(pool, async (client) => {
     await requireOperator(client, actor, "finance", true);
     const id = randomUUID();
-    await client.query(
-      "INSERT INTO rent_policies(id,label,currency,amount_minor,period_days,grace_days,mall_capacity,development_only) VALUES($1,$2,'UGX',$3,$4,$5,$6,$7)",
-      [id, v.label, v.amountMinor, v.periodDays, v.graceDays, v.mallCapacity, coreConfig().localAdapters],
-    );
+    try {
+      await client.query(
+        "INSERT INTO rent_policies(id,label,currency,amount_minor,period_days,grace_days,mall_capacity,development_only) VALUES($1,$2,'UGX',$3,$4,$5,$6,$7)",
+        [id, v.label, v.amountMinor, v.periodDays, v.graceDays, v.mallCapacity, coreConfig().localAdapters],
+      );
+    } catch (error) {
+      const pgCode = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+      const constraint = typeof error === "object" && error !== null && "constraint" in error ? String(error.constraint) : "";
+      if (pgCode === "23514" && constraint === "rent_policies_development_only_check")
+        throw new AccessError(503, "policy_environment_blocked");
+      throw error;
+    }
     await audit(client, actor, "rent.policy.created", id, undefined, { developmentOnly: coreConfig().localAdapters });
     return { id };
   });
