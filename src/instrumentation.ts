@@ -10,7 +10,7 @@ export const onRequestError: Instrumentation.onRequestError = async (
   request,
   context,
 ) => {
-  const digest = "digest" in error && typeof error.digest === "string"
+  const digest = error instanceof Error && "digest" in error && typeof error.digest === "string"
     ? error.digest
     : undefined;
   console.error(JSON.stringify({
@@ -21,7 +21,7 @@ export const onRequestError: Instrumentation.onRequestError = async (
     routeType: context.routeType,
     renderSource: context.renderSource,
     method: request.method,
-    errorType: error.name,
+    errorType: error instanceof Error ? error.name : "UnknownError",
     ...(digest ? { digest } : {}),
   }));
 };
