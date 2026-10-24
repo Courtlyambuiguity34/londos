@@ -32,6 +32,7 @@ export function CreateRentPolicy() {
           mfa_required: "Enable and verify two-factor authentication in Account security.",
           fresh_authentication_required: "Your security verification expired. Verify again in Account security, then retry.",
           invalid_input: "Check the rent amount, period, grace days and capacity.",
+          policy_environment_blocked: "The database still has the old development-only policy restriction. Migration 033 must be applied.",
           service_unavailable: "The server could not save this policy. Provide the request reference to the developer.",
         };
         throw new Error((messages[code] ?? "Unable to create rent policy: " + code) + " (reference: " + (response.headers.get("X-Request-ID") ?? "unavailable") + ")");
