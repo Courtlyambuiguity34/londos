@@ -7,7 +7,6 @@ import {
   applicationAccess,
   currentVersion,
   fingerprint,
-  localLifecycle,
   notifyOwners,
   reasonInput,
   type Application,
