@@ -7,7 +7,7 @@ import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { applicationQueue } from "@/server/applications";
 import { ClaimApplicationButton } from "@/components/lifecycle-controls";
-export const metadata = { title: "Development rent queue" };
+export const metadata = { title: "Rent reconciliation queue" };
 export default async function Page({
   searchParams,
 }: {
@@ -19,7 +19,7 @@ export default async function Page({
     rows = await applicationQueue(database(), actor, "finance", offset);
   return (
     <AccountWorkspaceShell kind="landlord" title="Rent review" subtitle="Review assigned work and follow up on requests." currentPath="/landlord/rent"><section className="portal-section account-page">
-      <h1>Development rent queue</h1>
+      <h1>Rent reconciliation queue</h1>
       <p>
         Claim an application to obtain scoped access. Claiming and consequential changes require
         recent MFA. Duplicate-name signals are advisory and are never an automatic rejection.
@@ -45,7 +45,7 @@ export default async function Page({
           </li>
         ))}
       </ul>
-      {!rows.length ? <p>No applications on this page.</p> : null}
+      {!rows.length ? <p>No approved applications are awaiting finance review on this page. Applications still under review appear in the Applications queue.</p> : null}
       <div className="button-row">
         {offset > 0 ? (
           <Link href={`?offset=${Math.max(0, offset - 20)}`}>Previous applications</Link>
