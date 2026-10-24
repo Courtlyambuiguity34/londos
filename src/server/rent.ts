@@ -65,6 +65,7 @@ export const paymentClaimInput = z
       .toUpperCase()
       .regex(/^[A-Z0-9][A-Z0-9/-]{5,79}$/),
     note: reasonInput,
+    paymentMethod: z.enum(["mtn_momo", "airtel_money", "bank_transfer", "cash", "other"]),
     confirm: z.literal(true),
   })
   .strict();
@@ -258,7 +259,7 @@ export async function readInvoice(
     ).rows[0] as RentPolicy;
     const claims = (
       await client.query(
-        "SELECT id,amount_minor::text,currency,reference,note,state,version,review_reason,created_at,updated_at FROM payment_claims WHERE invoice_id=$1 ORDER BY created_at DESC,id DESC LIMIT 50",
+        "SELECT id,amount_minor::text,currency,reference,note,payment_method,state,version,review_reason,created_at,updated_at FROM payment_claims WHERE invoice_id=$1 ORDER BY created_at DESC,id DESC LIMIT 50",
         [id],
       )
     ).rows as {
@@ -719,7 +720,7 @@ export async function submitPaymentClaim(
     const claimId = randomUUID();
     try {
       await client.query(
-        "INSERT INTO payment_claims(id,invoice_id,merchant_id,currency,amount_minor,reference,note,submitted_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+        "INSERT INTO payment_claims(id,invoice_id,merchant_id,currency,amount_minor,reference,note,submitted_by,payment_method) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
         [
           claimId,
           id,
@@ -729,6 +730,7 @@ export async function submitPaymentClaim(
           value.reference,
           value.note,
           actor.userId,
+          value.paymentMethod,
         ],
       );
     } catch (error) {
