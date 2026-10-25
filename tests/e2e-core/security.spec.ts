@@ -89,54 +89,87 @@ test("seeded-style unverified sign-in explains verification and offers a working
     await pool.end();
   }
 });
-test("R2 stalled JSON receives a bounded 408 from the compiled authentication endpoint", async ({
-  baseURL,
-  request,
-}) => {
-  const started = Date.now();
-  let outgoing: ReturnType<typeof httpRequest> | undefined;
-  try {
-    const result = await new Promise<{ status: number; body: string; cache: string }>(
-      (resolve, reject) => {
-        outgoing = httpRequest(
-          `${baseURL}/api/auth/sign-in/email`,
-          {
-            method: "POST",
-            headers: {
-              Origin: baseURL!,
-              "Content-Type": "Application/JSON; charset=utf-8",
-              "Transfer-Encoding": "chunked",
+for (const variant of [
+  "ordinary chunked",
+  "spoofed chunked preflight",
+  "spoofed fixed-length preflight",
+] as const) {
+  test(`R2 stalled JSON (${variant}) receives a bounded 408 from the compiled authentication endpoint`, async ({
+    baseURL,
+    request,
+  }) => {
+    const started = Date.now();
+    let outgoing: ReturnType<typeof httpRequest> | undefined;
+    try {
+      const result = await new Promise<{ status: number; body: string; cache: string }>(
+        (resolve, reject) => {
+          outgoing = httpRequest(
+            `${baseURL}/api/auth/sign-in/email`,
+            {
+              method: "POST",
+              headers: {
+                Origin: baseURL!,
+                "Content-Type": "Application/JSON; charset=utf-8",
+                ...(variant === "spoofed fixed-length preflight"
+                  ? { "Content-Length": "00064" }
+                  : { "Transfer-Encoding": "chunked" }),
+                ...(variant === "ordinary chunked"
+                  ? {}
+                  : { "Access-Control-Request-Method": "POST" }),
+              },
             },
-          },
-          (response) => {
-            let body = "";
-            response.setEncoding("utf8");
-            response.on("data", (chunk: string) => (body += chunk));
-            response.on("error", reject);
-            response.on("end", () =>
-              resolve({
-                status: response.statusCode!,
-                body,
-                cache: response.headers["cache-control"] ?? "",
-              }),
-            );
-          },
-        );
-        outgoing.on("error", reject);
-        outgoing.setTimeout(22_000, () => outgoing?.destroy(new Error("body deadline missed")));
-        outgoing.write('{"email":');
-        // Deliberately leave the chunked body unfinished. No auth operation may begin.
-      },
-    );
-    expect(result.status).toBe(408);
-    expect(JSON.parse(result.body)).toEqual({ error: "request_body_timeout" });
-    expect(result.cache).toContain("no-store");
-    expect(Date.now() - started).toBeGreaterThanOrEqual(14_000);
-    expect(Date.now() - started).toBeLessThan(22_000);
-    expect((await request.get("/api/ready")).status()).toBe(200);
-  } finally {
-    outgoing?.destroy();
-  }
+            (response) => {
+              let body = "";
+              response.setEncoding("utf8");
+              response.on("data", (chunk: string) => (body += chunk));
+              response.on("error", reject);
+              response.on("end", () =>
+                resolve({
+                  status: response.statusCode!,
+                  body,
+                  cache: response.headers["cache-control"] ?? "",
+                }),
+              );
+            },
+          );
+          outgoing.on("error", reject);
+          outgoing.setTimeout(22_000, () => outgoing?.destroy(new Error("body deadline missed")));
+          outgoing.write('{"email":');
+          // Deliberately leave the chunked body unfinished. No auth operation may begin.
+        },
+      );
+      expect(result.status).toBe(408);
+      expect(JSON.parse(result.body)).toEqual({ error: "request_body_timeout" });
+      expect(result.cache).toContain("no-store");
+      expect(Date.now() - started).toBeGreaterThanOrEqual(14_000);
+      expect(Date.now() - started).toBeLessThan(22_000);
+      expect((await request.get("/api/ready")).status()).toBe(200);
+    } finally {
+      outgoing?.destroy();
+    }
+  });
+}
+test("bodyless CORS preflight accepts the configured origin and rejects another origin", async ({
+  request,
+  baseURL,
+}) => {
+  const accepted = await request.fetch("/api/workspace/shops", {
+    method: "OPTIONS",
+    headers: { Origin: baseURL!, "Access-Control-Request-Method": "POST", "Content-Length": "0" },
+  });
+  expect(accepted.status()).toBe(204);
+  expect(accepted.headers()["access-control-allow-origin"]).toBe(baseURL);
+  expect(accepted.headers()["access-control-allow-credentials"]).toBe("true");
+  const denied = await request.fetch("/api/workspace/shops", {
+    method: "OPTIONS",
+    headers: {
+      Origin: "https://other.invalid",
+      "Access-Control-Request-Method": "POST",
+      "Content-Length": "0",
+    },
+  });
+  expect(denied.status()).toBe(403);
+  expect(denied.headers()["access-control-allow-origin"]).toBeUndefined();
 });
 test("anonymous private APIs deny access and the sign-in surface remains accessible", async ({
   page,
@@ -261,7 +294,7 @@ test("real owner login, tenant A/B attacks across all protected domain handlers 
   expect(response.headers()["cache-control"]).toContain("no-store");
   await page.getByLabel("Shop name", { exact: true }).fill("Browser fixture shop A");
   await page.getByRole("button", { name: "Save shop profile", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved. Background processing is queued.");
+  await expect(page.getByRole("status")).toHaveText("Shop profile saved.");
   const other = await browser.newContext();
   const otherPage = await other.newPage();
   await login(otherPage, accounts.ownerB);
@@ -372,9 +405,9 @@ test("operator MFA enrolls in the interface, gates Landlord, and challenges the 
   await page.getByLabel("Authenticator code", { exact: true }).fill(await generate({ secret }));
   await page.getByRole("button", { name: "Verify MFA", exact: true }).click();
   await expect(page).toHaveURL(/\/security\?verified=1$/);
-  await page.getByRole("link", { name: "Landlord", exact: true }).click();
+  await page.getByRole("link", { name: "Management", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Care for the mall.", exact: true }),
+    page.getByRole("heading", { name: "Manage your mall with clarity.", exact: true }),
   ).toBeVisible();
   expect((await page.request.get("/api/operator/jobs")).status()).toBe(200);
   expect(
@@ -390,6 +423,6 @@ test("operator MFA enrolls in the interface, gates Landlord, and challenges the 
   await page.getByLabel("Recovery code", { exact: true }).fill(recoveryCode!);
   await page.getByRole("button", { name: "Verify and sign in", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Care for the mall.", exact: true }),
+    page.getByRole("heading", { name: "Manage your mall with clarity.", exact: true }),
   ).toBeVisible();
 });

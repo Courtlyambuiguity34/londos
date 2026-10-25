@@ -9,73 +9,145 @@ import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { listShops } from "@/server/workspace";
 import { SignOutButton } from "@/components/auth-controls";
-
 export const metadata: Metadata = { title: "Shopkeeper dashboard" };
 export default async function ShopkeeperPage() {
   if (!coreConfigured()) return <WorkspaceGateway kind="shopkeeper" />;
   const actor = await pageActor("/shopkeeper");
-  // Operator-only accounts belong in the management workspace, not merchant onboarding.
-  // An account that also owns shops may intentionally use either workspace.
   const [operatorAccess, merchantAccess] = await Promise.all([
     database().query("SELECT 1 FROM operator_grants WHERE user_id=$1 LIMIT 1", [actor.userId]),
-    database().query("SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' LIMIT 1", [actor.userId]),
+    database().query("SELECT 1 FROM memberships WHERE user_id=$1 AND status='active' LIMIT 1", [
+      actor.userId,
+    ]),
   ]);
   if (operatorAccess.rowCount && !merchantAccess.rowCount) redirect("/landlord");
   const shops = await listShops(database(), actor);
-  const absoluteBase = coreConfig().baseURL;
-  const first = shops[0];
-  const base = first ? `/shopkeeper/shops/${first.id}` : null;
   const links = [
-    ...(base ? [
-      { href: base, label: "My shop" },
-      { href: `${base}/catalogue`, label: "Products & catalogue" },
-      { href: `${base}/design`, label: "Shop design" },
-      { href: `${base}/rent`, label: "Rent & subscription" },
-      ...(first.role === "owner" ? [
-        { href: `${base}/analytics`, label: "Analytics" },
-        { href: `${base}/costs`, label: "Business costs" },
-      ] : []),
-    ] : []),
-    { href: "/shopkeeper/applications", label: "Shop applications" },
-    { href: "/shopkeeper/team", label: "Teams" },
+    { href: "/shopkeeper/applications", label: "Applications" },
+    { href: "/shopkeeper/team", label: "Team & access" },
     { href: "/shopkeeper/invitations", label: "Invitations" },
   ];
   return (
-    <PortalShell kind="shopkeeper" title="Your business, all in one place." subtitle="Manage your shops, products, design and business tools." links={links} currentPath="/shopkeeper" banner={<div className="portal-next-step"><div><p className="portal-next-step__label">Suggested next step</p><strong>{first ? "Keep your shop ready for customers" : "Open your first shop space"}</strong><p>{first ? "Update products, refine your shop design, then share your storefront link." : "Apply for a shop space or accept an invitation to an existing merchant team."}</p></div><div className="portal-next-step__actions"><Link className="portal-primary" href={first ? `/shopkeeper/shops/${first.id}/catalogue` : "/shopkeeper/applications/new"}>{first ? "Manage catalogue →" : "Apply for a shop →"}</Link><Link href={first ? `/shopkeeper/shops/${first.id}/design` : "/shopkeeper/invitations"}>{first ? "Shop design" : "View invitations"}</Link></div></div>}>
-      {coreConfig().localAdapters ? <p className="portal-notice">Local development mode uses fictional businesses. Live rent collection is disabled.</p> : null}
-      <div className="portal-stat-grid">
-        <div className="portal-stat"><span>Accessible shops</span><strong>{shops.length}</strong><small>Shops linked to your membership</small></div>
-        <div className="portal-stat"><span>Your role</span><strong className="portal-stat-text">{first?.role ?? "No shop"}</strong><small>Permissions vary by shop</small></div>
-        <div className="portal-stat"><span>Workspace</span><strong className="portal-stat-text">{shops.length ? "Manage shops" : "No shop assigned"}</strong><small>{shops.length ? "Choose a shop to get started" : "Shop provisioning is required"}</small></div>
-      </div>
+    <PortalShell
+      kind="shopkeeper"
+      title="Your shops."
+      subtitle="Choose a shop to manage its products, design and rent. Publication is separate from payment approval."
+      links={links}
+      currentPath="/shopkeeper"
+    >
+      {coreConfig().localAdapters ? (
+        <p className="portal-notice">
+          Local development mode uses fictional businesses. Live rent collection is disabled.
+        </p>
+      ) : null}
       <section className="portal-section" aria-labelledby="shop-heading">
-        <div className="portal-section-heading"><div><h2 id="shop-heading">Your shops</h2><p>Choose a shop to manage its products, branding and customer contacts.</p></div><Link className="portal-primary" href="/shopkeeper/applications">Application status →</Link></div>
-        {shops.length ? <div className="portal-card-grid">{shops.map((shop) => (
-          <article className="portal-shop-card" key={shop.id}>
-            <div className="portal-shop-avatar" aria-hidden="true">{shop.name.slice(0, 1).toUpperCase()}</div>
-            <span className="portal-pill">{shop.role}</span>
-            <h3>{shop.name}</h3>
-            <p>Update your storefront and manage shop activity.</p>
-            <ShopPublicLink slug={shop.slug} absoluteBase={absoluteBase} compact />
-            <div className="portal-card-actions">
-              <Link className="portal-primary" href={`/shopkeeper/shops/${shop.id}`}>Edit shop →</Link>
-              <Link href={`/shopkeeper/shops/${shop.id}/catalogue`}>Products</Link>
-              <Link href={`/shopkeeper/shops/${shop.id}/design`}>Design &amp; publish</Link>
-              <Link href={`/shopkeeper/shops/${shop.id}/rent`}>Rent status</Link>
+        <div className="portal-section-heading">
+          <div>
+            <h2 id="shop-heading">Your storefronts</h2>
+            <p>
+              {shops.length
+                ? "Each shop has its own workspace and public status."
+                : "Approved and fully paid applications create a shop here. A submitted payment reference still needs verification."}
+            </p>
+          </div>
+          <Link className="button button--outline" href="/shopkeeper/applications">
+            View applications
+          </Link>
+        </div>
+        {shops.length ? (
+          <div className="portal-card-grid">
+            {shops.map((shop) => (
+              <article className="portal-shop-card" key={shop.id}>
+                <div className="portal-shop-card__heading">
+                  <span className="portal-shop-avatar" aria-hidden="true">
+                    {shop.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="portal-pill">{shop.role}</span>
+                </div>
+                <h3>
+                  {["catalogue", "design", "finance"].some((permission) =>
+                    shop.permissions.includes(permission),
+                  ) ? (
+                    <Link
+                      href={`/shopkeeper/shops/${shop.id}${shop.permissions.includes("catalogue") ? "" : shop.permissions.includes("design") ? "/design" : "/rent"}`}
+                    >
+                      {shop.name}
+                    </Link>
+                  ) : (
+                    shop.name
+                  )}
+                </h3>
+                <p>{shop.storefront.detail}</p>
+                {["catalogue", "design", "finance"].some((permission) =>
+                  shop.permissions.includes(permission),
+                ) ? (
+                  <Link
+                    className="button"
+                    href={`/shopkeeper/shops/${shop.id}${shop.permissions.includes("catalogue") ? "" : shop.permissions.includes("design") ? "/design" : "/rent"}`}
+                  >
+                    Manage shop →
+                  </Link>
+                ) : (
+                  <p>
+                    Ask the owner to assign catalogue, design or rent access for your workspace.
+                  </p>
+                )}
+                <ShopPublicLink
+                  slug={shop.slug}
+                  shopId={shop.id}
+                  storefront={shop.storefront}
+                  canDesign={shop.permissions.includes("design")}
+                  canManageRent={shop.permissions.includes("finance")}
+                  absoluteBase={coreConfig().baseURL}
+                  compact
+                />
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="portal-empty">
+            <h3>Your first shop starts here</h3>
+            <p>Apply for a shop space, or join a shop whose owner has invited you.</p>
+            <div className="merchant-tools">
+              <Link className="button" href="/shopkeeper/applications/new">
+                Apply for a shop
+              </Link>
+              <Link href="/shopkeeper/invitations">View invitations</Link>
             </div>
-          </article>
-        ))}</div> : <div className="portal-empty"><h3>No shops linked yet</h3><p>Check your application status or accept an invitation to an existing merchant team.</p><Link className="portal-primary" href="/shopkeeper/invitations">View invitations →</Link></div>}
+          </div>
+        )}
       </section>
-      <div className="portal-section"><Link className="portal-primary" href="/shopkeeper/applications/new">Apply for a new shop →</Link></div>
-      <section className="portal-section" aria-labelledby="tools-heading">
-        <div className="portal-section-heading"><div><h2 id="tools-heading">Account & team tools</h2><p>Everything needed to manage access to your business.</p></div></div>
+      <section className="portal-section" aria-labelledby="account-heading">
+        <div className="portal-section-heading">
+          <div>
+            <h2 id="account-heading">Your business account</h2>
+            <p>
+              Applications and access belong here. Products and shop settings are inside each shop.
+            </p>
+          </div>
+        </div>
         <div className="portal-quick-grid">
-          <Link href="/shopkeeper/team"><strong>Manage teams</strong><span>People and permissions →</span></Link>
-          <Link href="/shopkeeper/invitations"><strong>Invitations</strong><span>Join a merchant workspace →</span></Link>
-          <Link href="/security"><strong>Account security</strong><span>Protect your account →</span></Link>
+          <Link href="/shopkeeper/applications">
+            <strong>Applications & payments</strong>
+            <span>Track approval, invoices and shop allocation →</span>
+          </Link>
+          <Link href="/shopkeeper/team">
+            <strong>Team & invitations</strong>
+            <span>Manage people and permissions →</span>
+          </Link>
+          <Link href="/security">
+            <strong>Account security</strong>
+            <span>Password, verification and authenticator →</span>
+          </Link>
         </div>
       </section>
-      <div className="portal-signout"><SignOutButton /></div>
+      {shops.length ? (
+        <p>
+          <Link href="/shopkeeper/applications/new">Apply for another shop →</Link>
+        </p>
+      ) : null}
+      <div className="portal-signout">
+        <SignOutButton />
+      </div>
     </PortalShell>
   );
 }

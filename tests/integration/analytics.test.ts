@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, afterAll, test, expect } from "vitest";
 import { Pool } from "pg";
 import { randomUUID, createHmac } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -190,7 +190,9 @@ async function waitForLock() {
 }
 test("013-to-014 preserves existing shops/default grants and aggregate references are tenant-consistent", async () => {
   expect((await pool.query("SELECT * FROM shops ORDER BY id")).rows).toEqual(baseline);
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(25);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(
+    (await readdir("migrations")).filter((file) => /^\d{3}_.+\.sql$/.test(file)).length,
+  );
   await expect(
     pool.query(
       "INSERT INTO pilot_metrics VALUES(current_date,$1,$2,'shop_viewed','direct','none',1)",

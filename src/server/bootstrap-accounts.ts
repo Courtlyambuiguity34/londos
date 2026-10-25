@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { availableShopAddress } from "./shop-address";
 import { hashPassword } from "better-auth/crypto";
 import { createEmailVerificationToken } from "better-auth/api";
 import type { Pool } from "pg";
@@ -82,7 +83,13 @@ export async function bootstrapAccounts(
         ]);
         await db.query(
           "INSERT INTO shops(id,merchant_id,mall_id,name,slug) VALUES($1,$2,$3,$4,$5)",
-          [shop, merchant, mall, `${input.name}'s shop`.slice(0, 120), `shop-${shop}`],
+          [
+            shop,
+            merchant,
+            mall,
+            `${input.name}'s shop`.slice(0, 120),
+            await availableShopAddress(db, `${input.name}'s shop`),
+          ],
         );
         await db.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'unpublished')", [
           shop,

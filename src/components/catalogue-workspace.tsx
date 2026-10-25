@@ -273,7 +273,45 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
         <Link href="/security">Verify account security</Link> ·{" "}
         <Link href="/sign-in">Sign in again</Link>
       </p>
-      <section aria-labelledby="departments-title">
+      <nav className="merchant-tools" aria-label="Catalogue sections">
+        <a className="button button--outline button--small" href="#departments">
+          Departments
+        </a>
+        <a className="button button--outline button--small" href="#products">
+          Products
+        </a>
+        <a className="button button--outline button--small" href="#images">
+          Images
+        </a>
+        <a className="button button--outline button--small" href="#contacts">
+          Contacts
+        </a>
+        <a className="button button--outline button--small" href="#requests">
+          Customer requests
+        </a>
+        <button
+          type="button"
+          className="button button--outline button--small"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setMessage("");
+            try {
+              await refresh();
+              setMessage("Catalogue reloaded.");
+            } catch (error) {
+              setMessage(
+                error instanceof Error ? error.message : "The catalogue could not reload.",
+              );
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          Reload catalogue
+        </button>
+      </nav>
+      <section id="departments" aria-labelledby="departments-title">
         <h2 id="departments-title">Departments</h2>
         <ul className="workspace-list">
           {departments.map((d) => (
@@ -337,7 +375,7 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           </div>
         </form>
       </section>
-      <section aria-labelledby="products-title">
+      <section id="products" aria-labelledby="products-title">
         <h2 id="products-title">Products and services</h2>
         {!products.length && <p>No products on this page. Create one below.</p>}
         <ul className="workspace-list">
@@ -503,7 +541,7 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           </div>
         </form>
       </section>
-      <section aria-labelledby="images-title">
+      <section id="images" aria-labelledby="images-title">
         <h2 id="images-title">Shop images</h2>
         <p>
           Non-animated JPEG, PNG or WebP, up to 4 MiB, 16 million pixels and 8192 pixels per side.
@@ -584,7 +622,7 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           ))}
         </ul>
       </section>
-      <section aria-labelledby="contacts-title">
+      <section id="contacts" aria-labelledby="contacts-title">
         <h2 id="contacts-title">Contact and commerce settings</h2>
         <p>
           Sensitive changes require recent authentication. Payment instructions describe your terms;
@@ -656,7 +694,7 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           </p>
         )}
       </section>
-      <section aria-labelledby="requests-title">
+      <section id="requests" aria-labelledby="requests-title">
         <h2 id="requests-title">Customer requests</h2>
         <p>
           A request is not a confirmed order, payment or stock reservation. Contact the customer to

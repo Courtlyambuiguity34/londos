@@ -1,6 +1,7 @@
 "use client";
 
 import { designAssistantStatusMessage } from "@/modules/design-assistant-status";
+import { designResponseError } from "@/modules/design-feedback";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { assistantStatus, readAssistantRequest } from "@/server/ai-design/service";
@@ -21,13 +22,17 @@ const explain = (p: Proposal) =>
               ? "Proposal expired. Request a new proposal against the current design."
               : p.status === "rate_limited"
                 ? "Provider quota or cooldown reached. Wait before requesting again; manual design remains available."
-                : p.failureCode === "external_consent_required"
-                  ? "This instruction needs a configured provider and your permission to send shop design data. Try a supported simple edit or use manual design."
-                  : p.status === "unavailable"
-                    ? "Conversational provider is unavailable. Supported simple edits and manual design remain available."
-                    : p.status === "conflict"
-                      ? "The shop or your authority changed. Reload and review before requesting again."
-                      : "The provider response could not pass validation. No draft was changed. Use manual design or request a new proposal.";
+                : p.failureCode === "provider_authentication"
+                  ? "The configured design provider could not authorise this request. Contact mall management; manual design remains available."
+                  : p.failureCode === "provider_timeout"
+                    ? "The design provider took too long to respond. No draft changed. Try later or use manual design."
+                    : p.failureCode === "external_consent_required"
+                      ? "This instruction needs a configured provider and your permission to send shop design data. Try a supported simple edit or use manual design."
+                      : p.status === "unavailable"
+                        ? "Conversational provider is unavailable. Supported simple edits and manual design remain available."
+                        : p.status === "conflict"
+                          ? "The shop or your authority changed. Reload and review before requesting again."
+                          : "The provider response could not pass validation. No draft was changed. Use manual design or request a new proposal.";
 export function DesignAssistant({ shopId, initial }: { shopId: string; initial: State }) {
   const root = `/api/workspace/shops/${shopId}/design/assistant`,
     [state, setState] = useState(initial),
@@ -38,13 +43,11 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
     [confirmed, setConfirmed] = useState(false),
     [warning, setWarning] = useState(false),
     [busy, setBusy] = useState(false),
-    [notice, setNotice] = useState(
-      designAssistantStatusMessage("idle"),
-    );
+    [notice, setNotice] = useState(designAssistantStatusMessage("idle"));
   const retry = useRef<{ signature: string; body: unknown } | null>(null);
   const refresh = useCallback(async () => {
     const r = await fetch(root, { cache: "no-store" });
-    if (!r.ok) throw Error("Sign in again or verify account security to use this assistant.");
+    if (!r.ok) throw await designResponseError(r);
     const s = (await r.json()) as State;
     setState(s);
     return s;
@@ -70,6 +73,10 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
     };
   }, [busy, root]);
   async function propose() {
+    if (instruction.trim().length < 2) {
+      setNotice("Describe the change using at least two non-space characters.");
+      return;
+    }
     setBusy(true);
     setConfirmed(false);
     setWarning(false);
@@ -89,21 +96,16 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
         headers: { "content-type": "application/json" },
         body: JSON.stringify(retry.current.body),
       });
-      if (!r.ok)
-        throw Error(
-          r.status === 429
-            ? "Shop request, token, estimated-cost or concurrency limit reached. Try later; manual design remains available."
-            : r.status === 409
-              ? "The base design changed or retry body conflicts. Reload before trying again."
-              : r.status === 403
-                ? "Verify account security before requesting a proposal."
-                : "This request is unavailable or invalid. Your saved design is unchanged.",
-        );
+      if (!r.ok) throw await designResponseError(r);
       const p = (await r.json()) as Proposal;
       setProposal(p);
       setNotice(explain(p));
       retry.current = null;
-      await refresh();
+      await refresh().catch(() =>
+        setNotice(
+          `${explain(p)} The latest status could not refresh. Reload the assistant before another request.`,
+        ),
+      );
     } catch (e) {
       setNotice(
         e instanceof Error
@@ -128,19 +130,16 @@ export function DesignAssistant({ shopId, initial }: { shopId: string; initial: 
           acceptReviewWarning: warning,
         }),
       });
-      if (!r.ok)
-        throw Error(
-          r.status === 409
-            ? "The proposal expired or its design/catalogue changed. Reload and request a new proposal."
-            : r.status === 403
-              ? "Verify account security before applying."
-              : "The proposal is unavailable or needs review acknowledgment. No draft changed.",
-        );
+      if (!r.ok) throw await designResponseError(r);
       const p = (await r.json()) as Proposal;
       setProposal(p);
       setNotice(explain(p));
       setConfirmed(false);
-      await refresh();
+      await refresh().catch(() =>
+        setNotice(
+          `${explain(p)} The latest status could not refresh. Reload the assistant before another request.`,
+        ),
+      );
     } catch (e) {
       setNotice(
         e instanceof Error

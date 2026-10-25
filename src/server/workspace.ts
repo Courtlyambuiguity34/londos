@@ -3,9 +3,15 @@ import { z } from "zod";
 import { transaction } from "./db/pool";
 import { enqueue } from "./jobs/enqueue";
 import { audit } from "./security/audit";
-import { requireShop, sessionState, type Actor } from "./security/authorization";
+import {
+  requireShop,
+  sessionState,
+  type Actor,
+  type MerchantPermission,
+} from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { categorySlug } from "./discovery";
+import { storefrontStatus, type StorefrontState } from "../modules/storefront-status";
 
 export const profileChange = z
   .object({
@@ -19,12 +25,48 @@ export async function listShops(pool: Pool, actor: Actor) {
   await sessionState(pool, actor);
   return (
     await pool.query(
-      `SELECT s.id,s.merchant_id,s.name,s.slug,s.version,m.role FROM shops s
-    JOIN memberships m ON m.merchant_id=s.merchant_id WHERE m.user_id=$1 AND m.status='active'
-    AND (m.role='owner' OR ('catalogue'=ANY(m.permissions) AND EXISTS(SELECT 1 FROM staff_shop_grants g WHERE g.user_id=m.user_id AND g.shop_id=s.id AND 'catalogue'=ANY(g.permissions)))) ORDER BY s.name,s.id LIMIT 100`,
+      `SELECT s.id,s.merchant_id,s.name,s.slug,s.version,m.role,p.state AS publication,t.state AS tenancy,md.state AS moderation,coalesce(o.paused,false) AS paused,(sd.published_id IS NOT NULL) AS published_design,
+    CASE WHEN m.role='owner' THEN ARRAY['catalogue','design','publish','finance','sensitive','membership']::text[]
+      ELSE ARRAY(SELECT unnest(m.permissions) INTERSECT SELECT unnest(g.permissions)) END AS permissions FROM shops s
+    JOIN shop_publication p ON p.shop_id=s.id JOIN tenancies t ON t.shop_id=s.id JOIN shop_moderation md ON md.shop_id=s.id LEFT JOIN shop_operations o ON o.shop_id=s.id LEFT JOIN shop_designs sd ON sd.shop_id=s.id
+    JOIN memberships m ON m.merchant_id=s.merchant_id
+    LEFT JOIN staff_shop_grants g ON g.user_id=m.user_id AND g.shop_id=s.id AND g.merchant_id=s.merchant_id
+    WHERE m.user_id=$1 AND m.status='active'
+    AND (m.role='owner' OR m.permissions && g.permissions) ORDER BY s.name,s.id LIMIT 100`,
       [actor.userId],
     )
-  ).rows;
+  ).rows.map((shop) => ({ ...shop, storefront: storefrontStatus(shop as StorefrontState) }));
+}
+
+export async function effectiveShopPermissions(pool: Pool, actor: Actor, shopId: string) {
+  await sessionState(pool, actor);
+  const row = (
+    await pool.query(
+      `SELECT CASE WHEN m.role='owner' THEN ARRAY['catalogue','design','publish','finance','sensitive','membership']::text[]
+      ELSE ARRAY(SELECT unnest(m.permissions) INTERSECT SELECT unnest(g.permissions)) END AS permissions
+     FROM shops s JOIN memberships m ON m.merchant_id=s.merchant_id AND m.user_id=$2 AND m.status='active'
+     LEFT JOIN staff_shop_grants g ON g.user_id=m.user_id AND g.shop_id=s.id AND g.merchant_id=s.merchant_id
+     WHERE s.id=$1`,
+      [shopId, actor.userId],
+    )
+  ).rows[0] as { permissions: MerchantPermission[] } | undefined;
+  if (!row?.permissions.length) throw new AccessError(404, "resource_unavailable");
+  return row.permissions;
+}
+
+// Shell callers have already loaded the authorised shop. Status is also shown
+// on subpages so they never default to a stale "not published" banner.
+export async function shopStorefrontStatus(pool: Pool, shopId: string) {
+  const row = (
+    await pool.query(
+      `SELECT p.state AS publication,t.state AS tenancy,m.state AS moderation,coalesce(o.paused,false) AS paused,(sd.published_id IS NOT NULL) AS published_design
+     FROM shops s JOIN shop_publication p ON p.shop_id=s.id JOIN tenancies t ON t.shop_id=s.id JOIN shop_moderation m ON m.shop_id=s.id
+     LEFT JOIN shop_operations o ON o.shop_id=s.id LEFT JOIN shop_designs sd ON sd.shop_id=s.id WHERE s.id=$1`,
+      [shopId],
+    )
+  ).rows[0] as StorefrontState;
+  if (!row) throw new AccessError(404, "resource_unavailable");
+  return storefrontStatus(row);
 }
 export async function readShop(pool: Pool, actor: Actor, shopId: string) {
   return requireShop(pool, actor, shopId, "catalogue");

@@ -37,6 +37,14 @@ test("manual templates, private preview, publication, canonical rollback and ano
       })
     ).status(),
   ).toBe(200);
+  const baselineResponse = await page.request.get(root);
+  expect(baselineResponse.status()).toBe(200);
+  const baseline = await baselineResponse.json();
+  const baselineRevision = Math.max(
+    baseline.revision ?? 0,
+    baseline.publishedRevision ?? 0,
+    ...baseline.history.map((entry: { revision: number }) => entry.revision),
+  );
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}/design`);
   await expect(page.getByRole("status")).toHaveText("Design loaded.");
   const choices = page.getByRole("checkbox", { name: /Show .* department/ });
@@ -50,6 +58,8 @@ test("manual templates, private preview, publication, canonical rollback and ano
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Draft saved. Preview before publishing.");
   const state = await (await page.request.get(root)).json();
+  expect(state.version).toBe(baseline.version + 1);
+  expect(state.revision).toBe(baselineRevision + 1);
   const spaces = state.specification.spaces as { id: string; departmentId: string }[],
     departments = state.departments as { id: string; name: string }[];
   const section = (name: string) =>
@@ -73,20 +83,26 @@ test("manual templates, private preview, publication, canonical rollback and ano
   releasePatch();
   await expect(page.getByRole("status")).toHaveText("Draft saved. Preview before publishing.");
   await page.unroute(`**${root}/patch`);
+  const moved = await (await page.request.get(root)).json();
+  expect(moved.version).toBe(state.version + 1);
+  expect(moved.revision).toBe(state.revision + 1);
   await expect(
     page.getByRole("link", { name: "Preview saved draft", exact: true }),
-  ).toHaveAttribute("href", `/shopkeeper/shops/${seedIds.shopA}/preview?revision=2`);
+  ).toHaveAttribute(
+    "href",
+    `/shopkeeper/shops/${seedIds.shopA}/preview?revision=${moved.revision}`,
+  );
   await page.getByRole("link", { name: "Preview saved draft", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Annette Fashion House", exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("Private preview")).toContainText("Revision 2");
+  await expect(page.getByLabel("Private preview")).toContainText(`Revision ${moved.revision}`);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const guest = await browser.newContext(),
     anonymous = await guest.newPage();
   try {
     const denied = await anonymous.request.get(
-      `/shopkeeper/shops/${seedIds.shopA}/preview?revision=2`,
+      `/shopkeeper/shops/${seedIds.shopA}/preview?revision=${moved.revision}`,
       { headers: { RSC: "1" } },
     );
     expect(await denied.text()).not.toContain("fictional boutique");
@@ -97,6 +113,10 @@ test("manual templates, private preview, publication, canonical rollback and ano
       .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
+    const published = await (await page.request.get(root)).json();
+    expect(published.version).toBe(moved.version + 1);
+    expect(published.revision).toBe(moved.revision);
+    expect(published.publishedRevision).toBe(moved.revision);
     await anonymous.goto("/search?q=shoes");
     await anonymous.getByRole("link", { name: "Annette Fashion House", exact: true }).click();
     await expect(anonymous).toHaveURL(/\/departments\/shoes$/);
@@ -130,14 +150,21 @@ test("manual templates, private preview, publication, canonical rollback and ano
       },
     );
     expect(changed.status()).toBe(200);
-    await page.getByLabel("Layout revision", { exact: true }).selectOption("1");
+    await page.getByLabel("Layout revision", { exact: true }).selectOption(String(state.revision));
     await page.getByRole("button", { name: "Restore as new draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Draft saved. Preview before publishing.");
+    const restored = await (await page.request.get(root)).json();
+    expect(restored.version).toBe(published.version + 1);
+    expect(restored.revision).toBe(moved.revision + 1);
+    expect(restored.specification).toEqual(state.specification);
     await page
       .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
       .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
+    const republished = await (await page.request.get(root)).json();
+    expect(republished.version).toBe(restored.version + 1);
+    expect(republished.publishedRevision).toBe(restored.revision);
     await anonymous.goto("/shops/annette-fashion-house/products/sample-2");
     await expect(anonymous.locator("main")).toContainText("234,000");
     const imageProduct = catalogue.products.find((p: { media_id: string | null }) => p.media_id);
@@ -184,6 +211,9 @@ test("manual templates, private preview, publication, canonical rollback and ano
       .check();
     await page.getByRole("button", { name: "Unpublish shop", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop unpublished.");
+    const unpublished = await (await page.request.get(root)).json();
+    expect(unpublished.version).toBe(republished.version + 1);
+    expect(unpublished.revision).toBe(restored.revision);
     await anonymous.reload();
     await expect(anonymous.locator("main")).not.toContainText("Fictional plum product image");
     expect((await anonymous.request.get(image)).status()).toBe(404);

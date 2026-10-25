@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, afterAll, test, expect } from "vitest";
 import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -222,7 +222,9 @@ test("015 to 016 is additive, repeatable and creates no historical measurements 
       ])
     ).rows,
   ).toEqual((baseline as unknown[]).slice(0, 6));
-  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(25);
+  expect((await pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n).toBe(
+    (await readdir("migrations")).filter((file) => /^\d{3}_.+\.sql$/.test(file)).length,
+  );
   expect((await pool.query("SELECT count(*)::int AS n FROM resource_cost_entries")).rows[0].n).toBe(
     0,
   );

@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import { coreConfigured, coreConfig } from "@/server/config";
+import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { sessionState } from "@/server/security/authorization";
 import { CreateApplicationForm } from "@/components/lifecycle-controls";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 export const metadata = { title: "Apply for a shop" };
 export default async function Page() {
   if (!coreConfigured()) notFound();
@@ -16,14 +17,20 @@ export default async function Page() {
     )
   ).rows;
   return (
-    <section className="shell page-section account-page">
-      <h1>Apply for a shop</h1>
-      <p>
-        Save your details first, then add private verification images and submit for review. The
-        displayed rent policy and payment instructions will be confirmed after review. Never pay
-        until you receive official instructions from Londos.
-      </p>
-      <CreateApplicationForm merchants={merchants} />
-    </section>
+    <AccountWorkspaceShell
+      kind="shopkeeper"
+      title="Apply for a shop"
+      subtitle="Save your business details, add evidence and submit for review."
+      currentPath="/shopkeeper/applications/new"
+    >
+      <section className="portal-section account-page">
+        <p>
+          Save your details first, then add private verification images and submit for review. The
+          displayed rent policy and payment instructions will be confirmed after review. Never pay
+          until you receive official instructions from Londos.
+        </p>
+        <CreateApplicationForm merchants={merchants} />
+      </section>
+    </AccountWorkspaceShell>
   );
 }

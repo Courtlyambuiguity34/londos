@@ -22,6 +22,26 @@ async function login(page: Page, account: SeedAccounts[keyof SeedAccounts]) {
 }
 const origin = "http://127.0.0.1:3101",
   root = `/api/workspace/shops/${seedIds.shopA}`;
+async function publishShopFixture(page: Page) {
+  const response = await page.request.get(`${root}/design`);
+  expect(response.status()).toBe(200);
+  const design = await response.json();
+  const saved = await page.request.put(`${root}/design`, {
+    headers: { Origin: origin },
+    data: {
+      version: design.version,
+      summary: "P5 public contact fixture",
+      specification: design.specification,
+    },
+  });
+  expect(saved.status()).toBe(200);
+  const draft = await saved.json();
+  const published = await page.request.post(`${root}/design/publish`, {
+    headers: { Origin: origin },
+    data: { version: draft.version, revision: draft.revision, confirm: true },
+  });
+  expect(published.status()).toBe(200);
+}
 test("catalogue, contacts, native worker image processing and anonymous requests work together", async ({
   page,
   browser,
@@ -32,6 +52,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
   const guest = await browser.newContext();
   try {
     await login(page, accounts.ownerA);
+    await publishShopFixture(page);
     await page.goto(`/shopkeeper/shops/${seedIds.shopA}/catalogue`);
     await expect(
       page.getByRole("button", { name: "Create department", exact: true }),
@@ -186,6 +207,34 @@ test("every new protected handler rejects foreign and anonymous requests; guest 
 }) => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
+    const ownerContext = await browser.newContext();
+    try {
+      const owner = await ownerContext.newPage();
+      await login(owner, accounts.ownerA);
+      await publishShopFixture(owner);
+      const settings = await owner.request.get(`${root}/contacts`);
+      expect(settings.status()).toBe(200);
+      const current = await settings.json();
+      // This abuse-boundary case must not depend on the prior catalogue test
+      // having enabled intake successfully.
+      const enabled = await owner.request.put(`${root}/contacts`, {
+        headers: { Origin: origin },
+        data: {
+          version: current.version,
+          phone: current.phone,
+          whatsapp: current.whatsapp,
+          website: current.website,
+          fulfilment: current.fulfilment,
+          paymentInstructions: current.payment_instructions,
+          deliveryInstructions: current.delivery_instructions,
+          enquiriesEnabled: true,
+          reason: "P5 bounded enquiry fixture",
+        },
+      });
+      expect(enabled.status()).toBe(200);
+    } finally {
+      await ownerContext.close();
+    }
     await login(page, accounts.ownerB);
     const id = randomUUID(),
       department = "40000000-0000-4000-8000-000000000001";

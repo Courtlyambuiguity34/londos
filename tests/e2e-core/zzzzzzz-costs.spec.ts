@@ -244,7 +244,7 @@ test("all five resource methods and private HTML/Flight reject anonymous, foreig
   await page.getByLabel("Recovery code", { exact: true }).fill(reviewerRecoveryCode);
   await page.getByRole("button", { name: "Verify and sign in", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Care for the mall.", exact: true }),
+    page.getByRole("heading", { name: "Manage your mall with clarity.", exact: true }),
   ).toBeVisible();
   expect((await page.request.get("/api/operator/costs")).status()).toBe(200);
   expect(

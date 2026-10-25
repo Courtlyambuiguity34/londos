@@ -10,6 +10,7 @@ import {
   type Actor,
 } from "./security/authorization";
 import { AccessError } from "./security/errors";
+import { lockShopAddresses } from "./shop-address";
 
 export const addressInput = z
   .object({
@@ -54,12 +55,12 @@ export async function changeAddress(
   shopId: string,
   input: z.infer<typeof addressInput>,
 ) {
-  localLifecycle();
   const v = addressInput.parse(input);
   try {
     return await transaction(pool, async (client) => {
       const first = await requireShop(client, actor, shopId, "sensitive");
       await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [first.merchant_id]);
+      await lockShopAddresses(client);
       const current = await requireShop(client, actor, shopId, "sensitive");
       await requireMerchant(client, actor, current.merchant_id, "membership");
       currentVersion(current.version, v.version);

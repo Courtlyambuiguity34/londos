@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "@/server/db/pool";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
+import { requireOperator } from "@/server/security/authorization";
+import { HostedToolNotice } from "@/components/hosted-tool-notice";
 import { pageActor } from "@/server/page-actor";
 import { readOperatorCosts } from "@/server/costs";
 import { CostSummary } from "@/components/cost-summary";
@@ -15,13 +17,27 @@ export default async function Page({
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/landlord"),
     q = await searchParams,
-    requested = Number(q.days ?? 30),
-    data = await readOperatorCosts(
-      database(),
-      actor,
-      [7, 30, 90].includes(requested) ? requested : 30,
-      q.after ?? null,
+    requested = Number(q.days ?? 30);
+  if (!coreConfig().localAdapters) {
+    await requireOperator(database(), actor, "costs", true);
+    return (
+      <section className="shell page-section account-page">
+        <h1>Platform resources and costs</h1>
+        <HostedToolNotice
+          title="Cost reporting is not enabled"
+          description="The operating-cost journal is not enabled for this mall. Rent reconciliation and payment history remain available in the rent desk."
+          backHref="/landlord"
+          backLabel="Back to management"
+        />
+      </section>
     );
+  }
+  const data = await readOperatorCosts(
+    database(),
+    actor,
+    [7, 30, 90].includes(requested) ? requested : 30,
+    q.after ?? null,
+  );
   return (
     <section className="shell page-section account-page">
       <p className="eyebrow">Explicit costs grant and fresh native MFA</p>

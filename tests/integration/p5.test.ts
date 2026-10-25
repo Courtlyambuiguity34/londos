@@ -44,6 +44,7 @@ import {
 } from "../../src/server/media";
 import { claim, acknowledge, fail, type Job } from "../../src/server/jobs/queue";
 import { LocalNotifications, LocalPrivateStorage } from "../../src/server/jobs/adapters";
+import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-design";
 
 const parent = new Pool({ connectionString: process.env.DATABASE_URL }),
   databaseName = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -407,10 +408,23 @@ test("contact changes require fresh sensitive access and audit with owner notifi
   );
   expect((await readContacts(pool, actors.ownerA!, shop)).version).toBe(1);
 });
+async function publishFixtureShop() {
+  const current = await readDesign(pool, actors.ownerA!, shop);
+  const draft = await saveDesign(pool, actors.ownerA!, shop, {
+    version: current.version,
+    specification: current.specification,
+    summary: "Published contact fixture",
+  });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+}
 test("guest requests require eligibility, stay scoped and deduplicate without promising a sale", async () => {
   const input = guest();
   await expect(submitGuestRequest(pool, shop, input)).rejects.toMatchObject({ status: 404 });
   await saveContacts(pool, actors.ownerA!, shop, contacts());
+  // An active tenancy and enabled contact channel do not make an unpublished
+  // storefront public. Contact intake must share the storefront's design gate.
+  await expect(submitGuestRequest(pool, shop, input)).rejects.toMatchObject({ status: 404 });
+  await publishFixtureShop();
   await Promise.all([submitGuestRequest(pool, shop, input), submitGuestRequest(pool, shop, input)]);
   expect(await listGuestRequests(pool, actors.ownerA!, shop)).toHaveLength(1);
   await expect(
@@ -692,6 +706,7 @@ test("a foreign ready image is denied by both the product command and composite 
 });
 test("notification fanout limit rolls back contact changes and guest receipt atomically", async () => {
   await saveContacts(pool, actors.ownerA!, shop, contacts());
+  await publishFixtureShop();
   const ids: string[] = [];
   try {
     for (let i = 0; i < 10; i++) {

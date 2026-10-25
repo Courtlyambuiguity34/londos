@@ -17,7 +17,6 @@ import {
   applicationLock,
   currentVersion,
   fingerprint,
-  localLifecycle,
   notifyOwners,
   reasonInput,
 } from "./lifecycle-common";
@@ -389,7 +388,6 @@ export async function reviewApplication(
     currentVersion(row.version, value.version);
     if (row.state !== "reviewing") throw new AccessError(409, "application_not_reviewing");
     if (value.decision === "approved") {
-
       if (
         !(await client.query("SELECT 1 FROM application_evidence WHERE application_id=$1", [id]))
           .rowCount

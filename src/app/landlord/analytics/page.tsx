@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "@/server/db/pool";
-import { coreConfigured } from "@/server/config";
+import { coreConfigured, coreConfig } from "@/server/config";
+import { requireOperator } from "@/server/security/authorization";
+import { HostedToolNotice } from "@/components/hosted-tool-notice";
 import { pageActor } from "@/server/page-actor";
 import { readOperatorPilot } from "@/server/analytics";
 import { PilotSummary } from "@/components/pilot-summary";
@@ -9,8 +11,22 @@ export const metadata = { title: "Pilot analytics" };
 export default async function Page({ searchParams }: { searchParams: Promise<{ days?: string }> }) {
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/landlord"),
-    days = Number((await searchParams).days ?? 30),
-    result = await readOperatorPilot(database(), actor, [7, 30, 90].includes(days) ? days : 30);
+    days = Number((await searchParams).days ?? 30);
+  if (!coreConfig().localAdapters) {
+    await requireOperator(database(), actor, "analytics", true);
+    return (
+      <section className="shell page-section account-page">
+        <h1>Platform analytics</h1>
+        <HostedToolNotice
+          title="Live analytics is not enabled"
+          description="Live tracking and aggregate activity reporting remain disabled. No pilot statistics are presented as production visitor or sales results."
+          backHref="/landlord"
+          backLabel="Back to management"
+        />
+      </section>
+    );
+  }
+  const result = await readOperatorPilot(database(), actor, [7, 30, 90].includes(days) ? days : 30);
   return (
     <section className="shell page-section account-page">
       <p className="eyebrow">MFA-protected development aggregates</p>

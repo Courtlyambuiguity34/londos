@@ -16,17 +16,22 @@ test("merchant gets mobile navigation and an advisory setup checklist without fo
   await page.getByLabel("Password", { exact: true }).fill(accounts.ownerA.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
-  await page.locator(".mobile-navigation summary").click();
+  const menu = page.getByRole("button", { name: "Shop menu", exact: true });
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await menu.click();
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
   await expect(
     page
-      .getByRole("navigation", { name: "Mobile navigation" })
-      .getByRole("link", { name: "Shopkeeper", exact: true }),
+      .getByRole("navigation", { name: "Merchant sections" })
+      .getByRole("link", { name: "Your shops", exact: true }),
   ).toBeVisible();
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}`);
   await expect(page.getByRole("progressbar", { name: "Shop setup progress" })).toBeVisible();
-  await expect(page.getByText(/Three products is a suggestion/)).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Add three products or services", exact: true }),
+    page.getByText(/suggested steps complete. You choose when to publish/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Add products or services", exact: true }),
   ).toBeVisible();
   expect((await new AxeBuilder({ page }).include("main").analyze()).violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

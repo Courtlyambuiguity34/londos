@@ -19,6 +19,9 @@ export default defineConfig({
     {
       name: "core-desktop",
       testMatch: [
+        "shopkeeper-workflows.spec.ts",
+        "designer-feedback.spec.ts",
+        "portal-navigation.spec.ts",
         "audit.spec.ts",
         "security.spec.ts",
         "services.spec.ts",

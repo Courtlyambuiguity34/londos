@@ -1,5 +1,14 @@
 # Londos continuation handoff
 
+**Current hosted follow-up — 25 October 2026:** work targets
+`feature/hosted-lifecycle-secure-2026-10-23`, based on `c14da3d`, with readiness migration
+**035**. Read [hosted workflow audit](evidence/HOSTED-WORKFLOWS-2026-10-25.md) and
+[billing/shop operations](HOSTED-BILLING-AND-OPERATIONS.md) for the current implementation,
+verification results and remaining operator actions. Older branch names, schema numbers,
+missing-credential statements and local-only workflow descriptions below are historical.
+The original formal release/pilot gates are not relabelled complete by this follow-up.
+
+
 **Latest feature follow-up (2026-10-09):** the launcher/designer and P13/provider lines are consolidated on `feature/cross-platform-local-launchers-2026-10-09`. Both 019 migrations remain unchanged and 020 verifies their combined contract. Read [cross-platform evidence](evidence/CROSS-PLATFORM-LAUNCHERS-2026-10-09.md), [local launchers](LOCAL-INSTALLATION.md), [shared-server deployment](CROSS-PLATFORM-DEPLOYMENT.md), and the [designer review](SHOP-DESIGNER-REVIEW.md). Redis stays optional. Historical G5 evidence does not by itself verify this new source; the broad release gate remains pending.
 
 **The P13/G5 development packet is complete; production launch and real pilot outcomes are conditional.** Read [BUILD-STATUS](BUILD-STATUS.md), [current dossier](evidence/G5-P13.md), [verification](evidence/G5-VERIFICATION.json), [launch status](evidence/G5-STATUS.json), [deployment profiles](DEPLOYMENT-PROFILES.md) and [pilot runbook](PILOT-RUNBOOK.md). Preserve the existing branch `codex/londos-x2-2026-10-05`, all private files and completed P12/earlier work. Do not recreate or overwrite completed evidence.

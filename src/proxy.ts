@@ -49,14 +49,16 @@ export async function proxy(request: NextRequest) {
       // Only CORS preflight is handled here. Actual API requests must reach
       // their route handlers, which enforce authentication and origin checks.
       if (request.method !== "OPTIONS") return nextWithPathname();
-      if (!acceptedRequestOrigin(request))
-        return new NextResponse(null, { status: 403 });
+      if (!acceptedRequestOrigin(request)) return new NextResponse(null, { status: 403 });
       return corsResponse(request, new NextResponse(null, { status: 204 }));
     }
     // Public pages only need pathname propagation, not workspace authorization.
-    if (!request.nextUrl.pathname.startsWith("/shopkeeper") &&
-        !request.nextUrl.pathname.startsWith("/landlord") &&
-        request.nextUrl.pathname !== "/security") return nextWithPathname();
+    if (
+      !request.nextUrl.pathname.startsWith("/shopkeeper") &&
+      !request.nextUrl.pathname.startsWith("/landlord") &&
+      request.nextUrl.pathname !== "/security"
+    )
+      return nextWithPathname();
     const actor = await resolveActor(auth(), request.headers),
       path = request.nextUrl.pathname;
     const shop = /^\/shopkeeper\/shops\/([^/]+)(?:\/.*)?$/.exec(path);
@@ -178,6 +180,16 @@ export async function proxy(request: NextRequest) {
     return nextWithPathname();
   } catch (error) {
     if (error instanceof AccessError) {
+      // These landing pages recheck the shop/owner and freshness server-side,
+      // rendering only recovery guidance when stale. Keep deeper proposal
+      // previews and all mutation handlers fenced by their existing checks.
+      if (
+        error.code === "fresh_authentication_required" &&
+        /^\/shopkeeper\/shops\/[a-f0-9-]{36}\/(?:design\/assistant|address)$/.test(
+          request.nextUrl.pathname,
+        )
+      )
+        return nextWithPathname();
       if (error.status === 401) {
         const destination = request.nextUrl.pathname.startsWith("/landlord")
           ? "/landlord"
@@ -198,8 +210,16 @@ export const config = {
     {
       source: "/api/:path*",
       has: [{ type: "header", key: "access-control-request-method" }],
+      // Next finalizes/clones middleware request bodies before calling routes.
+      // Only bodyless preflights may enter here; otherwise a stalled upload
+      // could prevent the route's bounded reader and deadline from starting.
+      // Zero Content-Length is valid, including zeroes added by an HTTP client.
+      missing: [
+        { type: "header", key: "transfer-encoding" },
+        { type: "header", key: "content-length", value: ".*[1-9].*" },
+      ],
     },
-    "/((?!_next/static|_next/image|favicon.ico|brand/|illustrations/|pwa/).*)",
+    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|brand/|illustrations/|pwa/).*)",
     "/shopkeeper/:path*",
     "/landlord/:path*",
     "/security",

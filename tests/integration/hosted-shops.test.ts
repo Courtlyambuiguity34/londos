@@ -12,6 +12,9 @@ import { seed, seedIds, type SeedAccounts } from "../../src/server/db/seed";
 import { requireDevelopmentDatabase } from "../../src/server/db/development";
 import { createAuth } from "../../src/server/security/auth";
 import { coreConfig } from "../../src/server/config";
+import { requiredMigration } from "../../src/server/db/schema-contract";
+import { imageVariants } from "../../src/server/media";
+import sharp from "sharp";
 
 // Use a real compiled server and real PostgreSQL, but never a live provider or database.
 // The parent runner's development guard protects database creation and cleanup.
@@ -342,6 +345,190 @@ test("hosted merchant can create a product, preview privately, publish, discover
   ).toBe(0);
 });
 
+test("hosted public images and enquiry intake keep visibility, origin, privacy and quota boundaries", async () => {
+  const cookie = await login(accounts.ownerA);
+  const root = `/api/workspace/shops/${seedIds.shopA}`;
+  const previous = (
+    await pool!.query("SELECT state FROM shop_publication WHERE shop_id=$1", [seedIds.shopA])
+  ).rows[0].state;
+  const design = await (await request(`${root}/design`, cookie)).json();
+  const savedResponse = await request(`${root}/design`, cookie, "PUT", {
+    version: design.version,
+    summary: "Hosted enquiry and media boundary fixture",
+    specification: { ...design.specification, actions: ["enquiry"] },
+  });
+  expect(savedResponse.status).toBe(200);
+  const saved = await savedResponse.json();
+  expect(
+    (await request(`${root}/design/publish`, cookie, "POST", { ...saved, confirm: true })).status,
+  ).toBe(200);
+  const contacts = await (await request(`${root}/contacts`, cookie)).json();
+  expect(
+    (
+      await request(`${root}/contacts`, cookie, "PUT", {
+        version: contacts.version,
+        phone: "+256700000001",
+        whatsapp: "",
+        website: "",
+        fulfilment: "contact",
+        paymentInstructions: "Agree payment directly with the merchant.",
+        deliveryInstructions: "Contact the merchant to arrange fulfilment.",
+        enquiriesEnabled: true,
+        reason: "Enable hosted enquiry fixture",
+      })
+    ).status,
+  ).toBe(200);
+  const product = (
+    await pool!.query("SELECT id FROM products WHERE shop_id=$1 ORDER BY id LIMIT 1", [
+      seedIds.shopA,
+    ])
+  ).rows[0];
+  const assetId = randomUUID();
+  const image = await sharp({
+    create: { width: 80, height: 60, channels: 3, background: "#364636" },
+  })
+    .png()
+    .toBuffer();
+  const variants = await imageVariants(image, "image/png", new AbortController().signal);
+  await pool!.query(
+    "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,alt,width,height) VALUES($1,$2,$3,'ready',$4,'Fictional hosted product image',80,60)",
+    [assetId, seedIds.shopA, seedIds.merchantA, `hosted-test/${assetId}`],
+  );
+  for (const variant of variants)
+    await pool!.query(
+      "INSERT INTO media_blobs(asset_id,variant,bytes,width,height) VALUES($1,$2,$3,$4,$5)",
+      [assetId, variant.variant, variant.bytes, variant.width, variant.height],
+    );
+  await pool!.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [product.id, assetId, seedIds.shopA, seedIds.merchantA],
+  );
+  const media = `/api/public/shops/${seedIds.shopA}/media/${assetId}`;
+  const contact = `/contact/${seedIds.shopA}`;
+  const intake = `/api/guest/shops/${seedIds.shopA}/requests`;
+  const input = {
+    key: randomUUID(),
+    kind: "enquiry",
+    name: "Hosted contact visitor",
+    replyTo: "visitor@londos.invalid",
+    message: "PRIVATE hosted enquiry text",
+    productId: null,
+  };
+  try {
+    const contactPage = await request(contact);
+    expect(contactPage.status).toBe(200);
+    expect(await contactPage.text()).toContain("Send request");
+    expect(await (await request("/shops/annette-fashion-house")).text()).toContain(contact);
+    for (const variant of ["thumbnail", "card", "display"]) {
+      const result = await request(`${media}/${variant}`);
+      expect(result.status).toBe(200);
+      expect(result.headers.get("content-type")).toBe("image/webp");
+      expect(result.headers.get("cache-control")).toContain("no-store");
+      expect((await sharp(Buffer.from(await result.arrayBuffer())).metadata()).format).toBe("webp");
+    }
+    for (const variant of ["source", "quarantine", "not-a-variant"])
+      expect((await request(`${media}/${variant}`)).status).toBe(404);
+    expect((await request(`/api/public/shops/${seedIds.shopB}/media/${assetId}/card`)).status).toBe(
+      404,
+    );
+    for (const originHeader of [null, "https://attacker.invalid"]) {
+      const rejected = await fetch(`${origin}${intake}`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(originHeader ? { origin: originHeader } : {}),
+        },
+        body: JSON.stringify(input),
+      });
+      expect(rejected.status).toBe(403);
+    }
+    expect((await request(intake, "", "POST", { ...input, replyTo: "invalid" })).status).toBe(422);
+    expect((await request(intake, "", "POST", input)).status).toBe(200);
+    expect((await request(intake, "", "POST", input)).status).toBe(200);
+    expect(
+      (await request(intake, "", "POST", { ...input, message: "changed private text" })).status,
+    ).toBe(409);
+    expect(
+      (
+        await pool!.query("SELECT 1 FROM guest_requests WHERE shop_id=$1 AND request_key=$2", [
+          seedIds.shopA,
+          input.key,
+        ])
+      ).rowCount,
+    ).toBe(1);
+    expect((await request(`${root}/requests`)).status).toBe(401);
+    expect((await request(`${root}/requests`, await login(accounts.ownerB))).status).toBe(404);
+    const ownerRequests = await request(`${root}/requests`, cookie);
+    expect(ownerRequests.status).toBe(200);
+    expect(await ownerRequests.text()).toContain(input.message);
+    expect(await (await request("/shops/annette-fashion-house")).text()).not.toContain(
+      input.message,
+    );
+    for (const [table, hidden, visible] of [
+      ["shop_publication", "unpublished", "active"],
+      ["tenancies", "closed", "active"],
+      ["shop_moderation", "suspended", "clear"],
+    ]) {
+      await pool!.query(`UPDATE ${table} SET state=$1 WHERE shop_id=$2`, [hidden, seedIds.shopA]);
+      try {
+        expect((await request(contact)).status).toBe(404);
+        expect((await request(`${media}/card`)).status).toBe(404);
+        expect((await request(intake, "", "POST", { ...input, key: randomUUID() })).status).toBe(
+          404,
+        );
+      } finally {
+        await pool!.query(`UPDATE ${table} SET state=$1 WHERE shop_id=$2`, [
+          visible,
+          seedIds.shopA,
+        ]);
+      }
+    }
+    await pool!.query(
+      "INSERT INTO shop_operations(shop_id,merchant_id,paused,reason,changed_by) VALUES($1,$2,true,'Hosted visibility test',$3)",
+      [seedIds.shopA, seedIds.merchantA, accounts.operator.id],
+    );
+    try {
+      expect((await request(contact)).status).toBe(404);
+      expect((await request(`${media}/card`)).status).toBe(404);
+      expect((await request(intake, "", "POST", { ...input, key: randomUUID() })).status).toBe(404);
+    } finally {
+      await pool!.query("DELETE FROM shop_operations WHERE shop_id=$1", [seedIds.shopA]);
+    }
+    const pointer = (
+      await pool!.query("SELECT published_id FROM shop_designs WHERE shop_id=$1", [seedIds.shopA])
+    ).rows[0].published_id;
+    await pool!.query("UPDATE shop_designs SET published_id=NULL WHERE shop_id=$1", [
+      seedIds.shopA,
+    ]);
+    try {
+      expect((await request(contact)).status).toBe(404);
+      expect((await request(`${media}/card`)).status).toBe(404);
+      expect((await request(intake, "", "POST", { ...input, key: randomUUID() })).status).toBe(404);
+    } finally {
+      await pool!.query("UPDATE shop_designs SET published_id=$2 WHERE shop_id=$1", [
+        seedIds.shopA,
+        pointer,
+      ]);
+    }
+    let limited = false;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const result = await request(intake, "", "POST", { ...input, key: randomUUID() });
+      if (result.status === 429) {
+        limited = true;
+        break;
+      }
+      expect(result.status).toBe(200);
+    }
+    expect(limited).toBe(true);
+    expect((await pool!.query("SELECT 1 FROM notification_deliveries")).rowCount).toBe(0);
+  } finally {
+    await pool!.query("UPDATE shop_publication SET state=$2 WHERE shop_id=$1", [
+      seedIds.shopA,
+      previous,
+    ]);
+  }
+});
+
 test("runtime sitemap discovery uses the configured domain and keeps private/search pages noindex", async () => {
   const robots = await request("/robots.txt");
   expect(robots.status).toBe(200);
@@ -377,7 +564,8 @@ test("runtime sitemap discovery uses the configured domain and keeps private/sea
 });
 
 test("Shopkeeper navigation requires a current verified session and active merchant membership", async () => {
-  const link = /<a\b[^>]*class="shopkeeper-link"/;
+  // The management link shares this CSS class; assert the merchant destination.
+  const link = /<a\b(?=[^>]*class="shopkeeper-link")(?=[^>]*href="\/shopkeeper")[^>]*>/;
   const guest = await request("/");
   expect(guest.status).toBe(200);
   expect(await guest.text()).not.toMatch(link);
@@ -414,7 +602,7 @@ test("Shopkeeper navigation requires a current verified session and active merch
   expect(await (await request("/")).text()).not.toMatch(link);
 });
 
-test("hosted pages use customer wording and do not offer guarded application forms", async () => {
+test("hosted pages explain real application workflows without granting operator access", async () => {
   for (const path of ["/", "/about", "/rent-a-shop", "/report"]) {
     const response = await request(path);
     expect(response.status).toBe(200);
@@ -430,12 +618,11 @@ test("hosted pages use customer wording and do not offer guarded application for
   expect(report).toContain("authorised Londos reviewers");
   expect(report).not.toContain("<form");
   const rent = await (await request("/rent-a-shop")).text();
-  expect(rent).toContain("Shopkeeper sign in");
-  expect(rent).not.toContain("Apply for a shop");
+  expect(rent).toContain("Apply for a shop");
 
   const cookie = await login(accounts.ownerA);
   const workspace = await (await request("/shopkeeper", cookie)).text();
-  expect(workspace).toContain("Your private workspace");
+  expect(workspace).toContain("Your shops.");
   expect(workspace).not.toMatch(/development environment|fictional businesses/i);
   for (const path of ["/shopkeeper/applications", "/shopkeeper/applications/new"]) {
     expect((await request(path)).status).toBe(307);
@@ -443,14 +630,12 @@ test("hosted pages use customer wording and do not offer guarded application for
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toContain("private");
     const html = await response.text();
-    expect(html).toContain("New shop applications are currently closed");
-    expect(html).not.toContain("<form");
+    expect(html).not.toContain("New shop applications are currently closed");
+    if (path.endsWith("/new")) expect(html).toContain("<form");
   }
-  // Presentation changes cannot grant operator access or bypass lifecycle guards.
+  // Hosted applications are supported, while ordinary owners remain non-operators.
   expect((await request("/landlord", cookie)).status).toBe(403);
-  const blocked = await request("/api/workspace/applications", cookie);
-  expect(blocked.status).toBe(403);
-  expect(await blocked.json()).toMatchObject({ error: "local_lifecycle_only" });
+  expect((await request("/api/workspace/applications", cookie)).status).toBe(200);
 });
 
 test("empty published catalogue is not treated as a search outage", async () => {
@@ -563,9 +748,9 @@ test("hosted reports accept private intake and protect its evidence and review",
 });
 
 test("readiness rejects an outdated hosted schema without mislabelling it development", async () => {
-  await pool!.query(
-    "UPDATE schema_migrations SET name='test-hidden-024' WHERE name='024_hosted_accounts_and_privacy.sql'",
-  );
+  await pool!.query("UPDATE schema_migrations SET name='test-hidden-current' WHERE name=$1", [
+    requiredMigration,
+  ]);
   try {
     const response = await request("/api/ready");
     expect(response.status).toBe(503);
@@ -575,9 +760,9 @@ test("readiness rejects an outdated hosted schema without mislabelling it develo
       database: false,
     });
   } finally {
-    await pool!.query(
-      "UPDATE schema_migrations SET name='024_hosted_accounts_and_privacy.sql' WHERE name='test-hidden-024'",
-    );
+    await pool!.query("UPDATE schema_migrations SET name=$1 WHERE name='test-hidden-current'", [
+      requiredMigration,
+    ]);
   }
   expect((await request("/api/ready")).status).toBe(200);
 });

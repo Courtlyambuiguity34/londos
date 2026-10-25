@@ -51,11 +51,29 @@ const paymentDetails = z
       .regex(/^\+[1-9][0-9]{7,14}$/)
       .nullable(),
     mobileMoneyName: z.string().min(2).max(120).nullable(),
+    mtnMomoPhone: z
+      .string()
+      .regex(/^\+[1-9][0-9]{7,14}$/)
+      .nullable()
+      .optional(),
+    mtnMomoName: z.string().min(2).max(120).nullable().optional(),
+    airtelMoneyPhone: z
+      .string()
+      .regex(/^\+[1-9][0-9]{7,14}$/)
+      .nullable()
+      .optional(),
+    airtelMoneyName: z.string().min(2).max(120).nullable().optional(),
     bankName: z.string().min(2).max(120).nullable(),
     bankAccountName: z.string().min(2).max(120).nullable(),
     bankAccountNumber: z.string().min(4).max(80).nullable(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (Boolean(value.mtnMomoPhone) !== Boolean(value.mtnMomoName))
+      context.addIssue({ code: "custom", message: "mtn_pair_required" });
+    if (Boolean(value.airtelMoneyPhone) !== Boolean(value.airtelMoneyName))
+      context.addIssue({ code: "custom", message: "airtel_pair_required" });
+  });
 export const messageSchema = z.discriminatedUnion("template", [
   z
     .object({

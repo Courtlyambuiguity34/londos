@@ -70,6 +70,9 @@ test("owner application, native MFA review, partial settlement, publication, rev
       .getByLabel("Business telephone, including country code", { exact: true })
       .fill("+256700000008");
     await page.getByLabel("Merchant account", { exact: true }).selectOption(seedIds.merchantA);
+    await page
+      .getByRole("checkbox", { name: /^I have read and agree to the Terms of Use/ })
+      .check();
     await page.getByRole("button", { name: "Create application draft", exact: true }).click();
     await expect(page).toHaveURL(/\/shopkeeper\/applications\/[a-f0-9-]{36}$/);
     applicationId = new URL(page.url()).pathname.split("/").at(-1)!;
@@ -116,6 +119,9 @@ test("owner application, native MFA review, partial settlement, publication, rev
     ).toContain("no-store");
     await op.getByLabel("Decision", { exact: true }).selectOption("approved");
     await op
+      .getByLabel("Rent policy for approved applications", { exact: true })
+      .selectOption("90000000-0000-4000-8000-000000000001");
+    await op
       .getByLabel("Reason for the decision", { exact: true })
       .fill("Fictional evidence independently reviewed");
     await op
@@ -145,11 +151,11 @@ test("owner application, native MFA review, partial settlement, publication, rev
         .fill("Compared with fictional manual collection ledger");
       await op
         .getByRole("checkbox", {
-          name: "I independently verified this development credit and confirm recording it",
+          name: "I independently verified this credit and confirm recording it",
         })
         .check();
       await op.getByRole("button", { name: "Record verified credit", exact: true }).click();
-      await expect(op.getByRole("status")).toHaveText("Development credit recorded.");
+      await expect(op.getByRole("status")).toHaveText("Verified credit recorded.");
       const invoice = await (await op.request.get(`/api/operator/invoices/${invoiceId}`)).json();
       if (n === 1) expect(invoice.invoice.shop_id).toBeNull();
       else shopId = invoice.invoice.shop_id;
@@ -254,11 +260,11 @@ test("owner application, native MFA review, partial settlement, publication, rev
       .fill("Corrected fictional collection verified");
     await op
       .getByRole("checkbox", {
-        name: "I independently verified this development credit and confirm recording it",
+        name: "I independently verified this credit and confirm recording it",
       })
       .check();
     await op.getByRole("button", { name: "Record verified credit", exact: true }).click();
-    await expect(op.getByRole("status")).toHaveText("Development credit recorded.");
+    await expect(op.getByRole("status")).toHaveText("Verified credit recorded.");
     expect((await publicPage.request.get(`/shops/${shop.slug}`)).status()).toBe(200);
     await page.goto(`/shopkeeper/shops/${shopId}/rent`);
     await page
@@ -279,13 +285,13 @@ test("owner application, native MFA review, partial settlement, publication, rev
       .fill("Fictional renewal manually verified");
     await op
       .getByRole("checkbox", {
-        name: "I independently verified this development credit and confirm recording it",
+        name: "I independently verified this credit and confirm recording it",
       })
       .check();
     await op.getByRole("button", { name: "Record verified credit", exact: true }).click();
-    await expect(op.getByRole("status")).toHaveText("Development credit recorded.");
+    await expect(op.getByRole("status")).toHaveText("Verified credit recorded.");
     await page.goto(`/shopkeeper/shops/${shopId}/rent`);
-    await expect(page.getByText("Tenancy: active", { exact: true })).toBeVisible();
+    await expect(page.getByText("Tenancy: Active coverage", { exact: true })).toBeVisible();
   } finally {
     await opContext.close();
     await guest.close();

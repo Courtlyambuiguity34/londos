@@ -2,6 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import type { readApplication } from "@/server/applications";
 import type { readInvoice, RentPolicy } from "@/server/rent";
 import { formatMinorMoney, formatSignedMinorMoney } from "@/modules/money";
@@ -11,14 +12,20 @@ type ApplicationData = Awaited<ReturnType<typeof readApplication>>;
 type InvoiceData = Awaited<ReturnType<typeof readInvoice>>;
 function messageFor(code: string) {
   const messages: Record<string, string> = {
+    production_waiver_unavailable:
+      "Hosted rent requires an independently verified payment. A development waiver cannot settle this invoice.",
     stale_version: "This record changed. Reload it before trying again.",
-    policy_unavailable: "The selected rent policy is not available in this environment. Ask the landlord to configure an active production rent policy.",
+    policy_unavailable:
+      "The selected rent policy is not available in this environment. Ask the landlord to configure an active production rent policy.",
     policy_required: "Select a rent policy before approving the application.",
-    application_not_reviewing: "This application is no longer in the review stage. Reload to see its latest status.",
+    application_not_reviewing:
+      "This application is no longer in the review stage. Reload to see its latest status.",
     insufficient_permissions: "This account does not have permission to approve applications.",
     operator_permission_required: "This account needs application review permission.",
-    development_only: "This action is limited to development mode. Configure the live rent workflow instead.",
-    invalid_request: "Some review fields are invalid. Check the selected decision, reason and rent policy.",
+    development_only:
+      "This action is limited to development mode. Configure the live rent workflow instead.",
+    invalid_request:
+      "Some review fields are invalid. Check the selected decision, reason and rent policy.",
 
     fresh_authentication_required:
       "Please verify your account again in Account security, or sign out and sign in, then retry.",
@@ -166,17 +173,27 @@ export function CreateApplicationForm({
         <legend>Before creating your application</legend>
         <p>Read these two separate documents. Each opens in a new tab:</p>
         <p>
-          <Link className="application-policy-link" href="/terms" target="_blank" rel="noopener noreferrer">
+          <Link
+            className="application-policy-link"
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <span aria-hidden="true">↗ </span>Read Terms of Use
           </Link>
           {" · "}
-          <Link className="application-policy-link" href="/privacy" target="_blank" rel="noopener noreferrer">
+          <Link
+            className="application-policy-link"
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <span aria-hidden="true">↗ </span>Read Privacy Policy
           </Link>
         </p>
         <label className="checkbox-label">
-          <input name="acceptPolicies" type="checkbox" required />
-          I have read and agree to the Terms of Use and acknowledge the Privacy Policy.
+          <input name="acceptPolicies" type="checkbox" required />I have read and agree to the Terms
+          of Use and acknowledge the Privacy Policy.
         </label>
       </fieldset>
       <button className="button" disabled={pending}>
@@ -231,7 +248,9 @@ export function ApplicationPanel({
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
         if (body.error === "fresh_authentication_required" || body.error === "mfa_required") {
-          setMessage("For your privacy, viewing this image requires recent account verification. Open Account security, verify your identity, then return here to preview it.");
+          setMessage(
+            "For your privacy, viewing this image requires recent account verification. Open Account security, verify your identity, then return here to preview it.",
+          );
         } else {
           setMessage(messageFor(body.error ?? "service_unavailable"));
         }
@@ -292,7 +311,9 @@ export function ApplicationPanel({
           decision,
           reason: String(f.get("reason")),
           confirm: f.get("confirm") === "on",
-          ...(decision === "approved" && String(f.get("policyId")) ? { policyId: String(f.get("policyId")) } : {}),
+          ...(decision === "approved" && String(f.get("policyId"))
+            ? { policyId: String(f.get("policyId")) }
+            : {}),
         }),
       "Review decision saved.",
     );
@@ -333,7 +354,12 @@ export function ApplicationPanel({
         <ul>
           {data.evidence.map((e) => (
             <li key={e.slot}>
-              <button type="button" className="button button--outline" disabled={previewPending} onClick={() => void openEvidence(e.slot)}>
+              <button
+                type="button"
+                className="button button--outline"
+                disabled={previewPending}
+                onClick={() => void openEvidence(e.slot)}
+              >
                 {previewPending ? "Loading preview…" : `Preview private image ${e.slot}`}
               </button>
             </li>
@@ -343,14 +369,30 @@ export function ApplicationPanel({
         <p>No evidence uploaded.</p>
       )}
       {preview ? (
-        <div className="application-image-preview" role="region" aria-label={`Private image ${preview.slot} preview`}>
+        <div
+          className="application-image-preview"
+          role="region"
+          aria-label={`Private image ${preview.slot} preview`}
+        >
           {/* Blob URL is created from an authenticated image response and never persisted. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview.url} alt={`Private verification image ${preview.slot}`} style={{ maxWidth: "100%", height: "auto" }} />
-          <button type="button" className="button button--outline" onClick={() => {
-            URL.revokeObjectURL(preview.url);
-            setPreview(null);
-          }}>Close preview</button>
+          <Image
+            width={800}
+            height={800}
+            unoptimized
+            src={preview.url}
+            alt={`Private verification image ${preview.slot}`}
+            style={{ maxWidth: "100%", height: "auto" }}
+          />
+          <button
+            type="button"
+            className="button button--outline"
+            onClick={() => {
+              URL.revokeObjectURL(preview.url);
+              setPreview(null);
+            }}
+          >
+            Close preview
+          </button>
         </div>
       ) : null}
       {!operator && editable ? (
@@ -562,7 +604,7 @@ export function InvoicePanel({
       setMessage(
         reverse
           ? "Correction recorded. Original history is retained."
-          : "Development credit recorded.",
+          : "Verified credit recorded.",
       );
     } catch (e) {
       setMessage(
@@ -654,10 +696,39 @@ export function InvoicePanel({
         <dt>Invoice number</dt>
         <dd className="break-anywhere">{i.reference}</dd>
         <dt>Issued on</dt>
-        <dd><time dateTime={new Date(i.issued_at).toISOString()}>{new Date(i.issued_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}</time></dd>
+        <dd>
+          <time dateTime={new Date(i.issued_at).toISOString()}>
+            {new Date(i.issued_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}
+          </time>
+        </dd>
         <dt>Linked application</dt>
-        <dd><Link href={`/${operator ? "landlord" : "shopkeeper"}/applications/${i.application_id}`}>View application</Link></dd>
-        {i.shop_id ? <><dt>Linked shop</dt><dd><Link href={`/shopkeeper/shops/${i.shop_id}/rent`}>View shop rent history</Link></dd></> : null}
+        <dd>
+          <Link
+            href={
+              operator
+                ? `/landlord/rent/${i.application_id}`
+                : `/shopkeeper/applications/${i.application_id}`
+            }
+          >
+            {operator ? "View application rent records" : "View application"}
+          </Link>
+        </dd>
+        {i.shop_id ? (
+          <>
+            <dt>Linked shop</dt>
+            <dd>
+              <Link
+                href={
+                  operator
+                    ? `/landlord/rent/${i.application_id}`
+                    : `/shopkeeper/shops/${i.shop_id}/rent`
+                }
+              >
+                View shop rent history
+              </Link>
+            </dd>
+          </>
+        ) : null}
         <dt>Amount</dt>
         <dd>{formatMinorMoney(i.amount_minor, i.currency)}</dd>
         <dt>Recorded credit</dt>
@@ -682,6 +753,18 @@ export function InvoicePanel({
             <p>
               Mobile money: <strong>{data.paymentSettings.mobile_money_phone}</strong> · registered
               name <strong>{data.paymentSettings.mobile_money_name}</strong>
+            </p>
+          ) : null}
+          {data.paymentSettings.mtn_momo_phone ? (
+            <p>
+              MTN MoMo: <strong>{data.paymentSettings.mtn_momo_phone}</strong> · registered name{" "}
+              <strong>{data.paymentSettings.mtn_momo_name}</strong>
+            </p>
+          ) : null}
+          {data.paymentSettings.airtel_money_phone ? (
+            <p>
+              Airtel Money: <strong>{data.paymentSettings.airtel_money_phone}</strong> · registered
+              name <strong>{data.paymentSettings.airtel_money_name}</strong>
             </p>
           ) : null}
           {data.paymentSettings.bank_name ? (
@@ -716,7 +799,9 @@ export function InvoicePanel({
             />
             <label htmlFor="claim-method">Payment method</label>
             <select id="claim-method" name="paymentMethod" required defaultValue="">
-              <option value="" disabled>Select method</option>
+              <option value="" disabled>
+                Select method
+              </option>
               <option value="mtn_momo">MTN Mobile Money</option>
               <option value="airtel_money">Airtel Money</option>
               <option value="bank_transfer">Bank transfer</option>
@@ -794,11 +879,13 @@ export function InvoicePanel({
       ) : null}
       {operator && remaining !== "0" ? (
         <form className="account-form" onSubmit={(e) => void submit(e)}>
-          <h2>Record a development credit</h2>
+          <h2>Record a verified credit</h2>
           <label htmlFor="credit-kind">Credit type</label>
           <select id="credit-kind" name="kind">
             <option value="payment">Verified manual payment</option>
-            <option value="waiver">Approved development waiver</option>
+            {data.policy.development_only ? (
+              <option value="waiver">Approved development waiver</option>
+            ) : null}
           </select>
           <label htmlFor="credit-amount">Amount in UGX (whole shillings)</label>
           <input
@@ -825,8 +912,8 @@ export function InvoicePanel({
           <label htmlFor="credit-reason">Verification reason</label>
           <textarea id="credit-reason" name="reason" required minLength={5} maxLength={500} />
           <label className="checkbox-label">
-            <input type="checkbox" name="confirm" required /> I independently verified this
-            development credit and confirm recording it
+            <input type="checkbox" name="confirm" required /> I independently verified this credit
+            and confirm recording it
           </label>
           <button className="button" disabled={pending}>
             Record verified credit

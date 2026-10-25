@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { database } from "@/server/db/pool";
-import { coreConfigured, coreConfig } from "@/server/config";
+import { coreConfigured } from "@/server/config";
 import { AccessError } from "@/server/security/errors";
 import { readPublicVariant } from "@/server/public-shop";
 export async function GET(
@@ -13,7 +13,7 @@ export async function GET(
     "Referrer-Policy": "no-referrer",
   };
   try {
-    if (!coreConfigured() || !coreConfig().localAdapters)
+    if (!coreConfigured())
       return Response.json({ error: "service_unavailable" }, { status: 503, headers });
     const { shopId, id, variant } = await context.params,
       bytes = await readPublicVariant(database(), shopId, id, variant);

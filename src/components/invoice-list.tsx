@@ -19,7 +19,7 @@ export function InvoiceList({
             {i.reference}
           </Link>
           <span>
-            {i.shop_id ? "Shop renewal" : "Approved application"} · issued{" "}
+            {i.kind === "renewal" ? "Shop renewal" : "Approved application"} · issued{" "}
             <time dateTime={new Date(i.issued_at).toISOString()}>
               {new Date(i.issued_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}
             </time>
@@ -38,6 +38,9 @@ export function InvoiceList({
       ))}
     </ul>
   ) : (
-    <p>No rent invoices yet. An administrator can issue the first invoice from the Rent desk after approving the application.</p>
+    <p>
+      No rent invoices yet. An administrator can issue the first invoice from the Rent desk after
+      approving the application.
+    </p>
   );
 }

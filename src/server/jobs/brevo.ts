@@ -160,7 +160,16 @@ export function brevoMessage(message: Record<string, unknown>, origin: string) {
     const paymentLines = value.payment
       ? [
           `Support: ${value.payment.supportEmail}${value.payment.supportPhone ? ` / ${value.payment.supportPhone}` : ""}`,
-          value.payment.mobileMoneyPhone
+          value.payment.mtnMomoPhone
+            ? `MTN MoMo: ${value.payment.mtnMomoPhone} (${value.payment.mtnMomoName})`
+            : null,
+          value.payment.airtelMoneyPhone
+            ? `Airtel Money: ${value.payment.airtelMoneyPhone} (${value.payment.airtelMoneyName})`
+            : null,
+          value.payment.mobileMoneyPhone &&
+          ![value.payment.mtnMomoPhone, value.payment.airtelMoneyPhone].includes(
+            value.payment.mobileMoneyPhone,
+          )
             ? `Mobile money: ${value.payment.mobileMoneyPhone} (${value.payment.mobileMoneyName})`
             : null,
           value.payment.bankName
@@ -187,7 +196,13 @@ export function brevoMessage(message: Record<string, unknown>, origin: string) {
     to: value.to,
     subject,
     text,
-    html: brandedHTML({ origin, preview: subject, heading: subject, body, ...(action ? { action } : {}) }),
+    html: brandedHTML({
+      origin,
+      preview: subject,
+      heading: subject,
+      body,
+      ...(action ? { action } : {}),
+    }),
   };
 }
 

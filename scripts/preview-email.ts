@@ -24,7 +24,9 @@ if (process.argv.includes("--check")) {
   const { default: AxeBuilder } = await import("@axe-core/playwright");
   const logo = await readFile("public/brand/londos-logo.png");
   const browser = await chromium.launch({
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+      : {}),
   });
   try {
     for (const width of [320, 390, 1280]) {

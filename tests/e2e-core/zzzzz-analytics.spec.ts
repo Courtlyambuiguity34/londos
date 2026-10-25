@@ -99,7 +99,7 @@ test("direct and discovery navigation, search, department/product and contact in
   await page.reload();
   await expect.poll(() => count("product_viewed", "direct")).toBe(2);
   expect(await count("direct_link_entry")).toBe(1);
-  await page.getByRole("link", { name: "Enquire with the shop", exact: true }).click();
+  await page.getByRole("link", { name: "Send an enquiry", exact: true }).click();
   await expect(page).toHaveURL(/\/contact\//);
   await expect.poll(() => count("contact_action_clicked", "direct")).toBe(1);
   const discovery = await browser.newContext({ userAgent: browserAgent }),
@@ -230,7 +230,7 @@ test("analytics methods and private HTML/Flight deny foreign access; abuse and c
       expect(await r.json()).toEqual({ received: true });
       const guest = await request.get("/shops/annette-fashion-house");
       expect(guest.status()).toBe(200);
-      expect(await guest.text()).toContain("Enquire with the shop");
+      expect(await guest.text()).toContain("Send an enquiry");
     } finally {
       await p.query("ALTER TABLE pilot_metrics_unavailable RENAME TO pilot_metrics");
     }
@@ -238,7 +238,7 @@ test("analytics methods and private HTML/Flight deny foreign access; abuse and c
   await page.route("**/api/guest/pilot", (route) => route.abort());
   await page.goto("/shops/annette-fashion-house");
   await expect(page.getByRole("heading", { name: shopName, exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Enquire with the shop", exact: true }).click();
+  await page.getByRole("link", { name: "Send an enquiry", exact: true }).click();
   await expect(page).toHaveURL(/\/contact\//);
 });
 test("native owner and fresh-MFA analytics-only operator see truthful accessible aggregate dashboards", async ({
@@ -249,7 +249,7 @@ test("native owner and fresh-MFA analytics-only operator see truthful accessible
   await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}/analytics`);
   await expect(
-    page.getByRole("heading", { name: `Analytics for ${shopName}`, exact: true }),
+    page.getByRole("heading", { name: "Footfall & interest", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/not unique people/)).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

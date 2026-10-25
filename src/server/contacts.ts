@@ -133,6 +133,7 @@ export async function publicContact(pool: Pool, shopId: string) {
     await pool.query(
       `SELECT s.id,s.merchant_id,s.name,c.phone,c.whatsapp,c.website,c.fulfilment,c.delivery_instructions,c.payment_instructions FROM shops s
   JOIN shop_contacts c ON c.shop_id=s.id ${eligibilityJoins}
+  JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL
   WHERE s.id=$1 AND c.enquiries_enabled AND ${eligibleStates}`,
       [shopId],
     )
@@ -168,7 +169,7 @@ export async function submitGuestRequest(
     if (!lookup) throw new AccessError(404, "resource_unavailable");
     await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [lookup.merchant_id]);
     const eligible = await client.query(
-      `SELECT 1 FROM shops s JOIN shop_contacts c ON c.shop_id=s.id ${eligibilityJoins} WHERE s.id=$1 AND c.enquiries_enabled AND ${eligibleStates}`,
+      `SELECT 1 FROM shops s JOIN shop_contacts c ON c.shop_id=s.id ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE s.id=$1 AND c.enquiries_enabled AND ${eligibleStates}`,
       [shopId],
     );
     if (!eligible.rowCount) throw new AccessError(404, "resource_unavailable");

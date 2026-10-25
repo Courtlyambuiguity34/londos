@@ -71,9 +71,10 @@ async function mfa(page: Page, account: { email: string; password: string }) {
 }
 async function claim(page: Page) {
   await page.goto("/landlord/trust");
-  const item = page
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("heading", { name: shopName, exact: true }) });
+  const item = page.getByRole("form", {
+    name: `Claim case ${caseId.slice(0, 8)}`,
+    exact: true,
+  });
   await item
     .getByLabel("Claim reason", { exact: true })
     .fill("Fictional scoped independent investigation");
@@ -81,6 +82,7 @@ async function claim(page: Page) {
     .getByRole("checkbox", { name: "I confirm this scoped trust assignment.", exact: true })
     .check();
   await item.getByRole("button", { name: "Claim trust case", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/landlord/trust/${caseId}$`));
   await expect(
     page.getByRole("heading", { name: `Trust review for ${shopName}`, exact: true }),
   ).toBeVisible();
@@ -146,11 +148,15 @@ test("anonymous reporting, private image, scoped native MFA suspension and indep
       .setInputFiles({ name: "fictional-concern.png", mimeType: "image/png", buffer: image });
     await customer
       .getByRole("checkbox", {
-        name: "I reviewed this concern and understand it is a local development report.",
+        name: "I have checked this report and believe the information is accurate.",
         exact: true,
       })
       .check();
+    const reportSubmission = customer.waitForRequest(
+      (request) => request.url().endsWith("/api/guest/reports") && request.method() === "POST",
+    );
     await customer.getByRole("button", { name: "Send concern", exact: true }).click();
+    const reportId = (await reportSubmission).postDataJSON().key;
     await expect(customer.getByRole("status")).toContainText("Report and private image received");
     expect(customer.url()).not.toContain("capability");
     await mkdir("docs/evidence/images", { recursive: true });
@@ -164,8 +170,8 @@ test("anonymous reporting, private image, scoped native MFA suspension and indep
     try {
       caseId = (
         await pool.query(
-          "SELECT c.id FROM trust_cases c JOIN trust_reports r ON r.id=c.report_id WHERE r.message=$1",
-          [privateReport],
+          "SELECT c.id FROM trust_cases c JOIN trust_reports r ON r.id=c.report_id WHERE r.id=$1 AND r.message=$2",
+          [reportId, privateReport],
         )
       ).rows[0].id;
       assetId = (

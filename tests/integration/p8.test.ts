@@ -249,6 +249,10 @@ test("merchant payment claims remain pending until exact operator reconciliation
     supportPhone: "+256700000001",
     mobileMoneyPhone: "+256700000002",
     mobileMoneyName: "Londos Test Payments",
+    mtnMomoPhone: null,
+    mtnMomoName: null,
+    airtelMoneyPhone: null,
+    airtelMoneyName: null,
     bankName: null,
     bankAccountName: null,
     bankAccountNumber: null,
@@ -262,6 +266,7 @@ test("merchant payment claims remain pending until exact operator reconciliation
     currency: "UGX",
     reference,
     note: "Fictional external payment submitted for verification",
+    paymentMethod: "other",
     confirm: true,
   });
   let record = await readInvoice(pool, actors.ownerA!, invoice.id);

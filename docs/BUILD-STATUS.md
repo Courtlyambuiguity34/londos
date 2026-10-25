@@ -1,5 +1,14 @@
 # Build status and next model setting
 
+**Current hosted follow-up — 25 October 2026:** work targets
+`feature/hosted-lifecycle-secure-2026-10-23`, based on `c14da3d`, with readiness migration
+**035**. Read [hosted workflow audit](evidence/HOSTED-WORKFLOWS-2026-10-25.md) and
+[billing/shop operations](HOSTED-BILLING-AND-OPERATIONS.md) for the current implementation,
+verification results and remaining operator actions. Older branch names, schema numbers,
+missing-credential statements and local-only workflow descriptions below are historical.
+The original formal release/pilot gates are not relabelled complete by this follow-up.
+
+
 **Latest feature verification (2026-10-09):** the partial launcher/designer branch is consolidated with the completed P13/provider branch. Both independent 019 migrations remain unchanged; additive 020 verifies their combined schema contract. [Cross-platform evidence](evidence/CROSS-PLATFORM-LAUNCHERS-2026-10-09.md) records 105 focused unit checks, 55 targeted PostgreSQL checks, type/lint/docs, production build, PWA runtime, Render YAML and configured-secret scanning. Native Windows/macOS/Android installation and an actual Render deployment remain unexecuted. Historical G5 evidence does not verify this new source by itself.
 
 Updated 2026-10-09, Africa/Kampala. Branch `feature/cross-platform-local-launchers-2026-10-09`.

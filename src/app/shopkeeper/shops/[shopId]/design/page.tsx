@@ -17,16 +17,25 @@ export default async function Page({
 }) {
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/shopkeeper"),
-    shopId = z.uuid().parse((await params).shopId);
+    parsed = z.uuid().safeParse((await params).shopId);
+  if (!parsed.success) notFound();
+  const shopId = parsed.data;
   const shop = await requireShop(database(), actor, shopId, "design").catch((error) => {
     if (error instanceof AccessError || error instanceof z.ZodError) notFound();
     throw error;
   });
   return (
-    <ShopWorkspaceShell shop={shop} section="design" title="Design & publish" subtitle="Preview privately and publish when ready."><section className="portal-section account-page">
-      <h1>{shop.name}: shop design</h1>
-      <DesignWorkspace shopId={shopId} />
-      <DesignManualPathNotice shopId={shopId} />
-    </section></ShopWorkspaceShell>
+    <ShopWorkspaceShell
+      shop={shop}
+      section="design"
+      title="Design & publish"
+      subtitle="Preview privately and publish when ready."
+    >
+      <section className="portal-section account-page">
+        <h1>{shop.name}: shop design</h1>
+        <DesignWorkspace shopId={shopId} />
+        <DesignManualPathNotice shopId={shopId} />
+      </section>
+    </ShopWorkspaceShell>
   );
 }

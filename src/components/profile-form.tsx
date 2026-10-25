@@ -1,10 +1,12 @@
 "use client";
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 export function ProfileForm({
   shop,
 }: {
   shop: { id: string; name: string; version: number; category: string; tagline: string };
 }) {
+  const router = useRouter();
   const [version, setVersion] = useState(shop.version),
     [message, setMessage] = useState(""),
     [pending, setPending] = useState(false);
@@ -32,7 +34,8 @@ export function ProfileForm({
         return;
       }
       setVersion(data.version!);
-      setMessage("Saved. Background processing is queued.");
+      setMessage("Shop profile saved.");
+      router.refresh();
     } catch {
       setMessage("The service is unavailable. Your edit was not confirmed.");
     } finally {

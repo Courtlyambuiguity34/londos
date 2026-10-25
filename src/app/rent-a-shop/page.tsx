@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { coreConfigured, coreConfig } from "@/server/config";
+import { coreConfigured } from "@/server/config";
 
 export const metadata: Metadata = { title: "A place for your business" };
 
 export default function RentShopPage() {
   const configured = coreConfigured();
-  const applicationsOpen = configured && coreConfig().localAdapters;
+  const applicationsOpen = configured;
   return (
     <section className="shell page-section">
       <div className="merchant-page-heading">
@@ -51,7 +51,7 @@ export default function RentShopPage() {
           </h2>
           <p>
             {applicationsOpen
-              ? "Local account holders can save an application and submit fictional verification evidence for review. Approval creates a development invoice; live rent collection remains disabled."
+              ? "Create an account, submit your business details for review, then follow your approved invoice and payment instructions. Your shop space is created after payment is verified. You decide when to publish your storefront."
               : configured
                 ? "New shop applications are currently closed. Existing shopkeepers can sign in to manage their catalogue and publish updates."
                 : "Merchant applications are unavailable in this read-only preview. It does not collect business information or accept rent payments."}

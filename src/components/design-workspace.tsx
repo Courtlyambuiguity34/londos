@@ -1,12 +1,14 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   shopSpecification,
   type ShopSpecification,
   type ShopPresentation,
 } from "@/modules/shop-design/specification";
 import { DesignSections } from "./design-sections";
+import { designResponseError } from "@/modules/design-feedback";
 
 type State = {
   version: number;
@@ -52,6 +54,7 @@ const colorTokens = [
 ] as const;
 
 export function DesignWorkspace({ shopId }: { shopId: string }) {
+  const router = useRouter();
   const root = `/api/workspace/shops/${shopId}/design`,
     [state, setState] = useState<State | null>(null),
     [spec, setSpec] = useState<ShopSpecification | null>(null),
@@ -65,7 +68,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       const response = await fetch(root, { cache: "no-store", signal: signal ?? null });
-      if (!response.ok) throw Error("This design is unavailable to your account.");
+      if (!response.ok) throw await designResponseError(response);
       const current = (await response.json()) as State;
       setState(current);
       setSpec(current.specification);
@@ -99,24 +102,22 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!response.ok)
-        throw Error(
-          response.status === 409
-            ? "The design or shop state changed. Reload before trying again."
-            : response.status === 403
-              ? "Sign in again or verify account security before publishing."
-              : response.status === 404
-                ? "This design or a referenced item is unavailable to your account."
-                : "This change could not be saved. Check the design and try again.",
-        );
-      await refresh();
-      setStatus(
+      if (!response.ok) throw await designResponseError(response);
+      const confirmation =
         path === "/publish"
           ? "Shop published."
           : path === "/unpublish"
             ? "Shop unpublished."
-            : "Draft saved. Preview before publishing.",
-      );
+            : "Draft saved. Preview before publishing.";
+      if (path === "/publish" || path === "/unpublish") router.refresh();
+      try {
+        await refresh();
+        setStatus(confirmation);
+      } catch {
+        setStatus(
+          `${confirmation} Current design details could not reload. Reload this page before making another change.`,
+        );
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "The change could not complete.");
     } finally {
@@ -124,6 +125,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
     }
   }
   if (!state || !spec) return <p role="status">{status}</p>;
+  const dirty = JSON.stringify(spec) !== JSON.stringify(state.specification);
   const spaceName = (id: string) => {
     const space = spec.spaces.find((s) => s.id === id);
     return space?.type === "department"
@@ -143,6 +145,12 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
         Published revision: {state.publishedRevision ?? "None"}. Draft revision:{" "}
         {state.revision ?? "None"}.
       </p>
+      {dirty ? (
+        <p role="note" className="notice">
+          You have unsaved design changes. Save the draft before arranging or publishing it. Private
+          previews show the last saved draft.
+        </p>
+      ) : null}
       <Link href="/security">Verify account security</Link>
       <Link prefetch={false} href={`/shopkeeper/shops/${shopId}/design/assistant`}>
         Describe a change with the design assistant
@@ -570,7 +578,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                 </option>
               ))}
             </select>
-            <button className="button" disabled={busy || moving === before}>
+            <button className="button" disabled={busy || dirty || moving === before}>
               Move section in draft
             </button>
           </form>
@@ -602,7 +610,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
           </label>
           <button
             className="button"
-            disabled={busy || !confirmed}
+            disabled={busy || dirty || !confirmed}
             onClick={() =>
               void command("/publish", {
                 version: state.version,
@@ -650,7 +658,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                 </option>
               ))}
             </select>
-            <button className="button" disabled={busy}>
+            <button className="button" disabled={busy || dirty}>
               Restore as new draft
             </button>
           </form>

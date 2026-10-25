@@ -1,12 +1,83 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { PortalShell } from "@/components/portal-shell";
 import { ShopPublicLink } from "@/components/shop-public-link";
 import { coreConfig } from "@/server/config";
-type ShopRef={id:string;name:string;slug:string;role?:string};
-export function ShopWorkspaceShell({shop,section,title,subtitle,children,published=false,banner}:{shop:ShopRef;section:"overview"|"catalogue"|"design"|"rent"|"analytics"|"costs";title:string;subtitle:string;children:ReactNode;published?:boolean;banner?:ReactNode}) {
- const base=`/shopkeeper/shops/${shop.id}`;
- const path=section==="overview"?base:`${base}/${section}`;
- const links=[{href:base,label:"Overview"},{href:`${base}/catalogue`,label:"Catalogue"},{href:`${base}/design`,label:"Design"},{href:`${base}/rent`,label:"Rent"},{href:"/shopkeeper",label:"All shops"},{href:"/shopkeeper/applications",label:"Applications"},{href:"/shopkeeper/team",label:"Team"}];
- return <PortalShell kind="shopkeeper" title={title} subtitle={subtitle} links={links} currentPath={path} banner={banner ?? <div className="portal-next-step portal-next-step--compact"><div><p className="portal-next-step__label">{shop.name}</p><strong>Share your storefront</strong><p>Customers can visit your public shop once it is published and eligible.</p></div><ShopPublicLink slug={shop.slug} absoluteBase={coreConfig().baseURL} published={published} compact /></div>}>{children}</PortalShell>;
+import { database } from "@/server/db/pool";
+import { pageActor } from "@/server/page-actor";
+import { effectiveShopPermissions, shopStorefrontStatus } from "@/server/workspace";
+type ShopRef = { id: string; name: string; slug: string; role?: string };
+export async function ShopWorkspaceShell({
+  shop,
+  section,
+  title,
+  subtitle,
+  children,
+  banner,
+}: {
+  shop: ShopRef;
+  section:
+    "overview" | "catalogue" | "design" | "rent" | "analytics" | "costs" | "address" | "assistant";
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+  published?: boolean;
+  banner?: ReactNode;
+}) {
+  const base = `/shopkeeper/shops/${shop.id}`;
+  const path =
+    section === "overview"
+      ? base
+      : section === "assistant"
+        ? `${base}/design/assistant`
+        : `${base}/${section}`;
+  const actor = await pageActor("/shopkeeper");
+  const permissions = await effectiveShopPermissions(database(), actor, shop.id);
+  const status = await shopStorefrontStatus(database(), shop.id);
+  const links = [
+    ...(permissions.includes("catalogue")
+      ? [
+          { href: base, label: "Shop overview" },
+          { href: `${base}/catalogue`, label: "Products & contacts" },
+        ]
+      : []),
+    ...(permissions.includes("design")
+      ? [{ href: `${base}/design`, label: "Design & publish" }]
+      : []),
+    ...(permissions.includes("finance")
+      ? [{ href: `${base}/rent`, label: "Rent & invoices" }]
+      : []),
+    { href: "/shopkeeper/applications", label: "Applications" },
+    { href: "/shopkeeper/team", label: "Team & access" },
+  ];
+  return (
+    <PortalShell
+      kind="shopkeeper"
+      title={title}
+      subtitle={subtitle}
+      links={links}
+      currentPath={path}
+      banner={
+        banner ?? (
+          <div className="portal-next-step portal-next-step--compact">
+            <div>
+              <p className="portal-next-step__label">{shop.name}</p>
+              <strong>{status.label}</strong>
+              <p>{status.detail}</p>
+            </div>
+            <ShopPublicLink
+              slug={shop.slug}
+              shopId={shop.id}
+              absoluteBase={coreConfig().baseURL}
+              storefront={status}
+              canDesign={permissions.includes("design")}
+              canManageRent={permissions.includes("finance")}
+              compact
+            />
+          </div>
+        )
+      }
+    >
+      {children}
+    </PortalShell>
+  );
 }

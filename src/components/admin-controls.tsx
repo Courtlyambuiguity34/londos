@@ -341,6 +341,7 @@ export function AddressForm({ shop }: { shop: { id: string; slug: string; versio
       setMessage(
         "Shop address saved. Former links continue to resolve while the shop is eligible.",
       );
+      router.refresh();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "The service is unavailable.");
     } finally {
@@ -350,7 +351,7 @@ export function AddressForm({ shop }: { shop: { id: string; slug: string; versio
   return (
     <>
       <form className="account-form" onSubmit={submit}>
-        <label htmlFor="shop-address">Shop address slug</label>
+        <label htmlFor="shop-address">Shop address (the part after /shops/)</label>
         <input
           id="shop-address"
           name="slug"

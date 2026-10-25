@@ -1,10 +1,12 @@
 import { coreConfig } from "./config";
 import { randomUUID } from "node:crypto";
+import { availableShopAddress } from "./shop-address";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
 import {
   applicationAccess,
+  applicationLock,
   currentVersion,
   fingerprint,
   notifyOwners,
@@ -111,10 +113,18 @@ export type Invoice = {
 };
 const invoiceColumns =
   "i.id,i.merchant_id,i.application_id,i.shop_id,i.created_at AS issued_at,i.currency,i.amount_minor::text,i.period_start,i.period_end,i.description,i.due_at,s.reference,s.policy_id,s.kind,s.version,s.finalized,coalesce((SELECT sum(e.amount_minor) FROM rent_events e WHERE e.invoice_id=i.id AND e.kind IN ('payment','waiver','adjustment')),0)::text AS credited_minor";
-export async function listPolicies(pool: Pool, actor: Actor, permission: "review" | "finance" = "review") {
+export async function listPolicies(
+  pool: Pool,
+  actor: Actor,
+  permission: "review" | "finance" = "review",
+) {
   await requireOperator(pool, actor, permission);
-  return (await pool.query("SELECT * FROM rent_policies WHERE development_only=$1 ORDER BY created_at DESC,id LIMIT 50", [coreConfig().localAdapters]))
-    .rows as RentPolicy[];
+  return (
+    await pool.query(
+      "SELECT * FROM rent_policies WHERE development_only=$1 ORDER BY created_at DESC,id LIMIT 50",
+      [coreConfig().localAdapters],
+    )
+  ).rows as RentPolicy[];
 }
 export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<typeof policyInput>) {
   const v = policyInput.parse(input);
@@ -124,20 +134,39 @@ export async function createPolicy(pool: Pool, actor: Actor, input: z.infer<type
     try {
       await client.query(
         "INSERT INTO rent_policies(id,label,currency,amount_minor,period_days,grace_days,mall_capacity,development_only) VALUES($1,$2,'UGX',$3,$4,$5,$6,$7)",
-        [id, v.label, v.amountMinor, v.periodDays, v.graceDays, v.mallCapacity, coreConfig().localAdapters],
+        [
+          id,
+          v.label,
+          v.amountMinor,
+          v.periodDays,
+          v.graceDays,
+          v.mallCapacity,
+          coreConfig().localAdapters,
+        ],
       );
     } catch (error) {
-      const pgCode = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
-      const constraint = typeof error === "object" && error !== null && "constraint" in error ? String(error.constraint) : "";
+      const pgCode =
+        typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+      const constraint =
+        typeof error === "object" && error !== null && "constraint" in error
+          ? String(error.constraint)
+          : "";
       if (pgCode === "23514" && constraint === "rent_policies_development_only_check")
         throw new AccessError(409, "policy_environment_blocked");
       throw error;
     }
-    await audit(client, actor, "rent.policy.created", id, undefined, { developmentOnly: coreConfig().localAdapters });
+    await audit(client, actor, "rent.policy.created", id, undefined, {
+      developmentOnly: coreConfig().localAdapters,
+    });
     return { id };
   });
 }
-export type IssueInvoiceOptions = { amountMinor?: string | undefined; periodDays?: number | undefined; description?: string | undefined; dueAt?: Date | undefined };
+export type IssueInvoiceOptions = {
+  amountMinor?: string | undefined;
+  periodDays?: number | undefined;
+  description?: string | undefined;
+  dueAt?: Date | undefined;
+};
 export async function issueInvoice(
   client: PoolClient,
   actor: Actor,
@@ -150,16 +179,19 @@ export async function issueInvoice(
 ) {
   const policy = (
     await client.query("SELECT * FROM rent_policies WHERE id=$1 AND development_only=$2", [
-      policyId, coreConfig().localAdapters,
+      policyId,
+      coreConfig().localAdapters,
     ])
   ).rows[0] as RentPolicy | undefined;
   if (!policy) throw new AccessError(422, "policy_unavailable");
   const amountMinor = options.amountMinor ?? policy.amount_minor;
   const periodDays = options.periodDays ?? policy.period_days;
   if (!/^[1-9][0-9]{0,19}$/.test(String(amountMinor))) throw new AccessError(422, "invalid_amount");
-  if (!Number.isInteger(periodDays) || periodDays < 1 || periodDays > 366) throw new AccessError(422, "invalid_period");
+  if (!Number.isInteger(periodDays) || periodDays < 1 || periodDays > 366)
+    throw new AccessError(422, "invalid_period");
   const dueAt = options.dueAt ?? new Date(now.getTime() + 7 * day);
-  if (!Number.isFinite(dueAt.getTime()) || dueAt.getTime() < now.getTime()) throw new AccessError(422, "invalid_due_date");
+  if (!Number.isFinite(dueAt.getTime()) || dueAt.getTime() < now.getTime())
+    throw new AccessError(422, "invalid_due_date");
   const id = randomUUID(),
     reference = `LON-${id.replaceAll("-", "").toUpperCase()}`;
   await client.query(
@@ -188,31 +220,63 @@ export async function issueInvoice(
   });
   return { id, reference };
 }
-export const issueApplicationInvoiceInput = z.object({
-  policyId: z.uuid(),
-  amountMinor: z.string().regex(/^[1-9][0-9]{0,19}$/).optional(),
-  periodDays: z.number().int().min(1).max(366).optional(),
-  description: z.string().trim().min(1).max(1000).optional(),
-  dueAt: z.string().datetime().optional(),
-  confirm: z.literal(true),
-}).strict();
+export const issueApplicationInvoiceInput = z
+  .object({
+    policyId: z.uuid(),
+    amountMinor: z
+      .string()
+      .regex(/^[1-9][0-9]{0,19}$/)
+      .optional(),
+    periodDays: z.number().int().min(1).max(366).optional(),
+    description: z.string().trim().min(1).max(1000).optional(),
+    dueAt: z.string().datetime().optional(),
+    confirm: z.literal(true),
+  })
+  .strict();
 
-export async function issueApplicationInvoice(pool: Pool, actor: Actor, applicationId: string, input: z.infer<typeof issueApplicationInvoiceInput>, now = new Date()) {
+export async function issueApplicationInvoice(
+  pool: Pool,
+  actor: Actor,
+  applicationId: string,
+  input: z.infer<typeof issueApplicationInvoiceInput>,
+  now = new Date(),
+) {
   const value = issueApplicationInvoiceInput.parse(input);
   return transaction(pool, async (client) => {
     await requireOperator(client, actor, "finance", true);
-    const application = await applicationAccess(client, actor, applicationId, "finance");
-    await client.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [application.merchant_id]);
+    const application = await applicationLock(client, actor, applicationId, "finance");
+    // A lock wait must not preserve a now-revoked finance grant or stale proof.
+    await requireOperator(client, actor, "finance", true);
     if (application.state !== "approved") throw new AccessError(409, "application_not_approved");
-    const existing = await client.query("SELECT 1 FROM invoices WHERE application_id=$1 AND shop_id IS NULL LIMIT 1", [applicationId]);
-    if (existing.rowCount) throw new AccessError(409, "initial_invoice_already_issued");
-    const issued = await issueInvoice(client, actor, application, value.policyId, "initial", null, now, {
-      amountMinor: value.amountMinor, periodDays: value.periodDays, description: value.description,
-      dueAt: value.dueAt ? new Date(value.dueAt) : undefined,
-    });
-    await client.query("UPDATE applications SET policy_id=$2,updated_at=now() WHERE id=$1", [applicationId, value.policyId]);
+    const existing = await client.query(
+      "SELECT 1 FROM invoices i JOIN rent_invoice_state s ON s.invoice_id=i.id WHERE i.application_id=$1 AND s.kind='initial' LIMIT 1",
+      [applicationId],
+    );
+    if (existing.rowCount || application.provisioned_shop_id)
+      throw new AccessError(409, "initial_invoice_already_issued");
+    const issued = await issueInvoice(
+      client,
+      actor,
+      application,
+      value.policyId,
+      "initial",
+      null,
+      now,
+      {
+        amountMinor: value.amountMinor,
+        periodDays: value.periodDays,
+        description: value.description,
+        dueAt: value.dueAt ? new Date(value.dueAt) : undefined,
+      },
+    );
+    await client.query("UPDATE applications SET policy_id=$2,updated_at=now() WHERE id=$1", [
+      applicationId,
+      value.policyId,
+    ]);
     await notifyOwners(client, application.merchant_id, `invoice:${issued.id}`, {
-      template: "invoice-issued", applicationId, invoiceId: issued.id,
+      template: "invoice-issued",
+      applicationId,
+      invoiceId: issued.id,
     });
     return issued;
   });
@@ -401,23 +465,10 @@ async function provision(
   if (application.provisioned_shop_id) throw new AccessError(409, "already_provisioned");
   const id = randomUUID(),
     mall = await allocateMall(client, policy.mall_capacity);
-  const prefix =
-    application.business_name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 30)
-      .replace(/-$/g, "") || "shop";
+  const address = await availableShopAddress(client, application.business_name);
   await client.query(
     "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category) VALUES($1,$2,$3,$4,$5,$6)",
-    [
-      id,
-      invoice.merchant_id,
-      mall,
-      application.business_name,
-      `${prefix}-${id}`,
-      application.category,
-    ],
+    [id, invoice.merchant_id, mall, application.business_name, address, application.category],
   );
   await client.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'unpublished')", [id]);
   await client.query("INSERT INTO shop_moderation(shop_id,state) VALUES($1,'clear')", [id]);
@@ -569,6 +620,10 @@ export async function syncTenancy(client: PoolClient, shopId: string, now: Date,
                 supportPhone: payment.support_phone,
                 mobileMoneyPhone: payment.mobile_money_phone,
                 mobileMoneyName: payment.mobile_money_name,
+                mtnMomoPhone: payment.mtn_momo_phone,
+                mtnMomoName: payment.mtn_momo_name,
+                airtelMoneyPhone: payment.airtel_money_phone,
+                airtelMoneyName: payment.airtel_money_name,
                 bankName: payment.bank_name,
                 bankAccountName: payment.bank_account_name,
                 bankAccountNumber: payment.bank_account_number,
@@ -642,6 +697,8 @@ export async function reconcileInvoice(
     await requireOperator(client, actor, "finance", true);
     const previous = await previousCommand(client, actor, v.key, hash);
     if (previous) return previous;
+    if (!coreConfig().localAdapters && v.kind === "waiver")
+      throw new AccessError(422, "production_waiver_unavailable");
     currentVersion(invoice.version, v.version);
     const effectiveNow = now ?? new Date();
     if (invoice.currency !== v.currency) throw new AccessError(422, "currency_mismatch");

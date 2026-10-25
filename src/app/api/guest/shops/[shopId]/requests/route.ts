@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { coreConfigured, coreConfig } from "@/server/config";
+import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { boundedBody, checkOrigin, privateResponse } from "@/server/http";
 import { guestInput, submitGuestRequest } from "@/server/contacts";
@@ -12,11 +12,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ sho
   const respond = (data: unknown, status = 200) =>
     corsResponse(request, privateResponse(data, status, requestId));
   try {
-    if (!coreConfigured() || !coreConfig().localAdapters)
-      return respond({ error: "core_unavailable" }, 503);
+    if (!coreConfigured()) return respond({ error: "core_unavailable" }, 503);
     checkOrigin(request);
     const id = z.uuid().parse((await params).shopId);
-    // Ignore client-supplied IP headers in the current loopback deployment.
+    // Use shared budgets until ingress provides a verified client identity.
+    // Untrusted forwarded-IP headers must not let guests evade these limits.
     await consumeBudget(database(), "guest:network", 30);
     await consumeBudget(database(), `guest:shop:${id}`, 10);
     return respond(

@@ -78,7 +78,7 @@ test("owner team and address forms, invitation acceptance and scoped MFA operati
   try {
     await login(page, accounts.ownerA);
     await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "Manage your teams", exact: true }).click();
+    await page.getByRole("link", { name: /^Team & invitations/ }).click();
     await page.getByRole("link", { name: "Fictional Annette Merchant", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Manage Fictional Annette Merchant", exact: true }),
@@ -142,7 +142,7 @@ test("owner team and address forms, invitation acceptance and scoped MFA operati
       ).status(),
     ).toBe(200);
     const slug = `browser-admin-${randomUUID()}`;
-    await page.getByLabel("Shop address slug", { exact: true }).fill(slug);
+    await page.getByLabel("Shop address (the part after /shops/)", { exact: true }).fill(slug);
     await page
       .getByLabel("Reason for changing the address", { exact: true })
       .fill("Fictional owner requested this address");
