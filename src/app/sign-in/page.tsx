@@ -9,7 +9,10 @@ export default async function Page({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const { next, error } = await searchParams;
-  const destination = next === "/landlord" || next === "/security" ? next : "/shopkeeper";
+  const destination =
+    next === "/landlord" || next === "/security" || next === "/shopkeeper/invitations"
+      ? next
+      : "/shopkeeper";
   return (
     <section className="shell page-section account-page sign-in-page">
       <Image

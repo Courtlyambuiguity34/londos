@@ -64,6 +64,7 @@ import {
   createPromotion,
   scheduleCommunications,
   updatePaymentSettings,
+  currentPaymentSettings,
 } from "../../src/server/communications";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
@@ -1355,6 +1356,155 @@ test("R2 operations grant revoked during the target mall lock cannot move a shop
     await pending;
     await pool.query(
       "INSERT INTO operator_grants(user_id,permission)VALUES($1,'operations') ON CONFLICT DO NOTHING",
+      [actors.operator!.userId],
+    );
+  }
+});
+
+function collectionSettings(version: number, label: string, notifyShops = false) {
+  return {
+    version,
+    supportEmail: `billing-${label}@londos.test`,
+    supportPhone: null,
+    mobileMoneyPhone: "+256700000002",
+    mobileMoneyName: `Fictional collection ${label}`,
+    mtnMomoPhone: null,
+    mtnMomoName: null,
+    airtelMoneyPhone: null,
+    airtelMoneyName: null,
+    bankName: null,
+    bankAccountName: null,
+    bankAccountNumber: null,
+    notifyShops,
+    confirm: true as const,
+  };
+}
+
+async function waitForSettingsWriters(applicationName: string, count: number) {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const waiting = (
+      await pool.query(
+        "SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=current_database() AND application_name=$1 AND wait_event_type='Lock'",
+        [applicationName],
+      )
+    ).rows[0].n;
+    if (waiting === count) return;
+    await setTimeout(10);
+  }
+  throw new Error("Expected concurrent fictional payment-settings writers did not reach the lock");
+}
+
+test.each(["initial", "existing"] as const)(
+  "payment settings serialize %s saves without losing edits or announcing a rejected version",
+  async (mode) => {
+    if (mode === "initial") await pool.query("DELETE FROM payment_settings");
+    else {
+      const previous = await currentPaymentSettings(pool);
+      await updatePaymentSettings(
+        pool,
+        actors.operator!,
+        collectionSettings(previous?.version ?? 0, "baseline"),
+      );
+    }
+    const before = await currentPaymentSettings(pool),
+      version = before?.version ?? 0,
+      auditBefore = (
+        await pool.query(
+          "SELECT count(*)::int AS n FROM audit_events WHERE action='billing.payment-settings.changed'",
+        )
+      ).rows[0].n,
+      campaignsBefore = (await pool.query("SELECT count(*)::int AS n FROM email_campaigns")).rows[0]
+        .n;
+    const label = `settings-race-${randomUUID()}`,
+      writers = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 2,
+        application_name: label,
+      }),
+      blocker = await pool.connect();
+    let pending:
+      | Promise<PromiseSettledResult<Awaited<ReturnType<typeof updatePaymentSettings>>>[]>
+      | undefined;
+    try {
+      await blocker.query("BEGIN");
+      if (mode === "initial") await blocker.query("LOCK TABLE payment_settings IN SHARE MODE");
+      else await blocker.query("SELECT singleton FROM payment_settings FOR UPDATE");
+      const inputs = [
+        collectionSettings(version, "first", true),
+        collectionSettings(version, "second", true),
+      ];
+      pending = Promise.allSettled(
+        inputs.map((input) => updatePaymentSettings(writers, actors.operator!, input)),
+      );
+      await waitForSettingsWriters(label, 2);
+      await blocker.query("COMMIT");
+      const results = await pending;
+      expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+      const rejected = results.find((result) => result.status === "rejected");
+      expect(rejected).toMatchObject({
+        status: "rejected",
+        reason: { status: 409, code: "stale_version" },
+      });
+      const saved = await currentPaymentSettings(pool),
+        winner = results.findIndex((result) => result.status === "fulfilled");
+      expect(saved).toMatchObject({
+        version: version + 1,
+        support_email: inputs[winner]!.supportEmail,
+      });
+      expect(
+        (
+          await pool.query(
+            "SELECT count(*)::int AS n FROM audit_events WHERE action='billing.payment-settings.changed'",
+          )
+        ).rows[0].n,
+      ).toBe(auditBefore + 1);
+      expect((await pool.query("SELECT count(*)::int AS n FROM email_campaigns")).rows[0].n).toBe(
+        campaignsBefore + 1,
+      );
+    } finally {
+      await blocker.query("ROLLBACK");
+      blocker.release();
+      await pending;
+      await writers.end();
+    }
+  },
+);
+
+test("payment settings recheck current finance authority after a competing save lock", async () => {
+  const before = await currentPaymentSettings(pool),
+    label = `settings-scope-${randomUUID()}`,
+    writers = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 1,
+      application_name: label,
+    }),
+    blocker = await pool.connect();
+  let pending: Promise<unknown> | undefined;
+  try {
+    await blocker.query("BEGIN");
+    await blocker.query("SELECT pg_advisory_xact_lock(hashtextextended('payment-settings',0))");
+    pending = updatePaymentSettings(
+      writers,
+      actors.operator!,
+      collectionSettings(before?.version ?? 0, "revoked"),
+    ).then(
+      (result) => ({ accepted: result }),
+      (error: unknown) => error,
+    );
+    await waitForSettingsWriters(label, 1);
+    await pool.query("DELETE FROM operator_grants WHERE user_id=$1 AND permission='finance'", [
+      actors.operator!.userId,
+    ]);
+    await blocker.query("COMMIT");
+    expect(await pending).toMatchObject({ status: 403, code: "permission_denied" });
+    expect(await currentPaymentSettings(pool)).toEqual(before);
+  } finally {
+    await blocker.query("ROLLBACK");
+    blocker.release();
+    await pending;
+    await writers.end();
+    await pool.query(
+      "INSERT INTO operator_grants(user_id,permission) VALUES($1,'finance') ON CONFLICT DO NOTHING",
       [actors.operator!.userId],
     );
   }

@@ -2,6 +2,8 @@
 
 Updated 25 October 2026 (Africa/Kampala), hosted lifecycle branch. See the
 [workflow audit and exact verification scope](evidence/HOSTED-WORKFLOWS-2026-10-25.md).
+The [second workflow pass](evidence/HOSTED-WORKFLOWS-FOLLOWUP-2026-10-25.md) records
+additional invitation, catalogue, search, team and concurrent payment-setting corrections.
 
 ## Separate payment flows
 
@@ -95,6 +97,12 @@ working live reports. No fabricated visitor totals, sales or bills are supplied.
 
 ## Admin communications and future payment integrations
 
+Payment-instruction saves are serialized, including the first setup. If two operators save
+the same version, only one succeeds; the other must reload and review the current accounts.
+Authority and fresh native MFA are checked again after waiting for the save lock. A rejected
+save does not create a payment-change announcement. This does not change existing account
+values or automatically retry a rejected/uncertain email.
+
 Custom campaigns accept subject, escaped body, optional on-site CTA and audiences
 `all_shops`, `new_shops` and `specific_shops`, with the operations grant and fresh MFA.
 Verify worker/provider outcomes before describing a campaign as delivered.
@@ -109,3 +117,39 @@ No new environment variable or schema migration is introduced by this audit corr
 The branch's existing migration contract is **035_production_rent_reversals.sql**. Use the
 existing deployment/migration procedure. Keep PostgreSQL canonical, Redis optional, native
 MFA and role/tenant boundaries enabled. Do not turn on local adapters on Render as a workaround.
+
+## Merchant invitations and team access
+
+Owners invite a verified account using its exact email. The invitee opens the private email
+link, signs in with that email and explicitly accepts. Signing in does not accept an invitation.
+New email links carry the token in a browser fragment rather than in HTTP requests. Existing
+query links redirect to that form before page rendering. The entry page clears the token
+from its visible URL and can restore it in the same tab for up to one hour during sign-in.
+If browser storage is unavailable, sign in first and reopen the original email in that tab.
+Clear a saved invitation when using a shared browser. The server still enforces the original
+48-hour expiry, single use, invited email and current authentication; browser retention does
+not extend an invitation or grant access by itself.
+
+Team management pages now have separate member, invitation and shop page controls. Each
+list stays bounded to 20 rows. Advancing shops does not move the member selection; owners
+can assign staff to a shop beyond the first page without losing the staff list. Staff still
+need both merchant permission and the corresponding shop grant. Legacy `page` links remain
+supported. Invalid page values fail safely rather than producing an application error.
+
+A confirmed team or catalogue save remains confirmed if the following reload fails. Reload
+before another change; the stale form is disabled until current state is available. A team
+change that removes your own owner access may prevent a subsequent team read. Return to
+Your shops or check Account security rather than repeatedly submitting the completed change.
+
+## Catalogue and discovery
+
+Creating a department or product clears its creation form after a confirmed save; rejected
+writes retain input. The storefront's Browse collection button targets a real collection
+or department navigation. Exact product search matches open that product directly, including
+items beyond the first department page. Department and shop matches retain their existing
+destinations and ranking. Archiving, unpublishing and tenant restrictions still apply.
+
+Use **Preview saved draft** to browse departments and products before publishing. Links stay
+inside the private preview and retain its selected layout revision. **Preview proposal**
+retains that proposal's identity while browsing; return to its review screen to apply it.
+Neither preview publishes the shop or changes its catalogue, prices or financial records.

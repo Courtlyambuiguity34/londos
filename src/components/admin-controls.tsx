@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { TeamView } from "@/server/team";
@@ -52,17 +52,25 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
   const [team, setTeam] = useState(initial),
     [action, setAction] = useState("invite"),
     [message, setMessage] = useState(""),
-    [pending, setPending] = useState(false);
+    [pending, setPending] = useState(false),
+    [needsReload, setNeedsReload] = useState(false);
   const router = useRouter(),
     path = `/api/workspace/merchants/${team.merchant.id}/team`;
   async function reload() {
-    const response = await fetch(`${path}?page=${team.page}`);
+    const pages = new URLSearchParams({
+      membersPage: String(team.pagination.members.page),
+      invitationsPage: String(team.pagination.invitations.page),
+      shopsPage: String(team.pagination.shops.page),
+    });
+    const response = await fetch(`${path}?${pages}`, { cache: "no-store" });
     if (!response.ok)
       throw new Error("Current team access could not be verified. Check account security.");
     setTeam(await response.json());
+    setNeedsReload(false);
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (needsReload || pending) return;
     const form = event.currentTarget,
       fields = new FormData(form),
       role = String(fields.get("role") ?? "staff"),
@@ -102,18 +110,50 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
         router.refresh();
         return;
       }
-      await reload();
       form.reset();
-      setMessage(
+      const confirmation =
         action === "invite"
-          ? "Invitation queued for private development delivery. The invitee must sign in with the invited email."
-          : "Team change saved.",
-      );
+          ? "Invitation queued for private delivery. The invitee must sign in with the invited email."
+          : "Team change saved.";
+      try {
+        await reload();
+        setMessage(confirmation);
+      } catch {
+        setNeedsReload(true);
+        setMessage(
+          `${confirmation} Current team details could not reload; your owner access may have changed. Reload or check account security before another change.`,
+        );
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The service is unavailable.");
     } finally {
       setPending(false);
     }
+  }
+  function pageControls(kind: "members" | "invitations" | "shops", label: string) {
+    const current = team.pagination[kind];
+    const href = (page: number) => {
+      const values = {
+        membersPage: team.pagination.members.page,
+        invitationsPage: team.pagination.invitations.page,
+        shopsPage: team.pagination.shops.page,
+      };
+      values[`${kind}Page` as keyof typeof values] = page;
+      return `?${new URLSearchParams(Object.entries(values).map(([key, value]) => [key, String(value)]))}`;
+    };
+    return (
+      <nav className="account-links" aria-label={`${label} pages`}>
+        {current.page > 0 ? (
+          <Link href={href(current.page - 1)}>Previous {label.toLowerCase()}</Link>
+        ) : null}
+        <span>
+          {label} page {current.page + 1}
+        </span>
+        {current.next && current.page < 500 ? (
+          <Link href={href(current.page + 1)}>Next {label.toLowerCase()}</Link>
+        ) : null}
+      </nav>
+    );
   }
   return (
     <>
@@ -142,6 +182,7 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
           </li>
         ))}
       </ul>
+      {pageControls("members", "Members")}
       <h2>Pending invitations</h2>
       {team.invitations.length ? (
         <ul className="workspace-list">
@@ -158,12 +199,14 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
       ) : (
         <p>No unexpired invitations on this page.</p>
       )}
+      {pageControls("invitations", "Invitations")}
       <h2>Manage access</h2>
       <p>
         Staff need both merchant permissions and permissions for each shop. Ownership transfer makes
         you restricted staff and ends your owner access. Every change requires recent
         authentication.
       </p>
+      {pageControls("shops", "Shops")}
       <form className="account-form" onSubmit={submit}>
         <label htmlFor="team-action">Team action</label>
         <select id="team-action" value={action} onChange={(e) => setAction(e.target.value)}>
@@ -257,30 +300,122 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
           <input type="checkbox" name="confirm" required />I reviewed the selected access change and
           confirm it
         </label>
-        <button className="button" disabled={pending}>
+        <button className="button" disabled={pending || needsReload}>
           {pending ? "Saving…" : "Save team change"}
         </button>
       </form>
       <button
         className="button button--outline"
         disabled={pending}
-        onClick={() =>
+        onClick={() => {
+          setPending(true);
           void reload()
             .then(() => setMessage("Current team reloaded."))
             .catch((e) => setMessage(e.message))
-        }
+            .finally(() => setPending(false));
+        }}
       >
         Reload team
       </button>
       <p role="status">{message}</p>
+      <p>
+        <Link href="/shopkeeper">Return to your shops</Link>
+      </p>
       <AccessLinks />
     </>
   );
 }
-export function AcceptInvitationForm() {
+const invitationStorageKey = "londos.pending-invitation.v1";
+const invitationRetentionMs = 60 * 60 * 1000;
+const invitationTokenPattern = /^[A-Za-z0-9_-]{32,128}$/;
+function clearPendingInvitation() {
+  try {
+    window.sessionStorage.removeItem(invitationStorageKey);
+  } catch {
+    // A browser may disable storage; the in-memory form remains usable.
+  }
+}
+export function AcceptInvitationForm({ authenticated = true }: { authenticated?: boolean }) {
   const [message, setMessage] = useState(""),
-    [pending, setPending] = useState(false);
+    [pending, setPending] = useState(false),
+    [token, setToken] = useState(""),
+    [ready, setReady] = useState(false);
   const router = useRouter();
+  useEffect(() => {
+    let active = true;
+    const consumeInvitation = () => {
+      if (!active) return;
+      const location = new URL(window.location.href);
+      const fragment = new URLSearchParams(location.hash.slice(1));
+      const supplied = fragment.has("token") || fragment.has("invitation");
+      const tokens = fragment.getAll("token");
+      if (supplied) {
+        setMessage("");
+        // Remove the entire invitation fragment before navigation or rendering
+        // the form. Never pass it into server props or the sign-in destination.
+        window.history.replaceState(window.history.state, "", location.pathname + location.search);
+        clearPendingInvitation();
+        if (
+          tokens.length !== 1 ||
+          fragment.has("invitation") ||
+          !invitationTokenPattern.test(tokens[0]!)
+        ) {
+          setToken("");
+          setMessage(
+            "This invitation link is invalid. Reopen the original invitation or ask its owner for a new one.",
+          );
+        } else {
+          const value = tokens[0]!;
+          setToken(value);
+          try {
+            window.sessionStorage.setItem(
+              invitationStorageKey,
+              JSON.stringify({ token: value, expiresAt: Date.now() + invitationRetentionMs }),
+            );
+          } catch {
+            setMessage(
+              authenticated
+                ? "This browser cannot retain the invitation after you leave this page. You can still accept it here."
+                : "This browser cannot retain the invitation while you sign in. Sign in first, then reopen the original invitation email in this tab.",
+            );
+          }
+        }
+      } else {
+        try {
+          const saved: unknown = JSON.parse(
+            window.sessionStorage.getItem(invitationStorageKey) ?? "null",
+          );
+          const now = Date.now();
+          if (
+            saved !== null &&
+            typeof saved === "object" &&
+            !Array.isArray(saved) &&
+            "token" in saved &&
+            typeof saved.token === "string" &&
+            invitationTokenPattern.test(saved.token) &&
+            "expiresAt" in saved &&
+            typeof saved.expiresAt === "number" &&
+            Number.isSafeInteger(saved.expiresAt) &&
+            saved.expiresAt > now &&
+            saved.expiresAt <= now + invitationRetentionMs
+          )
+            setToken(saved.token);
+          else clearPendingInvitation();
+        } catch {
+          clearPendingInvitation();
+        }
+      }
+      setReady(true);
+    };
+    // Opening another email link can be a same-document fragment navigation.
+    // That does not remount this page, so consume it just like the initial URL.
+    window.addEventListener("hashchange", consumeInvitation);
+    void Promise.resolve().then(consumeInvitation);
+    return () => {
+      active = false;
+      window.removeEventListener("hashchange", consumeInvitation);
+    };
+  }, [authenticated]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget,
@@ -289,6 +424,8 @@ export function AcceptInvitationForm() {
     setMessage("");
     try {
       await command("/api/workspace/invitations/accept", { token: String(fields.get("token")) });
+      clearPendingInvitation();
+      setToken("");
       form.reset();
       setMessage("Invitation accepted. Your granted shops are available in Shopkeeper.");
       router.refresh();
@@ -300,23 +437,68 @@ export function AcceptInvitationForm() {
   }
   return (
     <>
-      <form className="account-form" onSubmit={submit}>
-        <label htmlFor="invitation-token">Private invitation token</label>
-        <input
-          id="invitation-token"
-          name="token"
-          type="password"
-          autoComplete="off"
-          minLength={32}
-          maxLength={128}
-          required
-        />
-        <button className="button" disabled={pending}>
-          {pending ? "Accepting…" : "Accept invitation"}
+      {!authenticated ? (
+        <div>
+          <p>
+            Sign in with the email address that received this invitation. Signing in does not accept
+            it.
+          </p>
+          <Link className="button" href="/sign-in?next=%2Fshopkeeper%2Finvitations">
+            Sign in to review invitation
+          </Link>
+        </div>
+      ) : (
+        <form className="account-form" onSubmit={submit}>
+          <label htmlFor="invitation-token">Private invitation token</label>
+          <input
+            id="invitation-token"
+            name="token"
+            type="password"
+            autoComplete="off"
+            minLength={32}
+            maxLength={128}
+            value={token}
+            onChange={(event) => {
+              setToken(event.target.value);
+              clearPendingInvitation();
+            }}
+            required
+          />
+          <button className="button" disabled={pending || !ready}>
+            {pending ? "Accepting…" : "Accept invitation"}
+          </button>
+        </form>
+      )}
+      {ready && token ? (
+        <button
+          type="button"
+          className="button button--outline"
+          disabled={pending}
+          onClick={() => {
+            clearPendingInvitation();
+            setToken("");
+            setMessage(
+              "Saved invitation cleared. Reopen the invitation email if you want to use it later.",
+            );
+          }}
+        >
+          Clear saved invitation
         </button>
-        <p role="status">{message}</p>
-      </form>
-      <AccessLinks />
+      ) : null}
+      <p role="status">{message}</p>
+      <p>
+        This tab can retain an invitation for up to one hour while you sign in. The original
+        invitation expires after 48 hours and can be accepted only once.
+      </p>
+      {authenticated ? (
+        <>
+          <p>
+            Accept only invitations you recognise. If this is the wrong account, open account
+            security to sign out, then sign in with the invited email.
+          </p>
+          <AccessLinks />
+        </>
+      ) : null}
     </>
   );
 }

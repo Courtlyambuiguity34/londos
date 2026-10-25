@@ -28,6 +28,9 @@ import { saveProduct } from "../../src/server/catalogue";
 import { publicContact, saveContacts } from "../../src/server/contacts";
 import { PostgresSearch } from "../../src/server/discovery";
 import type { ShopSpecification } from "../../src/modules/shop-design/specification";
+import { publicShopHref } from "../../src/modules/discovery/shop-continuity";
+import { shopViewHref } from "../../src/modules/shop-design/view-links";
+import { readVariant } from "../../src/server/media";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -175,6 +178,96 @@ test("draft and preview are private; guessed shops and foreign nested references
       },
     }),
   ).rejects.toMatchObject({ status: 404 });
+});
+test("saved preview navigation pins its revision, scopes catalogue cursors and keeps design-only media private", async () => {
+  const firstDraft = await draft();
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability,position) SELECT gen_random_uuid(),$1,$2,$3,'product','Preview item '||i,'preview-'||i,'UGX','available',i FROM generate_series(1,21) g(i)",
+    [shop, seedIds.merchantA, department],
+  );
+  await pool.query("UPDATE products SET position=99 WHERE id=$1", [product]);
+  await saveDesign(pool, actors.ownerA!, shop, {
+    version: firstDraft.version,
+    summary: "Newer draft",
+    specification: { ...specification(), theme: "blue" },
+  });
+  const first = await readPrivatePreview(pool, actors.ownerA!, shop, 1, { department: "shoes" });
+  expect(first.previewNavigation).toEqual({ kind: "saved", revision: 1 });
+  expect(first.specification.theme).toBe("earth");
+  expect(first.products).toHaveLength(20);
+  expect(first.products.some((item) => item.id === product)).toBe(false);
+  expect(first.nextCursor).not.toBeNull();
+  expect(shopViewHref(first, { department: "shoes", after: first.nextCursor! })).toBe(
+    `/shopkeeper/shops/${shop}/preview?revision=1&department=shoes&after=${first.nextCursor}`,
+  );
+  const next = await readPrivatePreview(pool, actors.ownerA!, shop, 1, {
+    department: "shoes",
+    after: first.nextCursor!,
+  });
+  expect(next.products.some((item) => item.id === product)).toBe(true);
+  const detail = await readPrivatePreview(pool, actors.ownerA!, shop, 1, {
+    product: "sample-shoes",
+  });
+  expect(detail.selectedProduct?.id).toBe(product);
+  expect(detail.specification.theme).toBe("earth");
+  expect(shopViewHref(detail)).toBe(`/shopkeeper/shops/${shop}/preview?revision=1`);
+  expect((await readPrivatePreview(pool, actors.ownerA!, shop)).previewNavigation.revision).toBe(2);
+  const foreign = await readPrivatePreview(pool, actors.ownerA!, shop, 1, {
+    department: "40000000-0000-4000-8000-000000000001",
+  });
+  expect(foreign.missingDestination).toBe(true);
+  expect(foreign.products).toEqual([]);
+  for (const destination of [
+    { department: "../foreign" },
+    { department: "shoes", product: "sample-shoes" },
+    { product: "sample-shoes", after: first.nextCursor! },
+  ])
+    await expect(readPrivatePreview(pool, actors.ownerA!, shop, 1, destination)).rejects.toThrow();
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Hats','hats',1)",
+    [randomUUID(), shop, seedIds.merchantA],
+  );
+  await expect(
+    readPrivatePreview(pool, actors.ownerA!, shop, 1, {
+      department: "hats",
+      after: first.nextCursor!,
+    }),
+  ).rejects.toMatchObject({ status: 422 });
+  await expect(
+    readPrivatePreview(pool, actors.ownerB!, shop, 1, { product: "sample-shoes" }),
+  ).rejects.toMatchObject({ status: 404 });
+  await expect(
+    readPrivatePreview(pool, actors.staff!, shop, 1, { product: "sample-shoes" }),
+  ).rejects.toMatchObject({ status: 404 });
+  await pool.query(
+    "UPDATE memberships SET permissions=ARRAY['design'] WHERE merchant_id=$1 AND user_id=$2",
+    [seedIds.merchantA, accounts.staff.id],
+  );
+  await pool.query(
+    "INSERT INTO staff_shop_grants(merchant_id,user_id,shop_id,permissions) VALUES($1,$2,$3,ARRAY['design'])",
+    [seedIds.merchantA, accounts.staff.id, shop],
+  );
+  expect(
+    (await readPrivatePreview(pool, actors.staff!, shop, 1, { product: "sample-shoes" }))
+      .selectedProduct?.id,
+  ).toBe(product);
+  const asset = randomUUID(),
+    bytes = Buffer.from("Fictional normalized card fixture");
+  await pool.query(
+    "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,alt,width,height) VALUES($1,$2,$3,'ready',$4,'Private preview fixture',2,2)",
+    [asset, shop, seedIds.merchantA, `private:${asset}`],
+  );
+  await pool.query(
+    "INSERT INTO media_blobs(asset_id,variant,bytes,width,height) VALUES($1,'card',$2,2,2),($1,'source',$2,2,2)",
+    [asset, bytes],
+  );
+  expect(await readVariant(pool, actors.staff!, shop, asset, "card")).toEqual(bytes);
+  await expect(readVariant(pool, actors.staff!, shop, asset, "source" as never)).rejects.toThrow();
+  await expect(readVariant(pool, actors.ownerB!, shop, asset, "card")).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(readPublicVariant(pool, shop, asset, "card")).rejects.toMatchObject({ status: 404 });
+  await expect(readPublicShop(pool, shop)).rejects.toMatchObject({ status: 404 });
 });
 test("staff requires explicit design and shop grants, and publishing needs its separate grant", async () => {
   await pool.query(
@@ -382,6 +475,58 @@ test("indexed discovery aggregates one result per shop and uses department conte
   expect(
     (await new PostgresSearch(pool).search({ query: "shoes", shopId: shop })).results,
   ).toHaveLength(1);
+});
+test("exact product search keeps its destination beyond the first catalogue page and retains visibility gates", async () => {
+  const state = await published();
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability,position) SELECT gen_random_uuid(),$1,$2,$3,'product','Fictional catalogue item '||i,'filler-'||i,'UGX','available',i FROM generate_series(1,21) g(i)",
+    [shop, seedIds.merchantA, department],
+  );
+  const target = randomUUID();
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability,position) VALUES($1,$2,$3,$4,'product','Zebraneedle handcrafted satchel','zebraneedle-satchel','UGX','available',99)",
+    [target, shop, seedIds.merchantA, department],
+  );
+  const first = await readPublicShop(pool, shop, { department: "shoes" });
+  expect(first.products).toHaveLength(20);
+  expect(first.products.some((item) => item.id === target)).toBe(false);
+  const search = new PostgresSearch(pool);
+  const result = await search.search({ query: "zebraneedle", shopId: shop });
+  expect(result.results).toHaveLength(1);
+  const hit = result.results[0]!;
+  expect(hit).toMatchObject({ product_slug: "zebraneedle-satchel", department_slug: "shoes" });
+  expect(
+    publicShopHref({
+      shopSlug: hit.slug,
+      departmentSlug: hit.department_slug,
+      productSlug: hit.product_slug,
+    }),
+  ).toBe(`/shops/${hit.slug}/products/zebraneedle-satchel`);
+  expect(
+    (await readPublicShop(pool, shop, { product: hit.product_slug! })).selectedProduct?.id,
+  ).toBe(target);
+  expect((await search.search({ query: "shoes", shopId: shop })).results[0]).toMatchObject({
+    department_slug: "shoes",
+    product_slug: null,
+  });
+
+  await pool.query("UPDATE products SET availability='archived' WHERE id=$1", [target]);
+  expect((await search.search({ query: "zebraneedle", shopId: shop })).results).toEqual([]);
+  expect(
+    (await readPublicShop(pool, shop, { product: "zebraneedle-satchel" })).missingDestination,
+  ).toBe(true);
+  await pool.query("UPDATE products SET availability='available' WHERE id=$1", [target]);
+  await pool.query("UPDATE departments SET archived=true WHERE id=$1", [department]);
+  expect((await search.search({ query: "zebraneedle", shopId: shop })).results).toEqual([]);
+  await pool.query("UPDATE departments SET archived=false WHERE id=$1", [department]);
+  await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shop]);
+  expect((await search.search({ query: "zebraneedle", shopId: shop })).results).toEqual([]);
+  await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [shop]);
+  await unpublishDesign(pool, actors.ownerA!, shop, { version: state.version, confirm: true });
+  expect((await search.search({ query: "zebraneedle", shopId: shop })).results).toEqual([]);
+  await expect(
+    readPublicShop(pool, shop, { product: "zebraneedle-satchel" }),
+  ).rejects.toMatchObject({ status: 404 });
 });
 test("search categories, stemming, shop scope and newly published exposure are bounded", async () => {
   await published();

@@ -121,11 +121,13 @@ export function brevoMessage(message: Record<string, unknown>, origin: string) {
     };
   } else if (value.template === "invitation") {
     link.pathname = "/shopkeeper/invitations";
-    link.searchParams.set("token", value.token);
+    // URL fragments stay in the recipient's browser, outside HTTP requests,
+    // server-rendered data and authentication callback URLs.
+    link.hash = new URLSearchParams({ token: value.token }).toString();
     subject = "Londos team invitation";
     text = `A merchant invited you to their Londos team. Review the invitation after signing in:\n${link.href}`;
     body = paragraphs(
-      "A merchant invited you to help manage their Londos shop. Sign in with this email address, then review the role and permissions before accepting.",
+      "A merchant invited you to help manage their Londos shop. If you recognise this invitation, sign in with this email address, then accept it in your private workspace.",
     );
     action = { label: "Review invitation", url: link.href };
   } else if (value.template === "shop-welcome") {

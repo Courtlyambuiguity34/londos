@@ -152,15 +152,27 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
     }
     return response.json();
   }
-  async function act(work: () => Promise<unknown>, success: string) {
+  async function act(work: () => Promise<unknown>, success: string, confirmed?: () => void) {
+    if (!loaded) {
+      setMessage("Reload the catalogue before making another change.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     try {
       await work();
-      await refresh();
+      confirmed?.();
       setDepartment(null);
       setProduct(null);
-      setMessage(success);
+      try {
+        await refresh();
+        setMessage(success);
+      } catch {
+        setLoaded(false);
+        setMessage(
+          `${success} The latest catalogue could not reload. Reload the catalogue before making another change.`,
+        );
+      }
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "The change was not confirmed. Try again.",
@@ -171,7 +183,8 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
   }
   function departmentSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget,
+      data = new FormData(form);
     void act(
       () =>
         write(
@@ -186,6 +199,9 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           },
         ),
       "Department saved.",
+      () => {
+        if (!department) form.reset();
+      },
     );
   }
   function productValue(p: Product) {
@@ -205,7 +221,8 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
   }
   function productSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget,
+      data = new FormData(form);
     void act(
       () =>
         write(product ? `/products/${product.id}` : "/products", product ? "PATCH" : "POST", {
@@ -222,6 +239,9 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
           version: product?.version ?? 0,
         }),
       "Product or service saved.",
+      () => {
+        if (!product) form.reset();
+      },
     );
   }
   function contactsSubmit(event: FormEvent<HTMLFormElement>) {

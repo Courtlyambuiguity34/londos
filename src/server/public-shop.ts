@@ -15,6 +15,7 @@ import {
   encodeCatalogueCursor,
   decodeCatalogueCursor,
 } from "./catalogue-pagination";
+import type { PreviewNavigation, ShopDestination } from "../modules/shop-design/view-links";
 
 export type PublicDepartment = { id: string; name: string; slug: string };
 export type PublicProduct = {
@@ -57,6 +58,7 @@ export type ShopView = {
   products: PublicProduct[];
   contact: PublicContact | null;
   privatePreview: boolean;
+  previewNavigation?: PreviewNavigation;
   applicationReviewed: boolean;
   selectedDepartment: PublicDepartment | null;
   selectedProduct: PublicProduct | null;
@@ -79,11 +81,27 @@ const routeKey = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
   .max(80);
+export const previewDestination = z
+  .object({
+    department: routeKey.optional(),
+    product: routeKey.optional(),
+    after: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{1,400}$/)
+      .optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.department && value.product)
+      context.addIssue({ code: "custom", message: "Choose a department or product." });
+    if (value.after && !value.department)
+      context.addIssue({ code: "custom", message: "Catalogue cursor requires a department." });
+  });
 export async function assemble(
   client: PoolClient,
   row: ShopView["shop"] & { design: unknown; revision: number },
   privatePreview: boolean,
-  destination: { department?: string; product?: string; after?: string } = {},
+  destination: ShopDestination = {},
 ): Promise<ShopView> {
   const specification = shopSpecification.safeParse(row.design).data ?? emptySpec;
   const departments = (
@@ -208,11 +226,7 @@ export async function assemble(
     paginated: Boolean(destination.after),
   };
 }
-export async function readPublicShop(
-  pool: Pool,
-  key: string,
-  destination: { department?: string; product?: string; after?: string } = {},
-) {
+export async function readPublicShop(pool: Pool, key: string, destination: ShopDestination = {}) {
   if (
     !routeKey.safeParse(key).success ||
     [destination.department, destination.product].some(
@@ -243,9 +257,11 @@ export async function readPrivatePreview(
   actor: Actor,
   shopId: string,
   revision?: number,
+  destination: ShopDestination = {},
 ) {
   await requireShop(pool, actor, shopId, "design");
   if (revision !== undefined) z.number().int().positive().parse(revision);
+  const selected = previewDestination.parse(destination);
   return transaction(pool, async (client) => {
     await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
     await requireShop(client, actor, shopId, "design");
@@ -256,7 +272,10 @@ export async function readPrivatePreview(
       )
     ).rows[0];
     if (!row) throw new AccessError(404, "resource_unavailable");
-    return assemble(client, row, true);
+    return {
+      ...(await assemble(client, row, true, selected)),
+      previewNavigation: { kind: "saved" as const, revision: row.revision as number },
+    };
   });
 }
 export async function readPublicVariant(

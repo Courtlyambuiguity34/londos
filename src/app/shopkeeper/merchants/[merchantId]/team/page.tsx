@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { AccountWorkspaceShell } from "@/components/account-workspace-shell";
 import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
-import { readTeam } from "@/server/team";
+import { readTeam, teamPageInput } from "@/server/team";
+import { AccessError } from "@/server/security/errors";
 import { TeamPanel } from "@/components/admin-controls";
 export const metadata = { title: "Merchant team management" };
 export default async function Page({
@@ -12,28 +14,52 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ merchantId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    membersPage?: string;
+    invitationsPage?: string;
+    shopsPage?: string;
+  }>;
 }) {
   if (!coreConfigured()) notFound();
   const actor = await pageActor("/shopkeeper"),
-    id = z.uuid().safeParse((await params).merchantId);
-  if (!id.success) notFound();
-  const page = z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(500)
-      .parse((await searchParams).page ?? 0),
-    view = await readTeam(database(), actor, id.data, page);
+    id = z.uuid().safeParse((await params).merchantId),
+    pages = teamPageInput.safeParse(await searchParams);
+  if (!id.success || !pages.success) notFound();
+  const view = await readTeam(database(), actor, id.data, pages.data.page, pages.data).catch(
+    (error) => {
+      if (error instanceof AccessError && error.code === "fresh_authentication_required")
+        return null;
+      if (error instanceof AccessError && error.status === 404) notFound();
+      throw error;
+    },
+  );
   return (
-    <section className="shell page-section account-page">
-      <h1>Manage {view.merchant.name}</h1>
-      <TeamPanel key={`${id.data}:${page}:${view.merchant.version}`} initial={view} />
-      <div className="account-links">
-        {page > 0 ? <Link href={`?page=${page - 1}`}>Previous team page</Link> : null}
-        {view.next && page < 500 ? <Link href={`?page=${page + 1}`}>Next team page</Link> : null}
+    <AccountWorkspaceShell
+      kind="shopkeeper"
+      title={view ? `Manage ${view.merchant.name}` : "Team access"}
+      subtitle="Manage team membership and permissions for each shop."
+      currentPath="/shopkeeper/team"
+    >
+      <section className="portal-section account-page">
+        {view ? (
+          <TeamPanel
+            key={`${id.data}:${JSON.stringify(view.pagination)}:${view.merchant.version}`}
+            initial={view}
+          />
+        ) : (
+          <div role="status">
+            <h2>Confirm your identity</h2>
+            <p>
+              Sign in again or verify your authenticator before viewing or changing team access.
+            </p>
+            <Link className="button" href="/security">
+              Open account security
+            </Link>
+          </div>
+        )}
         <Link href="/shopkeeper/team">All your teams</Link>
-      </div>
-    </section>
+      </section>
+    </AccountWorkspaceShell>
   );
 }

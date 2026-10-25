@@ -10,7 +10,11 @@ import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
 export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
-  const href = publicShopHref({shopSlug:result.slug,departmentSlug:result.department_slug});
+  const href = publicShopHref({
+    shopSlug: result.slug,
+    departmentSlug: result.department_slug,
+    productSlug: result.product_slug,
+  });
   return (
     <article className="shop-card tone-clay">
       <div className="shop-card-body">

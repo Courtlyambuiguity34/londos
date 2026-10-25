@@ -27,6 +27,7 @@ import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-des
 import { readPublicShop } from "../../src/server/public-shop";
 import { readOwnerCosts } from "../../src/server/costs";
 import { transaction } from "../../src/server/db/pool";
+import { shopViewHref } from "../../src/modules/shop-design/view-links";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -262,6 +263,104 @@ test("deterministic proposal previews without saving, atomic confirmation create
     (await pool.query("SELECT count(*)::int AS n FROM shop_revisions WHERE shop_id=$1", [shop]))
       .rows[0].n,
   ).toBe(1);
+});
+test("proposal preview navigation retains requester, proposal identity, paging and fresh authorization", async () => {
+  const department = randomUUID();
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Proposal shelves','proposal-shelves',0)",
+    [department, shop, merchant],
+  );
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability,position) SELECT gen_random_uuid(),$1,$2,$3,'product','Proposal specimen '||i,'specimen-'||i,'UGX','available',i FROM generate_series(1,22) g(i)",
+    [shop, merchant, department],
+  );
+  await saveDesign(pool, actors.ownerA!, shop, {
+    version: 0,
+    summary: "Proposal navigation baseline",
+    specification: {
+      schemaVersion: 1,
+      theme: "earth",
+      announcement: "",
+      actions: [],
+      spaces: [
+        { id: "shelves", type: "department", version: 1, departmentId: department, limit: 8 },
+      ],
+    },
+  });
+  const proposal = await propose({ instruction: "use blue theme" });
+  expect(proposal.status).toBe("proposed");
+  const first = await readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, {
+    department: "proposal-shelves",
+  });
+  expect(first.previewNavigation).toEqual({ kind: "proposal", id: proposal.id });
+  expect(first.specification.theme).toBe("blue");
+  expect(first.products).toHaveLength(20);
+  expect(first.nextCursor).not.toBeNull();
+  const base = `/shopkeeper/shops/${shop}/design/assistant/${proposal.id}/preview`;
+  expect(shopViewHref(first, { department: "proposal-shelves", after: first.nextCursor! })).toBe(
+    `${base}?department=proposal-shelves&after=${first.nextCursor}`,
+  );
+  const next = await readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, {
+    department: "proposal-shelves",
+    after: first.nextCursor!,
+  });
+  expect(next.products).toHaveLength(2);
+  const detail = await readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, {
+    product: "specimen-22",
+  });
+  expect(detail.selectedProduct?.slug).toBe("specimen-22");
+  expect(detail.specification.theme).toBe("blue");
+  expect(shopViewHref(detail)).toBe(base);
+  expect((await readDesign(pool, actors.ownerA!, shop)).specification.theme).toBe("earth");
+  await expect(readPublicShop(pool, shop)).rejects.toMatchObject({ status: 404 });
+  for (const bad of [
+    { department: "../foreign" },
+    { department: "proposal-shelves", product: "specimen-22" },
+    { product: "specimen-22", after: first.nextCursor! },
+  ])
+    await expect(
+      readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, bad),
+    ).rejects.toThrow();
+  const foreign = await readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, {
+    product: "foreign-product",
+  });
+  expect(foreign.missingDestination).toBe(true);
+  expect(foreign.products).toEqual([]);
+  await expect(
+    readAssistantPreview(pool, actors.ownerB!, shop, proposal.id, { product: "specimen-22" }),
+  ).rejects.toMatchObject({ status: 404 });
+  await pool.query(
+    "INSERT INTO memberships(merchant_id,user_id,role,permissions) VALUES($1,$2,'staff',ARRAY['design'])",
+    [merchant, actors.staff!.userId],
+  );
+  await pool.query(
+    "INSERT INTO staff_shop_grants(merchant_id,user_id,shop_id,permissions) VALUES($1,$2,$3,ARRAY['design'])",
+    [merchant, actors.staff!.userId, shop],
+  );
+  await expect(
+    readAssistantPreview(pool, actors.staff!, shop, proposal.id, { product: "specimen-22" }),
+  ).rejects.toMatchObject({ status: 404 });
+  await pool.query(
+    "UPDATE mfa_proofs SET verified_at=clock_timestamp()-interval '6 minutes' WHERE session_id=$1",
+    [actors.ownerA!.sessionId],
+  );
+  await pool.query(
+    "UPDATE session SET \"createdAt\"=clock_timestamp()-interval '6 minutes' WHERE id=$1",
+    [actors.ownerA!.sessionId],
+  );
+  await expect(
+    readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, { product: "specimen-22" }),
+  ).rejects.toMatchObject({ status: 403 });
+  await pool.query("UPDATE mfa_proofs SET verified_at=clock_timestamp() WHERE session_id=$1", [
+    actors.ownerA!.sessionId,
+  ]);
+  await pool.query('UPDATE session SET "createdAt"=clock_timestamp() WHERE id=$1', [
+    actors.ownerA!.sessionId,
+  ]);
+  await expire(proposal.id);
+  await expect(
+    readAssistantPreview(pool, actors.ownerA!, shop, proposal.id, { product: "specimen-22" }),
+  ).rejects.toMatchObject({ status: 404 });
 });
 test("unchanged concurrent request retries perform one call; changed payload and terminal acknowledgment conflict", async () => {
   const key = randomUUID(),

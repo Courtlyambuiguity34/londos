@@ -25,9 +25,9 @@ export const paymentSettingsInput = z
     supportPhone: z.preprocess((value) => (value === "" ? null : value), phone.nullable()),
     mobileMoneyPhone: z.preprocess((value) => (value === "" ? null : value), phone.nullable()),
     mobileMoneyName: optionalText(120),
-    mtnMomoPhone: z.preprocess((v) => v === "" ? null : v, phone.nullable()),
+    mtnMomoPhone: z.preprocess((v) => (v === "" ? null : v), phone.nullable()),
     mtnMomoName: optionalText(120),
-    airtelMoneyPhone: z.preprocess((v) => v === "" ? null : v, phone.nullable()),
+    airtelMoneyPhone: z.preprocess((v) => (v === "" ? null : v), phone.nullable()),
     airtelMoneyName: optionalText(120),
     bankName: optionalText(120),
     bankAccountName: optionalText(120),
@@ -46,7 +46,12 @@ export const paymentSettingsInput = z
     const bank = [value.bankName, value.bankAccountName, value.bankAccountNumber];
     if (bank.some(Boolean) && !bank.every(Boolean))
       context.addIssue({ code: "custom", message: "bank_details_complete_required" });
-    if (!value.mobileMoneyPhone && !value.mtnMomoPhone && !value.airtelMoneyPhone && !value.bankName)
+    if (
+      !value.mobileMoneyPhone &&
+      !value.mtnMomoPhone &&
+      !value.airtelMoneyPhone &&
+      !value.bankName
+    )
       context.addIssue({ code: "custom", message: "payment_method_required" });
   });
 
@@ -187,6 +192,11 @@ export async function updatePaymentSettings(
 ) {
   const value = paymentSettingsInput.parse(input);
   return transaction(pool, async (db) => {
+    await requireOperator(db, actor, "finance", true);
+    // Serialize even the first save, when no singleton row exists to lock.
+    // Recheck authority after waiting so a revoked/stale operator cannot save.
+    await db.query("SELECT pg_advisory_xact_lock(hashtextextended('payment-settings',0))");
+    await db.query("SELECT singleton FROM payment_settings WHERE singleton=true FOR UPDATE");
     await requireOperator(db, actor, "finance", true);
     const previous = await currentPaymentSettings(db);
     if ((previous?.version ?? 0) !== value.version) throw new AccessError(409, "stale_version");
@@ -435,7 +445,15 @@ async function scheduleMonthlyReports(db: PoolClient, now: Date) {
 async function scheduleRentReminders(db: PoolClient, now: Date) {
   if (process.env.LONDOS_RENT_REMINDERS_ENABLED !== "true") return 0;
   const settings = await currentPaymentSettings(db);
-  if (!settings || !((settings.mtn_momo_phone && settings.mtn_momo_name) || (settings.airtel_money_phone && settings.airtel_money_name) || (settings.mobile_money_phone && settings.mobile_money_name))) return 0;
+  if (
+    !settings ||
+    !(
+      (settings.mtn_momo_phone && settings.mtn_momo_name) ||
+      (settings.airtel_money_phone && settings.airtel_money_name) ||
+      (settings.mobile_money_phone && settings.mobile_money_name)
+    )
+  )
+    return 0;
   const rows = (
     await db.query(
       `SELECT i.id AS invoice_id,i.merchant_id,i.shop_id,i.currency,
@@ -467,9 +485,15 @@ async function scheduleRentReminders(db: PoolClient, now: Date) {
       `Invoice: ${row.invoice_reference}`,
       `Invoice total: ${row.currency} ${row.amount_minor}`,
       `Due date: ${due.toISOString().slice(0, 10)}`,
-      ...(settings.mtn_momo_phone && settings.mtn_momo_name ? [`MTN MoMo: ${settings.mtn_momo_phone} (${settings.mtn_momo_name}).`] : []),
-      ...(settings.airtel_money_phone && settings.airtel_money_name ? [`Airtel Money: ${settings.airtel_money_phone} (${settings.airtel_money_name}).`] : []),
-      ...(settings.mobile_money_phone && settings.mobile_money_name ? [`Other mobile money: ${settings.mobile_money_phone} (${settings.mobile_money_name}).`] : []),
+      ...(settings.mtn_momo_phone && settings.mtn_momo_name
+        ? [`MTN MoMo: ${settings.mtn_momo_phone} (${settings.mtn_momo_name}).`]
+        : []),
+      ...(settings.airtel_money_phone && settings.airtel_money_name
+        ? [`Airtel Money: ${settings.airtel_money_phone} (${settings.airtel_money_name}).`]
+        : []),
+      ...(settings.mobile_money_phone && settings.mobile_money_name
+        ? [`Other mobile money: ${settings.mobile_money_phone} (${settings.mobile_money_name}).`]
+        : []),
       "When paying directly, enter your business/shop name as the payment reason.",
       "Keep the transaction reference and submit it for review. A submitted claim is not confirmation of payment.",
       "If you have already paid, please contact support and do not pay twice.",

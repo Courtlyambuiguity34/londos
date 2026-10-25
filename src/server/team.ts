@@ -13,6 +13,20 @@ import {
   staffShopInput,
 } from "./security/memberships";
 
+const pageNumber = z.coerce.number().int().min(0).max(500);
+export const teamPageInput = z
+  .object({
+    page: pageNumber.default(0),
+    membersPage: pageNumber.optional(),
+    invitationsPage: pageNumber.optional(),
+    shopsPage: pageNumber.optional(),
+  })
+  .strict();
+type IndependentPages = Pick<
+  z.infer<typeof teamPageInput>,
+  "membersPage" | "invitationsPage" | "shopsPage"
+>;
+
 const commandBase = { version: z.number().int().positive(), confirm: z.literal(true) };
 export const teamCommandInput = z.discriminatedUnion("action", [
   z.object({ ...commandBase, action: z.literal("invite"), value: invitationInput }).strict(),
@@ -53,6 +67,7 @@ export type TeamView = {
   grants: { user_id: string; shop_id: string; permissions: string[] }[];
   page: number;
   next: boolean;
+  pagination: Record<"members" | "invitations" | "shops", { page: number; next: boolean }>;
 };
 export async function ownedMerchants(pool: Pool, actor: Actor, page = 0) {
   z.number().int().min(0).max(500).parse(page);
@@ -69,8 +84,12 @@ export async function readTeam(
   actor: Actor,
   merchantId: string,
   page = 0,
+  independent: Partial<IndependentPages> = {},
 ): Promise<TeamView> {
-  z.number().int().min(0).max(500).parse(page);
+  const input = teamPageInput.parse({ page, ...independent });
+  const membersPage = input.membersPage ?? input.page,
+    invitationsPage = input.invitationsPage ?? input.page,
+    shopsPage = input.shopsPage ?? input.page;
   return transaction(pool, async (client) => {
     await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
     await requireMerchant(client, actor, merchantId, "membership");
@@ -80,19 +99,19 @@ export async function readTeam(
     const members = (
       await client.query(
         'SELECT m.user_id,u.email,u.name,m.role,m.permissions,m.status FROM memberships m JOIN "user" u ON u.id=m.user_id WHERE m.merchant_id=$1 ORDER BY m.created_at,m.user_id LIMIT 21 OFFSET $2',
-        [merchantId, page * 20],
+        [merchantId, membersPage * 20],
       )
     ).rows;
     const invitations = (
       await client.query(
         "SELECT id,email,role,permissions,expires_at FROM invitations WHERE merchant_id=$1 AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at>clock_timestamp() ORDER BY created_at,id LIMIT 21 OFFSET $2",
-        [merchantId, page * 20],
+        [merchantId, invitationsPage * 20],
       )
     ).rows;
     const shops = (
       await client.query(
         "SELECT id,name FROM shops WHERE merchant_id=$1 ORDER BY name,id LIMIT 21 OFFSET $2",
-        [merchantId, page * 20],
+        [merchantId, shopsPage * 20],
       )
     ).rows;
     const grants = (
@@ -113,6 +132,11 @@ export async function readTeam(
       grants,
       page,
       next: [members, invitations, shops].some((rows) => rows.length > 20),
+      pagination: {
+        members: { page: membersPage, next: members.length > 20 },
+        invitations: { page: invitationsPage, next: invitations.length > 20 },
+        shops: { page: shopsPage, next: shops.length > 20 },
+      },
     };
   });
 }

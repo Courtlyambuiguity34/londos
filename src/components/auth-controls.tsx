@@ -47,7 +47,7 @@ function fields(event: FormEvent<HTMLFormElement>) {
 export function SignInForm({
   destination,
 }: {
-  destination: "/shopkeeper" | "/landlord" | "/security";
+  destination: "/shopkeeper" | "/landlord" | "/security" | "/shopkeeper/invitations";
 }) {
   const [challenge, setChallenge] = useState(false),
     [backup, setBackup] = useState(false),

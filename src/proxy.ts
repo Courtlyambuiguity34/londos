@@ -59,6 +59,24 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.pathname !== "/security"
     )
       return nextWithPathname();
+    // This exact page contains only invitation-entry instructions until sign-in.
+    // Keep bearer tokens out of SSR/Flight and authentication return URLs. New
+    // emails use fragments; old query links redirect before rendering anything.
+    if (request.nextUrl.pathname === "/shopkeeper/invitations") {
+      const tokens = request.nextUrl.searchParams.getAll("token");
+      if (tokens.length) {
+        const target = new URL("/shopkeeper/invitations", coreConfig().baseURL);
+        target.hash =
+          tokens.length === 1 && /^[A-Za-z0-9_-]{32,128}$/.test(tokens[0]!)
+            ? new URLSearchParams({ token: tokens[0]! }).toString()
+            : "invitation=invalid";
+        const result = NextResponse.redirect(target, 303);
+        result.headers.set("Cache-Control", "private, no-store, max-age=0");
+        result.headers.set("Referrer-Policy", "no-referrer");
+        return result;
+      }
+      return nextWithPathname();
+    }
     const actor = await resolveActor(auth(), request.headers),
       path = request.nextUrl.pathname;
     const shop = /^\/shopkeeper\/shops\/([^/]+)(?:\/.*)?$/.exec(path);
@@ -185,9 +203,10 @@ export async function proxy(request: NextRequest) {
       // previews and all mutation handlers fenced by their existing checks.
       if (
         error.code === "fresh_authentication_required" &&
-        /^\/shopkeeper\/shops\/[a-f0-9-]{36}\/(?:design\/assistant|address)$/.test(
+        (/^\/shopkeeper\/shops\/[a-f0-9-]{36}\/(?:design\/assistant|address)$/.test(
           request.nextUrl.pathname,
-        )
+        ) ||
+          /^\/shopkeeper\/merchants\/[a-f0-9-]{36}\/team$/.test(request.nextUrl.pathname))
       )
         return nextWithPathname();
       if (error.status === 401) {

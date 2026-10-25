@@ -1,8 +1,9 @@
 # Build status and next model setting
 
 **Current hosted follow-up — 25 October 2026:** work targets
-`feature/hosted-lifecycle-secure-2026-10-23`, based on `c14da3d`, with readiness migration
-**035**. Read [hosted workflow audit](evidence/HOSTED-WORKFLOWS-2026-10-25.md) and
+`feature/hosted-lifecycle-secure-2026-10-23`, continuing from `d363b25`, with readiness migration
+**035**. Read the [second workflow pass](evidence/HOSTED-WORKFLOWS-FOLLOWUP-2026-10-25.md),
+[first hosted workflow audit](evidence/HOSTED-WORKFLOWS-2026-10-25.md) and
 [billing/shop operations](HOSTED-BILLING-AND-OPERATIONS.md) for the current implementation,
 verification results and remaining operator actions. Older branch names, schema numbers,
 missing-credential statements and local-only workflow descriptions below are historical.

@@ -11,6 +11,7 @@ import { SearchForm } from "./search-form";
 import { spaceProducts, type ShopSpace } from "@/modules/shop-design/specification";
 import { shopContactActions } from "@/modules/shop-design/contact-actions";
 import { coreConfig } from "@/server/config";
+import { shopViewHref } from "@/modules/shop-design/view-links";
 
 export function CanonicalProduct({
   product,
@@ -42,7 +43,7 @@ export function CanonicalProduct({
         <h1>{product.name}</h1>
       ) : (
         <h3>
-          <Link prefetch={false} href={`/shops/${view.shop.slug}/products/${product.slug}`}>
+          <Link prefetch={false} href={shopViewHref(view, { product: product.slug })}>
             {product.name}
           </Link>
         </h3>
@@ -114,6 +115,15 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
     const product = space.featuredProductId
       ? view.products.find((item) => item.id === space.featuredProductId)
       : null;
+    const collection = view.specification.spaces.find((item) => {
+      if (item.type === "featured_product")
+        return view.products.some((entry) => entry.id === item.productId);
+      if (["product_section", "display", "gallery"].includes(item.type)) return true;
+      return (
+        (item.type === "department" || item.type === "collection") &&
+        view.departments.some((entry) => entry.id === item.departmentId)
+      );
+    });
     return (
       <section
         id={space.id}
@@ -125,7 +135,7 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
           <h1 id={space.id + "-title"}>{copyText(space.title)}</h1>
           {space.subtitle ? <p>{copyText(space.subtitle)}</p> : null}
           {space.cta === "browse" ? (
-            <a className="button" href="#shop-collections">
+            <a className="button" href={collection ? `#${collection.id}` : "#shop-departments"}>
               Browse collection
             </a>
           ) : space.cta === "whatsapp" &&
@@ -202,7 +212,7 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
         <Link
           className="button button--outline"
           prefetch={false}
-          href={"/shops/" + view.shop.slug + "/departments/" + department.slug}
+          href={shopViewHref(view, { department: department.slug })}
         >
           Explore {department.name}
         </Link>
@@ -299,19 +309,15 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             )}
           </aside>
         ) : null}
-        <nav aria-label="Shop navigation" className="filter-chips">
+        <nav id="shop-departments" aria-label="Shop navigation" className="filter-chips">
           <Link prefetch={false} href="/">
             The mall
           </Link>
-          <Link prefetch={false} href={`/shops/${view.shop.slug}`}>
+          <Link prefetch={false} href={shopViewHref(view)}>
             Whole shop
           </Link>
           {view.departments.map((d) => (
-            <Link
-              prefetch={false}
-              key={d.id}
-              href={`/shops/${view.shop.slug}/departments/${d.slug}`}
-            >
+            <Link prefetch={false} key={d.id} href={shopViewHref(view, { department: d.slug })}>
               {d.name}
             </Link>
           ))}
@@ -335,7 +341,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           <EmptyState
             title="This item has moved or is unavailable."
             description="Explore the shop's current departments and products."
-            href={`/shops/${view.shop.slug}`}
+            href={shopViewHref(view)}
             action="Browse the whole shop"
           />
         ) : view.selectedProduct ? (
@@ -357,7 +363,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
               {view.paginated ? (
                 <Link
                   prefetch={false}
-                  href={`/shops/${view.shop.slug}/departments/${view.selectedDepartment.slug}`}
+                  href={shopViewHref(view, { department: view.selectedDepartment.slug })}
                 >
                   First page
                 </Link>
@@ -365,7 +371,10 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
               {view.nextCursor ? (
                 <Link
                   prefetch={false}
-                  href={`/shops/${view.shop.slug}/departments/${view.selectedDepartment.slug}?after=${view.nextCursor}`}
+                  href={shopViewHref(view, {
+                    department: view.selectedDepartment.slug,
+                    after: view.nextCursor,
+                  })}
                 >
                   Next products
                 </Link>
@@ -425,7 +434,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
                         <figcaption>
                           <Link
                             prefetch={false}
-                            href={`/shops/${view.shop.slug}/products/${product.slug}`}
+                            href={shopViewHref(view, { product: product.slug })}
                           >
                             {product.name}
                           </Link>
@@ -442,7 +451,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           })
         )}
         {!view.selectedProduct ? (
-          <section id="shop-collections" className="shop-content-section">
+          <section id="shop-contact" className="shop-content-section">
             <h2>Make a connection</h2>
             <Contacts view={view} />
           </section>

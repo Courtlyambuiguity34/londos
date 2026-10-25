@@ -6,7 +6,8 @@ import { requireShop, requireStepUp, type Actor } from "../security/authorizatio
 import { AccessError } from "../security/errors";
 import { audit } from "../security/audit";
 import { withinDeadline } from "../jobs/deadline";
-import { assemble } from "../public-shop";
+import { assemble, previewDestination } from "../public-shop";
+import type { ShopDestination } from "../../modules/shop-design/view-links";
 import { fingerprint, currentVersion } from "../lifecycle-common";
 import { catalogueGeneration } from "../catalogue-pagination";
 import { readDesign, validateReferences, state, insertRevision } from "../shop-design";
@@ -574,9 +575,16 @@ export async function cleanupAssistantRequests(db: PoolClient) {
   );
 }
 
-export async function readAssistantPreview(pool: Pool, actor: Actor, shopId: string, id: string) {
+export async function readAssistantPreview(
+  pool: Pool,
+  actor: Actor,
+  shopId: string,
+  id: string,
+  destination: ShopDestination = {},
+) {
   return transaction(pool, async (db) => {
     const shop = await lock(db, actor, shopId),
+      selected = previewDestination.parse(destination),
       row = await requestRow(db, actor, shopId, id);
     if (
       row.status !== "proposed" ||
@@ -596,8 +604,8 @@ export async function readAssistantPreview(pool: Pool, actor: Actor, shopId: str
     if (JSON.stringify(spec) !== JSON.stringify(shopSpecification.parse(row.candidate)))
       throw new AccessError(409, "ai_proposal_changed");
     await validateReferences(db, shopId, spec);
-    const view = await assemble(db, { ...shop, design: spec, revision: 0 }, true);
+    const view = await assemble(db, { ...shop, design: spec, revision: 0 }, true, selected);
     await access(db, actor, shopId);
-    return view;
+    return { ...view, previewNavigation: { kind: "proposal" as const, id } };
   });
 }

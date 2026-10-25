@@ -19,16 +19,23 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
     throw error;
   });
   return (
-    <ShopWorkspaceShell shop={shop} section="catalogue" title="Products & contacts" subtitle="Manage products, images and how customers contact you."><section className="portal-section account-page">
-      <p className="eyebrow">Private catalogue</p>
-      <h1>{shop.name}</h1>
-      <p>
-        Maintain your departments, products, images, contact settings and customer requests here.
-      </p>
-      <Link className="text-button" href={`/shopkeeper/shops/${shop.id}`}>
-        Shop profile
-      </Link>
-      <CatalogueWorkspace shopId={shop.id} />
-    </section></ShopWorkspaceShell>
+    <ShopWorkspaceShell
+      shop={shop}
+      section="catalogue"
+      title="Products & contacts"
+      subtitle="Manage products, images and how customers contact you."
+    >
+      <section className="portal-section account-page">
+        <p className="eyebrow">Private catalogue</p>
+        <h2>{shop.name}</h2>
+        <p>
+          Maintain your departments, products, images, contact settings and customer requests here.
+        </p>
+        <Link className="text-button" href={`/shopkeeper/shops/${shop.id}`}>
+          Shop profile
+        </Link>
+        <CatalogueWorkspace shopId={shop.id} />
+      </section>
+    </ShopWorkspaceShell>
   );
 }
