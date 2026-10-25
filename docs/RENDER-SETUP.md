@@ -93,6 +93,16 @@ default-off `LONDOS_MIGRATE_ON_START=true` fallback described in
 Disable it after the reviewed upgrade. The root `render.yaml` remains a
 fixture-preview blueprint, not a full merchant deployment.
 
+The clean-shop-address release requires **036_clean_legacy_shop_addresses.sql**. Apply it
+before serving the new version. If using the phone-only fallback, set the existing web
+environment setting `LONDOS_MIGRATE_ON_START=true` and redeploy this branch, with the same
+reviewed migration-capable database credential used for earlier upgrades. If it is already
+true, no new setting is needed. Check for `release.migration` with `result: passed`; then
+restore the usual least-privilege runtime configuration. The cleanup runs once, keeps old
+links as aliases and never steals a reserved name. A remaining name collision is shown in
+**Service configuration** and **Edit address**, rather than given a generated number.
+See [URL verification and operator instructions](evidence/SHOP-ADDRESSES-2026-10-25.md).
+
 | Setting                                       | Required value or action                                                                                                    |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                                | Reachable canonical PostgreSQL URL for the reviewed web role, with verified TLS/trust.                                      |

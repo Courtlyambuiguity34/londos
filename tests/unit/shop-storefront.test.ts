@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { shopAddressBase } from "../../src/server/shop-address";
+import { shopAddressInput, legacyShopAddress } from "../../src/modules/shop-address";
 import { storefrontStatus } from "../../src/modules/storefront-status";
 import { brevoMessage } from "../../src/server/jobs/brevo";
 
@@ -12,6 +13,29 @@ test("shop addresses use readable names and safe bounded fallbacks", () => {
     expect(slug.length).toBeGreaterThanOrEqual(3);
     expect(slug.length).toBeLessThanOrEqual(70);
   }
+});
+
+test("readable addresses reject generated ID tails but retain digits in real business names", () => {
+  const id = "68a40e06-65f8-4e07-a5d5-61c7ed87d799";
+  for (const value of [
+    id,
+    `nguzza-agricultural-suppliers-${id}`,
+    `shop-${id.replaceAll("-", "")}`,
+    "12345",
+    "../another-shop",
+  ])
+    expect(shopAddressInput.safeParse(value).success).toBe(false);
+  for (const value of [
+    "nguzza-agricultural-suppliers",
+    "nguzza-agricultural-suppliers-mbale",
+    "24-seven",
+    "studio-54",
+  ])
+    expect(shopAddressInput.safeParse(value).success).toBe(true);
+  expect(legacyShopAddress(`nguzza-agricultural-suppliers-${id}`, id)).toBe(
+    "nguzza-agricultural-suppliers",
+  );
+  expect(legacyShopAddress(`another-${id}`, "11111111-1111-4111-8111-111111111111")).toBeNull();
 });
 
 const live = {

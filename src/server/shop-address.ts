@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import { AccessError } from "./security/errors";
+import { shopAddressInput } from "../modules/shop-address";
 
 export function shopAddressBase(name: string) {
   const base = name
@@ -16,25 +17,14 @@ export function shopAddressBase(name: string) {
 
 // Called inside provisioning's transaction. Address history is the reservation
 // authority; a former address must never be allocated to a different shop.
-export async function availableShopAddress(client: PoolClient, name: string) {
-  const base = shopAddressBase(name);
-  // A global lock also covers overlapping bases (e.g. "bakery" and "bakery-2").
+export async function availableShopAddress(client: PoolClient, name: string, preferred?: string) {
+  const base = shopAddressInput.parse(preferred ?? shopAddressBase(name));
+  // A global lock covers both automatic names and explicitly selected addresses.
   // Manual address changes use the same lock after acquiring the merchant lock.
   await lockShopAddresses(client);
-  const reserved = new Set(
-    (
-      await client.query("SELECT slug FROM shop_addresses WHERE slug=$1 OR slug LIKE $2", [
-        base,
-        `${base}-%`,
-      ])
-    ).rows.map((row: { slug: string }) => row.slug),
-  );
-  if (!reserved.has(base)) return base;
-  for (let number = 2; number <= 10000; number++) {
-    const candidate = `${base}-${number}`;
-    if (!reserved.has(candidate)) return candidate;
-  }
-  throw new AccessError(409, "address_unavailable");
+  if ((await client.query("SELECT 1 FROM shop_addresses WHERE slug=$1", [base])).rowCount)
+    throw new AccessError(409, "address_unavailable");
+  return base;
 }
 
 export async function lockShopAddresses(client: PoolClient) {

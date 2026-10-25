@@ -19,6 +19,7 @@ export default defineConfig({
     {
       name: "core-desktop",
       testMatch: [
+        "shop-addresses.spec.ts",
         "catalogue-feedback.spec.ts",
         "invitation-entry.spec.ts",
         "team-workflow.spec.ts",

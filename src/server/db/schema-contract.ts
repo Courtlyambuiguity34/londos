@@ -1,3 +1,3 @@
 // Readiness must require the deployed code's migration, not just a row count.
-// Require all production rent fixes, not only the older account migration.
-export const requiredMigration = "035_production_rent_reversals.sql";
+// Include the legacy address cleanup and all earlier production rent fixes.
+export const requiredMigration = "036_clean_legacy_shop_addresses.sql";

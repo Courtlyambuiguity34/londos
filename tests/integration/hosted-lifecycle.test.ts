@@ -445,7 +445,7 @@ test("claims and partial payments do not provision; duplicate commands and produ
   expect((await readInvoice(pool, actors.ownerA!, other.id)).invoice.shop_id).toBeNull();
 });
 
-test("allocation serializes overlapping names and never consumes a former shop address", async () => {
+test("allocation rejects duplicate names without generated suffixes and never consumes a former address", async () => {
   const create = async (businessName: string) =>
     transaction(pool, async (db) => {
       const slug = await availableShopAddress(db, businessName),
@@ -460,14 +460,48 @@ test("allocation serializes overlapping names and never consumes a former shop a
       return slug;
     });
   expect(await create("Corner Shop")).toBe("corner-shop");
-  const slugs = await Promise.all([
+  const results = await Promise.allSettled([
     create("Corner Shop"),
-    create("Corner Shop-2"),
+    create("Corner Shop East"),
     create("Corner Shop"),
   ]);
-  expect(new Set(slugs).size).toBe(3);
-  expect(slugs.every((s) => /^corner-shop-(?:2(?:-2)?|3|4)$/.test(s))).toBe(true);
+  expect(results.filter((r) => r.status === "fulfilled")).toEqual([
+    { status: "fulfilled", value: "corner-shop-east" },
+  ]);
+  for (const result of results.filter((r) => r.status === "rejected"))
+    expect(result.reason).toMatchObject({ status: 409, code: "address_unavailable" });
+  await pool.query("UPDATE shops SET slug='corner-shop-west' WHERE slug='corner-shop'");
+  await expect(create("Corner Shop")).rejects.toMatchObject({ code: "address_unavailable" });
   await expect(shopStorefrontStatus(pool, randomUUID())).rejects.toMatchObject({ status: 404 });
+});
+
+test("duplicate business names require an explicit readable address without recording a failed settlement", async () => {
+  const first = await paid("Fresh Harvest Supplies");
+  const second = await approved("Fresh Harvest Supplies");
+  const command = credit(second);
+  await expect(reconcileInvoice(pool, actors.operator!, second.id, command)).rejects.toMatchObject({
+    status: 409,
+    code: "address_unavailable",
+  });
+  expect((await readInvoice(pool, actors.ownerA!, second.id)).invoice).toMatchObject({
+    credited_minor: "0",
+    shop_id: null,
+    version: second.version,
+  });
+  expect(
+    (await pool.query("SELECT 1 FROM rent_events WHERE invoice_id=$1", [second.id])).rowCount,
+  ).toBe(0);
+  const result = await reconcileInvoice(pool, actors.operator!, second.id, {
+    ...command,
+    shopAddress: "fresh-harvest-supplies-mbale",
+  });
+  expect((await requireShop(pool, actors.ownerA!, result.shopId!, "catalogue")).slug).toBe(
+    "fresh-harvest-supplies-mbale",
+  );
+  expect(first.shop.slug).toBe("fresh-harvest-supplies");
+  expect(
+    (await pool.query("SELECT id FROM shops WHERE slug='fresh-harvest-supplies-2'")).rowCount,
+  ).toBe(0);
 });
 
 test("hosted renewal notices carry current MTN and Airtel collection details into the email renderer", async () => {

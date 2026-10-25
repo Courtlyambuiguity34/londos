@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { TeamView } from "@/server/team";
 import type { OperationsView } from "@/server/administration";
+import { shopAddressInput } from "@/modules/shop-address";
 const permissions = ["catalogue", "design", "publish", "finance", "sensitive"];
 const labels: Record<string, string> = {
   catalogue: "Catalogue",
@@ -502,7 +503,13 @@ export function AcceptInvitationForm({ authenticated = true }: { authenticated?:
     </>
   );
 }
-export function AddressForm({ shop }: { shop: { id: string; slug: string; version: number } }) {
+export function AddressForm({
+  shop,
+  suggestedAddress,
+}: {
+  shop: { id: string; slug: string; version: number };
+  suggestedAddress?: string;
+}) {
   const [version, setVersion] = useState(shop.version),
     [message, setMessage] = useState(""),
     [pending, setPending] = useState(false);
@@ -510,11 +517,16 @@ export function AddressForm({ shop }: { shop: { id: string; slug: string; versio
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const fields = new FormData(event.currentTarget);
+    const address = shopAddressInput.safeParse(fields.get("slug"));
+    if (!address.success) {
+      setMessage("Use 3–80 lowercase letters, digits and hyphens, without a generated ID suffix.");
+      return;
+    }
     setPending(true);
     setMessage("");
     try {
       const data = await command(`/api/workspace/shops/${shop.id}/address`, {
-        slug: String(fields.get("slug")),
+        slug: address.data,
         reason: String(fields.get("reason")),
         confirm: fields.get("confirm") === "on",
         version,
@@ -537,7 +549,7 @@ export function AddressForm({ shop }: { shop: { id: string; slug: string; versio
         <input
           id="shop-address"
           name="slug"
-          defaultValue={shop.slug}
+          defaultValue={suggestedAddress ?? shop.slug}
           pattern="[a-z0-9]+(-[a-z0-9]+)*"
           minLength={3}
           maxLength={80}

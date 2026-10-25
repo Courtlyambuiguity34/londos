@@ -36,12 +36,24 @@ platform collection accounts independently, then verified by an authorised finan
 ## Clean shop addresses
 
 Newly provisioned and bootstrap shops use a readable name such as `/shops/annette-fashion-house`,
-without a UUID suffix. If that address was ever reserved, the allocator chooses the next
-readable suffix, such as `-2`. Two shops cannot own the same address. Creation and owner
+without a UUID or automatic numeric suffix. If that address was ever reserved, the request
+returns a conflict instead of adding `-2` or an ID. For a new initial invoice, the finance
+operator can enter an optional **Shop public address** before the final credit; a promo-code
+redemption has the same option. Choose meaningful words, such as the shop's location, while
+retaining the actual business name. A rejected conflicting settlement/redemption is rolled
+back and creates no credit or shop. Two shops cannot own the same address. Creation and owner
 address changes share a transaction lock; database uniqueness and immutable address history
 remain the final safeguards.
 
-Existing shop URLs are **not** rewritten automatically. Owners can open their shop overview,
+Migration **036** removes a legacy UUID tail only when it matches that shop's own ID and the
+shorter address is safe and unreserved. Old URLs stay in address history and permanently
+redirect to the latest canonical URL while the shop is public. No external link is discarded.
+If a clean address is already another shop's current or former address, the migration leaves
+that row unchanged; **Service configuration** displays a warning and the owner must choose
+a distinct readable name. No automatic numeric fallback is created. Genuine digits within
+a business name, such as `studio-54`, are retained.
+
+Owners can open their shop overview,
 choose **Edit address**, confirm fresh account security and choose an available address.
 Former addresses remain reserved and redirect to the new address only while that shop is
 publicly eligible. Renaming a profile does not silently rename its URL. Changing a URL does
@@ -113,8 +125,9 @@ verified callbacks/signatures, matching invoice/account/amount/currency, final s
 deduplication and independently tracked reversals. Browser claims, screenshots, emails or
 unverified callbacks must never create automatic credits.
 
-No new environment variable or schema migration is introduced by this audit correction.
-The branch's existing migration contract is **035_production_rent_reversals.sql**. Use the
+The URL correction adds **036_clean_legacy_shop_addresses.sql**; migrations 001–035 are
+unchanged. The current readiness contract requires 036. No new environment key is needed.
+Use the
 existing deployment/migration procedure. Keep PostgreSQL canonical, Redis optional, native
 MFA and role/tenant boundaries enabled. Do not turn on local adapters on Render as a workaround.
 

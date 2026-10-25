@@ -7,11 +7,34 @@ import type { readApplication } from "@/server/applications";
 import type { readInvoice, RentPolicy } from "@/server/rent";
 import { formatMinorMoney, formatSignedMinorMoney } from "@/modules/money";
 import { claimLabels, invoiceStatus } from "@/modules/rent-presentation";
+import { shopAddressInput } from "@/modules/shop-address";
 
 type ApplicationData = Awaited<ReturnType<typeof readApplication>>;
 type InvoiceData = Awaited<ReturnType<typeof readInvoice>>;
+function NewShopAddress({ id }: { id: string }) {
+  return (
+    <>
+      <label htmlFor={id}>Shop public address (optional)</label>
+      <input
+        id={id}
+        name="shopAddress"
+        minLength={3}
+        maxLength={80}
+        pattern="[a-z0-9]+(-[a-z0-9]+)*"
+        placeholder="your-shop-name"
+      />
+      <p>
+        Leave blank to use the business name. If it is taken, choose a distinct readable address,
+        such as your-shop-name-kampala. Londos does not add numbers or IDs. This applies when full
+        coverage creates the shop; it never renames an existing shop.
+      </p>
+    </>
+  );
+}
 function messageFor(code: string) {
   const messages: Record<string, string> = {
+    address_unavailable:
+      "That shop address is already reserved. Choose a different readable shop address, such as a name with its location. No credit or promotion was recorded for this failed request.",
     production_waiver_unavailable:
       "Hosted rent requires an independently verified payment. A development waiver cannot settle this invoice.",
     stale_version: "This record changed. Reload it before trying again.",
@@ -595,8 +618,15 @@ export function InvoicePanel({
               currency: "UGX",
               invoiceReference: String(f.get("invoiceReference")),
               reference: String(f.get("reference")),
+              ...(String(f.get("shopAddress") ?? "").trim()
+                ? { shopAddress: String(f.get("shopAddress")).trim() }
+                : {}),
             }),
       };
+      if ("shopAddress" in body && !shopAddressInput.safeParse(body.shopAddress).success)
+        throw new Error(
+          "Use a readable shop address with lowercase letters and hyphens, without an ID suffix.",
+        );
       await send(`${base}/${reverse ? "reverse" : "reconcile"}`, "POST", body);
       key.current = null;
       form.reset();
@@ -649,7 +679,15 @@ export function InvoicePanel({
     setPending(true);
     setMessage("");
     try {
-      await send(`${base}/promotion`, "POST", { code: String(f.get("code")) });
+      const shopAddress = String(f.get("shopAddress") ?? "").trim();
+      if (shopAddress && !shopAddressInput.safeParse(shopAddress).success)
+        throw new Error(
+          "Use a readable shop address with lowercase letters and hyphens, without an ID suffix.",
+        );
+      await send(`${base}/promotion`, "POST", {
+        code: String(f.get("code")),
+        ...(shopAddress ? { shopAddress } : {}),
+      });
       form.reset();
       await reload();
       setMessage("Promotion applied and recorded in the invoice ledger.");
@@ -829,6 +867,7 @@ export function InvoicePanel({
               pattern="[A-Za-z0-9][A-Za-z0-9_-]{3,31}"
               required
             />
+            {!i.shop_id ? <NewShopAddress id="promotion-shop-address" /> : null}
             <button className="button button--outline" disabled={pending}>
               Apply promo code
             </button>
@@ -880,6 +919,7 @@ export function InvoicePanel({
       {operator && remaining !== "0" ? (
         <form className="account-form" onSubmit={(e) => void submit(e)}>
           <h2>Record a verified credit</h2>
+          {!i.shop_id ? <NewShopAddress id="credit-shop-address" /> : null}
           <label htmlFor="credit-kind">Credit type</label>
           <select id="credit-kind" name="kind">
             <option value="payment">Verified manual payment</option>

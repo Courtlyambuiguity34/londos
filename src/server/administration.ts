@@ -11,16 +11,11 @@ import {
 } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { lockShopAddresses } from "./shop-address";
+import { shopAddressInput } from "../modules/shop-address";
 
 export const addressInput = z
   .object({
-    slug: z
-      .string()
-      .trim()
-      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
-      .min(3)
-      .max(80)
-      .refine((value) => !z.uuid().safeParse(value).success),
+    slug: shopAddressInput,
     version: z.number().int().positive(),
     reason: reasonInput,
     confirm: z.literal(true),

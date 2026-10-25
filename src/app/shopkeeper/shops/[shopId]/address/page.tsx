@@ -8,6 +8,7 @@ import { pageActor } from "@/server/page-actor";
 import { requireShop, requireMerchant } from "@/server/security/authorization";
 import { AccessError } from "@/server/security/errors";
 import { AddressForm } from "@/components/admin-controls";
+import { legacyShopAddress } from "@/modules/shop-address";
 export const metadata = { title: "Change your shop address" };
 export default async function Page({ params }: { params: Promise<{ shopId: string }> }) {
   if (!coreConfigured()) notFound();
@@ -42,7 +43,19 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           redirect to the current address while public access is eligible.
         </p>
         {fresh ? (
-          <AddressForm key={shop.id} shop={shop} />
+          <>
+            {legacyShopAddress(shop.slug, shop.id) ? (
+              <p role="note">
+                This shop still has an older ID-based address. Its clean address may already be
+                reserved. Choose an available readable name; former links will keep working.
+              </p>
+            ) : null}
+            <AddressForm
+              key={shop.id}
+              shop={shop}
+              suggestedAddress={legacyShopAddress(shop.slug, shop.id) ?? shop.slug}
+            />
+          </>
         ) : (
           <div role="status">
             <h2>Confirm your identity</h2>

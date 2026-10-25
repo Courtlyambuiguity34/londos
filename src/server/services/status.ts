@@ -111,10 +111,22 @@ export async function readServiceConfiguration(pool: Pool, actor: Actor) {
       "SELECT EXISTS(SELECT 1 FROM worker_heartbeats WHERE state='running' AND seen_at>now()-interval '30 seconds') AS ready",
     )
   ).rows[0].ready;
+  const legacyAddresses = (
+    await pool.query("SELECT count(*)::int AS count FROM shops WHERE right(slug,37)='-'||id::text")
+  ).rows[0].count as number;
   return {
     verification: "configuration only; no provider request made",
     services: [
       ...serviceConfigurationStatus(),
+      ...(legacyAddresses
+        ? [
+            {
+              name: "Shop addresses",
+              status: "warning" as const,
+              message: `${legacyAddresses} older shop address(es) still need a unique readable name. Owners can use Edit address; historical reservations must not be taken from another shop.`,
+            },
+          ]
+        : []),
       {
         name: "Background worker",
         status: worker ? "configured" : "warning",

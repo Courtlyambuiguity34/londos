@@ -33,6 +33,16 @@ test("release web entry upgrades pre-024 data before real bootstrap and preserve
       "Existing customer",
       "existing-startup@londos.invalid",
     ]);
+    const shop = randomUUID(),
+      merchant = randomUUID(),
+      mall = randomUUID();
+    const oldAddress = `startup-supplier-${shop}`;
+    await pool.query("INSERT INTO malls(id,name) VALUES($1,'Startup mall')", [mall]);
+    await pool.query("INSERT INTO merchants(id,name) VALUES($1,'Startup supplier')", [merchant]);
+    await pool.query(
+      "INSERT INTO shops(id,merchant_id,mall_id,name,slug) VALUES($1,$2,$3,'Startup supplier',$4)",
+      [shop, merchant, mall, oldAddress],
+    );
     await symlink(resolve("dist"), join(directory, "dist"), "junction");
     await symlink(resolve("migrations"), join(directory, "migrations"), "junction");
     await writeFile(join(directory, "server.js"), "console.log('WEB_REACHED');");
@@ -60,6 +70,23 @@ test("release web entry upgrades pre-024 data before real bootstrap and preserve
     expect(first.stdout).toContain('"event":"release.migration","result":"passed"');
     expect(first.stdout).toContain('"event":"bootstrap.complete","created":1');
     expect(first.stdout).toContain("WEB_REACHED");
+    expect(
+      (await pool.query("SELECT slug,version FROM shops WHERE id=$1", [shop])).rows[0],
+    ).toEqual({ slug: "startup-supplier", version: 2 });
+    expect(
+      (
+        await pool.query("SELECT 1 FROM shop_addresses WHERE slug=$1 AND shop_id=$2", [
+          oldAddress,
+          shop,
+        ])
+      ).rowCount,
+    ).toBe(1);
+    const cleanup = (
+      await pool.query(
+        "SELECT checksum,applied_at FROM schema_migrations WHERE name='036_clean_legacy_shop_addresses.sql'",
+      )
+    ).rows[0];
+    expect(cleanup).toBeDefined();
     const migration = (
       await pool.query("SELECT checksum,applied_at FROM schema_migrations WHERE name=$1", [
         "024_hosted_accounts_and_privacy.sql",
@@ -69,6 +96,16 @@ test("release web entry upgrades pre-024 data before real bootstrap and preserve
     const second = await run();
     expect(second.stdout).toContain('"created":0');
     expect(second.stdout).toContain("WEB_REACHED");
+    expect(
+      (await pool.query("SELECT slug,version FROM shops WHERE id=$1", [shop])).rows[0],
+    ).toEqual({ slug: "startup-supplier", version: 2 });
+    expect(
+      (
+        await pool.query(
+          "SELECT checksum,applied_at FROM schema_migrations WHERE name='036_clean_legacy_shop_addresses.sql'",
+        )
+      ).rows[0],
+    ).toEqual(cleanup);
     expect(
       (
         await pool.query("SELECT checksum,applied_at FROM schema_migrations WHERE name=$1", [

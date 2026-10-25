@@ -1,6 +1,7 @@
 import { coreConfig } from "./config";
 import { randomUUID } from "node:crypto";
 import { availableShopAddress } from "./shop-address";
+import { shopAddressInput } from "../modules/shop-address";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { transaction } from "./db/pool";
@@ -44,6 +45,7 @@ export const reconcileInput = z
       .toUpperCase()
       .regex(/^[A-Z0-9][A-Z0-9/-]{5,79}$/),
     reason: reasonInput,
+    shopAddress: shopAddressInput.optional(),
     confirm: z.literal(true),
   })
   .strict();
@@ -80,6 +82,7 @@ export const promotionRedemptionInput = z
       .trim()
       .toUpperCase()
       .regex(/^[A-Z0-9][A-Z0-9_-]{3,31}$/),
+    shopAddress: shopAddressInput.optional(),
   })
   .strict();
 export type RentPolicy = {
@@ -457,6 +460,7 @@ async function provision(
   policy: RentPolicy,
   start: Date,
   end: Date,
+  preferredAddress?: string,
 ) {
   const application = (
     await client.query("SELECT * FROM applications WHERE id=$1", [invoice.application_id])
@@ -465,7 +469,7 @@ async function provision(
   if (application.provisioned_shop_id) throw new AccessError(409, "already_provisioned");
   const id = randomUUID(),
     mall = await allocateMall(client, policy.mall_capacity);
-  const address = await availableShopAddress(client, application.business_name);
+  const address = await availableShopAddress(client, application.business_name, preferredAddress);
   await client.query(
     "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category) VALUES($1,$2,$3,$4,$5,$6)",
     [id, invoice.merchant_id, mall, application.business_name, address, application.category],
@@ -501,6 +505,7 @@ async function finalizeCoverage(
   actor: Actor,
   invoice: Invoice,
   effectiveNow: Date,
+  preferredAddress?: string,
 ) {
   if (invoice.finalized) return invoice.shop_id;
   const policy = (
@@ -520,7 +525,9 @@ async function finalizeCoverage(
     end,
   ]);
   const created = !invoice.shop_id;
-  const shopId = invoice.shop_id ?? (await provision(client, actor, invoice, policy, start, end));
+  const shopId =
+    invoice.shop_id ??
+    (await provision(client, actor, invoice, policy, start, end, preferredAddress));
   await client.query("UPDATE rent_invoice_state SET finalized=true WHERE invoice_id=$1", [
     invoice.id,
   ]);
@@ -734,7 +741,7 @@ export async function reconcileInvoice(
     );
     let shopId = invoice.shop_id;
     if (total === due && !invoice.finalized)
-      shopId = await finalizeCoverage(client, actor, invoice, effectiveNow);
+      shopId = await finalizeCoverage(client, actor, invoice, effectiveNow, v.shopAddress);
     await client.query("UPDATE rent_invoice_state SET version=version+1 WHERE invoice_id=$1", [id]);
     await client.query(
       "UPDATE payment_claims SET state='verified',version=version+1,reviewed_by=$2,reviewed_at=clock_timestamp(),review_reason=$3,updated_at=clock_timestamp() WHERE invoice_id=$1 AND reference=$4 AND state='pending'",
@@ -948,7 +955,7 @@ export async function applyPromotion(
     );
     let shopId = invoice.shop_id;
     if (amountMinor === remaining && !invoice.finalized)
-      shopId = await finalizeCoverage(client, actor, invoice, now);
+      shopId = await finalizeCoverage(client, actor, invoice, now, value.shopAddress);
     await client.query("UPDATE rent_invoice_state SET version=version+1 WHERE invoice_id=$1", [
       invoiceId,
     ]);
