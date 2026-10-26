@@ -1,5 +1,13 @@
 # Build status and next model setting
 
+**Render theme build packaging fix — 26 October 2026:** continuing from
+`fef5189`. The Docker context now includes the theme-registry generator required
+by `prebuild`, plus its formatting configuration. The
+[container verification](evidence/RENDER-THEME-BUILD-CONTEXT-2026-10-26.md)
+records the reproduced exclusion, passing context/private-canary regression,
+complete production Docker build and isolated fixture startup. No environment
+values, dependencies, migrations or application behaviour changed.
+
 **Deeper marketplace review and refinements — 26 October 2026:** continuing
 from `f2ff037` on the same hosted branch. The
 [official-source follow-up](DEEP-COMPETITIVE-REVIEW-2026-10-26.md) covers Amazon,

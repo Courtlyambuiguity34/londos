@@ -1,6 +1,7 @@
 **
 !package.json
 !package-lock.json
+!.prettierrc.json
 !tsconfig.json
 !next.config.ts
 !next-env.d.ts
@@ -11,6 +12,7 @@
 !scripts/
 scripts/**
 !scripts/build-worker.mjs
+!scripts/generate-shop-themes.mjs
 !scripts/package-standalone.mjs
 !scripts/local-env.ts
 !scripts/release-entry.mjs
