@@ -43,25 +43,52 @@ export function ProfileForm({
     }
   }
   return (
-    <form className="account-form" onSubmit={submit}>
-      <label htmlFor="shop-name">Shop name</label>
-      <input id="shop-name" name="name" defaultValue={shop.name} required maxLength={120} />
-      <label htmlFor="shop-category">Shop category</label>
-      <select id="shop-category" name="category" defaultValue={shop.category}>
-        {["fashion", "electronics", "beauty", "food", "home", "services", "other"].map(
-          (category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ),
-        )}
-      </select>
-      <label htmlFor="shop-tagline">Shop introduction</label>
-      <input id="shop-tagline" name="tagline" defaultValue={shop.tagline} maxLength={160} />
-      <button className="button" disabled={pending}>
-        {pending ? "Saving…" : "Save shop profile"}
-      </button>
-      <p role="status">{message}</p>
+    <form className="account-form workspace-profile-form" onSubmit={submit}>
+      <div className="workspace-field">
+        <label htmlFor="shop-name">Shop name</label>
+        <input id="shop-name" name="name" defaultValue={shop.name} required maxLength={120} />
+      </div>
+      <div className="workspace-field">
+        <label htmlFor="shop-category">Shop category</label>
+        <select id="shop-category" name="category" defaultValue={shop.category}>
+          {["fashion", "electronics", "beauty", "food", "home", "services", "other"].map(
+            (category) => (
+              <option key={category} value={category}>
+                {
+                  {
+                    fashion: "Fashion & style",
+                    electronics: "Electronics",
+                    beauty: "Beauty & care",
+                    food: "Food & drink",
+                    home: "Home & living",
+                    services: "Local services",
+                    other: "Other",
+                  }[category]
+                }
+              </option>
+            ),
+          )}
+        </select>
+      </div>
+      <div className="workspace-field workspace-field--wide">
+        <label htmlFor="shop-tagline">Shop introduction</label>
+        <input
+          id="shop-tagline"
+          name="tagline"
+          defaultValue={shop.tagline}
+          maxLength={160}
+          aria-describedby="shop-tagline-help"
+        />
+        <small id="shop-tagline-help">
+          A short introduction customers will see on your storefront.
+        </small>
+      </div>
+      <div className="workspace-form-footer">
+        <button className="button" disabled={pending}>
+          {pending ? "Saving…" : "Save shop profile"}
+        </button>
+        <p role="status">{message}</p>
+      </div>
     </form>
   );
 }

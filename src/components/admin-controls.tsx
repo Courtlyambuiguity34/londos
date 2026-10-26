@@ -57,6 +57,28 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
     [needsReload, setNeedsReload] = useState(false);
   const router = useRouter(),
     path = `/api/workspace/merchants/${team.merchant.id}/team`;
+  const guidance = {
+    invite: [
+      "Invite someone. Share the work.",
+      "Start with an email and a role. Choose only the permissions this person needs.",
+    ],
+    membership: [
+      "The right role for each person.",
+      "Update a business membership. Staff also need permission to work on an individual shop.",
+    ],
+    staff_shop: [
+      "Choose where your teammate works.",
+      "Assign one shop and the permissions they need there. These must also be allowed by their business membership.",
+    ],
+    revoke_invitation: [
+      "Close a pending invitation.",
+      "Choose an invitation to revoke. Its private link will no longer allow someone to join.",
+    ],
+    transfer: [
+      "Hand over ownership with care.",
+      "This changes who controls the business. Review the recipient and the warning below before confirming.",
+    ],
+  }[action] ?? ["Manage team access", "Review this change before confirming."];
   async function reload() {
     const pages = new URLSearchParams({
       membersPage: String(team.pagination.members.page),
@@ -157,175 +179,241 @@ export function TeamPanel({ initial }: { initial: TeamView }) {
     );
   }
   return (
-    <>
-      <h2>Team members</h2>
-      <ul className="workspace-list">
-        {team.members.map((member) => (
-          <li key={member.user_id}>
-            <strong>{member.name}</strong>
-            <span>
-              {member.email} · {member.role} · {member.status}
-            </span>
-            <span>
-              {member.role === "owner"
-                ? "All merchant permissions"
-                : member.permissions.map((p) => labels[p]).join(", ") || "No merchant permissions"}
-            </span>
-            <span>
-              {team.grants
-                .filter((g) => g.user_id === member.user_id)
-                .map(
-                  (g) =>
-                    `${team.shops.find((s) => s.id === g.shop_id)?.name}: ${g.permissions.map((p) => labels[p]).join(", ") || "No shop permissions"}`,
-                )
-                .join("; ")}
-            </span>
-          </li>
-        ))}
-      </ul>
-      {pageControls("members", "Members")}
-      <h2>Pending invitations</h2>
-      {team.invitations.length ? (
-        <ul className="workspace-list">
-          {team.invitations.map((i) => (
-            <li key={i.id}>
-              <strong>{i.email}</strong>
-              <span>
-                {i.role} · expires{" "}
-                {new Date(i.expires_at).toLocaleDateString("en-UG", { timeZone: "Africa/Kampala" })}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No unexpired invitations on this page.</p>
-      )}
-      {pageControls("invitations", "Invitations")}
-      <h2>Manage access</h2>
-      <p>
-        Staff need both merchant permissions and permissions for each shop. Ownership transfer makes
-        you restricted staff and ends your owner access. Every change requires recent
-        authentication.
-      </p>
-      {pageControls("shops", "Shops")}
-      <form className="account-form" onSubmit={submit}>
-        <label htmlFor="team-action">Team action</label>
-        <select id="team-action" value={action} onChange={(e) => setAction(e.target.value)}>
-          <option value="invite">Invite a member</option>
-          <option value="membership">Change a membership</option>
-          <option value="staff_shop">Set staff shop permissions</option>
-          <option value="revoke_invitation">Revoke an invitation</option>
-          <option value="transfer">Transfer my ownership</option>
-        </select>
-        {action === "invite" ? (
-          <>
-            <label htmlFor="invite-email">Invitee email</label>
-            <input id="invite-email" name="email" type="email" maxLength={254} required />
-          </>
-        ) : null}
-        {["membership", "staff_shop", "transfer"].includes(action) ? (
-          <>
-            <label htmlFor="member-id">Team member</label>
-            <select id="member-id" name="userId" required defaultValue="">
-              <option value="" disabled>
-                Choose a team member
-              </option>
-              {team.members.map((m) => (
-                <option key={m.user_id} value={m.user_id}>
-                  {m.email} · {m.role} · {m.status}
-                </option>
-              ))}
-            </select>
-          </>
-        ) : null}
-        {["invite", "membership"].includes(action) ? (
-          <>
-            <label htmlFor="member-role">Membership role</label>
-            <select id="member-role" name="role" defaultValue="staff">
-              <option value="staff">Staff</option>
-              <option value="owner">Owner</option>
-            </select>
-          </>
-        ) : null}
-        {action === "membership" ? (
-          <>
-            <label htmlFor="member-status">Membership status</label>
-            <select id="member-status" name="status">
-              <option value="active">Active</option>
-              <option value="revoked">Revoked</option>
-            </select>
-          </>
-        ) : null}
-        {action === "staff_shop" ? (
-          <>
-            <label htmlFor="staff-shop">Staff shop</label>
-            <select id="staff-shop" name="shopId" required defaultValue="">
-              <option value="" disabled>
-                Choose a shop
-              </option>
-              {team.shops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </>
-        ) : null}
-        {["invite", "membership", "staff_shop"].includes(action) ? (
-          <fieldset>
-            <legend>Permissions</legend>
-            {permissions.map((p) => (
-              <label className="checkbox-label" key={p}>
-                <input type="checkbox" name="permissions" value={p} />
-                {labels[p]}
-              </label>
-            ))}
-          </fieldset>
-        ) : null}
-        {action === "revoke_invitation" ? (
-          <>
-            <label htmlFor="pending-invitation">Pending invitation</label>
-            <select id="pending-invitation" name="invitationId" required defaultValue="">
-              <option value="" disabled>
-                Choose an invitation
-              </option>
-              {team.invitations.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.email}
-                </option>
-              ))}
-            </select>
-          </>
-        ) : null}
-        <label className="checkbox-label">
-          <input type="checkbox" name="confirm" required />I reviewed the selected access change and
-          confirm it
-        </label>
-        <button className="button" disabled={pending || needsReload}>
-          {pending ? "Saving…" : "Save team change"}
-        </button>
-      </form>
-      <button
-        className="button button--outline"
-        disabled={pending}
-        onClick={() => {
-          setPending(true);
-          void reload()
-            .then(() => setMessage("Current team reloaded."))
-            .catch((e) => setMessage(e.message))
-            .finally(() => setPending(false));
-        }}
+    <div className="team-layout">
+      <section
+        className="workspace-panel team-editor"
+        id="invite"
+        aria-labelledby="team-editor-heading"
       >
-        Reload team
-      </button>
-      <p role="status">{message}</p>
-      <p>
-        <Link href="/shopkeeper">Return to your shops</Link>
-      </p>
-      <AccessLinks />
-    </>
+        <span className="workspace-eyebrow">Work better together</span>
+        <h2 id="team-editor-heading">{guidance[0]}</h2>
+        <p>{guidance[1]}</p>
+        <form className="account-form team-access-form" onSubmit={submit}>
+          <div className="workspace-field">
+            <label htmlFor="team-action">Team action</label>
+            <select id="team-action" value={action} onChange={(e) => setAction(e.target.value)}>
+              <option value="invite">Invite a member</option>
+              <option value="membership">Change a membership</option>
+              <option value="staff_shop">Set staff shop permissions</option>
+              <option value="revoke_invitation">Revoke an invitation</option>
+              <option value="transfer">Transfer my ownership</option>
+            </select>
+          </div>
+          {action === "invite" ? (
+            <>
+              <div className="workspace-field">
+                <label htmlFor="invite-email">Invitee email</label>
+                <input
+                  id="invite-email"
+                  name="email"
+                  type="email"
+                  maxLength={254}
+                  autoComplete="email"
+                  placeholder="teammate@example.com"
+                  required
+                />
+                <small>
+                  We will email a private link to this address. It expires after 48 hours.
+                </small>
+              </div>
+            </>
+          ) : null}
+          {["membership", "staff_shop", "transfer"].includes(action) ? (
+            <>
+              <label htmlFor="member-id">Team member</label>
+              <select id="member-id" name="userId" required defaultValue="">
+                <option value="" disabled>
+                  Choose a team member
+                </option>
+                {team.members.map((m) => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.email} · {m.role} · {m.status}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+          {["invite", "membership"].includes(action) ? (
+            <>
+              <label htmlFor="member-role">Membership role</label>
+              <select id="member-role" name="role" defaultValue="staff">
+                <option value="staff">Staff</option>
+                <option value="owner">Owner</option>
+              </select>
+              <small className="workspace-field-hint">
+                Staff use the permissions you select. Owners control the whole business, including
+                team access.
+              </small>
+            </>
+          ) : null}
+          {action === "membership" ? (
+            <>
+              <label htmlFor="member-status">Membership status</label>
+              <select id="member-status" name="status">
+                <option value="active">Active</option>
+                <option value="revoked">Revoked</option>
+              </select>
+            </>
+          ) : null}
+          {action === "staff_shop" ? (
+            <>
+              <label htmlFor="staff-shop">Staff shop</label>
+              <select id="staff-shop" name="shopId" required defaultValue="">
+                <option value="" disabled>
+                  Choose a shop
+                </option>
+                {team.shops.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+          {["invite", "membership", "staff_shop"].includes(action) ? (
+            <fieldset className="team-permissions">
+              <legend>Permissions</legend>
+              {permissions.map((p) => (
+                <label className="checkbox-label" key={p}>
+                  <input type="checkbox" name="permissions" value={p} aria-label={labels[p]} />
+                  <span>
+                    {labels[p]}
+                    <small>
+                      {
+                        (
+                          {
+                            catalogue: "Products, departments and images",
+                            design: "Storefront themes and layout",
+                            publish: "Publish reviewed changes",
+                            finance: "Invoices and rent records",
+                            sensitive: "Contact details and protected settings",
+                          } as Record<string, string>
+                        )[p]
+                      }
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+          ) : null}
+          {action === "revoke_invitation" ? (
+            <>
+              <label htmlFor="pending-invitation">Pending invitation</label>
+              <select id="pending-invitation" name="invitationId" required defaultValue="">
+                <option value="" disabled>
+                  Choose an invitation
+                </option>
+                {team.invitations.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.email}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+          {action === "transfer" ? (
+            <p className="workspace-access-warning">
+              Transferring ownership removes your owner access. Confirm the recipient carefully
+              before continuing.
+            </p>
+          ) : null}
+          {action === "invite" || action === "staff_shop" ? (
+            <p className="workspace-field-hint">
+              Staff need both business permissions and access to an individual shop. After an
+              invitation is accepted, choose “Set staff shop permissions” to assign their shops.
+            </p>
+          ) : null}
+          <label className="checkbox-label workspace-confirmation">
+            <input type="checkbox" name="confirm" required />I reviewed the selected access change
+            and confirm it
+          </label>
+          <button className="button" disabled={pending || needsReload}>
+            {pending ? "Saving…" : "Save team change"}
+          </button>
+        </form>
+        <button
+          className="button button--outline"
+          disabled={pending}
+          onClick={() => {
+            setPending(true);
+            void reload()
+              .then(() => setMessage("Current team reloaded."))
+              .catch((e) => setMessage(e.message))
+              .finally(() => setPending(false));
+          }}
+        >
+          Reload team
+        </button>
+        <p role="status" className="workspace-feedback">
+          {message}
+        </p>
+        {pageControls("shops", "Shops")}
+        <AccessLinks />
+      </section>
+      <div className="team-roster">
+        <section className="workspace-panel" aria-label="Your team and invitations">
+          <h2>Team members</h2>
+          <ul className="workspace-list">
+            {team.members.map((member) => (
+              <li key={member.user_id}>
+                <strong>{member.name}</strong>
+                <span>
+                  {member.email} · {member.role} · {member.status}
+                </span>
+                <span>
+                  {member.role === "owner"
+                    ? "All merchant permissions"
+                    : member.permissions.map((p) => labels[p]).join(", ") ||
+                      "No merchant permissions"}
+                </span>
+                <span>
+                  {team.grants
+                    .filter((g) => g.user_id === member.user_id)
+                    .map(
+                      (g) =>
+                        `${team.shops.find((s) => s.id === g.shop_id)?.name}: ${g.permissions.map((p) => labels[p]).join(", ") || "No shop permissions"}`,
+                    )
+                    .join("; ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {pageControls("members", "Members")}
+          <h2>Pending invitations</h2>
+          {team.invitations.length ? (
+            <ul className="workspace-list">
+              {team.invitations.map((i) => (
+                <li key={i.id}>
+                  <strong>{i.email}</strong>
+                  <span>
+                    {i.role} · expires{" "}
+                    {new Date(i.expires_at).toLocaleDateString("en-UG", {
+                      timeZone: "Africa/Kampala",
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No unexpired invitations on this page.</p>
+          )}
+          {pageControls("invitations", "Invitations")}
+        </section>
+        <div className="workspace-team-guide">
+          <h3>A simple way to get started</h3>
+          <ol>
+            <li>Send an invitation to your teammate’s email.</li>
+            <li>They sign in with that email and accept.</li>
+            <li>Assign staff to the shops they will work on.</li>
+          </ol>
+          <p>Owners have full business access. Changes require recent authentication.</p>
+          <Link href="/shopkeeper">Return to your shops</Link>
+        </div>
+      </div>
+    </div>
   );
 }
+
 const invitationStorageKey = "londos.pending-invitation.v1";
 const invitationRetentionMs = 60 * 60 * 1000;
 const invitationTokenPattern = /^[A-Za-z0-9_-]{32,128}$/;
@@ -341,7 +429,6 @@ export function AcceptInvitationForm({ authenticated = true }: { authenticated?:
     [pending, setPending] = useState(false),
     [token, setToken] = useState(""),
     [ready, setReady] = useState(false);
-  const router = useRouter();
   useEffect(() => {
     let active = true;
     const consumeInvitation = () => {
@@ -429,7 +516,9 @@ export function AcceptInvitationForm({ authenticated = true }: { authenticated?:
       setToken("");
       form.reset();
       setMessage("Invitation accepted. Your granted shops are available in Shopkeeper.");
-      router.refresh();
+      // The current invitation page already shows the confirmed result. A refresh
+      // can race a second email's fragment and restore it after consumption.
+      // Workspace links load fresh server-authorised membership on navigation.
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "The invitation could not be confirmed.");
     } finally {

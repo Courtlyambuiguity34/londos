@@ -41,7 +41,7 @@ export default async function Page({
       subtitle="Manage team membership and permissions for each shop."
       currentPath="/shopkeeper/team"
     >
-      <section className="portal-section account-page">
+      <section className="portal-section account-page workspace-team-page">
         {view ? (
           <TeamPanel
             key={`${id.data}:${JSON.stringify(view.pagination)}:${view.merchant.version}`}

@@ -52,7 +52,7 @@ export function WorkspaceCommandPalette({ items }: { items: CommandItem[] }) {
         onClick={show}
         aria-label="Search workspace"
       >
-        Search <kbd>⌘K</kbd>
+        Find a tool <kbd>Ctrl / ⌘ K</kbd>
       </button>
       <dialog
         ref={dialog}
@@ -102,7 +102,7 @@ export function WorkspaceCommandPalette({ items }: { items: CommandItem[] }) {
               <li key={x.href}>
                 <button type="button" onClick={() => go(x.href)}>
                   <strong>{x.label}</strong>
-                  <span>{x.href}</span>
+                  <span>{x.keywords ?? "Open workspace page"}</span>
                 </button>
               </li>
             ))}

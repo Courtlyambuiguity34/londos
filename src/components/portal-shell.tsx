@@ -1,8 +1,11 @@
+import { Icon } from "@/components/icon";
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { WorkspaceCommandPalette } from "@/components/workspace-command-palette";
 import { PortalNavigation } from "./portal-navigation";
+import { PortalIcon } from "./portal-icon";
+import { activePortalHref } from "@/modules/portal-navigation";
 
 export type PortalLink = { href: string; label: string; description?: string; group?: string };
 export function PortalShell({
@@ -14,6 +17,7 @@ export function PortalShell({
   currentPath,
   banner,
   contextName,
+  actions,
 }: {
   kind: "shopkeeper" | "landlord";
   title: string;
@@ -23,6 +27,7 @@ export function PortalShell({
   currentPath?: string;
   banner?: ReactNode;
   contextName?: string;
+  actions?: ReactNode;
 }) {
   const homeHref = kind === "landlord" ? "/landlord" : "/shopkeeper";
   const safeLinks = links.filter((item) =>
@@ -30,6 +35,11 @@ export function PortalShell({
       ? !(item.href === "/landlord" || item.href.startsWith("/landlord/"))
       : !(item.href === "/shopkeeper" || item.href.startsWith("/shopkeeper/")),
   );
+  const destination = activePortalHref(
+    currentPath ?? homeHref,
+    safeLinks.map((link) => link.href),
+  );
+  const currentLabel = safeLinks.find((link) => link.href === destination)?.label;
   return (
     <div className={`portal-shell portal-shell--${kind}`}>
       <aside
@@ -47,7 +57,7 @@ export function PortalShell({
         </Link>
         <div className="portal-sidebar-context">
           <span className="portal-context-icon" aria-hidden="true">
-            {kind === "landlord" ? "▦" : "▣"}
+            <PortalIcon href={homeHref} />
           </span>
           <div>
             <strong>
@@ -78,7 +88,12 @@ export function PortalShell({
             </strong>
           </div>
           <div className="portal-topbar-controls">
-            <WorkspaceCommandPalette items={[{ href: homeHref, label: "Home" }, ...safeLinks]} />
+            <WorkspaceCommandPalette
+              items={[
+                { href: homeHref, label: "Home" },
+                ...safeLinks.map((item) => ({ ...item, keywords: item.description ?? "" })),
+              ]}
+            />
             <nav className="portal-topbar-actions" aria-label="Quick links">
               <Link href="/" className="portal-topbar-mall">
                 Visit mall
@@ -89,12 +104,19 @@ export function PortalShell({
                 aria-label="Account and security"
                 title="Account and security"
               >
-                Account <span aria-hidden="true">↗</span>
+                Account <Icon name="arrow" />
               </Link>
             </nav>
           </div>
         </header>
         <div className="portal-content">
+          <nav className="workspace-breadcrumb" aria-label="Workspace location">
+            <Link href={homeHref}>{kind === "landlord" ? "Management" : "Your business"}</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">
+              {currentLabel ?? (currentPath === homeHref ? "Overview" : title)}
+            </span>
+          </nav>
           <div className="portal-heading">
             <div>
               <p className="portal-kicker">
@@ -103,6 +125,7 @@ export function PortalShell({
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
+            {actions ? <div className="workspace-heading-actions">{actions}</div> : null}
           </div>
           {banner ? <div className="portal-banner">{banner}</div> : null}
           {children}

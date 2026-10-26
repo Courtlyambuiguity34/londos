@@ -29,7 +29,16 @@ export function PortalNavigation({
   );
   const shortcuts = items.filter((item) => item.href !== "/security").slice(0, 3);
   return (
-    <div className="portal-navigation" data-expanded={open}>
+    <div
+      className="portal-navigation"
+      data-expanded={open}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          setOpen(false);
+          toggle.current?.focus();
+        }
+      }}
+    >
       <button
         className="portal-menu-toggle"
         ref={toggle}

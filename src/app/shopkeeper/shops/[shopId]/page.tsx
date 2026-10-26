@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { WorkspaceTaskLink } from "@/components/workspace-cards";
 import { ProfileForm } from "@/components/profile-form";
 import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
 import { ShopPublicLink } from "@/components/shop-public-link";
@@ -75,7 +76,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           <progress value={completed} max={steps.length} aria-label="Shop setup progress" />
           <ol className="setup-checklist">
             {steps.map((step) => (
-              <li key={step.label}>
+              <li key={step.label} data-complete={step.done}>
                 <span>{step.done ? "Complete" : "To do"}</span>
                 <Link href={step.href}>{step.label}</Link>
               </li>
@@ -101,27 +102,37 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           </div>
         </div>
         <div className="portal-quick-grid">
-          <Link href={`${base}/catalogue`}>
-            <strong>Products & contacts</strong>
-            <span>Departments, items, images and customer contact details →</span>
-          </Link>
+          <WorkspaceTaskLink href={`${base}/catalogue`} title="Products & contacts">
+            Build your catalogue, organise departments and connect with customers.
+          </WorkspaceTaskLink>
           {canDesign ? (
-            <Link href={`${base}/design`}>
-              <strong>Design & publish</strong>
-              <span>Arrange your storefront, preview and go live →</span>
-            </Link>
+            <WorkspaceTaskLink href={`${base}/design`} title="Design & publish">
+              Choose a theme, make it yours and preview before publishing.
+            </WorkspaceTaskLink>
           ) : null}
           {canFinance ? (
-            <Link href={`${base}/rent`}>
-              <strong>Rent & invoices</strong>
-              <span>Coverage, payment references and renewals →</span>
-            </Link>
+            <WorkspaceTaskLink href={`${base}/rent`} title="Rent & invoices">
+              Review coverage, payment references and renewals.
+            </WorkspaceTaskLink>
+          ) : null}
+          {setup.role === "owner" ? (
+            <WorkspaceTaskLink
+              href={`/shopkeeper/merchants/${shop.merchant_id}/team#invite`}
+              title="Invite a teammate"
+            >
+              Work together with clear roles and access to the right shops.
+            </WorkspaceTaskLink>
           ) : null}
         </div>
       </section>
-      <section className="portal-section workspace-panel" aria-labelledby="profile-heading">
-        <h2 id="profile-heading">Shop profile</h2>
-        <p>Your name and introduction appear on your published storefront.</p>
+      <section
+        className="portal-section workspace-panel workspace-profile"
+        aria-labelledby="profile-heading"
+      >
+        <div>
+          <h2 id="profile-heading">Shop profile</h2>
+          <p>Your name and introduction appear on your published storefront.</p>
+        </div>
         <ProfileForm key={shop.id} shop={shop} />
       </section>
       {setup.role === "owner" ? (

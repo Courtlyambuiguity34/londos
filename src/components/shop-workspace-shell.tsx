@@ -5,7 +5,9 @@ import { coreConfig } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { effectiveShopPermissions, shopStorefrontStatus } from "@/server/workspace";
-type ShopRef = { id: string; name: string; slug: string; role?: string };
+import { merchantAccountLinks } from "@/modules/workspace-links";
+import Link from "next/link";
+type ShopRef = { id: string; name: string; slug: string; role?: string; merchant_id?: string };
 export async function ShopWorkspaceShell({
   shop,
   section,
@@ -46,9 +48,7 @@ export async function ShopWorkspaceShell({
     ...(permissions.includes("finance")
       ? [{ href: `${base}/rent`, label: "Rent & invoices", group: "Subscription" }]
       : []),
-    { href: "/shopkeeper/applications", label: "Applications", group: "Business account" },
-    { href: "/shopkeeper/team", label: "Team & access" },
-    { href: "/security", label: "Account security" },
+    ...merchantAccountLinks,
   ];
   return (
     <PortalShell
@@ -58,6 +58,20 @@ export async function ShopWorkspaceShell({
       subtitle={subtitle}
       links={links}
       currentPath={path}
+      actions={
+        permissions.includes("membership") ? (
+          <Link
+            className="button button--outline"
+            href={
+              shop.merchant_id
+                ? `/shopkeeper/merchants/${shop.merchant_id}/team#invite`
+                : "/shopkeeper/team"
+            }
+          >
+            Invite a teammate <span aria-hidden="true">+</span>
+          </Link>
+        ) : undefined
+      }
       banner={
         banner ?? (
           <div className="portal-next-step portal-next-step--compact">

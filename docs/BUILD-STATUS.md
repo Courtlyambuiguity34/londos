@@ -1,5 +1,13 @@
 # Build status and next model setting
 
+**Private workspace experience — 26 October 2026:** continuing from `cf2bae2`
+on the hosted branch. The [workspace review](evidence/WORKSPACE-EXPERIENCE-2026-10-26.md)
+records the merchant/landlord visual refresh, explicit owner invitation shortcuts,
+received-invitation navigation, compact profile and team controls, mobile menu
+fix and invitation replay fix. It includes the changed-file summary, local
+verification and desktop/phone screenshots. No new configuration or migration
+is required.
+
 **Render theme build packaging fix — 26 October 2026:** continuing from
 `fef5189`. The Docker context now includes the theme-registry generator required
 by `prebuild`, plus its formatting configuration. The

@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icon";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -8,6 +9,8 @@ import { coreConfigured, coreConfig } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { listShops } from "@/server/workspace";
+import { merchantAccountLinks } from "@/modules/workspace-links";
+import { WorkspaceWelcome, WorkspaceTaskLink } from "@/components/workspace-cards";
 import { SignOutButton } from "@/components/auth-controls";
 export const metadata: Metadata = { title: "Shopkeeper dashboard" };
 export default async function ShopkeeperPage() {
@@ -21,11 +24,8 @@ export default async function ShopkeeperPage() {
   ]);
   if (operatorAccess.rowCount && !merchantAccess.rowCount) redirect("/landlord");
   const shops = await listShops(database(), actor);
-  const links = [
-    { href: "/shopkeeper/applications", label: "Applications", group: "Business account" },
-    { href: "/shopkeeper/team", label: "Team & access" },
-    { href: "/shopkeeper/invitations", label: "Invitations" },
-  ];
+  const links = merchantAccountLinks;
+  const ownsBusiness = shops.some((shop) => shop.role === "owner");
   return (
     <PortalShell
       kind="shopkeeper"
@@ -33,12 +33,35 @@ export default async function ShopkeeperPage() {
       subtitle="Everything for your business, in one place. Choose a shop to get started."
       links={links}
       currentPath="/shopkeeper"
+      actions={
+        <Link
+          className="button button--outline"
+          href={ownsBusiness ? "/shopkeeper/team" : "/shopkeeper/applications/new"}
+        >
+          {ownsBusiness ? "Invite a teammate +" : "Open a shop +"}
+        </Link>
+      }
     >
       {coreConfig().localAdapters ? (
         <p className="portal-notice">
           Local development mode uses fictional businesses. Live rent collection is disabled.
         </p>
       ) : null}
+      <WorkspaceWelcome
+        eyebrow="Built around your business"
+        title="Your next chapter starts here."
+        action={
+          <Link
+            className="button"
+            href={shops.length ? "#shop-heading" : "/shopkeeper/applications/new"}
+          >
+            {shops.length ? "Choose your shop" : "Start your application"} <Icon name="arrow" />
+          </Link>
+        }
+      >
+        Create a storefront you are proud to share. Keep your products, people and everyday tasks
+        together.
+      </WorkspaceWelcome>
       <section className="portal-stat-grid" aria-label="Your shop summary">
         <div className="portal-stat">
           <span>Shops you manage</span>
@@ -143,18 +166,18 @@ export default async function ShopkeeperPage() {
           </div>
         </div>
         <div className="portal-quick-grid">
-          <Link href="/shopkeeper/applications">
-            <strong>Applications & payments</strong>
-            <span>Track approval, invoices and shop allocation →</span>
-          </Link>
-          <Link href="/shopkeeper/team">
-            <strong>Team & invitations</strong>
-            <span>Manage people and permissions →</span>
-          </Link>
-          <Link href="/security">
-            <strong>Account security</strong>
-            <span>Password, verification and authenticator →</span>
-          </Link>
+          <WorkspaceTaskLink href="/shopkeeper/applications" title="Applications & payments">
+            Follow your application, invoice and shop allocation.
+          </WorkspaceTaskLink>
+          <WorkspaceTaskLink href="/shopkeeper/team" title="Team & invitations">
+            Invite teammates and give each person the access they need.
+          </WorkspaceTaskLink>
+          <WorkspaceTaskLink href="/shopkeeper/invitations" title="Received invitations">
+            Joining another business? Accept its private invitation here.
+          </WorkspaceTaskLink>
+          <WorkspaceTaskLink href="/security" title="Account security">
+            Look after your password, verification and authenticator.
+          </WorkspaceTaskLink>
         </div>
       </section>
       {shops.length ? (

@@ -3,6 +3,7 @@ import { PortalShell, type PortalLink } from "@/components/portal-shell";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
 import { coreConfig } from "@/server/config";
+import { merchantAccountLinks } from "@/modules/workspace-links";
 
 export async function AccountWorkspaceShell({
   kind,
@@ -21,12 +22,7 @@ export async function AccountWorkspaceShell({
   banner?: ReactNode;
   extraLinks?: PortalLink[];
 }) {
-  let links: PortalLink[] = [
-    { href: "/shopkeeper/applications", label: "Applications", group: "Business account" },
-    { href: "/shopkeeper/team", label: "Team & access" },
-    { href: "/shopkeeper/invitations", label: "Invitations" },
-    { href: "/security", label: "Account security" },
-  ];
+  let links: PortalLink[] = merchantAccountLinks;
   if (kind === "landlord") {
     const actor = await pageActor("/landlord");
     const grants = (

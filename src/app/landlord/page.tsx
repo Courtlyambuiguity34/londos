@@ -1,7 +1,10 @@
+import { Icon } from "@/components/icon";
 import { operatorQueueCounts } from "@/server/operator-queue-counts";
 import type { Metadata } from "next";
 import { WorkspaceGateway } from "@/components/workspace-gateway";
 import Link from "next/link";
+import { WorkspaceWelcome, WorkspaceTaskLink } from "@/components/workspace-cards";
+import { PortalIcon } from "@/components/portal-icon";
 import { PortalShell } from "@/components/portal-shell";
 import { coreConfigured, coreConfig } from "@/server/config";
 import { database } from "@/server/db/pool";
@@ -150,7 +153,7 @@ export default async function LandlordPage() {
           href: "/landlord/demo-accounts",
           label: "Demonstration accounts",
           description: "Manage development accounts",
-          allowed: can("operations"),
+          allowed: coreConfig().localAdapters && can("operations"),
         },
         {
           href: "/security",
@@ -225,6 +228,9 @@ export default async function LandlordPage() {
             <div className="portal-today__grid">
               {today.map((item) => (
                 <Link key={item.href} href={item.href} className="portal-today__card">
+                  <span className="workspace-queue-icon" aria-hidden="true">
+                    <PortalIcon href={item.href} />
+                  </span>
                   <strong>
                     {item.label}
                     {item.count !== null ? (
@@ -239,6 +245,23 @@ export default async function LandlordPage() {
         ) : null
       }
     >
+      <WorkspaceWelcome
+        eyebrow="The bigger picture"
+        title="A good mall starts with great care."
+        action={
+          can("operations") ? (
+            <Link className="button" href="/landlord/operations">
+              Manage shops <Icon name="arrow" />
+            </Link>
+          ) : (
+            <Link className="button" href="/security">
+              Your account
+            </Link>
+          )
+        }
+      >
+        A clear place for the people, shops and decisions that keep Londos moving.
+      </WorkspaceWelcome>
       <section className="landlord-hub">
         <details className="landlord-account-details">
           <summary>Account protection &amp; background jobs</summary>
@@ -285,13 +308,9 @@ export default async function LandlordPage() {
                 </div>
                 <div className="landlord-action-grid">
                   {links.map((link) => (
-                    <Link className="landlord-action" href={link.href} key={link.href}>
-                      <strong>{link.label}</strong>
-                      <span>{link.description}</span>
-                      <span className="landlord-action-arrow" aria-hidden="true">
-                        →
-                      </span>
-                    </Link>
+                    <WorkspaceTaskLink href={link.href} title={link.label} key={link.href}>
+                      {link.description}
+                    </WorkspaceTaskLink>
                   ))}
                 </div>
               </section>
@@ -299,7 +318,7 @@ export default async function LandlordPage() {
           })}
         </div>
         <p className="landlord-caution">
-          Rent reconciliation is manual. Live collection is not enabled.
+          Rent payments are reviewed and confirmed by your finance team.
         </p>
         <div className="landlord-signout">
           <SignOutButton />
