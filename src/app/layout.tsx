@@ -5,6 +5,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { PwaRegistrar } from "@/components/pwa-registrar";
 import { assertPreviewConfiguration } from "@/server/preview";
 import "./globals.css";
+import "./workspaces.css";
 
 export const metadata: Metadata = {
   title: { default: "Londos — A place for good shops", template: "%s | Londos" },

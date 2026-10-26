@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { WorkspaceCommandPalette } from "@/components/workspace-command-palette";
 import { PortalNavigation } from "./portal-navigation";
 
-export type PortalLink = { href: string; label: string; description?: string };
+export type PortalLink = { href: string; label: string; description?: string; group?: string };
 export function PortalShell({
   kind,
   title,
@@ -13,6 +13,7 @@ export function PortalShell({
   children,
   currentPath,
   banner,
+  contextName,
 }: {
   kind: "shopkeeper" | "landlord";
   title: string;
@@ -21,6 +22,7 @@ export function PortalShell({
   children: ReactNode;
   currentPath?: string;
   banner?: ReactNode;
+  contextName?: string;
 }) {
   const homeHref = kind === "landlord" ? "/landlord" : "/shopkeeper";
   const safeLinks = links.filter((item) =>
@@ -36,7 +38,7 @@ export function PortalShell({
       >
         <Link href="/" className="portal-brand">
           <Image
-            src="/brand/londos-logo.png"
+            src="/brand/londos-logo-dark.png"
             width={180}
             height={60}
             alt="Londos — Digital Mall"
@@ -48,7 +50,9 @@ export function PortalShell({
             {kind === "landlord" ? "▦" : "▣"}
           </span>
           <div>
-            <strong>{kind === "landlord" ? "Mall management" : "Merchant workspace"}</strong>
+            <strong>
+              {contextName ?? (kind === "landlord" ? "Mall management" : "Merchant workspace")}
+            </strong>
             <small>{kind === "landlord" ? "Operator" : "Shopkeeper"}</small>
           </div>
         </div>
@@ -68,7 +72,10 @@ export function PortalShell({
             <span className="portal-topbar-eyebrow">
               {kind === "landlord" ? "Londos administration" : "Londos for merchants"}
             </span>
-            <strong>{kind === "landlord" ? "Management overview" : "Shopkeeper workspace"}</strong>
+            <strong>
+              {contextName ??
+                (kind === "landlord" ? "Management overview" : "Shopkeeper workspace")}
+            </strong>
           </div>
           <div className="portal-topbar-controls">
             <WorkspaceCommandPalette items={[{ href: homeHref, label: "Home" }, ...safeLinks]} />
@@ -87,15 +94,17 @@ export function PortalShell({
             </nav>
           </div>
         </header>
-        {banner ? <div className="portal-banner">{banner}</div> : null}
         <div className="portal-content">
           <div className="portal-heading">
             <div>
-              <p className="portal-kicker">Londos workspace</p>
+              <p className="portal-kicker">
+                {kind === "landlord" ? "Your management desk" : "Your business on Londos"}
+              </p>
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
           </div>
+          {banner ? <div className="portal-banner">{banner}</div> : null}
           {children}
         </div>
       </div>

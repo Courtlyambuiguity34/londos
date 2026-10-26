@@ -209,13 +209,13 @@ export default async function LandlordPage() {
   const navigation = groups.flatMap((group) =>
     group.links
       .filter((link) => link.allowed)
-      .map((link) => ({ href: link.href, label: link.label })),
+      .map((link) => ({ href: link.href, label: link.label, group: group.title })),
   );
   return (
     <PortalShell
       kind="landlord"
       title="Manage your mall with clarity."
-      subtitle="Shops, tenants, finance, support and growth — organized around your work."
+      subtitle="Start with what needs attention, then open the tools for your next task."
       links={navigation}
       currentPath="/landlord"
       banner={
@@ -240,37 +240,34 @@ export default async function LandlordPage() {
       }
     >
       <section className="landlord-hub">
-        <p className="eyebrow">Londos · secure management workspace</p>
-
-        <p className="landlord-intro">
-          Start with shops and tenants, then handle rent, support and growth. Your tools are grouped
-          by responsibility, and only actions permitted for your account are shown.
-        </p>
-        <div className="landlord-status" role="status">
-          <div>
-            <strong>Protected workspace</strong>
-            <span>Multi-factor authentication enabled</span>
-          </div>
-          <div>
-            <strong>{grants.length} permissions</strong>
-            <span>Scoped operator access</span>
-          </div>
-          {can("jobs") ? (
+        <details className="landlord-account-details">
+          <summary>Account protection &amp; background jobs</summary>
+          <div className="landlord-status">
             <div>
-              <strong>{counts.reduce((sum, item) => sum + item.count, 0)} jobs</strong>
-              <span>Across all recorded states</span>
+              <strong>Protected workspace</strong>
+              <span>Multi-factor authentication enabled</span>
             </div>
+            <div>
+              <strong>{grants.length} permissions</strong>
+              <span>Scoped operator access</span>
+            </div>
+            {can("jobs") ? (
+              <div>
+                <strong>{counts.reduce((sum, item) => sum + item.count, 0)} jobs</strong>
+                <span>Across all recorded states</span>
+              </div>
+            ) : null}
+          </div>
+          {can("jobs") && counts.length > 0 ? (
+            <ul>
+              {counts.map((item) => (
+                <li key={item.state}>
+                  {item.state}: {item.count}
+                </li>
+              ))}
+            </ul>
           ) : null}
-        </div>
-        <nav className="landlord-jump" aria-label="Management sections">
-          {groups
-            .filter((group) => group.links.some((link) => link.allowed))
-            .map((group, index) => (
-              <a key={group.title} href={`#management-${index}`}>
-                {group.title}
-              </a>
-            ))}
-        </nav>
+        </details>
         <div className="landlord-sections">
           {groups.map((group, index) => {
             const links = group.links.filter((link) => link.allowed);
@@ -301,18 +298,6 @@ export default async function LandlordPage() {
             );
           })}
         </div>
-        {can("jobs") && counts.length > 0 ? (
-          <details className="landlord-jobs">
-            <summary>Background job details</summary>
-            <ul>
-              {counts.map((item) => (
-                <li key={item.state}>
-                  {item.state}: {item.count}
-                </li>
-              ))}
-            </ul>
-          </details>
-        ) : null}
         <p className="landlord-caution">
           Rent reconciliation is manual. Live collection is not enabled.
         </p>

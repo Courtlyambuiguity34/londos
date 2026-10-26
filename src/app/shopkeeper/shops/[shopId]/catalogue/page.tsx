@@ -6,7 +6,7 @@ import { coreConfigured } from "@/server/config";
 import { ShopWorkspaceShell } from "@/components/shop-workspace-shell";
 import { database } from "@/server/db/pool";
 import { pageActor } from "@/server/page-actor";
-import { readShop } from "@/server/workspace";
+import { readShop, effectiveShopPermissions } from "@/server/workspace";
 import { AccessError } from "@/server/security/errors";
 export const metadata = { title: "Shop catalogue" };
 export default async function Page({ params }: { params: Promise<{ shopId: string }> }) {
@@ -34,7 +34,12 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
         <Link className="text-button" href={`/shopkeeper/shops/${shop.id}`}>
           Shop profile
         </Link>
-        <CatalogueWorkspace shopId={shop.id} />
+        <CatalogueWorkspace
+          shopId={shop.id}
+          canDesign={(await effectiveShopPermissions(database(), actor, shop.id)).includes(
+            "design",
+          )}
+        />
       </section>
     </ShopWorkspaceShell>
   );

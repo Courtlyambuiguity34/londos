@@ -234,4 +234,10 @@ test("finance-only and design-only staff see their granted workspace without cat
   const nav = page.getByRole("navigation", { name: "Merchant sections" });
   await expect(nav.getByRole("link", { name: "Products & contacts", exact: true })).toHaveCount(0);
   await expect(nav.getByRole("link", { name: "Rent & invoices", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Upload or manage shop images", exact: false }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Ask a catalogue editor to upload images for this shop.", { exact: false }),
+  ).toBeVisible();
 });

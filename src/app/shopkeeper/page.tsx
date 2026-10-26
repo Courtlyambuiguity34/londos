@@ -22,7 +22,7 @@ export default async function ShopkeeperPage() {
   if (operatorAccess.rowCount && !merchantAccess.rowCount) redirect("/landlord");
   const shops = await listShops(database(), actor);
   const links = [
-    { href: "/shopkeeper/applications", label: "Applications" },
+    { href: "/shopkeeper/applications", label: "Applications", group: "Business account" },
     { href: "/shopkeeper/team", label: "Team & access" },
     { href: "/shopkeeper/invitations", label: "Invitations" },
   ];
@@ -30,7 +30,7 @@ export default async function ShopkeeperPage() {
     <PortalShell
       kind="shopkeeper"
       title="Your shops."
-      subtitle="Choose a shop to manage its products, design and rent. Publication is separate from payment approval."
+      subtitle="Everything for your business, in one place. Choose a shop to get started."
       links={links}
       currentPath="/shopkeeper"
     >
@@ -39,6 +39,23 @@ export default async function ShopkeeperPage() {
           Local development mode uses fictional businesses. Live rent collection is disabled.
         </p>
       ) : null}
+      <section className="portal-stat-grid" aria-label="Your shop summary">
+        <div className="portal-stat">
+          <span>Shops you manage</span>
+          <strong>{shops.length}</strong>
+          <small>Assigned to your account</small>
+        </div>
+        <div className="portal-stat">
+          <span>Live storefronts</span>
+          <strong>{shops.filter((shop) => shop.storefront.public).length}</strong>
+          <small>Visible to customers on the mall</small>
+        </div>
+        <div className="portal-stat">
+          <span>Setup or review</span>
+          <strong>{shops.filter((shop) => !shop.storefront.public).length}</strong>
+          <small>Check each shop’s next step below</small>
+        </div>
+      </section>
       <section className="portal-section" aria-labelledby="shop-heading">
         <div className="portal-section-heading">
           <div>

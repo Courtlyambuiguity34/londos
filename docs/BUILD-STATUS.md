@@ -1,8 +1,9 @@
 # Build status and next model setting
 
-**Current hosted follow-up — 25 October 2026:** work targets
-`feature/hosted-lifecycle-secure-2026-10-23`, continuing from `eb41829`, with readiness migration
-**036**. Read the [clean shop URL correction](evidence/SHOP-ADDRESSES-2026-10-25.md),
+**Current hosted follow-up — 26 October 2026:** work targets
+`feature/hosted-lifecycle-secure-2026-10-23`, continuing from `02332c8`, with readiness migration
+**036**. Read the [shop images and workspace update](evidence/SHOP-IMAGES-AND-WORKSPACES-2026-10-26.md),
+[image and navigation guide](SHOP-APPEARANCE.md), [clean shop URL correction](evidence/SHOP-ADDRESSES-2026-10-25.md),
 [second workflow pass](evidence/HOSTED-WORKFLOWS-FOLLOWUP-2026-10-25.md),
 [first hosted workflow audit](evidence/HOSTED-WORKFLOWS-2026-10-25.md) and
 [billing/shop operations](HOSTED-BILLING-AND-OPERATIONS.md) for the current implementation,

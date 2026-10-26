@@ -9,6 +9,7 @@ import {
 } from "@/modules/shop-design/specification";
 import { DesignSections } from "./design-sections";
 import { designResponseError } from "@/modules/design-feedback";
+import { ShopBrandingFields, type BrandingImage } from "./shop-branding-fields";
 
 type State = {
   version: number;
@@ -18,6 +19,8 @@ type State = {
   history: { revision: number; summary: string }[];
   departments: { id: string; name: string }[];
   products: { id: string; name: string; has_image: boolean }[];
+  images?: BrandingImage[];
+  canManageImages?: boolean;
 };
 const defaultPresentation: ShopPresentation = {
   premiseStyle: "minimalist",
@@ -151,11 +154,13 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
           previews show the last saved draft.
         </p>
       ) : null}
-      <Link href="/security">Verify account security</Link>
-      <Link prefetch={false} href={`/shopkeeper/shops/${shopId}/design/assistant`}>
-        Describe a change with the design assistant
-      </Link>
-      <Link href="/sign-in">Sign in again</Link>
+      <div className="design-help-links">
+        <Link href="/security">Verify account security</Link>
+        <Link prefetch={false} href={`/shopkeeper/shops/${shopId}/design/assistant`}>
+          Describe a change with the design assistant
+        </Link>
+        <Link href="/sign-in">Sign in again</Link>
+      </div>
       <form
         className="account-form"
         onSubmit={(e) => {
@@ -174,6 +179,14 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
           Choose a template and arrange departments. Prices and contact details remain in your
           catalogue settings.
         </p>
+        <ShopBrandingFields
+          shopId={shopId}
+          images={state.images ?? []}
+          spec={spec}
+          onChange={setSpec}
+          disabled={busy}
+          canManageImages={state.canManageImages ?? false}
+        />
         <label htmlFor="design-theme">Shop theme</label>
         <select
           id="design-theme"
@@ -196,10 +209,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
         </label>
         <fieldset>
           <legend>Responsive premises</legend>
-          <p>
-            These controls are deterministic and provider-free. They use only Londos-approved
-            layout, palette and responsive tokens.
-          </p>
+          <p>Set your layout, colours and spacing for phones and larger screens.</p>
           {!spec.presentation ? (
             <button
               type="button"

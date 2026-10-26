@@ -9,6 +9,8 @@ import { SearchForm } from "./search-form";
 import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
+import { ReadyImage } from "./ready-image";
+import { Icon } from "./icon";
 export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
   const href = publicShopHref({
     shopSlug: result.slug,
@@ -16,7 +18,24 @@ export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
     productSlug: result.product_slug,
   });
   return (
-    <article className="shop-card tone-clay">
+    <article className="shop-card canonical-directory-card tone-clay">
+      <div className="shop-card-art">
+        {result.image ? (
+          <ReadyImage
+            shopId={result.id}
+            assetId={result.image.id}
+            alt={result.image.alt}
+            width={result.image.width}
+            height={result.image.height}
+          />
+        ) : (
+          <div className="shop-card-fallback" aria-hidden="true">
+            <Icon name="shop" />
+            <span>{result.name.slice(0, 1).toUpperCase()}</span>
+          </div>
+        )}
+        <span className="shop-card-stamp">Independent shop</span>
+      </div>
       <div className="shop-card-body">
         <p className="eyebrow">
           {categories.find((c) => c.slug === result.category)?.name ?? "Independent shop"}
@@ -24,6 +43,7 @@ export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
         <h3>
           <Link prefetch={false} href={href} data-pilot-shop={result.id}>
             {result.name}
+            <Icon name="arrow" />
           </Link>
         </h3>
         <p>{result.tagline}</p>
@@ -146,7 +166,9 @@ export async function CanonicalDirectory({
             </Link>
           ))}
         </nav>
-        <p>{result.results.length} shops on this page</p>
+        <p className="directory-result-count">
+          {result.results.length} {result.results.length === 1 ? "shop" : "shops"} on this page
+        </p>
         {result.results.length ? (
           <div className="shop-grid">
             {result.results.map((row) => (

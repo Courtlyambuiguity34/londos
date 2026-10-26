@@ -48,6 +48,7 @@ export type DiscoveryResult = {
   context: string | null;
   department_slug: string | null;
   product_slug: string | null;
+  image?: { id: string; alt: string; width: number; height: number } | null;
 };
 export interface SearchService {
   search(
@@ -89,7 +90,20 @@ export class PostgresSearch implements SearchService {
       return (
         await client.query(
           `WITH eligible AS (SELECT s.id,s.name,s.slug,s.tagline,s.category,s.created_at FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE length($1::text)<=80 AND ${eligibleStates} AND ($2::text IS NULL OR s.category=$2) AND ($3::uuid IS NULL OR s.id=$3)), ${query}
-   SELECT e.id,e.name,e.slug,e.tagline,e.category,b.context,b.department_slug,b.product_slug,b.score FROM best b JOIN eligible e ON e.id=b.id WHERE ($4::double precision IS NULL OR b.score<$4 OR (b.score=$4 AND e.id>$5::uuid)) ORDER BY b.score DESC,e.id LIMIT $6`,
+   SELECT e.id,e.name,e.slug,e.tagline,e.category,b.context,b.department_slug,b.product_slug,b.score,
+     (SELECT json_build_object('id',a.id,'alt',a.alt,'width',a.width,'height',a.height)
+      FROM media_assets a JOIN shops image_shop ON image_shop.id=a.shop_id AND image_shop.merchant_id=a.merchant_id
+      JOIN shop_designs image_design ON image_design.shop_id=a.shop_id
+      JOIN shop_revisions image_revision ON image_revision.id=image_design.published_id AND image_revision.shop_id=a.shop_id
+      WHERE a.shop_id=e.id AND a.state='ready' AND a.created_by IS NOT NULL AND a.alt<>'' AND a.width>0 AND a.height>0
+        AND (SELECT count(*) FROM media_blobs image_blob WHERE image_blob.asset_id=a.id AND image_blob.variant IN ('thumbnail','card','display'))=3
+        AND (image_revision.design->'branding'->>'coverAssetId'=a.id::text
+             OR EXISTS(SELECT 1 FROM products image_product
+                       JOIN departments image_department ON image_department.id=image_product.department_id AND image_department.shop_id=image_product.shop_id AND image_department.archived=false
+                       JOIN product_media image_media ON image_media.product_id=image_product.id AND image_media.shop_id=image_product.shop_id AND image_media.merchant_id=image_product.merchant_id
+                       WHERE image_product.shop_id=e.id AND image_product.availability<>'archived' AND image_media.asset_id=a.id))
+      ORDER BY (image_revision.design->'branding'->>'coverAssetId'=a.id::text) DESC NULLS LAST,a.id LIMIT 1) AS image
+   FROM best b JOIN eligible e ON e.id=b.id WHERE ($4::double precision IS NULL OR b.score<$4 OR (b.score=$4 AND e.id>$5::uuid)) ORDER BY b.score DESC,e.id LIMIT $6`,
           [
             value.query,
             value.category ?? null,
@@ -113,6 +127,7 @@ export class PostgresSearch implements SearchService {
         context: row.context,
         department_slug: row.department_slug,
         product_slug: row.product_slug,
+        image: row.image ?? null,
       })),
       nextCursor:
         rows.length > value.limit && last

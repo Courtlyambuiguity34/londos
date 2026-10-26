@@ -8,6 +8,7 @@ import {
   type ShopSpecification,
   departmentReferences,
   productReferences,
+  brandingReferences,
 } from "../modules/shop-design/specification";
 import { transaction } from "./db/pool";
 import { requireShop, requireStepUp, type Actor } from "./security/authorization";
@@ -61,6 +62,20 @@ export async function validateReferences(
 ) {
   const departments = departmentReferences(spec),
     products = productReferences(spec);
+  const branding = brandingReferences(spec);
+  if (
+    branding.length &&
+    (
+      await client.query(
+        `SELECT a.id FROM media_assets a JOIN shops s ON s.id=a.shop_id AND s.merchant_id=a.merchant_id
+     WHERE a.shop_id=$1 AND a.id=ANY($2::uuid[]) AND a.created_by IS NOT NULL
+       AND a.state='ready' AND a.alt<>'' AND a.width>0 AND a.height>0
+       AND (SELECT count(*) FROM media_blobs b WHERE b.asset_id=a.id AND b.variant IN ('thumbnail','card','display'))=3`,
+        [shopId, branding],
+      )
+    ).rowCount !== branding.length
+  )
+    throw new AccessError(404, "resource_unavailable");
   const validDepartments = (
     await client.query(
       "SELECT id FROM departments WHERE shop_id=$1 AND archived=false AND id=ANY($2::uuid[])",
@@ -152,6 +167,12 @@ export async function insertRevision(
 }
 export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: string) {
   await requireShop(pool, actor, shopId, "design");
+  const canManageImages = await requireShop(pool, actor, shopId, "catalogue")
+    .then(() => true)
+    .catch((error: unknown) => {
+      if (error instanceof AccessError && error.status === 404) return false;
+      throw error;
+    });
   const pointer = (
     await pool.query(
       "SELECT d.version,r.revision,r.design,p.revision AS published_revision FROM shop_designs d LEFT JOIN shop_revisions r ON r.id=d.draft_id LEFT JOIN shop_revisions p ON p.id=d.published_id WHERE d.shop_id=$1",
@@ -205,6 +226,18 @@ export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: 
     history,
     departments,
     products,
+    canManageImages,
+    images: (
+      await pool.query(
+        `SELECT a.id,a.alt,a.width,a.height FROM media_assets a
+       JOIN shops s ON s.id=a.shop_id AND s.merchant_id=a.merchant_id
+       WHERE a.shop_id=$1 AND a.created_by IS NOT NULL AND a.state='ready' AND a.alt<>''
+         AND a.width>0 AND a.height>0
+         AND (SELECT count(*) FROM media_blobs b WHERE b.asset_id=a.id AND b.variant IN ('thumbnail','card','display'))=3
+       ORDER BY a.id LIMIT 100`,
+        [shopId],
+      )
+    ).rows as { id: string; alt: string; width: number; height: number }[],
   };
 }
 export async function saveDesign(

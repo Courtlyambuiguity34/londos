@@ -324,6 +324,35 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
         </nav>
         {!view.selectedProduct ? (
           <header className="canonical-heading">
+            {view.brandingImages?.find(
+              (image) => image.id === view.specification.branding?.coverAssetId,
+            ) ? (
+              <div className="storefront-cover">
+                <ReadyImage
+                  shopId={view.shop.id}
+                  assetId={view.specification.branding!.coverAssetId!}
+                  {...view.brandingImages.find(
+                    (image) => image.id === view.specification.branding?.coverAssetId,
+                  )!}
+                  privatePreview={view.privatePreview}
+                  large
+                />
+              </div>
+            ) : null}
+            {view.brandingImages?.find(
+              (image) => image.id === view.specification.branding?.logoAssetId,
+            ) ? (
+              <div className="storefront-logo">
+                <ReadyImage
+                  shopId={view.shop.id}
+                  assetId={view.specification.branding!.logoAssetId!}
+                  {...view.brandingImages.find(
+                    (image) => image.id === view.specification.branding?.logoAssetId,
+                  )!}
+                  privatePreview={view.privatePreview}
+                />
+              </div>
+            ) : null}
             <p className="eyebrow">Independent shop</p>
             <h1>{view.shop.name}</h1>
             <p>{view.shop.tagline}</p>

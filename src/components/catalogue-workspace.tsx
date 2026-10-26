@@ -66,7 +66,13 @@ const blankContacts: Contacts = {
   enquiries_enabled: false,
 };
 const field = (data: FormData, key: string) => String(data.get(key) ?? "");
-export function CatalogueWorkspace({ shopId }: { shopId: string }) {
+export function CatalogueWorkspace({
+  shopId,
+  canDesign = false,
+}: {
+  shopId: string;
+  canDesign?: boolean;
+}) {
   const root = `/api/workspace/shops/${shopId}`;
   const [departments, setDepartments] = useState<Department[]>([]),
     [products, setProducts] = useState<Product[]>([]),
@@ -133,7 +139,8 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
     if (!response.ok) {
       const result = await response.json();
       const conflicts: Record<string, string> = {
-        media_in_use: "Remove this image from its products before deleting it.",
+        media_in_use:
+          "Remove this image from products and saved/published shop branding before deleting it.",
         department_contains_products:
           "Archive or move the department’s products before archiving it.",
         slug_in_use: "This address is already used in this shop. Choose another address.",
@@ -564,6 +571,16 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
       <section id="images" aria-labelledby="images-title">
         <h2 id="images-title">Shop images</h2>
         <p>
+          Uploading adds an image to your library. Assign it to a product, or choose it as your
+          cover or logo in{" "}
+          {canDesign ? (
+            <Link href={`/shopkeeper/shops/${shopId}/design`}>Design &amp; publish</Link>
+          ) : (
+            "Design & publish (design access required)"
+          )}
+          . Publish the saved design to show your cover on the mall’s shop list.
+        </p>
+        <p>
           Non-animated JPEG, PNG or WebP, up to 4 MiB, 16 million pixels and 8192 pixels per side.
           Describe the image for customers using assistive technology. Processing must finish before
           an image can be assigned.
@@ -628,7 +645,11 @@ export function CatalogueWorkspace({ shopId }: { shopId: string }) {
                   className="text-button"
                   disabled={busy}
                   onClick={() => {
-                    if (window.confirm(`Delete ${m.alt}? Remove product references first.`))
+                    if (
+                      window.confirm(
+                        `Delete ${m.alt}? Remove product and shop branding references first.`,
+                      )
+                    )
                       void act(
                         () => write(`/media/${m.id}`, "DELETE", { version: m.version }),
                         "Image deleted.",

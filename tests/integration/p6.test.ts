@@ -30,7 +30,15 @@ import { PostgresSearch } from "../../src/server/discovery";
 import type { ShopSpecification } from "../../src/modules/shop-design/specification";
 import { publicShopHref } from "../../src/modules/discovery/shop-continuity";
 import { shopViewHref } from "../../src/modules/shop-design/view-links";
-import { readVariant } from "../../src/server/media";
+import {
+  readVariant,
+  startUpload,
+  finishUpload,
+  processMedia,
+  deleteMedia,
+} from "../../src/server/media";
+import { claim, acknowledge } from "../../src/server/jobs/queue";
+import sharp from "sharp";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -592,6 +600,37 @@ test("closure, unpublish and suspension cannot be resurrected by stale internal 
 });
 test("cursor pages are bounded, scope-bound and contain no duplicated shops or tariff signals", async () => {
   await published();
+  // Supply a second eligible hit explicitly: this test must also pass in a
+  // focused run that skips the earlier discovery scenarios.
+  const sibling = randomUUID(),
+    siblingDepartment = randomUUID();
+  await pool.query(
+    "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category) SELECT $1,merchant_id,mall_id,'Cursor fixture shoes',$2,category FROM shops WHERE id=$3",
+    [sibling, `cursor-fixture-${sibling}`, shop],
+  );
+  await pool.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'unpublished')", [
+    sibling,
+  ]);
+  await pool.query("INSERT INTO tenancies(shop_id,state) VALUES($1,'active')", [sibling]);
+  await pool.query("INSERT INTO shop_moderation(shop_id,state) VALUES($1,'clear')", [sibling]);
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Shoes','shoes',0)",
+    [siblingDepartment, sibling, seedIds.merchantA],
+  );
+  const siblingDraft = await saveDesign(pool, actors.ownerA!, sibling, {
+    version: 0,
+    summary: "Independent pagination fixture",
+    specification: {
+      schemaVersion: 1,
+      theme: "earth",
+      announcement: "",
+      actions: [],
+      spaces: [
+        { id: "shoes", type: "department", version: 1, departmentId: siblingDepartment, limit: 8 },
+      ],
+    },
+  });
+  await publishDesign(pool, actors.ownerA!, sibling, { ...siblingDraft, confirm: true });
   const search = new PostgresSearch(pool),
     all = new Set<string>();
   let cursor: string | undefined;
@@ -641,4 +680,188 @@ test("search has a real database statement deadline and recovers after contentio
     (await new PostgresSearch(pool).search({ query: "shoes", shopId: shop })).results,
   ).toHaveLength(1);
   expect((await readPublicShop(pool, shop)).shop.id).toBe(shop);
+});
+
+async function brandingUpload(alt: string) {
+  const bytes = await sharp({
+    create: { width: 480, height: 240, channels: 3, background: "#af4d28" },
+  })
+    .png()
+    .toBuffer();
+  const started = await startUpload(pool, actors.ownerA!, shop, {
+    contentType: "image/png",
+    bytes: bytes.length,
+    alt,
+  });
+  await finishUpload(pool, actors.ownerA!, shop, started.id, bytes, "image/png");
+  await pool.query(
+    "UPDATE jobs SET state='done',lease_token=NULL,lease_until=NULL WHERE state IN ('pending','running') AND NOT (kind='media.process' AND payload->>'assetId'=$1)",
+    [started.id],
+  );
+  const job = await claim(pool);
+  expect(job?.payload.assetId).toBe(started.id);
+  await processMedia(pool, job!, AbortSignal.timeout(5000));
+  expect(await acknowledge(pool, job!)).toBe(true);
+  return started.id as string;
+}
+
+test("shop branding publishes actual ready uploads on discovery without exposing draft-only replacements", async () => {
+  const cover = await brandingUpload("Fictional storefront cover"),
+    logo = await brandingUpload("Fictional storefront logo");
+  const spec = { ...specification(), branding: { coverAssetId: cover, logoAssetId: logo } };
+  const draft = await saveDesign(pool, actors.ownerA!, shop, {
+    version: 0,
+    summary: "Choose shop images",
+    specification: spec,
+  });
+  expect((await readDesign(pool, actors.ownerA!, shop)).images.map((image) => image.id)).toEqual(
+    expect.arrayContaining([cover, logo]),
+  );
+  const preview = await readPrivatePreview(pool, actors.ownerA!, shop);
+  expect(preview.brandingImages?.map((image) => image.id)).toEqual(
+    expect.arrayContaining([cover, logo]),
+  );
+  await expect(readPublicVariant(pool, shop, cover, "card")).rejects.toMatchObject({ status: 404 });
+  const live = await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  const discovery = new PostgresSearch(pool);
+  expect((await discovery.search({ query: "", shopId: shop })).results[0]?.image).toMatchObject({
+    id: cover,
+    alt: "Fictional storefront cover",
+    width: 480,
+    height: 240,
+  });
+  for (const variant of ["thumbnail", "card", "display"]) {
+    const bytes = await readPublicVariant(pool, shop, cover, variant);
+    expect((await sharp(bytes).metadata()).format).toBe("webp");
+  }
+  await expect(readPublicVariant(pool, shop, cover, "source")).rejects.toThrow();
+  await expect(readPublicVariant(pool, shop, cover, "quarantine")).rejects.toThrow();
+  const replacement = await brandingUpload("Unpublished new cover");
+  const changed = await saveDesign(pool, actors.ownerA!, shop, {
+    version: live.version,
+    summary: "Private cover replacement",
+    specification: { ...spec, branding: { coverAssetId: replacement, logoAssetId: logo } },
+  });
+  expect((await discovery.search({ query: "", shopId: shop })).results[0]?.image?.id).toBe(cover);
+  expect((await readPublicShop(pool, shop)).brandingImages?.map((image) => image.id)).not.toContain(
+    replacement,
+  );
+  await expect(readPublicVariant(pool, shop, replacement, "card")).rejects.toMatchObject({
+    status: 404,
+  });
+  for (const id of [cover, logo, replacement])
+    await expect(deleteMedia(pool, actors.ownerA!, shop, id, 2)).rejects.toMatchObject({
+      status: 409,
+      code: "media_in_use",
+    });
+  const next = await publishDesign(pool, actors.ownerA!, shop, { ...changed, confirm: true });
+  expect((await discovery.search({ query: "", shopId: shop })).results[0]?.image?.id).toBe(
+    replacement,
+  );
+  await expect(readPublicVariant(pool, shop, cover, "card")).rejects.toMatchObject({ status: 404 });
+  expect(await deleteMedia(pool, actors.ownerA!, shop, cover, 2)).toEqual({ deleted: true });
+  await unpublishDesign(pool, actors.ownerA!, shop, { version: next.version, confirm: true });
+  expect((await discovery.search({ query: "", shopId: shop })).results).toEqual([]);
+  await expect(readPublicVariant(pool, shop, replacement, "card")).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+test("shop branding denies foreign, unprocessed, missing and blobless assets and preserves the current revision", async () => {
+  const cover = await brandingUpload("Scoped cover");
+  const make = (id: string) => ({
+    ...specification(),
+    branding: { coverAssetId: id, logoAssetId: null },
+  });
+  await expect(
+    saveDesign(pool, actors.ownerB!, shop, {
+      version: 0,
+      summary: "Foreign edit",
+      specification: make(cover),
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  const foreignProduct =
+    (await pool.query("SELECT id FROM media_assets WHERE shop_id=$1 LIMIT 1", [seedIds.shopB]))
+      .rows[0]?.id ?? randomUUID();
+  const pending = await startUpload(pool, actors.ownerA!, shop, {
+    contentType: "image/png",
+    bytes: 20,
+    alt: "Unprocessed cover",
+  });
+  const blobless = await brandingUpload("Incomplete variants");
+  await pool.query("DELETE FROM media_blobs WHERE asset_id=$1 AND variant='card'", [blobless]);
+  for (const id of [foreignProduct, pending.id, randomUUID(), blobless])
+    await expect(
+      saveDesign(pool, actors.ownerA!, shop, {
+        version: 0,
+        summary: "Reject unsafe selection",
+        specification: make(id),
+      }),
+    ).rejects.toMatchObject({ status: 404 });
+  expect((await readDesign(pool, actors.ownerA!, shop)).revision).toBeNull();
+  const current = await saveDesign(pool, actors.ownerA!, shop, {
+    version: 0,
+    summary: "Valid selection",
+    specification: make(cover),
+  });
+  await expect(
+    saveDesign(pool, actors.ownerA!, shop, {
+      version: 0,
+      summary: "Stale selection",
+      specification: specification(),
+    }),
+  ).rejects.toMatchObject({ status: 409 });
+  expect((await readDesign(pool, actors.ownerA!, shop)).revision).toBe(current.revision);
+  const other = seedIds.shopA;
+  const otherState = await readDesign(pool, actors.ownerA!, other);
+  await expect(
+    saveDesign(pool, actors.ownerA!, other, {
+      version: otherState.version,
+      summary: "Same merchant, wrong shop",
+      specification: {
+        ...otherState.specification,
+        branding: { coverAssetId: cover, logoAssetId: null },
+      },
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  await expect(readVariant(pool, actors.ownerB!, shop, cover, "card")).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+test("shop discovery falls back to an assigned public product image and never to an unassigned upload", async () => {
+  const id = await brandingUpload("Visible product photo");
+  const unassigned = await brandingUpload("Private library upload");
+  await published();
+  const search = new PostgresSearch(pool),
+    find = async () => (await search.search({ query: "", shopId: shop })).results[0];
+  expect((await find())?.image).toBeNull();
+  await expect(readPublicVariant(pool, shop, unassigned, "card")).rejects.toMatchObject({
+    status: 404,
+  });
+  await pool.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [product, id, shop, seedIds.merchantA],
+  );
+  expect((await find())?.image?.id).toBe(id);
+  expect((await search.search({ query: "shoes", shopId: shop })).results[0]?.image?.id).toBe(id);
+  await pool.query("UPDATE products SET availability='archived' WHERE id=$1", [product]);
+  expect((await find())?.image).toBeNull();
+  await expect(readPublicVariant(pool, shop, id, "card")).rejects.toMatchObject({ status: 404 });
+  await pool.query("UPDATE products SET availability='available' WHERE id=$1", [product]);
+  await pool.query("UPDATE departments SET archived=true WHERE id=$1", [department]);
+  expect((await find())?.image).toBeNull();
+  await pool.query("UPDATE departments SET archived=false WHERE id=$1", [department]);
+  for (const change of [
+    "UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1",
+    "UPDATE tenancies SET state='closed' WHERE shop_id=$1",
+    "UPDATE shop_publication SET state='unpublished' WHERE shop_id=$1",
+  ]) {
+    await pool.query(change, [shop]);
+    expect(await find()).toBeUndefined();
+    await expect(readPublicVariant(pool, shop, id, "card")).rejects.toMatchObject({ status: 404 });
+    await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [shop]);
+    await pool.query("UPDATE tenancies SET state='active' WHERE shop_id=$1", [shop]);
+    await pool.query("UPDATE shop_publication SET state='active' WHERE shop_id=$1", [shop]);
+  }
 });

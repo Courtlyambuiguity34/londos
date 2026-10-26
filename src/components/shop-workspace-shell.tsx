@@ -37,22 +37,24 @@ export async function ShopWorkspaceShell({
     ...(permissions.includes("catalogue")
       ? [
           { href: base, label: "Shop overview" },
-          { href: `${base}/catalogue`, label: "Products & contacts" },
+          { href: `${base}/catalogue`, label: "Products & contacts", group: "Your shop" },
         ]
       : []),
     ...(permissions.includes("design")
       ? [{ href: `${base}/design`, label: "Design & publish" }]
       : []),
     ...(permissions.includes("finance")
-      ? [{ href: `${base}/rent`, label: "Rent & invoices" }]
+      ? [{ href: `${base}/rent`, label: "Rent & invoices", group: "Subscription" }]
       : []),
-    { href: "/shopkeeper/applications", label: "Applications" },
+    { href: "/shopkeeper/applications", label: "Applications", group: "Business account" },
     { href: "/shopkeeper/team", label: "Team & access" },
+    { href: "/security", label: "Account security" },
   ];
   return (
     <PortalShell
       kind="shopkeeper"
       title={title}
+      contextName={shop.name}
       subtitle={subtitle}
       links={links}
       currentPath={path}

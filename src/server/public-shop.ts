@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   shopSpecification,
   productReferences,
+  brandingReferences,
   type ShopSpecification,
 } from "../modules/shop-design/specification";
 import { transaction } from "./db/pool";
@@ -58,6 +59,7 @@ export type ShopView = {
   products: PublicProduct[];
   contact: PublicContact | null;
   privatePreview: boolean;
+  brandingImages?: { id: string; alt: string; width: number; height: number }[];
   previewNavigation?: PreviewNavigation;
   applicationReviewed: boolean;
   selectedDepartment: PublicDepartment | null;
@@ -209,6 +211,16 @@ export async function assemble(
     products,
     contact,
     privatePreview,
+    brandingImages: (
+      await client.query(
+        `SELECT a.id,a.alt,a.width,a.height FROM media_assets a
+       JOIN shops s ON s.id=a.shop_id AND s.merchant_id=a.merchant_id
+       WHERE a.shop_id=$1 AND a.id=ANY($2::uuid[]) AND a.created_by IS NOT NULL
+         AND a.state='ready' AND a.alt<>'' AND a.width>0 AND a.height>0
+         AND (SELECT count(*) FROM media_blobs b WHERE b.asset_id=a.id AND b.variant IN ('thumbnail','card','display'))=3`,
+        [row.id, brandingReferences(specification)],
+      )
+    ).rows,
     applicationReviewed: Boolean(
       (
         await client.query(
@@ -289,7 +301,17 @@ export async function readPublicVariant(
   const name = z.enum(["thumbnail", "card", "display"]).parse(variant);
   const row = (
     await pool.query(
-      `SELECT b.bytes FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL JOIN products q ON q.shop_id=s.id AND q.availability<>'archived' JOIN departments d ON d.id=q.department_id AND d.archived=false JOIN product_media pm ON pm.product_id=q.id JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=s.id AND a.state='ready' JOIN media_blobs b ON b.asset_id=a.id AND b.variant=$3 WHERE s.id=$1 AND a.id=$2 AND ${eligibleStates} LIMIT 1`,
+      `SELECT b.bytes FROM shops s ${eligibilityJoins}
+       JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL
+       JOIN shop_revisions r ON r.id=sd.published_id AND r.shop_id=s.id AND r.merchant_id=s.merchant_id
+       JOIN media_assets a ON a.shop_id=s.id AND a.merchant_id=s.merchant_id AND a.state='ready'
+       JOIN media_blobs b ON b.asset_id=a.id AND b.variant=$3
+       WHERE s.id=$1 AND a.id=$2 AND ${eligibleStates}
+         AND (EXISTS(SELECT 1 FROM products q JOIN departments d ON d.id=q.department_id AND d.shop_id=q.shop_id AND d.archived=false
+                     JOIN product_media pm ON pm.product_id=q.id AND pm.shop_id=q.shop_id AND pm.merchant_id=q.merchant_id
+                     WHERE q.shop_id=s.id AND q.availability<>'archived' AND pm.asset_id=a.id)
+              OR (a.created_by IS NOT NULL AND a.alt<>'' AND a.width>0 AND a.height>0
+                  AND (r.design->'branding'->>'coverAssetId'=a.id::text OR r.design->'branding'->>'logoAssetId'=a.id::text))) LIMIT 1`,
       [shopId, assetId, name],
     )
   ).rows[0];

@@ -130,7 +130,15 @@ export async function deleteMedia(
     if (!asset || asset.state === "deleted") throw new AccessError(404, "resource_unavailable");
     if (asset.version !== version) throw new AccessError(409, "stale_version");
     if (
-      (await client.query("SELECT 1 FROM product_media WHERE asset_id=$1 LIMIT 1", [id])).rowCount
+      (await client.query("SELECT 1 FROM product_media WHERE asset_id=$1 LIMIT 1", [id]))
+        .rowCount ||
+      (
+        await client.query(
+          `SELECT 1 FROM shop_designs d JOIN shop_revisions r ON r.id IN (d.draft_id,d.published_id)
+         WHERE d.shop_id=$1 AND (r.design->'branding'->>'coverAssetId'=$2 OR r.design->'branding'->>'logoAssetId'=$2) LIMIT 1`,
+          [shopId, id],
+        )
+      ).rowCount
     )
       throw new AccessError(409, "media_in_use");
     await purgeAsset(client, id, shopId, asset.byte_count, asset.reserved_bytes);

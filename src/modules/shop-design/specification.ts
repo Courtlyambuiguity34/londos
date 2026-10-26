@@ -197,6 +197,10 @@ export const shopSpecification = z
     schemaVersion: z.literal(1),
     theme: z.enum(["earth", "plum", "blue"]),
     presentation: presentation.optional(),
+    branding: z
+      .object({ coverAssetId: z.uuid().nullable(), logoAssetId: z.uuid().nullable() })
+      .strict()
+      .optional(),
     announcement: z.string().trim().max(160),
     spaces: z
       .array(
@@ -284,6 +288,16 @@ export const shopSpecification = z
 
 export type ShopSpecification = z.infer<typeof shopSpecification>;
 export type ShopSpace = ShopSpecification["spaces"][number];
+
+export function brandingReferences(spec: ShopSpecification) {
+  return [
+    ...new Set(
+      [spec.branding?.coverAssetId, spec.branding?.logoAssetId].filter((id): id is string =>
+        Boolean(id),
+      ),
+    ),
+  ];
+}
 
 export function departmentReferences(spec: ShopSpecification) {
   return spec.spaces.flatMap((s) =>
