@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { themeIds } from "../shop-themes/registry.generated";
 import {
   shopSpecification,
   specificationPatch,
@@ -142,7 +143,7 @@ export function compileIntent(context: DesignContext, input: unknown): ShopSpeci
   const intent = designIntent.parse(input);
   let next = shopSpecification.parse(context.specification);
   for (const patch of intent.patches) {
-    if (["move", "theme", "actions", "presentation"].includes(patch.op))
+    if (["move", "theme", "actions", "presentation", "storefront_theme"].includes(patch.op))
       next = patchSpecification(next, specificationPatch.parse(patch));
     else if (patch.op === "announcement") next = { ...next, announcement: patch.text };
     else if (patch.op === "add_space") next = { ...next, spaces: [...next.spaces, patch.space] };
@@ -217,6 +218,15 @@ export function deterministicIntent(
   instruction: string,
 ): DesignIntent | null {
   const text = instruction.trim().replace(/[.!]$/, "").toLowerCase();
+  const named = /^(?:use|switch to) ([a-z][a-z0-9-]{1,31})(?: theme)?$/.exec(text);
+  const namedId = themeIds.find((id) => id === named?.[1]);
+  if (namedId)
+    return {
+      patches: [{ op: "storefront_theme", id: namedId }],
+      decisions: [],
+      confidence: "high",
+      review: "not_needed",
+    };
   const theme =
     /^(?:use|switch to|make (?:the|my) shop) (earth|plum|blue)(?: (?:theme|boutique|studio))?$/.exec(
       text,
@@ -271,23 +281,25 @@ export function changeSummary(intent: DesignIntent): string[] {
     ...intent.patches.map((p) =>
       p.op === "theme"
         ? "Use " + p.theme + " theme"
-        : p.op === "presentation"
-          ? "Use " +
-            p.presentation.premiseStyle +
-            " premises with " +
-            p.presentation.density +
-            " density"
-          : p.op === "actions"
-            ? "Show " + (p.actions.join(", ") || "no contact actions")
-            : p.op === "move"
-              ? "Move " + p.spaceId + " before " + p.before
-              : p.op === "announcement"
-                ? "Change the shop announcement"
-                : p.op === "add_space"
-                  ? "Add " + p.space.type + " section"
-                  : p.op === "remove_space"
-                    ? "Remove " + p.spaceId
-                    : "Replace " + p.spaceId,
+        : p.op === "storefront_theme"
+          ? `Use ${p.id} storefront theme`
+          : p.op === "presentation"
+            ? "Use " +
+              p.presentation.premiseStyle +
+              " premises with " +
+              p.presentation.density +
+              " density"
+            : p.op === "actions"
+              ? "Show " + (p.actions.join(", ") || "no contact actions")
+              : p.op === "move"
+                ? "Move " + p.spaceId + " before " + p.before
+                : p.op === "announcement"
+                  ? "Change the shop announcement"
+                  : p.op === "add_space"
+                    ? "Add " + p.space.type + " section"
+                    : p.op === "remove_space"
+                      ? "Remove " + p.spaceId
+                      : "Replace " + p.spaceId,
     ),
     ...intent.decisions.map((decision) => "Decision: " + decision.question),
   ];

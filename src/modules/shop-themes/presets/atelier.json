@@ -1,0 +1,35 @@
+{
+  "id": "atelier",
+  "name": "Atelier",
+  "tagline": "Considered. Collected. Yours.",
+  "description": "Quiet luxury, generous imagery and an editorial rhythm for fashion and home.",
+  "category": "fashion",
+  "layout": {
+    "hero": "split",
+    "cards": "clean",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "luxury",
+    "palette": {
+      "primary": "burgundy",
+      "secondary": "gold",
+      "background": "cream",
+      "surface": "white",
+      "text": "charcoal",
+      "accent": "burgundy"
+    },
+    "typography": "editorial",
+    "density": "airy",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

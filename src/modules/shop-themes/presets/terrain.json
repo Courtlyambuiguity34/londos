@@ -1,0 +1,35 @@
+{
+  "id": "terrain",
+  "name": "Terrain",
+  "tagline": "Made for what\u2019s next.",
+  "description": "A bold image-led storefront for outdoor goods, equipment and lifestyle collections.",
+  "category": "home",
+  "layout": {
+    "hero": "cover",
+    "cards": "framed",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "catalogue",
+    "palette": {
+      "primary": "forest",
+      "secondary": "stone",
+      "background": "white",
+      "surface": "cream",
+      "text": "charcoal",
+      "accent": "forest"
+    },
+    "typography": "modern",
+    "density": "balanced",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

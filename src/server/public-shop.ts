@@ -133,6 +133,19 @@ export async function assemble(
       : [],
   );
   const ids = productReferences(specification);
+  // A merchant may have saved only narrative sections. Their published,
+  // non-archived catalogue still needs a useful storefront, not a blank shelf.
+  if (!sources.length && !ids.length)
+    sources.push(
+      ...departments
+        .slice(0, 4)
+        .map((department) => ({
+          id: department.id,
+          lim: 8,
+          kind: "all" as const,
+          availability: "all" as const,
+        })),
+    );
   let nextCursor: string | null = null;
   let products: PublicProduct[];
   if (destination.product)

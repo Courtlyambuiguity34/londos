@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Londos digital mall — staged implementation",
+  "description": "Londos digital mall \u2014 staged implementation",
   "engines": {
     "node": ">=24.19.0 <25",
     "npm": ">=11 <12"
@@ -51,7 +51,10 @@
     "email:verify": "node --use-env-proxy --import tsx scripts/verify-brevo.ts",
     "pilot": "tsx scripts/pilot.ts",
     "services": "node --use-env-proxy --import tsx scripts/services.ts",
-    "mongo:verify": "node --use-env-proxy --import tsx scripts/verify-mongodb.ts"
+    "mongo:verify": "node --use-env-proxy --import tsx scripts/verify-mongodb.ts",
+    "themes:generate": "node scripts/generate-shop-themes.mjs",
+    "prebuild": "node scripts/generate-shop-themes.mjs",
+    "predev": "node scripts/generate-shop-themes.mjs"
   },
   "dependencies": {
     "better-auth": "1.7.7",

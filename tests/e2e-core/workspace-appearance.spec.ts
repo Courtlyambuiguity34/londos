@@ -83,7 +83,10 @@ async function accessibleLayout(page: Page) {
 }
 async function screenshot(page: Page, name: string) {
   await mkdir("docs/evidence/images", { recursive: true });
-  await page.screenshot({ path: `docs/evidence/images/${name}-2026-10-26.png`, fullPage: true });
+  await page.screenshot({
+    path: `docs/evidence/images/${name}-themes-2026-10-26.png`,
+    fullPage: true,
+  });
 }
 
 test("merchant dashboard, catalogue and designer stay organised at desktop, tablet and small phone widths", async ({
@@ -119,6 +122,7 @@ test("merchant dashboard, catalogue and designer stay organised at desktop, tabl
     if (width === 1440 || width === 390) await screenshot(page, `workspace-shopkeeper-${width}`);
     for (const section of ["catalogue", "design"]) {
       await page.goto(`${base}/${section}`);
+      if (section === "catalogue") await page.getByRole("tab", { name: /^Departments/ }).click();
       await expect(
         page.getByRole("button", {
           name: section === "catalogue" ? "Create department" : "Save draft",
@@ -172,6 +176,7 @@ test("uploaded shop image is selected, previewed and published onto the main mal
     404,
   );
   await page.goto(`${base}/design`);
+  await page.getByRole("tab", { name: /^Branding/ }).click();
   await page.getByLabel("Shop cover image", { exact: true }).selectOption(asset.id);
   await page.getByLabel("Shop logo", { exact: true }).selectOption(asset.id);
   await page.getByRole("button", { name: "Save draft", exact: true }).click();
@@ -189,6 +194,7 @@ test("uploaded shop image is selected, previewed and published onto the main mal
     404,
   );
   await page.goto(`${base}/design`);
+  await page.getByRole("tab", { name: /^Review & publish/ }).click();
   await page
     .getByRole("checkbox", {
       name: "I reviewed this saved draft and confirm publication",
@@ -217,6 +223,7 @@ test("uploaded shop image is selected, previewed and published onto the main mal
   await expect(page).toHaveURL(new RegExp(`/shops/${slug}$`));
   await expect(page.locator(".storefront-cover img")).toBeVisible();
   await page.goto(`${base}/design`);
+  await page.getByRole("tab", { name: /^Review & publish/ }).click();
   await page
     .getByRole("checkbox", {
       name: "I reviewed this saved draft and confirm publication",

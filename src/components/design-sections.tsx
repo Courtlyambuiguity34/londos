@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { distinctShopSections } from "@/modules/shop-themes/sections";
 import {
   shopSpecification,
   type ShopSpecification,
@@ -11,16 +12,52 @@ type Props = {
   products: { id: string; name: string; has_image: boolean }[];
   onChange: (spec: ShopSpecification) => void;
 };
+function sectionText(
+  space: ShopSpace,
+  field: "title" | "body" | "subtitle",
+  value: string,
+): ShopSpace {
+  switch (space.type) {
+    case "hero":
+      return field === "title"
+        ? { ...space, title: { text: value, provenance: "merchant" } }
+        : field === "subtitle"
+          ? { ...space, subtitle: value ? { text: value, provenance: "merchant" } : null }
+          : space;
+    case "featured_product":
+    case "product_section":
+      return field === "title"
+        ? { ...space, title: { text: value, provenance: "merchant" } }
+        : space;
+    case "department_editorial":
+      return field === "title"
+        ? { ...space, title: { text: value, provenance: "merchant" } }
+        : field === "body"
+          ? { ...space, body: { text: value, provenance: "merchant" } }
+          : space;
+    default:
+      if (field === "title" && "title" in space) return { ...space, title: value };
+      if (field === "body" && "body" in space) return { ...space, body: value };
+      return space;
+  }
+}
 export function DesignSections({ specification, departments, products, onChange }: Props) {
   const [type, setType] = useState<ShopSpace["type"]>("entrance"),
-    [title, setTitle] = useState("Welcome to our shop"),
-    [body, setBody] = useState("Explore our catalogue and contact us with questions."),
+    [title, setTitle] = useState(""),
+    [body, setBody] = useState(""),
     [department, setDepartment] = useState(departments[0]?.id ?? ""),
     [ids, setIds] = useState<string[]>([]),
     [limit, setLimit] = useState(4),
     [kind, setKind] = useState<"all" | "product" | "service">("all"),
     [availability, setAvailability] = useState<"all" | "available">("all"),
     [message, setMessage] = useState("");
+  const editText = (id: string, field: "title" | "body" | "subtitle", value: string) =>
+    onChange({
+      ...specification,
+      spaces: specification.spaces.map((space) =>
+        space.id === id ? sectionText(space, field, value) : space,
+      ),
+    });
   const narrative = ["entrance", "story", "offer", "service_desk"].includes(type),
     curated = ["display", "products", "gallery"].includes(type),
     departmental = type === "department" || type === "collection";
@@ -49,8 +86,14 @@ export function DesignSections({ specification, departments, products, onChange 
       );
       return;
     }
+    if (distinctShopSections(checked.data.spaces).length !== checked.data.spaces.length) {
+      setMessage("This section is already on your page. Edit the existing section instead.");
+      return;
+    }
     onChange(checked.data);
     setIds([]);
+    setTitle("");
+    setBody("");
     setMessage("Section added to your unsaved draft. Save and preview before publishing.");
   }
   return (
@@ -60,7 +103,7 @@ export function DesignSections({ specification, departments, products, onChange 
         All text is plain text. Offers describe merchant terms; the service desk uses your saved
         contact settings. Choose up to eight sections and 32 cards in total.
       </p>
-      {specification.spaces.map((space) => {
+      {specification.spaces.map((space, index) => {
         const title =
           "title" in space
             ? typeof space.title === "string"
@@ -75,63 +118,95 @@ export function DesignSections({ specification, departments, products, onChange 
           "commerce_info",
         ].includes(space.type);
         return (
-          <fieldset key={space.id}>
-            <legend>{title} section</legend>
-            {rich ? (
-              <p>
-                This is a trusted responsive designer section. Its provenance-bearing copy and
-                catalogue scope stay intact here; remove it, rearrange it, or ask the design
-                assistant for a reviewed replacement.
-              </p>
-            ) : "title" in space && typeof space.title === "string" ? (
-              <label>
-                Section title
-                <input
-                  maxLength={100}
-                  value={space.title}
-                  onChange={(e) => {
-                    const checked = shopSpecification.safeParse({
-                      ...specification,
-                      spaces: specification.spaces.map((s) =>
-                        s.id === space.id ? { ...space, title: e.target.value } : s,
-                      ),
-                    });
-                    if (checked.success) onChange(checked.data);
+          <details className="editor-section-card" key={space.id}>
+            <summary>
+              <span className="editor-section-number">{index + 1}</span>
+              <span>
+                <strong>{title}</strong>
+                <small>{space.type.replaceAll("_", " ")}</small>
+              </span>
+              <span className="editor-section-edit">Edit</span>
+            </summary>
+            <fieldset>
+              <legend className="sr-only">{title} section</legend>
+              {"title" in space ? (
+                <label>
+                  Section title
+                  <input
+                    aria-label="Section title"
+                    maxLength={100}
+                    value={typeof space.title === "string" ? space.title : space.title.text}
+                    onChange={(event) => editText(space.id, "title", event.target.value)}
+                  />
+                </label>
+              ) : null}
+              {"body" in space ? (
+                <label>
+                  Section text
+                  <textarea
+                    aria-label="Section text"
+                    maxLength={typeof space.body === "string" ? 1000 : 240}
+                    value={typeof space.body === "string" ? space.body : space.body.text}
+                    onChange={(event) => editText(space.id, "body", event.target.value)}
+                  />
+                </label>
+              ) : space.type === "hero" ? (
+                <label>
+                  Section text
+                  <textarea
+                    aria-label="Section text"
+                    maxLength={240}
+                    value={space.subtitle?.text ?? ""}
+                    onChange={(event) => editText(space.id, "subtitle", event.target.value)}
+                  />
+                </label>
+              ) : null}
+              {rich ? (
+                <p>
+                  Product and department assignments stay intact. Use the design assistant to change
+                  a section’s structure.
+                </p>
+              ) : null}
+              <div className="editor-section-actions">
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={index === 0}
+                  onClick={() => {
+                    const spaces = [...specification.spaces];
+                    [spaces[index - 1], spaces[index]] = [spaces[index]!, spaces[index - 1]!];
+                    onChange({ ...specification, spaces });
                   }}
-                />
-              </label>
-            ) : null}
-            {!rich && "body" in space && typeof space.body === "string" ? (
-              <label>
-                Section text
-                <textarea
-                  maxLength={1000}
-                  value={space.body}
-                  onChange={(e) => {
-                    const checked = shopSpecification.safeParse({
-                      ...specification,
-                      spaces: specification.spaces.map((s) =>
-                        s.id === space.id ? { ...space, body: e.target.value } : s,
-                      ),
-                    });
-                    if (checked.success) onChange(checked.data);
+                >
+                  Move {title} up
+                </button>
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={index === specification.spaces.length - 1}
+                  onClick={() => {
+                    const spaces = [...specification.spaces];
+                    [spaces[index + 1], spaces[index]] = [spaces[index]!, spaces[index + 1]!];
+                    onChange({ ...specification, spaces });
                   }}
-                />
-              </label>
-            ) : null}
-            <button
-              type="button"
-              className="text-button"
-              onClick={() =>
-                onChange({
-                  ...specification,
-                  spaces: specification.spaces.filter((s) => s.id !== space.id),
-                })
-              }
-            >
-              Remove {title} section
-            </button>
-          </fieldset>
+                >
+                  Move {title} down
+                </button>
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() =>
+                    onChange({
+                      ...specification,
+                      spaces: specification.spaces.filter((s) => s.id !== space.id),
+                    })
+                  }
+                >
+                  Remove {title} section
+                </button>
+              </div>
+            </fieldset>
+          </details>
         );
       })}
       <label htmlFor="new-section-type">New section type</label>
@@ -168,6 +243,7 @@ export function DesignSections({ specification, departments, products, onChange 
             id="new-section-title"
             maxLength={100}
             value={title}
+            placeholder="A short heading in your own words"
             onChange={(e) => setTitle(e.target.value)}
           />
         </>
@@ -179,6 +255,7 @@ export function DesignSections({ specification, departments, products, onChange 
             id="new-section-text"
             maxLength={1000}
             value={body}
+            placeholder="Tell customers something useful about your shop"
             onChange={(e) => setBody(e.target.value)}
           />
         </>

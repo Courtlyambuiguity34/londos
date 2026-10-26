@@ -12,51 +12,74 @@ import { spaceProducts, type ShopSpace } from "@/modules/shop-design/specificati
 import { shopContactActions } from "@/modules/shop-design/contact-actions";
 import { coreConfig } from "@/server/config";
 import { shopViewHref } from "@/modules/shop-design/view-links";
+import { findShopTheme } from "@/modules/shop-themes/catalogue";
+import { distinctShopSections } from "@/modules/shop-themes/sections";
+import { StorefrontHero, StorefrontCollections } from "./storefront-hero";
+import { Icon } from "./icon";
 
 export function CanonicalProduct({
   product,
   view,
   large = false,
+  detail = false,
 }: {
   product: PublicProduct;
   view: ShopView;
   large?: boolean;
+  detail?: boolean;
 }) {
   return (
-    <article className="product-card canonical-product">
-      {product.media_id && product.alt && product.width && product.height ? (
-        <ReadyImage
-          shopId={view.shop.id}
-          assetId={product.media_id}
-          alt={product.alt}
-          width={product.width}
-          height={product.height}
-          privatePreview={view.privatePreview}
-          large={large}
-        />
-      ) : (
-        <div className="image-placeholder" role="img" aria-label={`No image for ${product.name}`}>
-          Image coming soon
-        </div>
-      )}
-      {large ? (
-        <h1>{product.name}</h1>
-      ) : (
-        <h3>
-          <Link prefetch={false} href={shopViewHref(view, { product: product.slug })}>
-            {product.name}
+    <article
+      className={`product-card canonical-product${detail ? " storefront-product-detail" : ""}`}
+    >
+      <div className="storefront-product-image">
+        {product.media_id && product.alt && product.width && product.height ? (
+          <ReadyImage
+            shopId={view.shop.id}
+            assetId={product.media_id}
+            alt={product.alt}
+            width={product.width}
+            height={product.height}
+            privatePreview={view.privatePreview}
+            large={large}
+          />
+        ) : (
+          <div className="image-placeholder" role="img" aria-label={`No image for ${product.name}`}>
+            Image coming soon
+          </div>
+        )}
+      </div>
+      <div className="storefront-product-copy">
+        {detail ? (
+          <h1>{product.name}</h1>
+        ) : (
+          <h3>
+            <Link prefetch={false} href={shopViewHref(view, { product: product.slug })}>
+              {product.name}
+            </Link>
+          </h3>
+        )}
+        <p className="storefront-product-price">
+          {formatMinorMoney(product.price_minor, product.currency)}
+        </p>
+        <p className="storefront-product-availability">
+          {product.availability === "available"
+            ? product.kind === "service"
+              ? "Service available"
+              : "Available"
+            : "Currently unavailable"}
+        </p>
+        {large ? <p>{product.description}</p> : null}
+        {!detail ? (
+          <Link
+            className="storefront-product-explore"
+            href={shopViewHref(view, { product: product.slug })}
+            prefetch={false}
+          >
+            View {product.kind === "service" ? "service" : "product"} <Icon name="arrow" />
           </Link>
-        </h3>
-      )}
-      <p>{formatMinorMoney(product.price_minor, product.currency)}</p>
-      <p>
-        {product.availability === "available"
-          ? product.kind === "service"
-            ? "Service available"
-            : "Available"
-          : "Currently unavailable"}
-      </p>
-      {large ? <p>{product.description}</p> : null}
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -132,7 +155,7 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
       >
         <div className="designer-hero__copy">
           <p className="eyebrow">{view.shop.category}</p>
-          <h1 id={space.id + "-title"}>{copyText(space.title)}</h1>
+          <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
           {space.subtitle ? <p>{copyText(space.subtitle)}</p> : null}
           {space.cta === "browse" ? (
             <a className="button" href={collection ? `#${collection.id}` : "#shop-departments"}>
@@ -235,6 +258,14 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
 
 export function CanonicalShop({ view, proposal = false }: { view: ShopView; proposal?: boolean }) {
   const development = coreConfig().localAdapters;
+  const theme = findShopTheme(view.specification.storefrontTheme);
+  const spaces = distinctShopSections(view.specification.spaces);
+  const hasProductSections = spaces.some(
+    (space) =>
+      "productIds" in space ||
+      "departmentId" in space ||
+      (space.type === "hero" && space.featuredProductId),
+  );
   const c = view.contact,
     actions = view.specification.actions,
     presentation = view.specification.presentation,
@@ -278,7 +309,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
     >
       <div
         className={
-          "shell shop-page canonical-shop theme-" +
+          `shell shop-page canonical-shop storefront${theme ? ` storefront-${theme.id} hero-${theme.layout.hero} cards-${theme.layout.cards} collections-${theme.layout.departments} corners-${theme.layout.radius}` : ""} theme-` +
           view.specification.theme +
           (presentation
             ? " designer-premise premise-" +
@@ -322,44 +353,18 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             </Link>
           ))}
         </nav>
-        {!view.selectedProduct ? (
-          <header className="canonical-heading">
-            {view.brandingImages?.find(
-              (image) => image.id === view.specification.branding?.coverAssetId,
-            ) ? (
-              <div className="storefront-cover">
-                <ReadyImage
-                  shopId={view.shop.id}
-                  assetId={view.specification.branding!.coverAssetId!}
-                  {...view.brandingImages.find(
-                    (image) => image.id === view.specification.branding?.coverAssetId,
-                  )!}
-                  privatePreview={view.privatePreview}
-                  large
-                />
-              </div>
-            ) : null}
-            {view.brandingImages?.find(
-              (image) => image.id === view.specification.branding?.logoAssetId,
-            ) ? (
-              <div className="storefront-logo">
-                <ReadyImage
-                  shopId={view.shop.id}
-                  assetId={view.specification.branding!.logoAssetId!}
-                  {...view.brandingImages.find(
-                    (image) => image.id === view.specification.branding?.logoAssetId,
-                  )!}
-                  privatePreview={view.privatePreview}
-                />
-              </div>
-            ) : null}
-            <p className="eyebrow">Independent shop</p>
-            <h1>{view.shop.name}</h1>
-            <p>{view.shop.tagline}</p>
-            <p>{view.specification.announcement}</p>
-          </header>
+        {view.specification.announcement ? (
+          <div className="storefront-announcement">{view.specification.announcement}</div>
         ) : null}
-        {!view.privatePreview ? <SearchForm shopId={view.shop.id} maxLength={80} /> : null}
+        <StorefrontHero view={view} />
+        {!view.privatePreview ? (
+          <div className="storefront-search">
+            <SearchForm shopId={view.shop.id} maxLength={80} />
+          </div>
+        ) : null}
+        {!view.selectedDepartment && !view.selectedProduct ? (
+          <StorefrontCollections view={view} />
+        ) : null}
         {view.applicationReviewed && development ? (
           <p className="notice">
             Development application reviewed. This fictional local review does not guarantee
@@ -376,12 +381,15 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
         ) : view.selectedProduct ? (
           <section className="shop-content-section">
             <p className="eyebrow">{view.shop.name}</p>
-            <CanonicalProduct product={view.selectedProduct} view={view} large />
+            <CanonicalProduct product={view.selectedProduct} view={view} large detail />
             <Contacts view={view} />
           </section>
         ) : view.selectedDepartment ? (
           <section className="shop-content-section">
-            <h2>{view.selectedDepartment.name}</h2>
+            <div className="storefront-section-heading">
+              <h2>Explore {view.selectedDepartment.name}</h2>
+              <span>{view.products.length} on this page</span>
+            </div>
             <div className="product-grid">
               {view.products.map((product) => (
                 <CanonicalProduct key={product.id} product={product} view={view} />
@@ -411,7 +419,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             </nav>
           </section>
         ) : (
-          view.specification.spaces.map((space) => {
+          spaces.map((space) => {
             if (
               space.type === "hero" ||
               space.type === "featured_product" ||
@@ -479,7 +487,31 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             );
           })
         )}
-        {!view.selectedProduct ? (
+        {!view.selectedProduct &&
+        !view.selectedDepartment &&
+        !hasProductSections &&
+        view.products.length ? (
+          <section className="shop-content-section" id="shop-products">
+            <div className="storefront-section-heading">
+              <div>
+                <p className="eyebrow">Discover the collection</p>
+                <h2>From our shop.</h2>
+              </div>
+            </div>
+            <div className="product-grid">
+              {view.products.map((product) => (
+                <CanonicalProduct key={product.id} product={product} view={view} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+        {!view.selectedProduct &&
+        !spaces.some(
+          (space) =>
+            space.type === "contact" ||
+            space.type === "commerce_info" ||
+            space.type === "service_desk",
+        ) ? (
           <section id="shop-contact" className="shop-content-section">
             <h2>Make a connection</h2>
             <Contacts view={view} />

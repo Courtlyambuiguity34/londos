@@ -54,6 +54,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     await login(page, accounts.ownerA);
     await publishShopFixture(page);
     await page.goto(`/shopkeeper/shops/${seedIds.shopA}/catalogue`);
+    await page.getByRole("tab", { name: /^Departments/ }).click();
     await expect(
       page.getByRole("button", { name: "Create department", exact: true }),
     ).toBeEnabled();
@@ -61,6 +62,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     await page.getByLabel("Department address", { exact: true }).fill("browser-specials");
     await page.getByRole("button", { name: "Create department", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Department saved.");
+    await page.getByRole("tab", { name: /^Products/ }).click();
     await page.getByLabel("Product or service name", { exact: true }).fill("Browser sample shoes");
     await page.getByLabel("Product address", { exact: true }).fill("browser-sample-shoes");
     await page
@@ -72,6 +74,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
       .fill("123000");
     await page.getByRole("button", { name: "Create product or service", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    await page.getByRole("tab", { name: /^Images/ }).click();
     await page.getByLabel("Image file", { exact: true }).setInputFiles({
       name: "sample.png",
       mimeType: "image/png",
@@ -91,17 +94,20 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     await expect(
       page.getByRole("img", { name: "Fictional plum product image", exact: true }),
     ).toBeVisible({ timeout: 15000 });
+    await page.getByRole("tab", { name: /^Products/ }).click();
     await page.getByRole("button", { name: "Edit Browser sample shoes", exact: true }).click();
     await page
       .getByLabel("Ready image", { exact: true })
       .selectOption({ label: "Fictional plum product image" });
     await page.getByRole("button", { name: "Save product or service", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    await page.getByRole("tab", { name: /^Images/ }).click();
     page.once("dialog", (dialog) => dialog.accept());
     await page
       .getByRole("button", { name: "Delete Fictional plum product image", exact: true })
       .click();
-    await expect(page.getByRole("status")).toContainText("Remove this image from its products");
+    await expect(page.getByRole("status")).toContainText("Remove this image from products");
+    await page.getByRole("tab", { name: /^Images/ }).click();
     await page.getByLabel("Image file", { exact: true }).setInputFiles({
       name: "broken.png",
       mimeType: "image/png",
@@ -118,6 +124,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     await expect(
       page.getByRole("img", { name: "Fictional plum product image", exact: true }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: /^Contact settings/ }).click();
     await page.getByLabel("Call number", { exact: true }).fill("+256700000001");
     await page.getByLabel("WhatsApp number", { exact: true }).fill("+256700000001");
     await page.getByLabel("Website", { exact: true }).fill("https://example.com");
@@ -159,6 +166,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
       ).rows[0].count,
     ).toBe(1);
     await page.reload();
+    await page.getByRole("tab", { name: /^Customer requests/ }).click();
     await expect(
       page.getByRole("button", {
         name: "Acknowledge request from Browser sample customer",
@@ -176,7 +184,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     expect(axe.violations).toEqual([]);
     await mkdir("docs/evidence/images", { recursive: true });
     await page.screenshot({
-      path: "docs/evidence/images/x2-catalogue-desktop.png",
+      path: "docs/evidence/images/catalogue-task-panels-2026-10-26.png",
       fullPage: true,
     });
     await publicPage.screenshot({

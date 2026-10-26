@@ -1,4 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync } from "node:fs";
+const chromiumExecutable =
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+  (process.platform === "linux" && existsSync("/usr/bin/chromium")
+    ? "/usr/bin/chromium"
+    : undefined);
 export default defineConfig({
   testDir: "./tests/e2e-core",
   outputDir: "test-results/core",
@@ -11,14 +17,13 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3101",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
-      : {},
+    launchOptions: chromiumExecutable ? { executablePath: chromiumExecutable } : {},
   },
   projects: [
     {
       name: "core-desktop",
       testMatch: [
+        "storefront-themes.spec.ts",
         "workspace-appearance.spec.ts",
         "shop-addresses.spec.ts",
         "catalogue-feedback.spec.ts",

@@ -1,0 +1,35 @@
+{
+  "id": "studio",
+  "name": "Studio",
+  "tagline": "A space for your expertise.",
+  "description": "An expressive editorial canvas for creatives, beauty and independent services.",
+  "category": "services",
+  "layout": {
+    "hero": "editorial",
+    "cards": "clean",
+    "departments": "tiles",
+    "radius": "soft"
+  },
+  "presentation": {
+    "premiseStyle": "service",
+    "palette": {
+      "primary": "plum",
+      "secondary": "stone",
+      "background": "cream",
+      "surface": "white",
+      "text": "charcoal",
+      "accent": "plum"
+    },
+    "typography": "classic",
+    "density": "airy",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

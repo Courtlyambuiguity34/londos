@@ -77,14 +77,15 @@ test("catalogue recovers from a temporary load failure and its section links wor
     } else await route.continue();
   });
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}/catalogue`);
+  await page.getByRole("tab", { name: /^Departments/ }).click();
   await expect(page.getByRole("status")).toContainText("Workspace unavailable");
   await expect(page.getByRole("button", { name: "Create department", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Reload catalogue", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Catalogue reloaded.");
   await expect(page.getByRole("button", { name: "Create department", exact: true })).toBeEnabled();
   await page
-    .getByRole("navigation", { name: "Catalogue sections" })
-    .getByRole("link", { name: "Contacts", exact: true })
+    .getByRole("tablist", { name: "Catalogue sections" })
+    .getByRole("tab", { name: /^Contact settings/ })
     .click();
   await expect(page).toHaveURL(/#contacts$/);
   await expect(

@@ -118,12 +118,14 @@ test("designer failures give safe actionable references; unsaved drafts cannot p
     await page.unroute(`**${assistant}`);
 
     await page.goto(workspace);
+    await page.getByRole("tab", { name: /^Style/ }).click();
     const theme = page.getByLabel("Shop theme", { exact: true });
     const current = await theme.inputValue();
     await theme.selectOption(current === "blue" ? "plum" : "blue");
     await expect(
       page.getByRole("note").filter({ hasText: "unsaved design changes" }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: /^Review & publish/ }).click();
     await page
       .getByRole("checkbox", {
         name: "I reviewed this saved draft and confirm publication",

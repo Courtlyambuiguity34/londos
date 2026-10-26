@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { WorkspaceSectionNav, useWorkspaceSection } from "./workspace-sections";
 import { formatMinorMoney } from "@/modules/money";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
@@ -55,6 +56,13 @@ type CustomerRequest = {
   status: string;
   version: number;
 };
+const catalogueSections = [
+  { id: "products", label: "Products", description: "Your catalogue" },
+  { id: "departments", label: "Departments", description: "Organise collections" },
+  { id: "images", label: "Images", description: "Photo library" },
+  { id: "contacts", label: "Contact settings", description: "How customers reach you" },
+  { id: "requests", label: "Customer requests", description: "Your inbox" },
+] as const;
 const blankContacts: Contacts = {
   version: 0,
   phone: "",
@@ -73,6 +81,7 @@ export function CatalogueWorkspace({
   shopId: string;
   canDesign?: boolean;
 }) {
+  const { active, select } = useWorkspaceSection(catalogueSections, "products");
   const root = `/api/workspace/shops/${shopId}`;
   const [departments, setDepartments] = useState<Department[]>([]),
     [products, setProducts] = useState<Product[]>([]),
@@ -300,22 +309,13 @@ export function CatalogueWorkspace({
         <Link href="/security">Verify account security</Link> ·{" "}
         <Link href="/sign-in">Sign in again</Link>
       </p>
-      <nav className="merchant-tools" aria-label="Catalogue sections">
-        <a className="button button--outline button--small" href="#departments">
-          Departments
-        </a>
-        <a className="button button--outline button--small" href="#products">
-          Products
-        </a>
-        <a className="button button--outline button--small" href="#images">
-          Images
-        </a>
-        <a className="button button--outline button--small" href="#contacts">
-          Contacts
-        </a>
-        <a className="button button--outline button--small" href="#requests">
-          Customer requests
-        </a>
+      <WorkspaceSectionNav
+        items={catalogueSections}
+        active={active}
+        select={select}
+        label="Catalogue sections"
+      />
+      <div className="catalogue-toolbar">
         <button
           type="button"
           className="button button--outline button--small"
@@ -337,8 +337,14 @@ export function CatalogueWorkspace({
         >
           Reload catalogue
         </button>
-      </nav>
-      <section id="departments" aria-labelledby="departments-title">
+      </div>
+      <section
+        hidden={active !== "departments"}
+        role="tabpanel"
+        aria-label="Departments"
+        id="departments"
+        aria-labelledby="departments-title"
+      >
         <h2 id="departments-title">Departments</h2>
         <ul className="workspace-list">
           {departments.map((d) => (
@@ -347,45 +353,58 @@ export function CatalogueWorkspace({
                 {d.name}
                 {d.archived ? " (archived)" : ""} · position {d.position}
               </span>
-              <button className="text-button" disabled={busy} onClick={() => setDepartment(d)}>
+              <button
+                className="text-button"
+                disabled={busy}
+                onClick={() => {
+                  select("departments");
+                  setDepartment(d);
+                }}
+              >
                 Edit {d.name}
               </button>
             </li>
           ))}
         </ul>
         <form
-          className="account-form"
+          className="account-form editor-form-grid"
           key={department ? `${department.id}:${department.version}` : "new-department"}
           onSubmit={departmentSubmit}
         >
           <h3>{department ? "Edit department" : "Create department"}</h3>
-          <label htmlFor="department-name">Department name</label>
-          <input
-            id="department-name"
-            name="name"
-            defaultValue={department?.name}
-            required
-            maxLength={120}
-          />
-          <label htmlFor="department-slug">Department address</label>
-          <input
-            id="department-slug"
-            name="slug"
-            defaultValue={department?.slug}
-            required
-            pattern="[a-z0-9]+(-[a-z0-9]+)*"
-            maxLength={80}
-          />
-          <label htmlFor="department-position">Department position</label>
-          <input
-            id="department-position"
-            name="position"
-            type="number"
-            min={0}
-            max={1000000}
-            defaultValue={department?.position ?? 0}
-            required
-          />
+          <div className="editor-form-field">
+            <label htmlFor="department-name">Department name</label>
+            <input
+              id="department-name"
+              name="name"
+              defaultValue={department?.name}
+              required
+              maxLength={120}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="department-slug">Department address</label>
+            <input
+              id="department-slug"
+              name="slug"
+              defaultValue={department?.slug}
+              required
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              maxLength={80}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="department-position">Department position</label>
+            <input
+              id="department-position"
+              name="position"
+              type="number"
+              min={0}
+              max={1000000}
+              defaultValue={department?.position ?? 0}
+              required
+            />
+          </div>
           <label className="check-label">
             <input name="archived" type="checkbox" defaultChecked={department?.archived} /> Archive
             department (archive or move its products first)
@@ -402,17 +421,65 @@ export function CatalogueWorkspace({
           </div>
         </form>
       </section>
-      <section id="products" aria-labelledby="products-title">
+      <section
+        hidden={active !== "products"}
+        role="tabpanel"
+        aria-label="Products"
+        id="products"
+        aria-labelledby="products-title"
+      >
         <h2 id="products-title">Products and services</h2>
-        {!products.length && <p>No products on this page. Create one below.</p>}
+        {!products.length && (
+          <div className="catalogue-empty">
+            <h3>Make room for your first product.</h3>
+            <p>Start with a department, then add a product or service with its photo and price.</p>
+            <button
+              className="button button--outline"
+              type="button"
+              onClick={() => select("departments")}
+            >
+              Organise departments
+            </button>
+          </div>
+        )}
         <ul className="workspace-list">
           {products.map((p) => (
             <li key={p.id}>
-              <span>
-                {p.name} · {formatMinorMoney(p.price_minor, p.currency)} · {p.availability}
-              </span>
+              <div className="catalogue-product-identity">
+                {p.media_id ? (
+                  <Image
+                    src={`${root}/media/${p.media_id}/thumbnail`}
+                    alt=""
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="catalogue-product-photo"
+                  />
+                ) : (
+                  <span
+                    className="catalogue-product-photo catalogue-product-letter"
+                    aria-hidden="true"
+                  >
+                    {p.name.slice(0, 1)}
+                  </span>
+                )}
+                <div>
+                  <strong>{p.name}</strong>
+                  <span>
+                    {formatMinorMoney(p.price_minor, p.currency)} ·{" "}
+                    {p.availability.replaceAll("_", " ")}
+                  </span>
+                </div>
+              </div>
               <div className="account-links">
-                <button className="text-button" disabled={busy} onClick={() => setProduct(p)}>
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => {
+                    select("products");
+                    setProduct(p);
+                  }}
+                >
                   Edit {p.name}
                 </button>
                 {p.availability !== "archived" && (
@@ -455,104 +522,124 @@ export function CatalogueWorkspace({
           </button>
         </div>
         <form
-          className="account-form"
+          className="account-form editor-form-grid"
           key={product ? `${product.id}:${product.version}` : "new-product"}
           onSubmit={productSubmit}
         >
           <h3>{product ? "Edit product or service" : "Create product or service"}</h3>
-          <label htmlFor="product-name">Product or service name</label>
-          <input
-            id="product-name"
-            name="name"
-            defaultValue={product?.name}
-            required
-            maxLength={160}
-          />
-          <label htmlFor="product-slug">Product address</label>
-          <input
-            id="product-slug"
-            name="slug"
-            defaultValue={product?.slug}
-            required
-            pattern="[a-z0-9]+(-[a-z0-9]+)*"
-            maxLength={80}
-          />
-          <label htmlFor="product-department">Department</label>
-          <select
-            id="product-department"
-            name="department"
-            defaultValue={product?.department_id}
-            required
-          >
-            {departments
-              .filter((d) => !d.archived)
-              .map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
+          <div className="editor-form-field">
+            <label htmlFor="product-name">Product or service name</label>
+            <input
+              id="product-name"
+              name="name"
+              defaultValue={product?.name}
+              required
+              maxLength={160}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-slug">Product address</label>
+            <input
+              id="product-slug"
+              name="slug"
+              defaultValue={product?.slug}
+              required
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              maxLength={80}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-department">Department</label>
+            <select
+              id="product-department"
+              name="department"
+              defaultValue={product?.department_id}
+              required
+            >
+              {departments
+                .filter((d) => !d.archived)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-kind">Type</label>
+            <select id="product-kind" name="kind" defaultValue={product?.kind ?? "product"}>
+              <option value="product">Product</option>
+              <option value="service">Service</option>
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-description">Description</label>
+            <textarea
+              id="product-description"
+              name="description"
+              defaultValue={product?.description}
+              maxLength={2000}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-currency">Currency</label>
+            <select id="product-currency" name="currency" defaultValue={product?.currency ?? "UGX"}>
+              {["UGX", "USD", "KES", "EUR", "GBP"].map((c) => (
+                <option key={c}>{c}</option>
               ))}
-          </select>
-          <label htmlFor="product-kind">Type</label>
-          <select id="product-kind" name="kind" defaultValue={product?.kind ?? "product"}>
-            <option value="product">Product</option>
-            <option value="service">Service</option>
-          </select>
-          <label htmlFor="product-description">Description</label>
-          <textarea
-            id="product-description"
-            name="description"
-            defaultValue={product?.description}
-            maxLength={2000}
-          />
-          <label htmlFor="product-currency">Currency</label>
-          <select id="product-currency" name="currency" defaultValue={product?.currency ?? "UGX"}>
-            {["UGX", "USD", "KES", "EUR", "GBP"].map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-          <label htmlFor="product-price">
-            Price in minor units (leave blank for ask-for-price)
-          </label>
-          <input
-            id="product-price"
-            name="price"
-            defaultValue={product?.price_minor ?? ""}
-            inputMode="numeric"
-            pattern="(0|[1-9][0-9]{0,19})"
-            maxLength={20}
-          />
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-price">
+              Price in minor units (leave blank for ask-for-price)
+            </label>
+            <input
+              id="product-price"
+              name="price"
+              defaultValue={product?.price_minor ?? ""}
+              inputMode="numeric"
+              pattern="(0|[1-9][0-9]{0,19})"
+              maxLength={20}
+            />
+          </div>
           <p>UGX uses whole shillings; USD, KES, EUR and GBP use hundredths.</p>
-          <label htmlFor="product-availability">Availability</label>
-          <select
-            id="product-availability"
-            name="availability"
-            defaultValue={product?.availability ?? "available"}
-          >
-            {["available", "unavailable", "archived"].map((a) => (
-              <option key={a}>{a}</option>
-            ))}
-          </select>
-          <label htmlFor="product-position">Product position</label>
-          <input
-            id="product-position"
-            name="position"
-            type="number"
-            min={0}
-            max={1000000}
-            defaultValue={product?.position ?? 0}
-            required
-          />
-          <label htmlFor="product-image">Ready image</label>
-          <select id="product-image" name="image" defaultValue={product?.media_id ?? ""}>
-            <option value="">No image</option>
-            {media
-              .filter((m) => m.state === "ready")
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.alt}
-                </option>
+          <div className="editor-form-field">
+            <label htmlFor="product-availability">Availability</label>
+            <select
+              id="product-availability"
+              name="availability"
+              defaultValue={product?.availability ?? "available"}
+            >
+              {["available", "unavailable", "archived"].map((a) => (
+                <option key={a}>{a}</option>
               ))}
-          </select>
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-position">Product position</label>
+            <input
+              id="product-position"
+              name="position"
+              type="number"
+              min={0}
+              max={1000000}
+              defaultValue={product?.position ?? 0}
+              required
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-image">Ready image</label>
+            <select id="product-image" name="image" defaultValue={product?.media_id ?? ""}>
+              <option value="">No image</option>
+              {media
+                .filter((m) => m.state === "ready")
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.alt}
+                  </option>
+                ))}
+            </select>
+          </div>
           <div className="account-links">
             <button
               className="button"
@@ -568,7 +655,13 @@ export function CatalogueWorkspace({
           </div>
         </form>
       </section>
-      <section id="images" aria-labelledby="images-title">
+      <section
+        hidden={active !== "images"}
+        role="tabpanel"
+        aria-label="Images"
+        id="images"
+        aria-labelledby="images-title"
+      >
         <h2 id="images-title">Shop images</h2>
         <p>
           Uploading adds an image to your library. Assign it to a product, or choose it as your
@@ -585,17 +678,21 @@ export function CatalogueWorkspace({
           Describe the image for customers using assistive technology. Processing must finish before
           an image can be assigned.
         </p>
-        <form className="account-form" onSubmit={upload}>
-          <label htmlFor="media-file">Image file</label>
-          <input
-            id="media-file"
-            name="file"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            required
-          />
-          <label htmlFor="media-alt">Image description</label>
-          <input id="media-alt" name="alt" required maxLength={240} />
+        <form className="account-form editor-form-grid" onSubmit={upload}>
+          <div className="editor-form-field">
+            <label htmlFor="media-file">Image file</label>
+            <input
+              id="media-file"
+              name="file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              required
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="media-alt">Image description</label>
+            <input id="media-alt" name="alt" required maxLength={240} />
+          </div>
           <button className="button" disabled={busy || !loaded}>
             Upload image
           </button>
@@ -663,68 +760,92 @@ export function CatalogueWorkspace({
           ))}
         </ul>
       </section>
-      <section id="contacts" aria-labelledby="contacts-title">
+      <section
+        hidden={active !== "contacts"}
+        role="tabpanel"
+        aria-label="Contact settings"
+        id="contacts"
+        aria-labelledby="contacts-title"
+      >
         <h2 id="contacts-title">Contact and commerce settings</h2>
         <p>
           Sensitive changes require recent authentication. Payment instructions describe your terms;
           they do not collect a payment.
         </p>
-        <form className="account-form" key={contacts.version} onSubmit={contactsSubmit}>
-          <label htmlFor="contact-phone">Call number</label>
-          <input
-            id="contact-phone"
-            name="phone"
-            type="tel"
-            defaultValue={contacts.phone}
-            placeholder="+256…"
-            pattern="\+[1-9][0-9]{7,14}"
-          />
-          <label htmlFor="contact-whatsapp">WhatsApp number</label>
-          <input
-            id="contact-whatsapp"
-            name="whatsapp"
-            type="tel"
-            defaultValue={contacts.whatsapp}
-            placeholder="+256…"
-            pattern="\+[1-9][0-9]{7,14}"
-          />
-          <label htmlFor="contact-website">Website</label>
-          <input
-            id="contact-website"
-            name="website"
-            type="url"
-            defaultValue={contacts.website}
-            placeholder="https://example.com"
-            maxLength={500}
-          />
-          <label htmlFor="contact-fulfilment">Delivery and pickup</label>
-          <select id="contact-fulfilment" name="fulfilment" defaultValue={contacts.fulfilment}>
-            {["contact", "pickup", "delivery", "pickup_and_delivery"].map((f) => (
-              <option value={f} key={f}>
-                {f.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="contact-delivery">Delivery or pickup instructions</label>
-          <textarea
-            id="contact-delivery"
-            name="delivery"
-            defaultValue={contacts.delivery_instructions}
-            maxLength={500}
-          />
-          <label htmlFor="contact-payment">Merchant payment instructions</label>
-          <textarea
-            id="contact-payment"
-            name="payment"
-            defaultValue={contacts.payment_instructions}
-            maxLength={500}
-          />
+        <form
+          className="account-form editor-form-grid"
+          key={contacts.version}
+          onSubmit={contactsSubmit}
+        >
+          <div className="editor-form-field">
+            <label htmlFor="contact-phone">Call number</label>
+            <input
+              id="contact-phone"
+              name="phone"
+              type="tel"
+              defaultValue={contacts.phone}
+              placeholder="+256…"
+              pattern="\+[1-9][0-9]{7,14}"
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="contact-whatsapp">WhatsApp number</label>
+            <input
+              id="contact-whatsapp"
+              name="whatsapp"
+              type="tel"
+              defaultValue={contacts.whatsapp}
+              placeholder="+256…"
+              pattern="\+[1-9][0-9]{7,14}"
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="contact-website">Website</label>
+            <input
+              id="contact-website"
+              name="website"
+              type="url"
+              defaultValue={contacts.website}
+              placeholder="https://example.com"
+              maxLength={500}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="contact-fulfilment">Delivery and pickup</label>
+            <select id="contact-fulfilment" name="fulfilment" defaultValue={contacts.fulfilment}>
+              {["contact", "pickup", "delivery", "pickup_and_delivery"].map((f) => (
+                <option value={f} key={f}>
+                  {f.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="contact-delivery">Delivery or pickup instructions</label>
+            <textarea
+              id="contact-delivery"
+              name="delivery"
+              defaultValue={contacts.delivery_instructions}
+              maxLength={500}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="contact-payment">Merchant payment instructions</label>
+            <textarea
+              id="contact-payment"
+              name="payment"
+              defaultValue={contacts.payment_instructions}
+              maxLength={500}
+            />
+          </div>
           <label className="check-label">
             <input type="checkbox" name="enquiries" defaultChecked={contacts.enquiries_enabled} />{" "}
             Enable customer requests when this shop is eligible to receive them
           </label>
-          <label htmlFor="contact-reason">Reason for this change</label>
-          <input id="contact-reason" name="reason" required minLength={3} maxLength={240} />
+          <div className="editor-form-field">
+            <label htmlFor="contact-reason">Reason for this change</label>
+            <input id="contact-reason" name="reason" required minLength={3} maxLength={240} />
+          </div>
           <button className="button" disabled={busy || !loaded}>
             Save contact settings
           </button>
@@ -735,7 +856,13 @@ export function CatalogueWorkspace({
           </p>
         )}
       </section>
-      <section id="requests" aria-labelledby="requests-title">
+      <section
+        hidden={active !== "requests"}
+        role="tabpanel"
+        aria-label="Customer requests"
+        id="requests"
+        aria-labelledby="requests-title"
+      >
         <h2 id="requests-title">Customer requests</h2>
         <p>
           A request is not a confirmed order, payment or stock reservation. Contact the customer to

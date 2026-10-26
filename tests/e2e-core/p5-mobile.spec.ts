@@ -12,6 +12,7 @@ test("mobile catalogue is accessible, bounded and denies an ungranted tenant", a
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your shops.", exact: true })).toBeVisible();
   await page.goto(`/shopkeeper/shops/${seedIds.shopA}/catalogue`);
+  await page.getByRole("tab", { name: /^Departments/ }).click();
   await expect(page.getByRole("button", { name: "Create department", exact: true })).toBeEnabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,

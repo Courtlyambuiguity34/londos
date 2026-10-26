@@ -1,0 +1,35 @@
+{
+  "id": "signal",
+  "name": "Signal",
+  "tagline": "Clarity in every detail.",
+  "description": "Crisp product-first grids and precise typography for electronics and specialist shops.",
+  "category": "electronics",
+  "layout": {
+    "hero": "catalogue",
+    "cards": "framed",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "electronics",
+    "palette": {
+      "primary": "navy",
+      "secondary": "sky",
+      "background": "white",
+      "surface": "cream",
+      "text": "charcoal",
+      "accent": "navy"
+    },
+    "typography": "technical",
+    "density": "balanced",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 4
+    }
+  }
+}

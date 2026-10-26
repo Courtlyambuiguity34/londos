@@ -237,6 +237,7 @@ test("finance-only and design-only staff see their granted workspace without cat
   await expect(
     page.getByRole("link", { name: "Upload or manage shop images", exact: false }),
   ).toHaveCount(0);
+  await page.getByRole("tab", { name: /^Branding/ }).click();
   await expect(
     page.getByText("Ask a catalogue editor to upload images for this shop.", { exact: false }),
   ).toBeVisible();

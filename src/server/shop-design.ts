@@ -14,6 +14,7 @@ import { transaction } from "./db/pool";
 import { requireShop, requireStepUp, type Actor } from "./security/authorization";
 import { AccessError } from "./security/errors";
 import { audit } from "./security/audit";
+import { findShopTheme } from "../modules/shop-themes/catalogue";
 
 export const saveDesignInput = z
   .object({
@@ -60,6 +61,8 @@ export async function validateReferences(
   shopId: string,
   spec: ShopSpecification,
 ) {
+  if (spec.storefrontTheme && !findShopTheme(spec.storefrontTheme))
+    throw new AccessError(422, "theme_unavailable");
   const departments = departmentReferences(spec),
     products = productReferences(spec);
   const branding = brandingReferences(spec);

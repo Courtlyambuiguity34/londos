@@ -1,0 +1,35 @@
+{
+  "id": "pulse",
+  "name": "Pulse",
+  "tagline": "Show up your way.",
+  "description": "Strong type, graphic borders and a confident gallery for clothing and statement products.",
+  "category": "fashion",
+  "layout": {
+    "hero": "cover",
+    "cards": "bold",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "streetwear",
+    "palette": {
+      "primary": "black",
+      "secondary": "gold",
+      "background": "white",
+      "surface": "cream",
+      "text": "black",
+      "accent": "black"
+    },
+    "typography": "modern",
+    "density": "balanced",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

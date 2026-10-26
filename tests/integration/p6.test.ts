@@ -39,6 +39,7 @@ import {
 } from "../../src/server/media";
 import { claim, acknowledge } from "../../src/server/jobs/queue";
 import sharp from "sharp";
+import { shopThemes, applyShopTheme } from "../../src/modules/shop-themes/catalogue";
 const parentURL = process.env.DATABASE_URL!,
   parent = new Pool({ connectionString: parentURL }),
   name = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -864,4 +865,96 @@ test("shop discovery falls back to an assigned public product image and never to
     await pool.query("UPDATE tenancies SET state='active' WHERE shop_id=$1", [shop]);
     await pool.query("UPDATE shop_publication SET state='active' WHERE shop_id=$1", [shop]);
   }
+});
+
+test("theme selection remains private until publication and preserves catalogue and financial identity", async () => {
+  const before = (
+    await pool.query("SELECT id,name,slug,version,merchant_id FROM shops WHERE id=$1", [shop])
+  ).rows;
+  const productsBefore = (await pool.query("SELECT * FROM products WHERE shop_id=$1", [shop])).rows;
+  let version = 0;
+  for (const theme of shopThemes) {
+    const changed = await saveDesign(pool, actors.ownerA!, shop, {
+      version,
+      summary: `Choose ${theme.name}`,
+      specification: applyShopTheme(specification(), theme.id),
+    });
+    version = changed.version;
+    expect(
+      (await readPrivatePreview(pool, actors.ownerA!, shop)).specification.storefrontTheme,
+    ).toBe(theme.id);
+    await expect(readPublicShop(pool, shop)).rejects.toMatchObject({ status: 404 });
+  }
+  const selected = await readDesign(pool, actors.ownerA!, shop);
+  const live = await publishDesign(pool, actors.ownerA!, shop, {
+    version,
+    revision: selected.revision!,
+    confirm: true,
+  });
+  expect((await readPublicShop(pool, shop)).specification.storefrontTheme).toBe(
+    shopThemes.at(-1)!.id,
+  );
+  const replacement = await saveDesign(pool, actors.ownerA!, shop, {
+    version: live.version,
+    summary: "Private theme replacement",
+    specification: applyShopTheme(specification(), shopThemes[0]!.id),
+  });
+  expect((await readPublicShop(pool, shop)).specification.storefrontTheme).toBe(
+    shopThemes.at(-1)!.id,
+  );
+  expect((await readPrivatePreview(pool, actors.ownerA!, shop)).specification.storefrontTheme).toBe(
+    shopThemes[0]!.id,
+  );
+  await expect(
+    saveDesign(pool, actors.ownerA!, shop, {
+      version: replacement.version,
+      summary: "Unreviewed code must not become a theme",
+      specification: { ...specification(), storefrontTheme: "unreviewed-theme" },
+    }),
+  ).rejects.toMatchObject({ status: 422, code: "theme_unavailable" });
+  await expect(
+    saveDesign(pool, actors.ownerB!, shop, {
+      version: replacement.version,
+      summary: "Foreign theme edit",
+      specification: applyShopTheme(specification(), shopThemes[0]!.id),
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  expect(
+    (await pool.query("SELECT id,name,slug,version,merchant_id FROM shops WHERE id=$1", [shop]))
+      .rows,
+  ).toEqual(before);
+  expect((await pool.query("SELECT * FROM products WHERE shop_id=$1", [shop])).rows).toEqual(
+    productsBefore,
+  );
+  expect((await readDesign(pool, actors.ownerA!, shop)).version).toBe(replacement.version);
+});
+
+test("a published narrative-only design still shows its current owned catalogue and respects archived departments", async () => {
+  const draft = await saveDesign(pool, actors.ownerA!, shop, {
+    version: 0,
+    summary: "Merchant-only story",
+    specification: {
+      ...specification(),
+      spaces: [
+        {
+          id: "intro",
+          type: "entrance",
+          version: 1,
+          title: "Merchant introduction",
+          body: "Original merchant content",
+        },
+      ],
+    },
+  });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  const current = await readPublicShop(pool, shop);
+  expect(current.products.map((product) => product.id)).toEqual([product]);
+  expect(current.departments.map((d) => d.id)).toContain(department);
+  expect(current.products.every((item) => item.department_id === department)).toBe(true);
+  await pool.query("UPDATE departments SET archived=true WHERE id=$1", [department]);
+  const archived = await readPublicShop(pool, shop);
+  expect(archived.products).toEqual([]);
+  expect(archived.departments).toEqual([]);
+  await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shop]);
+  await expect(readPublicShop(pool, shop)).rejects.toMatchObject({ status: 404 });
 });

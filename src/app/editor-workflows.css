@@ -1,0 +1,581 @@
+.portal-shell [role="tabpanel"][hidden] {
+  display: none !important;
+}
+.portal-shell .workspace-section-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.portal-shell .workspace-section-nav > button {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  gap: 3px;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  min-height: 62px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: 400 13px/1.5 var(--sans);
+}
+.portal-shell .workspace-section-nav > button > span {
+  font-weight: 600;
+}
+.portal-shell .workspace-section-nav small {
+  font-size: 10px;
+  font-weight: 400;
+}
+.portal-shell .workspace-section-nav > button[aria-selected="true"] {
+  background: var(--white);
+  border-color: var(--line);
+  color: var(--green);
+  box-shadow: 0 2px 6px #292b2406;
+}
+.portal-shell .workspace-section-nav > button:hover {
+  background: var(--white);
+  color: var(--ink);
+}
+.portal-shell .catalogue-workspace {
+  gap: 18px;
+}
+.portal-shell .catalogue-workspace > .workspace-section-nav {
+  margin-bottom: 0;
+}
+.catalogue-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.portal-shell .catalogue-workspace > section {
+  margin: 0;
+}
+.portal-shell .catalogue-empty {
+  padding: 28px;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.catalogue-empty h3 {
+  font-size: 18px;
+}
+.catalogue-empty p {
+  max-width: 56ch;
+  font-size: 13px;
+}
+.catalogue-product-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.catalogue-product-identity > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.catalogue-product-identity strong {
+  font-size: 14px;
+}
+.catalogue-product-identity div > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.catalogue-product-photo {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.catalogue-product-letter {
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  font: 400 28px/1 var(--serif);
+}
+.portal-shell .editor-workflow {
+  gap: 18px;
+}
+.portal-shell .editor-workflow > .account-form {
+  background: none;
+  border: 0;
+  padding: 0;
+  display: block;
+}
+.portal-shell .editor-workflow [role="tabpanel"] {
+  border: 0;
+  padding: 0;
+  background: none;
+  display: block;
+}
+.portal-shell .editor-workflow [role="tabpanel"] > fieldset {
+  background: var(--white);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  margin: 0 0 24px;
+  display: grid;
+  gap: 12px;
+}
+.portal-shell .editor-workflow #branding > label {
+  display: grid;
+  gap: 10px;
+}
+.portal-shell .editor-workflow #branding > select {
+  margin-bottom: 18px;
+}
+.portal-shell .editor-workflow #branding > label input {
+  width: 100%;
+}
+.portal-shell .editor-workflow #review {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  padding: 24px;
+}
+.portal-shell .editor-workflow #review > h2 {
+  font: 700 20px/1.35 var(--sans);
+  margin: 28px 0 12px;
+  letter-spacing: -0.025em;
+}
+.portal-shell .editor-workflow #review > p {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.portal-shell .editor-workflow #review > .button,
+.portal-shell .editor-workflow #review > .check-label {
+  margin: 12px 12px 12px 0;
+}
+.editor-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.portal-shell .editor-section-heading h2 {
+  font: 400 clamp(26px, 3vw, 38px)/1.15 var(--serif);
+  max-width: 24ch;
+  letter-spacing: -0.04em;
+  margin-bottom: 12px;
+}
+.editor-section-heading p {
+  max-width: 62ch;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.editor-section-heading .eyebrow {
+  font-size: 10px;
+  margin-bottom: 10px;
+  color: var(--green);
+}
+.editor-section-heading > label {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
+}
+.portal-shell .editor-save-bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 16px 20px;
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 6px 24px #292b2412;
+}
+.portal-shell .editor-save-bar > label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 180px;
+  flex: 1;
+}
+.portal-shell .editor-save-bar > label input {
+  min-width: 0;
+}
+.editor-save-state {
+  font-size: 11px;
+  color: var(--muted);
+  align-self: center;
+}
+.portal-shell .editor-workflow .editor-section-card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+.editor-section-card > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 66px;
+  padding: 14px 18px;
+  background: var(--paper);
+}
+.editor-section-card > summary > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.editor-section-card summary strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.editor-section-card summary small {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: capitalize;
+}
+.editor-section-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 11px;
+}
+.editor-section-edit {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--green);
+}
+.portal-shell .editor-section-card > fieldset {
+  border: 0;
+  padding: 18px;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.editor-section-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.editor-notice {
+  padding: 18px;
+  background: var(--white);
+  border-left: 3px solid var(--orange);
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+.editor-notice .button {
+  margin-top: 12px;
+}
+.editor-hint {
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 24px 0 12px;
+  max-width: 80ch;
+}
+.theme-library-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.theme-choice {
+  min-width: 0;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.theme-choice[data-selected="true"] {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green);
+}
+.theme-choice-body {
+  padding: 20px;
+}
+.theme-choice-body > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.theme-choice-body h3 {
+  font: 400 26px/1.2 var(--serif);
+}
+.theme-choice-body > div > span {
+  font-size: 10px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 3px 10px;
+  text-transform: capitalize;
+}
+.theme-choice-body p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 12px 0 18px;
+  min-height: 42px;
+}
+.theme-miniature {
+  background: var(--theme-background);
+  color: var(--theme-text);
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  pointer-events: none;
+}
+.miniature-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 8px;
+  margin-bottom: 14px;
+}
+.miniature-nav > span {
+  font-size: 6px;
+}
+.miniature-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 170px;
+  gap: 16px;
+  align-items: center;
+}
+.miniature-hero > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.miniature-hero small {
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.miniature-hero strong {
+  font: 400 clamp(18px, 2.2vw, 30px)/1.15 var(--serif);
+  color: var(--theme-primary);
+}
+.miniature-button {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 7px 10px;
+  background: var(--theme-primary);
+  color: var(--theme-background);
+  font-size: 6px;
+}
+.miniature-photo {
+  height: 180px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--theme-secondary);
+}
+.miniature-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.miniature-shape {
+  width: 65%;
+  height: 68%;
+  background: var(--theme-primary);
+  opacity: 0.65;
+  border-radius: 30% 10% 20% 10%;
+  transform: rotate(-8deg);
+}
+.miniature-products {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.miniature-products span {
+  height: 36px;
+  background: var(--theme-secondary);
+  opacity: 0.5;
+}
+.miniature-editorial .miniature-hero > div:first-child {
+  order: 2;
+}
+.miniature-cover .miniature-hero {
+  position: relative;
+  background: var(--theme-primary);
+  padding: 20px;
+  min-height: 180px;
+  overflow: hidden;
+}
+.miniature-cover .miniature-hero > div:first-child {
+  z-index: 2;
+  grid-column: 1/-1;
+  width: 70%;
+  color: #fff;
+}
+.miniature-cover .miniature-hero strong {
+  color: #fff;
+}
+.miniature-cover .miniature-photo {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  opacity: 0.2;
+}
+.miniature-cover .miniature-button {
+  background: #fff;
+  color: #292b24;
+}
+.miniature-catalogue .miniature-photo {
+  height: 140px;
+}
+.portal-shell .communications-workspace > [role="tabpanel"] {
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  border-radius: 12px;
+}
+.portal-shell .editor-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: none;
+  gap: 20px;
+}
+.editor-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.portal-shell .editor-form-field label {
+  margin: 0;
+}
+.editor-form-field > input,
+.editor-form-field > select,
+.editor-form-field > textarea {
+  width: 100%;
+}
+.portal-shell .account-form input,
+.portal-shell .account-form select,
+.portal-shell .account-form textarea {
+  font-weight: 400;
+}
+.editor-form-field:has(textarea),
+.editor-form-field:has(input[type="file"]),
+.portal-shell .editor-form-grid > .account-links,
+.portal-shell .editor-form-grid > .check-label {
+  grid-column: 1/-1;
+}
+.portal-shell .editor-form-grid > h2,
+.portal-shell .editor-form-grid > h3,
+.portal-shell .editor-form-grid > p,
+.portal-shell .editor-form-grid > .checkbox-label,
+.portal-shell .editor-form-grid > button {
+  grid-column: 1/-1;
+}
+.portal-shell .editor-form-grid > h2 {
+  font: 700 22px/1.4 var(--sans);
+  letter-spacing: -0.025em;
+}
+.portal-shell .editor-form-grid > h3 {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.portal-shell .editor-form-grid > button {
+  justify-self: start;
+}
+.portal-shell .editor-form-grid > p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .theme-library-grid {
+    gap: 16px;
+  }
+  .miniature-hero {
+    min-height: 140px;
+    gap: 10px;
+  }
+  .miniature-photo {
+    height: 140px;
+  }
+  .miniature-hero strong {
+    font-size: 22px;
+  }
+}
+@media (max-width: 900px) {
+  .portal-shell .editor-save-bar {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 600px) {
+  .portal-shell .workspace-section-nav {
+    gap: 6px;
+  }
+  .portal-shell .workspace-section-nav > button {
+    padding: 10px 12px;
+    min-height: 48px;
+    font-size: 12px;
+  }
+  .workspace-section-nav small {
+    display: none;
+  }
+  .theme-library-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .editor-section-heading {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .editor-section-heading > label {
+    width: 100%;
+  }
+  .portal-shell .editor-section-heading h2 {
+    font-size: 30px;
+  }
+  .miniature-hero {
+    min-height: 170px;
+  }
+  .miniature-photo {
+    height: 180px;
+  }
+  .miniature-hero strong {
+    font-size: 30px;
+  }
+  .portal-shell .editor-save-bar {
+    padding: 14px;
+    gap: 10px;
+  }
+  .portal-shell .editor-save-bar > label {
+    flex-basis: 100%;
+  }
+  .editor-save-state {
+    flex-basis: 100%;
+  }
+  .portal-shell .editor-workflow [role="tabpanel"] > fieldset {
+    padding: 20px;
+  }
+  .portal-shell .editor-workflow #review {
+    padding: 20px;
+  }
+  .portal-shell .communications-workspace > [role="tabpanel"] {
+    padding: 20px;
+  }
+  .portal-shell .editor-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

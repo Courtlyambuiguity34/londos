@@ -60,6 +60,7 @@ async function ownShop(page: Page) {
 }
 
 async function createDepartment(page: Page, name: string, slug: string) {
+  await page.getByRole("tab", { name: /^Departments/ }).click();
   await page.getByLabel("Department name", { exact: true }).fill(name);
   await page.getByLabel("Department address", { exact: true }).fill(slug);
   const submission = page.waitForResponse(
@@ -70,6 +71,7 @@ async function createDepartment(page: Page, name: string, slug: string) {
 }
 
 async function createProduct(page: Page, name: string, slug: string) {
+  await page.getByRole("tab", { name: /^Products/ }).click();
   await page.getByLabel("Product or service name", { exact: true }).fill(name);
   await page.getByLabel("Product address", { exact: true }).fill(slug);
   await page.getByLabel("Price in minor units", { exact: false }).fill("5000");
@@ -87,6 +89,7 @@ test("catalogue has one main heading; consecutive creates reset their forms whil
   const fixture = await ownShop(page);
   try {
     await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    await page.getByRole("tab", { name: /^Departments/ }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Products & contacts");
     await expect(
       page.getByRole("button", { name: "Create department", exact: true }),
@@ -153,6 +156,7 @@ test("confirmed catalogue write survives a failed read refresh and requires relo
   const fixture = await ownShop(page);
   try {
     await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    await page.getByRole("tab", { name: /^Departments/ }).click();
     await expect(
       page.getByRole("button", { name: "Create department", exact: true }),
     ).toBeEnabled();

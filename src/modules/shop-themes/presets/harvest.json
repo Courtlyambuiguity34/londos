@@ -1,0 +1,35 @@
+{
+  "id": "harvest",
+  "name": "Harvest",
+  "tagline": "Good things, close to home.",
+  "description": "Warm, approachable shelves and rounded collection tiles for produce and everyday goods.",
+  "category": "food",
+  "layout": {
+    "hero": "split",
+    "cards": "soft",
+    "departments": "round",
+    "radius": "soft"
+  },
+  "presentation": {
+    "premiseStyle": "food",
+    "palette": {
+      "primary": "forest",
+      "secondary": "sage",
+      "background": "cream",
+      "surface": "white",
+      "text": "charcoal",
+      "accent": "forest"
+    },
+    "typography": "friendly",
+    "density": "balanced",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}
