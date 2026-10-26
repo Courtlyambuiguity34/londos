@@ -1,5 +1,17 @@
 # Londos continuation handoff
 
+**Latest marketplace experience — 26 October 2026:** continue on
+`feature/hosted-lifecycle-secure-2026-10-23` from `60e5025`; read the
+[reference review](COMPETITIVE-EXPERIENCE.md) and
+[discovery evidence](evidence/DISCOVERY-EXPERIENCE-2026-10-26.md).
+Discovery uses original image-led cards and current canonical product matches.
+Saved shops store at most 40 IDs on the browser and resolve public eligibility
+again through a bounded same-origin endpoint. Preserve the current price/media
+and tenant gates, browser storage failure feedback, sharing fallbacks, explicit
+theme publication and the unsupported-design fail-closed correction. There are
+no new environment variables, SQL migrations, packages or live provider effects.
+Do not overwrite previous theme screenshots when repeating older browser tests.
+
 **Current hosted follow-up — 26 October 2026:** work targets
 `feature/hosted-lifecycle-secure-2026-10-23`, continuing from `61e0f47`, with readiness migration
 **036**. The [verified theme/editor update](evidence/THEMES-2026-10-26.md) records the

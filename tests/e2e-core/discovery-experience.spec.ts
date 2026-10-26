@@ -1,0 +1,470 @@
+import { test, expect, type Page } from "./fixture";
+import { Pool } from "pg";
+import { randomUUID } from "node:crypto";
+import { readFile, mkdir } from "node:fs/promises";
+import sharp from "sharp";
+import AxeBuilder from "@axe-core/playwright";
+import { createAuth } from "../../src/server/security/auth";
+import { coreConfig } from "../../src/server/config";
+import { resolveActor } from "../../src/server/security/authorization";
+import { seedIds } from "../../src/server/db/seed";
+import { imageVariants } from "../../src/server/media";
+import { saveDesign, publishDesign } from "../../src/server/shop-design";
+import { applyShopTheme } from "../../src/modules/shop-themes/catalogue";
+import { SAVED_SHOPS_KEY } from "../../src/modules/discovery/saved-contract";
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
+const origin = "http://127.0.0.1:3101";
+const shops: { id: string; slug: string; name: string; asset: string }[] = [];
+test.beforeAll(async () => {
+  if (!/^\/londos_test_/.test(new URL(process.env.DATABASE_URL!).pathname))
+    throw Error("Disposable database required");
+  // Playwright restarts a worker after a failed assertion. Reuse this file's
+  // completed fixture in that disposable DB instead of colliding with its URLs.
+  const existing = (
+    await pool.query(
+      "SELECT s.id,s.slug,s.name,a.id AS asset FROM shops s JOIN media_assets a ON a.shop_id=s.id WHERE s.slug=ANY($1::text[])",
+      [["northline-goods", "the-green-room", "field-and-found", "circuit-studio"]],
+    )
+  ).rows;
+  if (existing.length === 4) {
+    for (const slug of ["northline-goods", "the-green-room", "field-and-found", "circuit-studio"])
+      shops.push(existing.find((entry) => entry.slug === slug)!);
+    return;
+  }
+  const auth = createAuth(pool, coreConfig(), true);
+  const account = {
+    email: `discovery-${randomUUID()}@londos.invalid`,
+    password: `Fictional-${randomUUID()}`,
+  };
+  const person = await auth.api.signUpEmail({
+    body: { ...account, name: "Fictional discovery merchant" },
+  });
+  await pool.query('UPDATE "user" SET "emailVerified"=true WHERE id=$1', [person.user.id]);
+  const response = await auth.handler(
+    new Request(`${origin}/api/auth/sign-in/email`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify(account),
+    }),
+  );
+  const cookie = response.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  const actor = await resolveActor(auth, new Headers({ cookie }));
+  const merchant = randomUUID();
+  await pool.query("INSERT INTO merchants(id,name) VALUES($1,'Fictional discovery merchant')", [
+    merchant,
+  ]);
+  await pool.query("INSERT INTO memberships(merchant_id,user_id,role) VALUES($1,$2,'owner')", [
+    merchant,
+    person.user.id,
+  ]);
+  const entries = [
+    {
+      name: "Northline Goods",
+      slug: "northline-goods",
+      category: "fashion",
+      art: "shop-fashion",
+      tagline: "Considered pieces for everyday adventures.",
+      theme: "atelier",
+    },
+    {
+      name: "The Green Room",
+      slug: "the-green-room",
+      category: "home",
+      art: "shop-home",
+      tagline: "Objects and small details that make a home.",
+      theme: "harvest",
+    },
+    {
+      name: "Field & Found",
+      slug: "field-and-found",
+      category: "food",
+      art: "shop-food",
+      tagline: "Good things, grown and gathered close to home.",
+      theme: "harvest",
+    },
+    {
+      name: "Circuit Studio",
+      slug: "circuit-studio",
+      category: "electronics",
+      art: "shop-electronics",
+      tagline: "Everyday technology, thoughtfully selected.",
+      theme: "signal",
+    },
+  ];
+  for (const entry of entries) {
+    const id = randomUUID(),
+      asset = randomUUID(),
+      department = randomUUID(),
+      product = randomUUID();
+    const variants = await imageVariants(
+      await sharp(await readFile(`public/illustrations/${entry.art}.svg`))
+        .resize({ width: 1200 })
+        .png()
+        .toBuffer(),
+      "image/png",
+      AbortSignal.timeout(5000),
+    );
+    await pool.query(
+      "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category,tagline) VALUES($1,$2,$3,$4,$5,$6,$7)",
+      [id, merchant, seedIds.mallA, entry.name, entry.slug, entry.category, entry.tagline],
+    );
+    await pool.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'unpublished')", [id]);
+    await pool.query("INSERT INTO shop_moderation(shop_id,state) VALUES($1,'clear')", [id]);
+    await pool.query("INSERT INTO tenancies(shop_id,state) VALUES($1,'active')", [id]);
+    await pool.query(
+      "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Everyday collection','everyday',0)",
+      [department, id, merchant],
+    );
+    await pool.query(
+      "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,description,currency,price_minor,availability) VALUES($1,$2,$3,$4,'product','City carry','city-carry','A fictional carry bag for layout verification.','UGX',125000,'available')",
+      [product, id, merchant, department],
+    );
+    await pool.query(
+      "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,created_by,alt,width,height) VALUES($1,$2,$3,'ready',$1::uuid::text,$4,'Fictional independent shop illustration',1200,860)",
+      [asset, id, merchant, person.user.id],
+    );
+    for (const variant of variants)
+      await pool.query(
+        "INSERT INTO media_blobs(asset_id,variant,bytes,width,height) VALUES($1,$2,$3,$4,$5)",
+        [asset, variant.variant, variant.bytes, variant.width, variant.height],
+      );
+    await pool.query(
+      "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+      [product, asset, id, merchant],
+    );
+    await pool.query(
+      "INSERT INTO shop_contacts(shop_id,merchant_id,version,phone,whatsapp,enquiries_enabled,fulfilment,delivery_instructions,payment_instructions) VALUES($1,$2,1,'+256700000099','+256700000099',true,'pickup','Arrange collection directly with the shop.','Confirm payment details with the merchant.')",
+      [id, merchant],
+    );
+    const draft = await saveDesign(pool, actor, id, {
+      version: 0,
+      summary: "Fictional discovery fixture",
+      specification: applyShopTheme(
+        {
+          schemaVersion: 1,
+          theme: "earth",
+          announcement: "Discover the collection. Connect directly with our shop.",
+          branding: { coverAssetId: asset, logoAssetId: null },
+          actions: ["whatsapp", "call", "enquiry"],
+          spaces: [
+            {
+              id: "collection",
+              type: "department",
+              version: 1,
+              departmentId: department,
+              limit: 8,
+            },
+          ],
+        },
+        entry.theme,
+      ),
+    });
+    await publishDesign(pool, actor, id, { ...draft, confirm: true });
+    shops.push({ id, slug: entry.slug, name: entry.name, asset });
+  }
+});
+test.afterAll(async () => pool.end());
+async function inspect(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(
+    (
+      await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()
+    ).violations.map((value) => ({ id: value.id, nodes: value.nodes.map((node) => node.target) })),
+  ).toEqual([]);
+}
+async function shot(page: Page, name: string, fullPage = true) {
+  await mkdir("docs/evidence/images", { recursive: true });
+  await page.screenshot({
+    path: `docs/evidence/images/discovery-${name}-2026-10-26.png`,
+    fullPage,
+  });
+}
+
+test("mall cards, category context and exact product prices are accessible on desktop and phones", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  for (const width of [1440, 900, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Good shops.");
+    const card = page
+      .locator(".discovery-card")
+      .filter({ has: page.getByRole("heading", { name: shops[0]!.name, exact: true }) });
+    await expect(card.locator("img")).toBeVisible();
+    await expect
+      .poll(() =>
+        card
+          .locator("img")
+          .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
+      )
+      .toBe(true);
+    expect(await card.locator("a button").count()).toBe(0);
+    await inspect(page);
+    if (width === 1440 || width === 390) await shot(page, `mall-${width}`);
+  }
+  await page.goto(`/search?shop=${shops[0]!.id}&q=carry`);
+  await expect(page.locator(".discovery-match-price")).toHaveText(/125,000/);
+  await expect(
+    page.getByRole("link", { name: "City carry at Northline Goods", exact: true }),
+  ).toHaveAttribute("href", "/shops/northline-goods/products/city-carry");
+  const categories = page.getByRole("navigation", { name: "Filter by category" });
+  await categories.getByRole("link", { name: "Home & living", exact: true }).click();
+  expect(new URL(page.url()).searchParams.get("shop")).toBe(shops[0]!.id);
+  await expect(page.getByText("No shops matched this search.", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Clear category ×", exact: true }).click();
+  await expect(page.locator(".discovery-match-price")).toHaveText(/125,000/);
+  await inspect(page);
+  await shot(page, "product-search-mobile");
+  await page.goto(`/search?shop=${shops[0]!.id}&q=nothing-matches-here`);
+  await page.getByRole("link", { name: "Browse this shop", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) => url.searchParams.get("shop") === shops[0]!.id && !url.searchParams.has("q"),
+  );
+  await expect(page.getByRole("link", { name: "Northline Goods", exact: true })).toBeVisible();
+  await page.goto(`/search?shop=${shops[0]!.id}&q=carry`);
+  await page.route(`**/api/public/shops/${shops[0]!.id}/media/**`, (route) =>
+    route.fulfill({ status: 404, body: "missing" }),
+  );
+  await page.reload();
+  await expect(page.getByRole("img", { name: /image currently unavailable/i })).toBeVisible();
+  await page.getByRole("link", { name: "City carry at Northline Goods", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("City carry");
+});
+
+test("saved shops persist IDs only, recheck visibility, sync tabs and recover from network/storage failures", async ({
+  page,
+  context,
+  browser,
+}) => {
+  test.setTimeout(100_000);
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Save Northline Goods to saved shops", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Remove Northline Goods from saved shops", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const raw = await page.evaluate((key) => localStorage.getItem(key), SAVED_SHOPS_KEY);
+  expect(JSON.parse(raw!)).toEqual([shops[0]!.id]);
+  await page.goto("/saved");
+  await expect(page.getByRole("heading", { name: "Northline Goods", exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Northline Goods", exact: true })).toBeVisible();
+  await inspect(page);
+  await shot(page, "saved-desktop");
+  const second = await context.newPage();
+  await second.goto("/saved");
+  await second
+    .getByRole("button", { name: "Remove Northline Goods from saved shops", exact: true })
+    .click();
+  await expect(page.getByText("Keep your favourites close.", { exact: true })).toBeVisible();
+  await second.close();
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Save Northline Goods to saved shops", exact: true })
+    .click();
+  await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shops[0]!.id]);
+  try {
+    await page.goto("/saved");
+    await expect(
+      page.getByText("These shops aren't available right now.", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Northline Goods", exact: true })).toHaveCount(
+      0,
+    );
+    expect(
+      JSON.parse((await page.evaluate((key) => localStorage.getItem(key), SAVED_SHOPS_KEY))!),
+    ).toEqual([shops[0]!.id]);
+  } finally {
+    await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [shops[0]!.id]);
+  }
+  await page.route("**/api/public/saved-shops", (route) =>
+    route.fulfill({ status: 503, json: { error: "service_unavailable" } }),
+  );
+  await page.reload();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Saved shops could not be loaded." }),
+  ).toBeVisible();
+  await page.unroute("**/api/public/saved-shops");
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Northline Goods", exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await inspect(page);
+  await shot(page, "saved-mobile");
+  const fresh = await browser.newContext();
+  const other = await fresh.newPage();
+  await other.goto(`${origin}/saved`);
+  await expect(other.getByText("Keep your favourites close.", { exact: true })).toBeVisible();
+  await fresh.close();
+  await page.getByRole("button", { name: "Clear saved shops", exact: true }).click();
+  await page.goto("/");
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException("Unavailable", "SecurityError");
+    };
+  });
+  await page
+    .getByRole("button", { name: "Save Northline Goods to saved shops", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "This browser could not save" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save Northline Goods to saved shops", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+});
+
+test("product contacts, scoped search and public share fallbacks work without leaking preview links", async ({
+  page,
+}) => {
+  test.setTimeout(70_000);
+  const path = "/shops/northline-goods/products/city-carry";
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as Window & { copied?: string }).copied = text;
+        },
+      },
+    });
+  });
+  await page.goto(path + "?unwanted=private#not-for-sharing");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("City carry");
+  await expect(
+    page.getByRole("searchbox", { name: "Search Northline Goods", exact: true }),
+  ).toBeVisible();
+  const contacts = page.locator("#product-contact");
+  const whatsapp = contacts.getByRole("link", { name: "Message on WhatsApp", exact: true });
+  const href = await whatsapp.getAttribute("href");
+  expect(new URL(href!).hostname).toBe("wa.me");
+  expect(new URL(href!).searchParams.get("text")).toContain(`${origin}${path}`);
+  await expect(
+    contacts.getByRole("link", { name: "Send an enquiry", exact: true }),
+  ).toHaveAttribute("href", `/contact/${shops[0]!.id}`);
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  expect(await page.evaluate(() => (window as Window & { copied?: string }).copied)).toBe(
+    origin + path,
+  );
+  await expect(page.getByRole("status").filter({ hasText: "Link copied." })).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw Error("blocked");
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Shop link", exact: true })).toHaveValue(
+    origin + path,
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async () => {} },
+    });
+  });
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Shop link", exact: true })).toHaveCount(0);
+  await inspect(page);
+  await shot(page, "product-desktop");
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(
+    page.getByRole("complementary", { name: "Quick product contact", exact: true }),
+  ).toBeInViewport();
+  await page
+    .getByRole("complementary", { name: "Quick product contact", exact: true })
+    .getByRole("link", { name: "Contact shop", exact: true })
+    .click();
+  await expect(contacts).toBeInViewport();
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await inspect(page);
+  // Capture the actual viewport after reaching contacts. A full-page capture
+  // of a scrolled page misrepresents fixed UI and the offscreen skip link.
+  await shot(page, "product-mobile", false);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async () => {
+        throw new DOMException("cancelled", "AbortError");
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect(page.getByText("This link cannot be shared.", { exact: true })).toHaveCount(0);
+});
+
+test("saved public API rejects cross-site, malformed and oversized requests and pages beyond twenty shops", async ({
+  request,
+}) => {
+  test.setTimeout(60_000);
+  const endpoint = "/api/public/saved-shops";
+  expect(
+    (
+      await request.post(endpoint, {
+        headers: { origin: "https://untrusted.invalid" },
+        data: { ids: [shops[0]!.id] },
+      })
+    ).status(),
+  ).toBe(403);
+  for (const data of [
+    { ids: ["not-an-id"] },
+    { ids: [], includePrivate: true },
+    { ids: Array.from({ length: 41 }, () => randomUUID()) },
+  ])
+    expect((await request.post(endpoint, { headers: { origin }, data })).status()).toBe(422);
+  expect(
+    (
+      await request.post(endpoint, {
+        headers: { origin, "content-type": "application/json" },
+        data: "x".repeat(9000),
+      })
+    ).status(),
+  ).toBe(422);
+  const original = shops[0]!.id;
+  const ids = [original];
+  for (let index = 0; index < 23; index++) {
+    const id = randomUUID();
+    ids.push(id);
+    await pool.query(
+      "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category) SELECT $1,merchant_id,mall_id,'Fictional saved pagination',$2,category FROM shops WHERE id=$3",
+      [id, `saved-boundary-${id}`, original],
+    );
+    await pool.query("INSERT INTO tenancies(shop_id,state) VALUES($1,'active')", [id]);
+    await pool.query("INSERT INTO shop_moderation(shop_id,state) VALUES($1,'clear')", [id]);
+    await pool.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'active')", [id]);
+    await pool.query(
+      'INSERT INTO shop_revisions(id,shop_id,merchant_id,revision,schema_version,design,summary,author_id) SELECT gen_random_uuid(),$1,merchant_id,1,1,\'{"schemaVersion":1,"theme":"earth","announcement":"","spaces":[],"actions":[]}\'::jsonb,\'Saved pagination fixture\',author_id FROM shop_revisions WHERE shop_id=$2 LIMIT 1',
+      [id, original],
+    );
+    await pool.query(
+      "INSERT INTO shop_designs(shop_id,merchant_id,published_id) SELECT $1,merchant_id,id FROM shop_revisions WHERE shop_id=$1",
+      [id],
+    );
+  }
+  const response = await request.post(endpoint, {
+    headers: { origin },
+    data: { ids: [...ids, original, randomUUID()] },
+  });
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  const body = await response.json();
+  expect(body.results).toHaveLength(24);
+  expect(new Set(body.results.map((value: { id: string }) => value.id)).size).toBe(24);
+  for (const result of body.results) {
+    expect(result).not.toHaveProperty("merchant_id");
+    expect(result).not.toHaveProperty("created_by");
+    expect(ids).toContain(result.id);
+  }
+});

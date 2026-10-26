@@ -706,6 +706,80 @@ async function brandingUpload(alt: string) {
   return started.id as string;
 }
 
+test("discovery product matches expose current prices and eligible product imagery instead of unrelated covers", async () => {
+  const cover = await brandingUpload("Fictional shop cover"),
+    image = await brandingUpload("Fictional matched product");
+  await pool.query("UPDATE products SET name='Zebra satchel' WHERE id=$1", [product]);
+  await pool.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [product, image, shop, seedIds.merchantA],
+  );
+  const draft = await saveDesign(pool, actors.ownerA!, shop, {
+    version: 0,
+    summary: "Product match fixture",
+    specification: { ...specification(), branding: { coverAssetId: cover, logoAssetId: null } },
+  });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  const search = new PostgresSearch(pool);
+  expect((await search.search({ query: "", shopId: shop })).results[0]).toMatchObject({
+    image: { id: cover },
+    match: null,
+  });
+  expect((await search.search({ query: "zebra", shopId: shop })).results[0]).toMatchObject({
+    product_slug: "sample-shoes",
+    image: { id: image },
+    match: {
+      name: "Zebra satchel",
+      kind: "product",
+      price_minor: "123000",
+      currency: "UGX",
+      availability: "available",
+    },
+  });
+  await pool.query(
+    "UPDATE products SET price_minor=NULL,kind='service',availability='unavailable' WHERE id=$1",
+    [product],
+  );
+  expect((await search.search({ query: "zebra", shopId: shop })).results[0]?.match).toMatchObject({
+    price_minor: null,
+    kind: "service",
+    availability: "unavailable",
+  });
+  await pool.query("UPDATE products SET availability='archived' WHERE id=$1", [product]);
+  expect((await search.search({ query: "zebra", shopId: shop })).results).toEqual([]);
+});
+
+test("saved lookup is bounded and cannot expose unpublished, closed, suspended or paused shops", async () => {
+  const state = await published();
+  const search = new PostgresSearch(pool),
+    missing = randomUUID();
+  expect((await search.search({ query: "", shopIds: [] })).results).toEqual([]);
+  expect(
+    (await search.search({ query: "", shopIds: [shop, shop, missing] })).results.map(
+      (row) => row.id,
+    ),
+  ).toEqual([shop]);
+  for (const [relation, column, restricted, normal] of [
+    ["tenancies", "state", "closed", "active"],
+    ["shop_moderation", "state", "suspended", "clear"],
+  ]) {
+    await pool.query(`UPDATE ${relation} SET ${column}=$2 WHERE shop_id=$1`, [shop, restricted]);
+    expect((await search.search({ query: "", shopIds: [shop] })).results).toEqual([]);
+    await pool.query(`UPDATE ${relation} SET ${column}=$2 WHERE shop_id=$1`, [shop, normal]);
+  }
+  await pool.query(
+    "INSERT INTO shop_operations(shop_id,merchant_id,paused,reason,changed_by) VALUES($1,$2,true,'Fictional visibility test',$3) ON CONFLICT(shop_id) DO UPDATE SET paused=true",
+    [shop, seedIds.merchantA, actors.ownerA!.userId],
+  );
+  expect((await search.search({ query: "", shopIds: [shop] })).results).toEqual([]);
+  await pool.query("UPDATE shop_operations SET paused=false WHERE shop_id=$1", [shop]);
+  await unpublishDesign(pool, actors.ownerA!, shop, { version: state.version, confirm: true });
+  expect((await search.search({ query: "", shopIds: [shop] })).results).toEqual([]);
+  await expect(
+    search.search({ query: "", shopIds: Array.from({ length: 41 }, () => randomUUID()) }),
+  ).rejects.toThrow();
+});
+
 test("shop branding publishes actual ready uploads on discovery without exposing draft-only replacements", async () => {
   const cover = await brandingUpload("Fictional storefront cover"),
     logo = await brandingUpload("Fictional storefront logo");

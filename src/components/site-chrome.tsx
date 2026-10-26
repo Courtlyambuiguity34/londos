@@ -6,10 +6,10 @@ import { workspaceAccess, requestPathname, isWorkspacePath } from "@/server/navi
 import { MobileNavigation } from "./mobile-navigation";
 
 export async function SiteHeader() {
-  const pathname=await requestPathname();
-  if(isWorkspacePath(pathname)) return null;
+  const pathname = await requestPathname();
+  if (isWorkspacePath(pathname)) return null;
   const mode = previewCapabilities().mode;
-  const access=await workspaceAccess();
+  const access = await workspaceAccess();
   return (
     <>
       {mode !== "database-core" ? (
@@ -33,6 +33,7 @@ export async function SiteHeader() {
         </Link>
         <nav aria-label="Main navigation" className="main-nav">
           <Link href="/search">Explore shops</Link>
+          <Link href="/saved">Saved shops</Link>
           <Link href="/about">Our mall</Link>
         </nav>
         <div className="header-actions">
@@ -41,21 +42,31 @@ export async function SiteHeader() {
               Shopkeeper <Icon name="external" />
             </Link>
           ) : null}
-          {access.landlord ? <Link href="/landlord" className="shopkeeper-link">Management <Icon name="external" /></Link> : null}
-          {(!access.landlord || access.shopkeeper) ? <Link href="/rent-a-shop" className="button button--small">
-            Open your shop <Icon name="arrow" />
-          </Link> : null}
+          {access.landlord ? (
+            <Link href="/landlord" className="shopkeeper-link">
+              Management <Icon name="external" />
+            </Link>
+          ) : null}
+          {!access.landlord || access.shopkeeper ? (
+            <Link href="/rent-a-shop" className="button button--small">
+              Open your shop <Icon name="arrow" />
+            </Link>
+          ) : null}
         </div>
-        <MobileNavigation showShopkeeper={access.shopkeeper} showLandlord={access.landlord} showRentCta={!access.landlord || access.shopkeeper} />
+        <MobileNavigation
+          showShopkeeper={access.shopkeeper}
+          showLandlord={access.landlord}
+          showRentCta={!access.landlord || access.shopkeeper}
+        />
       </header>
     </>
   );
 }
 
 export async function SiteFooter() {
-  const pathname=await requestPathname();
-  if(isWorkspacePath(pathname)) return null;
-  const access=await workspaceAccess();
+  const pathname = await requestPathname();
+  if (isWorkspacePath(pathname)) return null;
+  const access = await workspaceAccess();
   const mode = previewCapabilities().mode;
   return (
     <footer className="site-footer">
@@ -79,7 +90,10 @@ export async function SiteFooter() {
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/search">Explore the mall</Link>
-          {(!access.landlord || access.shopkeeper) ? <Link href="/rent-a-shop">Become a shopkeeper</Link> : null}
+          <Link href="/saved">Saved shops</Link>
+          {!access.landlord || access.shopkeeper ? (
+            <Link href="/rent-a-shop">Become a shopkeeper</Link>
+          ) : null}
           <Link href="/about">About Londos</Link>
           <Link href="/install">Install Londos</Link>
           <Link href="/privacy">Privacy</Link>

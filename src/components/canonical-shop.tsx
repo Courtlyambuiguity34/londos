@@ -16,6 +16,8 @@ import { findShopTheme } from "@/modules/shop-themes/catalogue";
 import { distinctShopSections } from "@/modules/shop-themes/sections";
 import { StorefrontHero, StorefrontCollections } from "./storefront-hero";
 import { Icon } from "./icon";
+import { SaveShopButton } from "./save-shop-button";
+import { ShareShopButton } from "./share-shop-button";
 
 export function CanonicalProduct({
   product,
@@ -70,6 +72,23 @@ export function CanonicalProduct({
             : "Currently unavailable"}
         </p>
         {large ? <p>{product.description}</p> : null}
+        {detail ? (
+          <div id="product-contact" className="product-contact-panel">
+            <h2>Interested in this {product.kind === "service" ? "service" : "product"}?</h2>
+            <p>Ask {view.shop.name} about availability and arrangements.</p>
+            <Contacts view={view} />
+            <Link
+              prefetch={false}
+              href={shopViewHref(view, {
+                department: view.departments.find(
+                  (department) => department.id === product.department_id,
+                )?.slug,
+              })}
+            >
+              Explore more from this shop <Icon name="arrow" />
+            </Link>
+          </div>
+        ) : null}
         {!detail ? (
           <Link
             className="storefront-product-explore"
@@ -86,7 +105,15 @@ export function CanonicalProduct({
 function Contacts({ view }: { view: ShopView }) {
   const c = view.contact;
   if (!c) return <p>Contact details will appear when the shop provides them.</p>;
-  const actions = shopContactActions(view);
+  const actions = shopContactActions(view).map((action) => {
+    if (action.kind !== "whatsapp" || !view.selectedProduct || view.privatePreview) return action;
+    const href = new URL(action.href);
+    href.searchParams.set(
+      "text",
+      `Hello, I'd like to ask about ${view.selectedProduct.name}. ${new URL(shopViewHref(view, { product: view.selectedProduct.slug }), coreConfig().baseURL).href}`,
+    );
+    return { ...action, href: href.href };
+  });
   return (
     <div className="canonical-contacts">
       <div className="button-row">
@@ -309,7 +336,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
     >
       <div
         className={
-          `shell shop-page canonical-shop storefront${theme ? ` storefront-${theme.id} hero-${theme.layout.hero} cards-${theme.layout.cards} collections-${theme.layout.departments} corners-${theme.layout.radius}` : ""} theme-` +
+          `shell shop-page canonical-shop storefront${view.selectedProduct ? " storefront--product" : ""}${theme ? ` storefront-${theme.id} hero-${theme.layout.hero} cards-${theme.layout.cards} collections-${theme.layout.departments} corners-${theme.layout.radius}` : ""} theme-` +
           view.specification.theme +
           (presentation
             ? " designer-premise premise-" +
@@ -348,18 +375,44 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             Whole shop
           </Link>
           {view.departments.map((d) => (
-            <Link prefetch={false} key={d.id} href={shopViewHref(view, { department: d.slug })}>
+            <Link
+              prefetch={false}
+              key={d.id}
+              href={shopViewHref(view, { department: d.slug })}
+              aria-current={view.selectedDepartment?.id === d.id ? "page" : undefined}
+            >
               {d.name}
             </Link>
           ))}
         </nav>
+        {!view.privatePreview ? (
+          <div className="storefront-visitor-tools">
+            <Link prefetch={false} href={shopViewHref(view)}>
+              Shop home
+            </Link>
+            <div>
+              <SaveShopButton id={view.shop.id} name={view.shop.name} />
+              <ShareShopButton
+                path={shopViewHref(
+                  view,
+                  view.selectedProduct ? { product: view.selectedProduct.slug } : {},
+                )}
+                title={
+                  view.selectedProduct
+                    ? `${view.selectedProduct.name} · ${view.shop.name}`
+                    : view.shop.name
+                }
+              />
+            </div>
+          </div>
+        ) : null}
         {view.specification.announcement ? (
           <div className="storefront-announcement">{view.specification.announcement}</div>
         ) : null}
         <StorefrontHero view={view} />
         {!view.privatePreview ? (
           <div className="storefront-search">
-            <SearchForm shopId={view.shop.id} maxLength={80} />
+            <SearchForm shopId={view.shop.id} shopName={view.shop.name} maxLength={80} />
           </div>
         ) : null}
         {!view.selectedDepartment && !view.selectedProduct ? (
@@ -380,9 +433,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           />
         ) : view.selectedProduct ? (
           <section className="shop-content-section">
-            <p className="eyebrow">{view.shop.name}</p>
             <CanonicalProduct product={view.selectedProduct} view={view} large detail />
-            <Contacts view={view} />
           </section>
         ) : view.selectedDepartment ? (
           <section className="shop-content-section">
@@ -535,6 +586,23 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             </Link>
           ) : null}
         </aside>
+        {view.selectedProduct && shopContactActions(view).length && !view.privatePreview ? (
+          <aside className="product-mobile-contact" aria-label="Quick product contact">
+            <div>
+              <strong>
+                {formatMinorMoney(view.selectedProduct.price_minor, view.selectedProduct.currency)}
+              </strong>
+              <span>
+                {view.selectedProduct.availability === "available"
+                  ? "Ask the shop for details"
+                  : "Currently unavailable"}
+              </span>
+            </div>
+            <a className="button" href="#product-contact">
+              Contact shop <Icon name="arrow" />
+            </a>
+          </aside>
+        ) : null}
       </div>
     </PilotObserver>
   );

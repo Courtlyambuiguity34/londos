@@ -1,5 +1,14 @@
 # Build status and next model setting
 
+**Latest marketplace experience — 26 October 2026:** the
+[competitor reference review](COMPETITIVE-EXPERIENCE.md) and
+[discovery verification](evidence/DISCOVERY-EXPERIENCE-2026-10-26.md) describe the
+image-led mall cards, current product-match prices, browser-local saved shops,
+public sharing and product contact layout on the same hosted branch, continuing
+from `60e5025`. No new environment variables, dependencies or migration were
+added. The recorded checks verify this scope, not full platform parity or a live
+Render deployment. Earlier theme/editor and workflow evidence below is retained.
+
 **Current hosted follow-up — 26 October 2026:** work targets
 `feature/hosted-lifecycle-secure-2026-10-23`, continuing from `61e0f47`, with readiness migration
 **036**. The [verified theme/editor update](evidence/THEMES-2026-10-26.md) records the

@@ -105,7 +105,8 @@ export async function assemble(
   privatePreview: boolean,
   destination: ShopDestination = {},
 ): Promise<ShopView> {
-  const specification = shopSpecification.safeParse(row.design).data ?? emptySpec;
+  const parsedSpecification = shopSpecification.safeParse(row.design);
+  const specification = parsedSpecification.data ?? emptySpec;
   const departments = (
     await client.query(
       "SELECT id,name,slug FROM departments WHERE shop_id=$1 AND archived=false ORDER BY position,id LIMIT 100",
@@ -135,7 +136,7 @@ export async function assemble(
   const ids = productReferences(specification);
   // A merchant may have saved only narrative sections. Their published,
   // non-archived catalogue still needs a useful storefront, not a blank shelf.
-  if (!sources.length && !ids.length)
+  if (parsedSpecification.success && !sources.length && !ids.length)
     sources.push(
       ...departments.slice(0, 4).map((department) => ({
         id: department.id,
@@ -146,7 +147,8 @@ export async function assemble(
     );
   let nextCursor: string | null = null;
   let products: PublicProduct[];
-  if (destination.product)
+  if (!parsedSpecification.success) products = [];
+  else if (destination.product)
     products = (
       await client.query(
         `SELECT ${productColumns} FROM products q JOIN departments d ON d.id=q.department_id ${mediaJoin} WHERE q.shop_id=$1 AND q.availability<>'archived' AND d.archived=false AND (q.slug=$2 OR q.id::text=$2) LIMIT 1`,

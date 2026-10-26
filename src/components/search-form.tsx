@@ -7,12 +7,14 @@ export function SearchForm({
   category,
   shopId,
   maxLength = MAX_QUERY_LENGTH,
+  shopName,
 }: {
   query?: string;
   large?: boolean;
   category?: string;
   shopId?: string;
   maxLength?: number;
+  shopName?: string;
 }) {
   return (
     <form
@@ -23,19 +25,23 @@ export function SearchForm({
     >
       <Icon name="search" />
       <label className="sr-only" htmlFor={large ? "hero-search" : "directory-search"}>
-        Search shops and what they sell
+        {shopId ? `Search ${shopName ?? "this shop"}` : "Search shops and what they sell"}
       </label>
       <input
         id={large ? "hero-search" : "directory-search"}
         type="search"
         name="q"
-        placeholder="Try shoes, homeware, a favourite shop…"
+        placeholder={
+          shopId
+            ? "Find a product or service in this shop…"
+            : "Try shoes, homeware, a favourite shop…"
+        }
         defaultValue={query}
         maxLength={maxLength}
       />
       {category ? <input type="hidden" name="category" value={category} /> : null}
       {shopId ? <input type="hidden" name="shop" value={shopId} /> : null}
-      <button type="submit" aria-label="Search the mall">
+      <button type="submit" aria-label={shopId ? "Search this shop" : "Search the mall"}>
         <span>Search</span>
         <Icon name="arrow" />
       </button>

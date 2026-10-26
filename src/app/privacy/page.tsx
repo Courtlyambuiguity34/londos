@@ -6,7 +6,7 @@ export default function Page() {
     <article className="shell page-section prose-page policy-page">
       <p className="eyebrow">Your information</p>
       <h1>Privacy policy</h1>
-      <p>Effective 21 October 2026</p>
+      <p>Effective 26 October 2026</p>
       <p>
         This policy explains how Londos handles information when you browse shops, create an account
         or use a private workspace. Individual merchants are responsible for information you share
@@ -60,6 +60,12 @@ export default function Page() {
         a person; submitting a request does not automatically erase data.
       </p>
       <h2>Cookies and external services</h2>
+      <p>
+        Saved shops is an optional feature stored on your browser. It stores only shop identifiers,
+        up to 40, and checks their current public details when you open your saved list. It does not
+        synchronise across devices. Use Clear saved shops or clear this browser's site data to
+        remove the list. No account is needed, and saving a shop does not subscribe you to emails.
+      </p>
       <p>
         Essential cookies support sign-in and account security. WhatsApp, merchant websites and
         other external links have their own privacy terms. We do not require an account for ordinary

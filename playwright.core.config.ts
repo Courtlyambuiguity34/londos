@@ -23,6 +23,7 @@ export default defineConfig({
     {
       name: "core-desktop",
       testMatch: [
+        "discovery-experience.spec.ts",
         "storefront-themes.spec.ts",
         "workspace-appearance.spec.ts",
         "shop-addresses.spec.ts",

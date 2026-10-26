@@ -1,57 +1,16 @@
-import { publicShopHref } from "@/modules/discovery/shop-continuity";
 import Link from "next/link";
 import { renderPilotContext } from "@/server/analytics";
 import { PilotObserver } from "./pilot-observer";
 import { categories } from "@/modules/catalogue/fixtures";
 import { database } from "@/server/db/pool";
-import { PostgresSearch, type DiscoveryResult } from "@/server/discovery";
+import { PostgresSearch } from "@/server/discovery";
 import { SearchForm } from "./search-form";
 import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
-import { ReadyImage } from "./ready-image";
 import { Icon } from "./icon";
-export function CanonicalShopCard({ result }: { result: DiscoveryResult }) {
-  const href = publicShopHref({
-    shopSlug: result.slug,
-    departmentSlug: result.department_slug,
-    productSlug: result.product_slug,
-  });
-  return (
-    <article className="shop-card canonical-directory-card tone-clay">
-      <div className="shop-card-art">
-        {result.image ? (
-          <ReadyImage
-            shopId={result.id}
-            assetId={result.image.id}
-            alt={result.image.alt}
-            width={result.image.width}
-            height={result.image.height}
-          />
-        ) : (
-          <div className="shop-card-fallback" aria-hidden="true">
-            <Icon name="shop" />
-            <span>{result.name.slice(0, 1).toUpperCase()}</span>
-          </div>
-        )}
-        <span className="shop-card-stamp">Independent shop</span>
-      </div>
-      <div className="shop-card-body">
-        <p className="eyebrow">
-          {categories.find((c) => c.slug === result.category)?.name ?? "Independent shop"}
-        </p>
-        <h3>
-          <Link prefetch={false} href={href} data-pilot-shop={result.id}>
-            {result.name}
-            <Icon name="arrow" />
-          </Link>
-        </h3>
-        <p>{result.tagline}</p>
-        {result.context ? <p className="match-context">Explore {result.context}</p> : null}
-      </div>
-    </article>
-  );
-}
+import { DiscoveryShopCard } from "./discovery-shop-card";
+export { DiscoveryShopCard as CanonicalShopCard } from "./discovery-shop-card";
 export async function CanonicalDirectory({
   query = "",
   category,
@@ -114,6 +73,13 @@ export async function CanonicalDirectory({
   if (category) next.set("category", category);
   if (shopId) next.set("shop", shopId);
   if (result.nextCursor) next.set("cursor", result.nextCursor);
+  const categoryHref = (value?: string) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (shopId) params.set("shop", shopId);
+    if (value) params.set("category", value);
+    return `/search${params.size ? `?${params}` : ""}`;
+  };
   return (
     <PilotObserver
       capture={renderPilotContext({
@@ -127,69 +93,170 @@ export async function CanonicalDirectory({
         channels: [],
       })}
     >
-      <section className="shell page-section">
-        <div className="page-heading">
-          <p className="eyebrow">Independent shops, together</p>
-          <h1>
-            {entrance ? (
-              <>
-                Good shops.
+      <section
+        className={`shell page-section discovery-page${entrance ? " discovery-page--entrance" : ""}`}
+      >
+        <div className="discovery-intro">
+          <div className="page-heading">
+            <p className="eyebrow">Independent shops, together</p>
+            <h1>
+              {entrance ? (
+                <>
+                  Good shops.
+                  <br />
+                  All <em>together.</em>
+                </>
+              ) : shopId ? (
+                query ? (
+                  <>In this shop: “{query.slice(0, 80)}”</>
+                ) : (
+                  "Explore this shop"
+                )
+              ) : query ? (
+                <>Shops for “{query.slice(0, 80)}”</>
+              ) : (
+                "Explore the mall"
+              )}
+            </h1>
+            <p>Discover a shop, then explore its departments and make a connection.</p>
+          </div>
+          {entrance ? (
+            <aside className="discovery-intro-note">
+              <span className="discovery-intro-icon">
+                <Icon name="shop" />
+              </span>
+              <p>
+                Small businesses.
                 <br />
-                All <em>together.</em>
-              </>
-            ) : query ? (
-              <>Shops for “{query.slice(0, 80)}”</>
-            ) : (
-              "Explore the mall"
-            )}
-          </h1>
-          <p>Discover a shop, then explore its departments and make a connection.</p>
+                <strong>A world to discover.</strong>
+              </p>
+              <span>Find something you love, then talk directly with the people behind it.</span>
+            </aside>
+          ) : null}
         </div>
-        <SearchForm
-          query={query}
-          maxLength={80}
-          {...(category ? { category } : {})}
-          {...(shopId ? { shopId } : {})}
-        />
-        <nav className="filter-chips" aria-label="Filter by category">
-          <Link prefetch={false} href={`/search?q=${encodeURIComponent(query)}`}>
+        <div className="discovery-search-area">
+          <SearchForm
+            query={query}
+            maxLength={80}
+            {...(category ? { category } : {})}
+            {...(shopId ? { shopId } : {})}
+          />
+          <p>Search for a shop, product or service.</p>
+        </div>
+        <nav className="discovery-categories" aria-label="Filter by category">
+          <Link
+            prefetch={false}
+            href={categoryHref()}
+            aria-current={!category ? "page" : undefined}
+          >
+            <Icon name="shop" />
             All shops
           </Link>
           {categories.map((c) => (
             <Link
               prefetch={false}
               key={c.slug}
-              href={`/search?category=${c.slug}&q=${encodeURIComponent(query)}`}
+              href={categoryHref(c.slug)}
               aria-current={category === c.slug ? "page" : undefined}
             >
+              <span className="discovery-category-symbol" aria-hidden="true">
+                {c.symbol}
+              </span>
               {c.name}
             </Link>
           ))}
         </nav>
-        <p className="directory-result-count">
-          {result.results.length} {result.results.length === 1 ? "shop" : "shops"} on this page
-        </p>
+        <div className="discovery-results-toolbar">
+          <div>
+            <h2>
+              {entrance
+                ? "Find your next favourite."
+                : query
+                  ? "Your search results"
+                  : "Shops to explore"}
+            </h2>
+            <p className="directory-result-count">
+              {result.results.length} {result.results.length === 1 ? "shop" : "shops"} on this page
+              {category ? ` · ${categories.find((c) => c.slug === category)?.name ?? "Other"}` : ""}
+            </p>
+          </div>
+          <Link href="/saved" className="discovery-saved-link">
+            <Icon name="heart" /> Saved shops
+          </Link>
+        </div>
+        {query || category || cursor || shopId ? (
+          <div className="discovery-active-filters">
+            <span>{shopId ? "Searching within this shop" : "Searching the mall"}</span>
+            {query ? <span>“{query.slice(0, 80)}”</span> : null}
+            {category ? <Link href={categoryHref()}>Clear category ×</Link> : null}
+            {cursor ? <Link href={categoryHref(category)}>First page</Link> : null}
+            {query ? (
+              <Link
+                href={`/search?${new URLSearchParams({ ...(shopId ? { shop: shopId } : {}), ...(category ? { category } : {}) })}`}
+              >
+                Clear search ×
+              </Link>
+            ) : null}
+            {shopId ? (
+              <Link
+                href={`/search?${new URLSearchParams({ ...(query ? { q: query } : {}), ...(category ? { category } : {}) })}`}
+              >
+                Search all shops
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
         {result.results.length ? (
-          <div className="shop-grid">
+          <div className="shop-grid discovery-grid">
             {result.results.map((row) => (
-              <CanonicalShopCard key={row.id} result={row} />
+              <DiscoveryShopCard key={row.id} result={row} />
             ))}
           </div>
         ) : (
           <EmptyState
             title="No shops matched this search."
             description="Try another name or category, or check back as more shops open."
+            href={
+              category
+                ? categoryHref()
+                : shopId
+                  ? `/search?${new URLSearchParams({ shop: shopId })}`
+                  : "/search"
+            }
+            action={
+              category
+                ? "Search without this category"
+                : shopId
+                  ? "Browse this shop"
+                  : "Browse shops"
+            }
           />
         )}
         {result.nextCursor ? (
-          <Link prefetch={false} className="button button--outline" href={`/search?${next}`}>
+          <Link
+            prefetch={false}
+            className="button button--outline discovery-next"
+            href={`/search?${next}`}
+          >
             Next shops
           </Link>
         ) : null}
         {entrance ? (
-          <Link prefetch={false} href="/search">
-            Explore all shops
-          </Link>
+          <div className="discovery-finish">
+            <Link prefetch={false} href="/search" className="button button--outline">
+              Explore all shops <Icon name="arrow" />
+            </Link>
+            <aside>
+              <div>
+                <p className="eyebrow">Made for independent businesses</p>
+                <h2>Your shop. Your own style.</h2>
+                <p>Showcase your products, choose a theme and share one simple shop link.</p>
+              </div>
+              <Link href="/rent-a-shop" className="button">
+                Open your shop <Icon name="arrow" />
+              </Link>
+            </aside>
+          </div>
         ) : null}
       </section>
     </PilotObserver>
