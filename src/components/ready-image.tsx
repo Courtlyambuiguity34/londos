@@ -9,6 +9,7 @@ export function ReadyImage({
   height,
   privatePreview = false,
   large = false,
+  allowRetry = true,
 }: {
   shopId: string;
   assetId: string;
@@ -17,6 +18,7 @@ export function ReadyImage({
   height: number;
   privatePreview?: boolean;
   large?: boolean;
+  allowRetry?: boolean;
 }) {
   const [failed, setFailed] = useState<string | null>(null),
     identity = `${shopId}:${assetId}`;
@@ -29,9 +31,11 @@ export function ReadyImage({
         <p role="img" aria-label={`${alt}: image currently unavailable`}>
           Image currently unavailable
         </p>
-        <button type="button" className="text-button" onClick={() => setFailed(null)}>
-          Retry image
-        </button>
+        {allowRetry ? (
+          <button type="button" className="text-button" onClick={() => setFailed(null)}>
+            Retry image
+          </button>
+        ) : null}
       </div>
     );
   return (

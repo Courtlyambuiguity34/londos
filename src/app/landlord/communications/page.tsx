@@ -21,8 +21,6 @@ export default async function CommunicationsPage() {
       currentPath="/landlord/communications"
     >
       <section className="portal-section account-page">
-        <p className="eyebrow">MFA-protected operations</p>
-        <h1>Communications, payment details and promotions</h1>
         <p>
           Messages use durable jobs and the configured hourly/daily limits. Payment remains manual;
           shop access changes only after a verified ledger credit or valid promotion.

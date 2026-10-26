@@ -129,6 +129,7 @@ export function StorefrontCollections({ view }: { view: ShopView }) {
                   <ReadyImage
                     shopId={view.shop.id}
                     assetId={product.media_id!}
+                    allowRetry={false}
                     alt={product.alt!}
                     width={product.width!}
                     height={product.height!}

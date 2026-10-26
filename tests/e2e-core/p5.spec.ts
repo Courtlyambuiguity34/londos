@@ -188,7 +188,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
       fullPage: true,
     });
     await publicPage.screenshot({
-      path: "docs/evidence/images/x2-guest-contact.png",
+      path: "docs/evidence/images/x2-guest-contact-themes-2026-10-26.png",
       fullPage: true,
     });
   } finally {

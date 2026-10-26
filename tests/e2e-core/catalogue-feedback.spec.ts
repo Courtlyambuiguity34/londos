@@ -36,7 +36,28 @@ async function ownShop(page: Page) {
     ]);
     let slug = "";
     await transaction(pool, async (client) => {
-      slug = await availableShopAddress(client, "Fictional catalogue shop");
+      // Each fictional same-name shop deliberately chooses distinct words;
+      // tests must respect the production address reservation rule.
+      const count = (
+        await client.query(
+          "SELECT count(*)::int AS n FROM shops WHERE name='Fictional catalogue shop'",
+        )
+      ).rows[0].n;
+      const choices = [
+        "central",
+        "north",
+        "south",
+        "east",
+        "west",
+        "riverside",
+        "hillside",
+        "lakeside",
+      ];
+      slug = await availableShopAddress(
+        client,
+        "Fictional catalogue shop",
+        `fictional-catalogue-${choices[count] ?? `district-${String.fromCharCode(97 + count)}`}`,
+      );
       await client.query(
         "INSERT INTO shops(id,merchant_id,mall_id,name,slug) SELECT $1,$2,mall_id,'Fictional catalogue shop',$3 FROM shops WHERE id=$4",
         [shop, merchant, slug, seedIds.shopA],

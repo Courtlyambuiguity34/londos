@@ -2,8 +2,8 @@
 
 **Current hosted follow-up — 26 October 2026:** work targets
 `feature/hosted-lifecycle-secure-2026-10-23`, continuing from `61e0f47`, with readiness migration
-**036**. The [theme/editor checkpoint](evidence/THEMES-2026-10-26.md) preserves the
-new design work; final browser verification is still in progress. Read the
+**036**. The [verified theme/editor update](evidence/THEMES-2026-10-26.md) records the
+new design system and focused verification; `ac76c62` preserves the earlier checkpoint. Read the
 [shop images and workspace update](evidence/SHOP-IMAGES-AND-WORKSPACES-2026-10-26.md),
 [image and navigation guide](SHOP-APPEARANCE.md), [clean shop URL correction](evidence/SHOP-ADDRESSES-2026-10-25.md),
 [second workflow pass](evidence/HOSTED-WORKFLOWS-FOLLOWUP-2026-10-25.md),

@@ -16,13 +16,11 @@ export function distinctShopSections(spaces: ShopSpace[]) {
 export function starterSections(
   departments: { id: string; name: string }[],
 ): ShopSpecification["spaces"] {
-  return departments
-    .slice(0, 4)
-    .map((department, index) => ({
-      id: `collection-${index + 1}`,
-      type: "department",
-      version: 1,
-      departmentId: department.id,
-      limit: 8,
-    }));
+  return departments.slice(0, 4).map((department, index) => ({
+    id: `collection-${index + 1}`,
+    type: "department",
+    version: 1,
+    departmentId: department.id,
+    limit: 8,
+  }));
 }

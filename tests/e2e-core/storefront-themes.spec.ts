@@ -198,6 +198,7 @@ async function login(page: Page, account = owner, next = "/shopkeeper") {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 async function inspect(page: Page) {
+  await expect(page).toHaveTitle(/\S/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(
     (
@@ -234,6 +235,20 @@ test("all six original themes render real catalogue links, one introduction and 
       await expect(page.locator(".canonical-product")).toHaveCount(6);
       await inspect(page);
       await shot(page, `theme-${theme.id}-${width}`);
+    }
+    if (theme.id === "atelier") {
+      await page.route(`**/api/public/shops/${shop.id}/media/**`, (route) =>
+        route.fulfill({ status: 404, body: "" }),
+      );
+      await page.reload();
+      await expect(
+        page
+          .locator(".storefront-collection-card")
+          .first()
+          .getByText("Image currently unavailable", { exact: true }),
+      ).toBeVisible();
+      await expect(page.locator(".storefront-collection-card button")).toHaveCount(0);
+      await page.unroute(`**/api/public/shops/${shop.id}/media/**`);
     }
     await page.getByRole("link", { name: "Bags & carry", exact: false }).last().click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bags & carry");
@@ -294,18 +309,21 @@ test("theme selection, section cleanup and review preserve drafts and require ex
   await page.goto(`/shops/${shop.slug}`);
   await expect(page.locator(".storefront")).toHaveClass(/storefront-harvest/);
   await page.goto(base);
+  await expect(page.getByRole("button", { name: "Use Atelier", exact: true })).toBeVisible();
   await shot(page, "theme-picker-desktop");
   await page.setViewportSize({ width: 390, height: 900 });
   await inspect(page);
   await shot(page, "theme-picker-mobile");
   await page.goto(`/shopkeeper/shops/${shop.id}/catalogue`);
-  await expect(page.getByRole("tabpanel", { name: "Products", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("tabpanel", { name: "Products and services", exact: true }),
+  ).toBeVisible();
   await page
     .getByLabel("Product or service name", { exact: true })
     .fill("Keep this unsaved product");
   const tabs = page.getByRole("tablist", { name: "Catalogue sections" });
   await tabs.getByRole("tab", { name: /^Images/ }).click();
-  await expect(page.getByRole("tabpanel", { name: "Images", exact: true })).toBeVisible();
+  await expect(page.getByRole("tabpanel", { name: "Shop images", exact: true })).toBeVisible();
   await tabs.getByRole("tab", { name: /^Products/ }).click();
   await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
     "Keep this unsaved product",
@@ -332,6 +350,7 @@ test("landlord forms separate payments, campaigns and promotions without losing 
   await page.getByRole("button", { name: "Verify MFA", exact: true }).click();
   await expect(page).toHaveURL(/\/security\?verified=1$/);
   await page.goto("/landlord/communications");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await page.getByLabel("Support email", { exact: true }).fill("fictional-support@londos.invalid");
   const tabs = page.getByRole("tablist", { name: "Communications tools" });
   await tabs.getByRole("tab", { name: /^Email campaigns/ }).click();
