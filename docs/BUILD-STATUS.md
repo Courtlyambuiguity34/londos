@@ -1,5 +1,14 @@
 # Build status and next model setting
 
+**Deeper marketplace review and refinements — 26 October 2026:** continuing
+from `f2ff037` on the same hosted branch. The
+[official-source follow-up](DEEP-COMPETITIVE-REVIEW-2026-10-26.md) covers Amazon,
+Etsy, MTN MoMo Market and other primary help/design sources after storefront
+access failures. [Search-refinement evidence](evidence/SEARCH-REFINEMENTS-2026-10-26.md)
+records the new product/service and availability controls, preserved search
+context, default cursor compatibility and focused checks. No new dependencies,
+environment settings or migration were added. Earlier evidence is retained.
+
 **Latest marketplace experience — 26 October 2026:** the
 [competitor reference review](COMPETITIVE-EXPERIENCE.md) and
 [discovery verification](evidence/DISCOVERY-EXPERIENCE-2026-10-26.md) describe the

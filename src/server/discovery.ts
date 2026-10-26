@@ -5,6 +5,7 @@ import { transaction } from "./db/pool";
 import { eligibilityJoins, eligibleStates } from "./public-eligibility";
 import { AccessError } from "./security/errors";
 import { savedShopIds } from "../modules/discovery/saved-contract";
+import { listingKind, listingAvailability } from "../modules/discovery/refinements";
 
 export const categorySlug = z.enum([
   "fashion",
@@ -29,6 +30,8 @@ export const searchInput = z
     category: categorySlug.optional(),
     shopId: z.uuid().optional(),
     shopIds: savedShopIds.optional(),
+    kind: listingKind.default("all"),
+    availability: listingAvailability.default("all"),
     cursor: z.string().max(400).optional(),
     limit: z.number().int().min(1).max(20).default(20),
   })
@@ -77,6 +80,9 @@ export class PostgresSearch implements SearchService {
             value.category ?? null,
             value.shopId ?? null,
             ...(value.shopIds ? [[...value.shopIds].sort()] : []),
+            ...(value.kind !== "all" || value.availability !== "all"
+              ? [{ kind: value.kind, availability: value.availability }]
+              : []),
           ]),
         )
         .digest("hex")
@@ -92,18 +98,27 @@ export class PostgresSearch implements SearchService {
         throw new AccessError(422, "invalid_cursor");
       }
     }
+    const refined = value.kind !== "all" || value.availability !== "all";
+    // Fixed SQL fragments use only bound values. No browser-side filtering of
+    // an already paginated result: every eligible hit satisfies the scope.
+    const productFilter = "($8::text='all' OR q.kind=$8) AND ($9::text='all' OR q.availability=$9)";
+    const departmentFilter =
+      "(($8::text='all' AND $9::text='all') OR EXISTS(SELECT 1 FROM products department_product WHERE department_product.shop_id=d.shop_id AND department_product.department_id=d.id AND department_product.availability<>'archived' AND ($8::text='all' OR department_product.kind=$8) AND ($9::text='all' OR department_product.availability=$9)))";
     const query = value.query
       ? `hits AS (
    SELECT e.id,ts_rank_cd(s.search_document,plainto_tsquery('english',$1))::double precision+0.2 AS score,NULL::text AS context,NULL::text AS department_slug,NULL::text AS product_slug FROM eligible e JOIN shops s ON s.id=e.id WHERE s.search_document@@plainto_tsquery('english',$1)
-   UNION ALL SELECT e.id,ts_rank_cd(d.search_document,plainto_tsquery('english',$1))::double precision+0.1,d.name,d.slug,NULL::text FROM departments d JOIN eligible e ON e.id=d.shop_id WHERE d.archived=false AND d.search_document@@plainto_tsquery('english',$1)
-   UNION ALL SELECT e.id,ts_rank_cd(q.search_document,plainto_tsquery('english',$1))::double precision,q.name,d.slug,q.slug FROM products q JOIN departments d ON d.id=q.department_id AND d.archived=false JOIN eligible e ON e.id=q.shop_id WHERE q.availability<>'archived' AND q.search_document@@plainto_tsquery('english',$1)
+   UNION ALL SELECT e.id,ts_rank_cd(d.search_document,plainto_tsquery('english',$1))::double precision+0.1,d.name,d.slug,NULL::text FROM departments d JOIN eligible e ON e.id=d.shop_id WHERE d.archived=false AND d.search_document@@plainto_tsquery('english',$1) AND ${departmentFilter}
+   UNION ALL SELECT e.id,ts_rank_cd(q.search_document,plainto_tsquery('english',$1))::double precision,q.name,d.slug,q.slug FROM products q JOIN departments d ON d.id=q.department_id AND d.archived=false JOIN eligible e ON e.id=q.shop_id WHERE q.availability<>'archived' AND q.search_document@@plainto_tsquery('english',$1) AND ${productFilter}
   ), best AS (SELECT DISTINCT ON(id) id,score,context,department_slug,product_slug FROM hits ORDER BY id,score DESC,context,department_slug,product_slug)`
-      : `best AS (SELECT id,extract(epoch FROM created_at)::double precision AS score,NULL::text AS context,NULL::text AS department_slug,NULL::text AS product_slug FROM eligible)`;
+      : refined
+        ? `best AS (SELECT DISTINCT ON(e.id) e.id,extract(epoch FROM e.created_at)::double precision AS score,q.name AS context,d.slug AS department_slug,q.slug AS product_slug FROM eligible e JOIN products q ON q.shop_id=e.id JOIN departments d ON d.id=q.department_id AND d.shop_id=e.id AND d.archived=false WHERE q.availability<>'archived' AND ${productFilter} ORDER BY e.id,q.position,q.id)`
+        : `best AS (SELECT id,extract(epoch FROM created_at)::double precision AS score,NULL::text AS context,NULL::text AS department_slug,NULL::text AS product_slug FROM eligible)`;
     const rows = await transaction(this.pool, async (client) => {
       await client.query("SET LOCAL statement_timeout='2000ms'");
       return (
         await client.query(
-          `WITH eligible AS (SELECT s.id,s.name,s.slug,s.tagline,s.category,s.created_at FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE length($1::text)<=80 AND ${eligibleStates} AND ($2::text IS NULL OR s.category=$2) AND ($3::uuid IS NULL OR s.id=$3) AND ($7::uuid[] IS NULL OR s.id=ANY($7))), ${query}
+          `WITH eligible AS (SELECT s.id,s.name,s.slug,s.tagline,s.category,s.created_at FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE length($1::text)<=80 AND ${eligibleStates} AND ($2::text IS NULL OR s.category=$2) AND ($3::uuid IS NULL OR s.id=$3) AND ($7::uuid[] IS NULL OR s.id=ANY($7))
+     AND (($8::text='all' AND $9::text='all') OR EXISTS(SELECT 1 FROM products filter_product JOIN departments filter_department ON filter_department.id=filter_product.department_id AND filter_department.shop_id=s.id AND filter_department.archived=false WHERE filter_product.shop_id=s.id AND filter_product.availability<>'archived' AND ($8::text='all' OR filter_product.kind=$8) AND ($9::text='all' OR filter_product.availability=$9)))), ${query}
    SELECT e.id,e.name,e.slug,e.tagline,e.category,b.context,b.department_slug,b.product_slug,b.score,
      CASE WHEN match_product.id IS NOT NULL THEN json_build_object('name',match_product.name,'kind',match_product.kind,'price_minor',match_product.price_minor::text,'currency',match_product.currency,'availability',match_product.availability) ELSE NULL END AS match,
      (SELECT json_build_object('id',a.id,'alt',a.alt,'width',a.width,'height',a.height)
@@ -129,6 +144,8 @@ export class PostgresSearch implements SearchService {
             cursor?.id ?? null,
             value.limit + 1,
             value.shopIds ?? null,
+            value.kind,
+            value.availability,
           ],
         )
       ).rows as (DiscoveryResult & { score: number })[];

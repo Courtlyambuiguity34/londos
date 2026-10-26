@@ -550,6 +550,154 @@ test("search categories, stemming, shop scope and newly published exposure are b
   expect((await search.search({ query: "qzx-no-match", shopId: shop })).results).toEqual([]);
   expect((await search.search({ query: "", limit: 1 })).results[0]!.id).toBe(shop);
 });
+
+test("search refinements use current owned listings and never let a different department satisfy a match", async () => {
+  await published();
+  const care = randomUUID(),
+    service = randomUUID();
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Care','care',1)",
+    [care, shop, seedIds.merchantA],
+  );
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability) VALUES($1,$2,$3,$4,'service','Repair visit','repair-visit','UGX',45000,'unavailable')",
+    [service, shop, seedIds.merchantA, care],
+  );
+  const search = new PostgresSearch(pool);
+  expect(
+    (await search.search({ query: "", shopId: shop, kind: "service" })).results[0],
+  ).toMatchObject({
+    product_slug: "repair-visit",
+    match: { kind: "service", availability: "unavailable" },
+  });
+  expect(
+    (await search.search({ query: "", shopId: shop, kind: "service", availability: "available" }))
+      .results,
+  ).toEqual([]);
+  expect(
+    (await search.search({ query: "", shopId: shop, kind: "product", availability: "available" }))
+      .results[0]?.match,
+  ).toMatchObject({ name: "Sample shoes", kind: "product", availability: "available" });
+  // An available product in Shoes must not make the unrelated Care department
+  // or its unavailable service match the available-product filter.
+  expect(
+    (
+      await search.search({
+        query: "care",
+        shopId: shop,
+        kind: "product",
+        availability: "available",
+      })
+    ).results,
+  ).toEqual([]);
+  expect(
+    (await search.search({ query: "repair", shopId: shop, availability: "available" })).results,
+  ).toEqual([]);
+  expect(
+    (
+      await search.search({
+        query: "Fictional design shop",
+        shopId: shop,
+        kind: "product",
+        availability: "available",
+      })
+    ).results,
+  ).toHaveLength(1);
+  await pool.query("UPDATE products SET availability='available' WHERE id=$1", [service]);
+  expect(
+    (
+      await search.search({
+        query: "repair",
+        shopId: shop,
+        kind: "service",
+        availability: "available",
+      })
+    ).results[0]?.product_slug,
+  ).toBe("repair-visit");
+  await pool.query("UPDATE departments SET archived=true WHERE id=$1", [care]);
+  expect((await search.search({ query: "", shopId: shop, kind: "service" })).results).toEqual([]);
+  await pool.query("UPDATE departments SET archived=false WHERE id=$1", [care]);
+  await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shop]);
+  expect(
+    (await search.search({ query: "", shopId: shop, kind: "service", availability: "available" }))
+      .results,
+  ).toEqual([]);
+});
+
+test("refinements qualify the full result set before paging and bind cursors without changing default searches", async () => {
+  await published();
+  const ids = [shop],
+    expected = new Set<string>();
+  for (let index = 0; index < 23; index++) {
+    const id = randomUUID(),
+      dept = randomUUID(),
+      item = randomUUID();
+    ids.push(id);
+    const kind = index % 2 ? "service" : "product",
+      availability = index % 3 ? "available" : "unavailable";
+    await pool.query(
+      "INSERT INTO shops(id,merchant_id,mall_id,name,slug,category) SELECT $1,merchant_id,mall_id,'Refinement fixture',$2,category FROM shops WHERE id=$3",
+      [id, `refinement-${id}`, shop],
+    );
+    await pool.query(
+      "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Care','care',0)",
+      [dept, id, seedIds.merchantA],
+    );
+    await pool.query(
+      "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability) VALUES($1,$2,$3,$4,$5,'Repair visit','repair-visit','UGX',45000,$6)",
+      [item, id, seedIds.merchantA, dept, kind, availability],
+    );
+    await pool.query("INSERT INTO shop_publication(shop_id,state) VALUES($1,'unpublished')", [id]);
+    await pool.query("INSERT INTO tenancies(shop_id,state) VALUES($1,'active')", [id]);
+    await pool.query("INSERT INTO shop_moderation(shop_id,state) VALUES($1,'clear')", [id]);
+    const draft = await saveDesign(pool, actors.ownerA!, id, {
+      version: 0,
+      summary: "Refined pagination fixture",
+      specification: {
+        schemaVersion: 1,
+        theme: "earth",
+        announcement: "",
+        actions: [],
+        spaces: [{ id: "care", type: "department", version: 1, departmentId: dept, limit: 8 }],
+      },
+    });
+    await publishDesign(pool, actors.ownerA!, id, { ...draft, confirm: true });
+    if (kind === "service" && availability === "available") expected.add(id);
+  }
+  const search = new PostgresSearch(pool),
+    found = new Set<string>();
+  const filters = {
+    query: "",
+    shopIds: ids,
+    kind: "service" as const,
+    availability: "available" as const,
+    limit: 2,
+  };
+  const first = await search.search(filters);
+  expect(first.results).toHaveLength(2);
+  expect(first.nextCursor).not.toBeNull();
+  let cursor: string | undefined;
+  for (let page = 0; page < 15; page++) {
+    const result = await search.search({ ...filters, ...(cursor ? { cursor } : {}) });
+    for (const row of result.results) {
+      expect(found.has(row.id)).toBe(false);
+      found.add(row.id);
+      expect(row.match).toMatchObject({ kind: "service", availability: "available" });
+    }
+    if (!result.nextCursor) break;
+    cursor = result.nextCursor;
+  }
+  expect(found).toEqual(expected);
+  for (const changes of [{ kind: "product" as const }, { availability: "all" as const }])
+    await expect(
+      search.search({ ...filters, ...changes, cursor: first.nextCursor! }),
+    ).rejects.toMatchObject({ status: 422, code: "invalid_cursor" });
+  const legacy = await search.search({ query: "", shopIds: ids, limit: 2 });
+  const page = { query: "", shopIds: ids, limit: 2, cursor: legacy.nextCursor! };
+  expect(await search.search({ ...page, kind: "all", availability: "all" })).toEqual(
+    await search.search(page),
+  );
+});
 test("live product/search changes become visible without worker projections", async () => {
   await published();
   await pool.query("UPDATE products SET name='Violet example' WHERE id=$1", [product]);

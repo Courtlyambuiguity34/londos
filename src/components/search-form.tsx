@@ -8,6 +8,8 @@ export function SearchForm({
   shopId,
   maxLength = MAX_QUERY_LENGTH,
   shopName,
+  kind = "all",
+  availability = "all",
 }: {
   query?: string;
   large?: boolean;
@@ -15,6 +17,8 @@ export function SearchForm({
   shopId?: string;
   maxLength?: number;
   shopName?: string;
+  kind?: string;
+  availability?: string;
 }) {
   return (
     <form
@@ -41,6 +45,10 @@ export function SearchForm({
       />
       {category ? <input type="hidden" name="category" value={category} /> : null}
       {shopId ? <input type="hidden" name="shop" value={shopId} /> : null}
+      {kind !== "all" ? <input type="hidden" name="kind" value={kind} /> : null}
+      {availability !== "all" ? (
+        <input type="hidden" name="availability" value={availability} />
+      ) : null}
       <button type="submit" aria-label={shopId ? "Search this shop" : "Search the mall"}>
         <span>Search</span>
         <Icon name="arrow" />

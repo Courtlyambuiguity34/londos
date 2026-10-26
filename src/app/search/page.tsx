@@ -18,6 +18,8 @@ export default async function SearchPage({
     category?: string | string[];
     cursor?: string | string[];
     shop?: string | string[];
+    kind?: string | string[];
+    availability?: string | string[];
   }>;
 }) {
   const params = await searchParams;
@@ -30,6 +32,8 @@ export default async function SearchPage({
         category={category}
         cursor={typeof params.cursor === "string" ? params.cursor : undefined}
         shopId={typeof params.shop === "string" ? params.shop : undefined}
+        kind={typeof params.kind === "string" ? params.kind : "all"}
+        availability={typeof params.availability === "string" ? params.availability : "all"}
       />
     );
   const result = searchPreviewShops({ query, ...(category ? { category } : {}) });

@@ -1,5 +1,15 @@
 # Londos continuation handoff
 
+**Deeper marketplace review — 26 October 2026:** see the
+[official-source research](DEEP-COMPETITIVE-REVIEW-2026-10-26.md) and
+[filter verification](evidence/SEARCH-REFINEMENTS-2026-10-26.md), continuing
+from `f2ff037` on the existing hosted branch. When a reference storefront is
+blocked, search for and read its official seller/help/design documentation;
+record what was read and distinguish it from a tested private workflow.
+Preserve the native GET refinement forms, server filtering before pagination,
+filter-aware cursor scope, default search compatibility and current visibility
+gates. Defaults remain unchanged; this update adds no migration or env variable.
+
 **Latest marketplace experience — 26 October 2026:** continue on
 `feature/hosted-lifecycle-secure-2026-10-23` from `60e5025`; read the
 [reference review](COMPETITIVE-EXPERIENCE.md) and

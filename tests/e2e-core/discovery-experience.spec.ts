@@ -16,6 +16,7 @@ import { SAVED_SHOPS_KEY } from "../../src/modules/discovery/saved-contract";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const origin = "http://127.0.0.1:3101";
 const shops: { id: string; slug: string; name: string; asset: string }[] = [];
+test.use({ actionTimeout: 15_000 });
 test.beforeAll(async () => {
   if (!/^\/londos_test_/.test(new URL(process.env.DATABASE_URL!).pathname))
     throw Error("Disposable database required");
@@ -467,4 +468,111 @@ test("saved public API rejects cross-site, malformed and oversized requests and 
     expect(result).not.toHaveProperty("created_by");
     expect(ids).toContain(result.id);
   }
+});
+
+test("listing refinements preserve search context, recover empty results and work without browser JavaScript", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(90_000);
+  const circuit = shops[3]!;
+  const row = (
+    await pool.query(
+      "SELECT merchant_id,department_id FROM products WHERE shop_id=$1 AND slug='city-carry'",
+      [circuit.id],
+    )
+  ).rows[0];
+  const id = randomUUID();
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,description,currency,price_minor,availability) VALUES($1,$2,$3,$4,'service','City repair','city-repair','Fictional repair service for refinement verification.','UGX',45000,'available')",
+    [id, circuit.id, row.merchant_id, row.department_id],
+  );
+  await pool.query(
+    "INSERT INTO product_media(product_id,asset_id,shop_id,merchant_id) VALUES($1,$2,$3,$4)",
+    [id, circuit.asset, circuit.id, row.merchant_id],
+  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/search?q=City&category=electronics");
+  await page.locator(".search-refinements > summary").click();
+  await page.getByLabel("Listing type", { exact: true }).selectOption("service");
+  await page.getByLabel("Availability", { exact: true }).selectOption("available");
+  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("q") === "City" &&
+      url.searchParams.get("category") === "electronics" &&
+      url.searchParams.get("kind") === "service" &&
+      url.searchParams.get("availability") === "available",
+  );
+  await expect(
+    page.getByRole("link", { name: "City repair at Circuit Studio", exact: true }),
+  ).toHaveAttribute("href", "/shops/circuit-studio/products/city-repair");
+  await expect(page.locator(".discovery-card")).toHaveCount(1);
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(page.getByLabel("Listing type", { exact: true })).toHaveValue("service");
+    await expect(page.getByLabel("Availability", { exact: true })).toHaveValue("available");
+    await inspect(page);
+    if (width !== 320) await shot(page, `refinements-${width}`);
+  }
+  await page
+    .getByRole("navigation", { name: "Filter by category" })
+    .getByRole("link", { name: "Fashion & style", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "No shops matched this search.", exact: true }),
+  ).toBeVisible();
+  expect(new URL(page.url()).searchParams.get("kind")).toBe("service");
+  await page.getByRole("link", { name: "Search without these refinements", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("q") === "City" &&
+      url.searchParams.get("category") === "fashion" &&
+      !url.searchParams.has("kind") &&
+      !url.searchParams.has("availability"),
+  );
+  await expect(
+    page.getByRole("link", { name: "City carry at Northline Goods", exact: true }),
+  ).toBeVisible();
+  await page.goto(`/search?q=City&shop=${circuit.id}&kind=service&availability=available`);
+  await page.getByRole("searchbox").fill("repair");
+  await page.getByRole("button", { name: "Search this shop", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("q") === "repair" &&
+      url.searchParams.get("shop") === circuit.id &&
+      url.searchParams.get("kind") === "service" &&
+      url.searchParams.get("availability") === "available",
+  );
+  await page
+    .getByRole("navigation", { name: "Applied search filters" })
+    .getByRole("link", { name: "Services ×", exact: true })
+    .click();
+  await expect(page.getByLabel("Listing type", { exact: true })).toHaveValue("all");
+  await expect(page.getByLabel("Availability", { exact: true })).toHaveValue("available");
+  await expect(page.getByRole("searchbox")).toHaveValue("repair");
+  await page.getByRole("link", { name: "Clear refinements", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("shop") === circuit.id &&
+      url.searchParams.get("q") === "repair" &&
+      !url.searchParams.has("kind") &&
+      !url.searchParams.has("availability"),
+  );
+  await page.goto("/search?kind=archived");
+  await expect(
+    page.getByRole("heading", { name: "Check this search.", exact: true }),
+  ).toBeVisible();
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const basic = await context.newPage();
+  await basic.goto(`${origin}/search?q=City&category=electronics`);
+  await basic.locator(".search-refinements > summary").click();
+  await basic.getByLabel("Listing type", { exact: true }).selectOption("service");
+  await basic.getByLabel("Availability", { exact: true }).selectOption("available");
+  await basic.getByRole("button", { name: "Apply filters", exact: true }).click();
+  await expect(
+    basic.getByRole("link", { name: "City repair at Circuit Studio", exact: true }),
+  ).toBeVisible();
+  await expect(basic.locator(".discovery-card")).toHaveCount(1);
+  await context.close();
 });

@@ -5,6 +5,13 @@ pages, not paid accounts, checkout completion, seller dashboards or a performanc
 benchmark. Original layouts and Londos colours are retained. Competitor imagery,
 brand assets, reviews, counts and commercial theme code are not copied.
 
+The [deeper follow-up](DEEP-COMPETITIVE-REVIEW-2026-10-26.md) uses web searches and
+official seller/help documentation, including Amazon, Etsy and MTN alternatives
+to their previously blocked storefront pages. It records the additional verified
+capabilities and the subsequent search-refinement implementation. The direct
+page results below remain the historical initial observation, not the limit of
+the follow-up research.
+
 | Reference actually inspected | Useful strength | Londos decision |
 | --- | --- | --- |
 | [CampusPlug listing](https://campusplugug.com/listings/8e58843d-5cdd-48ac-9964-e3e3d158f826) | Clear image/detail split, visible price, direct WhatsApp action, Save/Share and adjacent safety information. | Bring product information and enabled merchant contact actions together; add sharing and browser-local saved shops. Keep merchant payments explicit. |

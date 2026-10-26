@@ -3,37 +3,47 @@ import { renderPilotContext } from "@/server/analytics";
 import { PilotObserver } from "./pilot-observer";
 import { categories } from "@/modules/catalogue/fixtures";
 import { database } from "@/server/db/pool";
-import { PostgresSearch } from "@/server/discovery";
+import { PostgresSearch, searchInput } from "@/server/discovery";
 import { SearchForm } from "./search-form";
 import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
 import { Icon } from "./icon";
 import { DiscoveryShopCard } from "./discovery-shop-card";
+import { SearchRefinements } from "./search-refinements";
+import { searchHref } from "@/modules/discovery/refinements";
 export { DiscoveryShopCard as CanonicalShopCard } from "./discovery-shop-card";
 export async function CanonicalDirectory({
   query = "",
   category,
   cursor,
   shopId,
+  kind = "all",
+  availability = "all",
   entrance = false,
 }: {
   query?: string;
   category?: string | undefined;
   cursor?: string | undefined;
   shopId?: string | undefined;
+  kind?: string | undefined;
+  availability?: string | undefined;
   entrance?: boolean;
 }) {
   let result: Awaited<ReturnType<PostgresSearch["search"]>> | null = null;
   let failure: unknown;
   try {
-    result = await new PostgresSearch(database()).search({
-      query,
-      ...(category ? { category: category as "fashion" } : {}),
-      ...(cursor ? { cursor } : {}),
-      ...(shopId ? { shopId } : {}),
-      limit: entrance ? 8 : 20,
-    });
+    result = await new PostgresSearch(database()).search(
+      searchInput.parse({
+        query,
+        ...(category ? { category } : {}),
+        ...(cursor ? { cursor } : {}),
+        ...(shopId ? { shopId } : {}),
+        limit: entrance ? 8 : 20,
+        kind,
+        availability,
+      }),
+    );
   } catch (error) {
     failure = error;
   }
@@ -58,7 +68,7 @@ export async function CanonicalDirectory({
             title={invalid ? "Check this search." : "Search is temporarily unavailable."}
             description={
               invalid
-                ? "Use up to eight words and 80 characters, or start a new search."
+                ? "Choose one of the listed filters and use up to eight words and 80 characters, or start a new search."
                 : "Please try again shortly. A shop you already know may still be available at its direct link."
             }
             href="/search"
@@ -69,17 +79,9 @@ export async function CanonicalDirectory({
       </section>
     );
   }
-  const next = new URLSearchParams({ q: query });
-  if (category) next.set("category", category);
-  if (shopId) next.set("shop", shopId);
-  if (result.nextCursor) next.set("cursor", result.nextCursor);
-  const categoryHref = (value?: string) => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (shopId) params.set("shop", shopId);
-    if (value) params.set("category", value);
-    return `/search${params.size ? `?${params}` : ""}`;
-  };
+  const filters = { query, category, shopId, kind, availability };
+  const refined = kind !== "all" || availability !== "all";
+  const categoryHref = (value?: string) => searchHref({ ...filters, category: value });
   return (
     <PilotObserver
       capture={renderPilotContext({
@@ -136,8 +138,11 @@ export async function CanonicalDirectory({
         </div>
         <div className="discovery-search-area">
           <SearchForm
+            key={JSON.stringify(filters)}
             query={query}
             maxLength={80}
+            kind={kind}
+            availability={availability}
             {...(category ? { category } : {})}
             {...(shopId ? { shopId } : {})}
           />
@@ -166,6 +171,7 @@ export async function CanonicalDirectory({
             </Link>
           ))}
         </nav>
+        <SearchRefinements key={JSON.stringify(filters)} {...filters} />
         <div className="discovery-results-toolbar">
           <div>
             <h2>
@@ -184,27 +190,29 @@ export async function CanonicalDirectory({
             <Icon name="heart" /> Saved shops
           </Link>
         </div>
-        {query || category || cursor || shopId ? (
-          <div className="discovery-active-filters">
+        {query || category || cursor || shopId || refined ? (
+          <nav className="discovery-active-filters" aria-label="Applied search filters">
             <span>{shopId ? "Searching within this shop" : "Searching the mall"}</span>
             {query ? <span>“{query.slice(0, 80)}”</span> : null}
             {category ? <Link href={categoryHref()}>Clear category ×</Link> : null}
+            {kind !== "all" ? (
+              <Link href={searchHref({ ...filters, kind: "all" })}>
+                {kind === "product" ? "Products" : "Services"} ×
+              </Link>
+            ) : null}
+            {availability !== "all" ? (
+              <Link href={searchHref({ ...filters, availability: "all" })}>
+                Available listings ×
+              </Link>
+            ) : null}
             {cursor ? <Link href={categoryHref(category)}>First page</Link> : null}
             {query ? (
-              <Link
-                href={`/search?${new URLSearchParams({ ...(shopId ? { shop: shopId } : {}), ...(category ? { category } : {}) })}`}
-              >
-                Clear search ×
-              </Link>
+              <Link href={searchHref({ ...filters, query: undefined })}>Clear search ×</Link>
             ) : null}
             {shopId ? (
-              <Link
-                href={`/search?${new URLSearchParams({ ...(query ? { q: query } : {}), ...(category ? { category } : {}) })}`}
-              >
-                Search all shops
-              </Link>
+              <Link href={searchHref({ ...filters, shopId: undefined })}>Search all shops</Link>
             ) : null}
-          </div>
+          </nav>
         ) : null}
         {result.results.length ? (
           <div className="shop-grid discovery-grid">
@@ -217,18 +225,22 @@ export async function CanonicalDirectory({
             title="No shops matched this search."
             description="Try another name or category, or check back as more shops open."
             href={
-              category
-                ? categoryHref()
-                : shopId
-                  ? `/search?${new URLSearchParams({ shop: shopId })}`
-                  : "/search"
+              refined
+                ? searchHref({ query, category, shopId })
+                : category
+                  ? categoryHref()
+                  : shopId
+                    ? `/search?${new URLSearchParams({ shop: shopId })}`
+                    : "/search"
             }
             action={
-              category
-                ? "Search without this category"
-                : shopId
-                  ? "Browse this shop"
-                  : "Browse shops"
+              refined
+                ? "Search without these refinements"
+                : category
+                  ? "Search without this category"
+                  : shopId
+                    ? "Browse this shop"
+                    : "Browse shops"
             }
           />
         )}
@@ -236,7 +248,7 @@ export async function CanonicalDirectory({
           <Link
             prefetch={false}
             className="button button--outline discovery-next"
-            href={`/search?${next}`}
+            href={searchHref({ ...filters, cursor: result.nextCursor })}
           >
             Next shops
           </Link>
