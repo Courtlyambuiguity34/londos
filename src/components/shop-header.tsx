@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { BrowseRail } from "./browse-rail";
 import type { PreviewShop } from "@/modules/catalogue/types";
 import { findCategory } from "@/modules/discovery/preview-directory";
 
@@ -37,20 +37,18 @@ export function ShopHeader({
           />
         </div>
       </section>
-      <nav aria-label="Shop departments" className="department-nav">
-        <Link href={`/shops/${shop.slug}`} aria-current={!activeDepartment ? "page" : undefined}>
-          The whole shop
-        </Link>
-        {shop.departments.map((department) => (
-          <Link
-            key={department.slug}
-            href={`/shops/${shop.slug}/departments/${department.slug}`}
-            aria-current={activeDepartment === department.slug ? "page" : undefined}
-          >
-            {department.name}
-          </Link>
-        ))}
-      </nav>
+      <BrowseRail
+        label="Shop departments"
+        kind="departments"
+        items={[
+          { href: `/shops/${shop.slug}`, label: "The whole shop", current: !activeDepartment },
+          ...shop.departments.map((department) => ({
+            href: `/shops/${shop.slug}/departments/${department.slug}`,
+            label: department.name,
+            current: activeDepartment === department.slug,
+          })),
+        ]}
+      />
     </>
   );
 }

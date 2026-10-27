@@ -9,6 +9,7 @@ import { EmptyState } from "./empty-state";
 import { randomUUID } from "node:crypto";
 import { failureCategory } from "@/server/diagnostics";
 import { Icon } from "./icon";
+import { BrowseRail } from "./browse-rail";
 import { DiscoveryShopCard } from "./discovery-shop-card";
 import { SearchRefinements } from "./search-refinements";
 import { searchHref } from "@/modules/discovery/refinements";
@@ -148,29 +149,18 @@ export async function CanonicalDirectory({
           />
           <p>Search for a shop, product or service.</p>
         </div>
-        <nav className="discovery-categories" aria-label="Filter by category">
-          <Link
-            prefetch={false}
-            href={categoryHref()}
-            aria-current={!category ? "page" : undefined}
-          >
-            <Icon name="shop" />
-            All shops
-          </Link>
-          {categories.map((c) => (
-            <Link
-              prefetch={false}
-              key={c.slug}
-              href={categoryHref(c.slug)}
-              aria-current={category === c.slug ? "page" : undefined}
-            >
-              <span className="discovery-category-symbol" aria-hidden="true">
-                {c.symbol}
-              </span>
-              {c.name}
-            </Link>
-          ))}
-        </nav>
+        <BrowseRail
+          label="Filter by category"
+          items={[
+            { href: categoryHref(), label: "All shops", current: !category, shopIcon: true },
+            ...categories.map((c) => ({
+              href: categoryHref(c.slug),
+              label: c.name,
+              current: category === c.slug,
+              symbol: c.symbol,
+            })),
+          ]}
+        />
         <SearchRefinements key={JSON.stringify(filters)} {...filters} />
         <div className="discovery-results-toolbar">
           <div>

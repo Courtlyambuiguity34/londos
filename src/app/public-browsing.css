@@ -1,0 +1,193 @@
+/* Shared public browsing rails: normal links, a seamless visual repeat, and an
+   explicit pause control. With no script, the first group scrolls natively. */
+.browse-rail {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  margin: 24px 0;
+  color: var(--shop-text, var(--green));
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  padding-bottom: 12px;
+}
+.browse-rail[data-overflow="true"] {
+  padding-inline-end: 48px;
+}
+.browse-rail-viewport {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  scroll-behavior: auto;
+  padding: 3px;
+}
+.browse-rail-viewport::-webkit-scrollbar {
+  display: none;
+}
+.browse-rail-track {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  width: max-content;
+}
+.browse-rail-group {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: max-content;
+}
+.browse-rail-repeat {
+  display: none;
+}
+.browse-rail[data-overflow="true"] .browse-rail-repeat {
+  display: flex;
+}
+.browse-rail-group > a {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 11px 16px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.45;
+  color: inherit;
+}
+.browse-rail-group > a:hover,
+.browse-rail-group > a[aria-current="page"] {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+}
+.browse-rail-group > a[aria-current="page"] {
+  font-weight: 600;
+}
+.browse-rail-group > a:focus-visible,
+.browse-rail-toggle:focus-visible,
+.purchase-note-report:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.browse-rail-symbol {
+  font-size: 23px;
+  line-height: 1;
+}
+.browse-rail-toggle {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 5px;
+  width: 40px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: var(--shop-surface, var(--white));
+  color: inherit;
+  cursor: pointer;
+}
+.browse-rail-toggle:hover {
+  background: color-mix(in srgb, currentColor 8%, var(--shop-surface, var(--white)));
+}
+.browse-rail--departments {
+  margin: 0 0 24px;
+}
+.browse-rail--departments .browse-rail-group > a {
+  font-size: 12px;
+  padding-inline: 12px;
+}
+.discovery-page .browse-rail {
+  margin: 16px 0 27px;
+  padding-top: 20px;
+}
+.discovery-page .browse-rail-toggle {
+  top: 25px;
+}
+
+/* A single themed information card, including dark storefronts. */
+.shop-contact-note.shop-purchase-note {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.6fr);
+  align-items: start;
+  gap: 22px 32px;
+  margin-top: 44px;
+  padding: 28px;
+  border: 1px solid color-mix(in srgb, var(--shop-text, var(--ink)) 17%, transparent);
+  border-radius: 18px;
+  background: var(--shop-surface, #eff0e7);
+  color: var(--shop-text, var(--ink));
+}
+.shop-purchase-note .purchase-note-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.purchase-note-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.shop-purchase-note p.purchase-note-eyebrow {
+  margin: 0 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: inherit;
+}
+.shop-purchase-note .purchase-note-heading h2 {
+  margin: 0;
+  font: 500 24px / 1.15 var(--serif);
+  letter-spacing: -0.025em;
+  color: inherit;
+}
+.shop-purchase-note .purchase-note-copy p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: inherit;
+}
+.shop-purchase-note .purchase-note-copy p + p {
+  margin-top: 9px;
+}
+.purchase-note-report {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  grid-column: 1 / -1;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: inherit;
+}
+.purchase-note-report svg {
+  flex: none;
+}
+@media (max-width: 700px) {
+  .shop-contact-note.shop-purchase-note {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 23px 20px;
+    border-radius: 16px;
+  }
+  .purchase-note-report {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .browse-rail[data-overflow="true"] {
+    padding-inline-end: 0;
+  }
+}

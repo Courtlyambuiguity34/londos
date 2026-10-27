@@ -19,6 +19,8 @@ import { StorefrontHero, StorefrontCollections } from "./storefront-hero";
 import { Icon } from "./icon";
 import { SaveShopButton } from "./save-shop-button";
 import { ShareShopButton } from "./share-shop-button";
+import { BrowseRail } from "./browse-rail";
+import { ShopPurchaseNote } from "./shop-purchase-note";
 
 export function CanonicalProduct({
   product,
@@ -415,24 +417,24 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             )}
           </aside>
         ) : null}
-        <nav id="shop-departments" aria-label="Shop navigation" className="filter-chips">
-          <Link prefetch={false} href="/">
-            The mall
-          </Link>
-          <Link prefetch={false} href={shopViewHref(view)}>
-            Whole shop
-          </Link>
-          {view.departments.map((d) => (
-            <Link
-              prefetch={false}
-              key={d.id}
-              href={shopViewHref(view, { department: d.slug })}
-              aria-current={view.selectedDepartment?.id === d.id ? "page" : undefined}
-            >
-              {d.name}
-            </Link>
-          ))}
-        </nav>
+        <BrowseRail
+          id="shop-departments"
+          label="Shop navigation"
+          kind="departments"
+          items={[
+            { href: "/", label: "The mall" },
+            {
+              href: shopViewHref(view),
+              label: "Whole shop",
+              current: !view.selectedDepartment && !view.selectedProduct,
+            },
+            ...view.departments.map((d) => ({
+              href: shopViewHref(view, { department: d.slug }),
+              label: d.name,
+              current: view.selectedDepartment?.id === d.id,
+            })),
+          ]}
+        />
         {!view.privatePreview ? (
           <div className="storefront-visitor-tools">
             <Link prefetch={false} href={shopViewHref(view)}>
@@ -634,24 +636,10 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             <Contacts view={view} />
           </section>
         ) : null}
-        <aside className="shop-contact-note">
-          {development ? (
-            <p>
-              This development mall uses fictional merchants. No payment is collected by Londos.
-            </p>
-          ) : (
-            <p>Londos does not collect payment for purchases from shops.</p>
-          )}
-          <p>
-            Merchant terms apply to purchases and fulfilment. A contact action is not a confirmed
-            sale.
-          </p>
-          {!view.privatePreview ? (
-            <Link prefetch={false} href={`/report/${view.shop.id}`}>
-              Report a concern about this shop
-            </Link>
-          ) : null}
-        </aside>
+        <ShopPurchaseNote
+          development={development}
+          {...(!view.privatePreview ? { shopId: view.shop.id } : {})}
+        />
         {view.selectedProduct && shopContactActions(view).length && !view.privatePreview ? (
           <aside className="product-mobile-contact" aria-label="Quick product contact">
             <div>

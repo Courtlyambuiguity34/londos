@@ -9,6 +9,7 @@ import { ShopHeader } from "@/components/shop-header";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/empty-state";
 import { Icon } from "@/components/icon";
+import { ShopPurchaseNote } from "@/components/shop-purchase-note";
 
 export async function generateMetadata({
   params,
@@ -80,16 +81,7 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
           ))}
         </div>
       </section>
-      <aside className="shop-contact-note">
-        <Icon name="shield" />
-        <div>
-          <h2>A preview of what’s possible.</h2>
-          <p>
-            These shops and prices are fictional. Merchant contact, purchases and enquiries are
-            unavailable in this preview.
-          </p>
-        </div>
-      </aside>
+      <ShopPurchaseNote sample />
     </div>
   );
 }

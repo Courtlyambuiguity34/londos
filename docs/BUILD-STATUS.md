@@ -1,5 +1,12 @@
 # Build status and next model setting
 
+**Public browsing update — 27 October 2026:** continuing from `3fd5ef4` on the
+hosted branch. The [public browsing review](evidence/PUBLIC-BROWSING-2026-10-27.md)
+records a themed purchase-information card, automatically looping category and
+department bars, pause and reduced-motion support, touch/keyboard fallbacks,
+private-preview verification and desktop/phone captures. No configuration,
+dependency or migration change is required.
+
 **Design studio update — 27 October 2026:** continuing from `dbc9eee` on the
 hosted branch. The [design studio guide](DESIGN-STUDIO.md) explains local briefs,
 reference-website limitations, phone/desktop proposal comparison and manual

@@ -234,6 +234,20 @@ test("all installed themes render real catalogue links, one introduction and res
         )
         .toBe(true);
       await expect(page.locator(".canonical-product")).toHaveCount(6);
+      const note = page.getByRole("complementary", { name: "Buying from this shop", exact: true });
+      await expect(
+        note.getByRole("heading", { name: "Before you buy.", exact: true }),
+      ).toBeVisible();
+      await expect(
+        note.getByRole("link", { name: "Report a concern about this shop", exact: true }),
+      ).toHaveAttribute("href", `/report/${shop.id}`);
+      expect(
+        await note.evaluate((element) => ({
+          display: getComputedStyle(element).display,
+          padding: parseFloat(getComputedStyle(element).paddingLeft),
+          radius: parseFloat(getComputedStyle(element).borderRadius),
+        })),
+      ).toEqual({ display: "grid", padding: width < 700 ? 20 : 28, radius: width < 700 ? 16 : 18 });
       if (theme.id === "mosaic") {
         expect(
           await page
@@ -243,6 +257,12 @@ test("all installed themes render real catalogue links, one introduction and res
         await expect(page.locator(".storefront-image-mosaic img")).toHaveCount(3);
       }
       await inspect(page);
+      if (theme.id === "nocturne") {
+        await mkdir("docs/evidence/images", { recursive: true });
+        await note.screenshot({
+          path: `docs/evidence/images/public-browsing-purchase-note-${width}-2026-10-27.png`,
+        });
+      }
       await shot(page, `theme-${theme.id}-${width}`);
     }
     if (theme.id === "atelier") {
@@ -266,6 +286,35 @@ test("all installed themes render real catalogue links, one introduction and res
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("City carry 1");
     await inspect(page);
   }
+});
+
+test("shop department bars reveal every department automatically while keeping their destinations", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  const shop = shops.get("atelier")!;
+  await page.goto(`/shops/${shop.slug}`);
+  const nav = page.getByRole("navigation", { name: "Shop navigation", exact: true });
+  await nav.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  const rail = nav.locator("..");
+  await expect(rail).toHaveAttribute("data-overflow", "true");
+  await expect(rail).toHaveAttribute("data-playing", "true");
+  await expect(nav.getByRole("link")).toHaveCount(4);
+  const start = await nav.evaluate((element) => element.scrollLeft);
+  await expect.poll(() => nav.evaluate((element) => element.scrollLeft)).toBeGreaterThan(start + 5);
+  const last = nav.getByRole("link", { name: "Everyday essentials", exact: true });
+  await last.focus();
+  await expect(rail).toHaveAttribute("data-playing", "false");
+  await expect(last).toBeInViewport();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Everyday essentials");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Shop navigation", exact: true })
+      .getByRole("link", { name: "Everyday essentials", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await inspect(page);
 });
 
 test("theme selection, section cleanup and review preserve drafts and require explicit publication", async ({

@@ -23,6 +23,7 @@ export default defineConfig({
     {
       name: "core-desktop",
       testMatch: [
+        "public-browsing.spec.ts",
         "design-studio.spec.ts",
         "workspace-experience.spec.ts",
         "discovery-experience.spec.ts",

@@ -1,7 +1,7 @@
 import { databaseBrowsing } from "@/server/preview";
 import { CanonicalDirectory } from "@/components/canonical-directory";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BrowseRail } from "@/components/browse-rail";
 import { SearchForm } from "@/components/search-form";
 import { ShopCard } from "@/components/shop-card";
 import { EmptyState } from "@/components/empty-state";
@@ -63,23 +63,23 @@ export default async function SearchPage({
       <div className="search-page-form">
         <SearchForm query={query} {...(category ? { category } : {})} />
       </div>
-      <nav aria-label="Filter by category" className="filter-chips">
-        <Link
-          href={query ? `/search?q=${encodeURIComponent(query)}` : "/search"}
-          aria-current={!category ? "page" : undefined}
-        >
-          All shops
-        </Link>
-        {categories.map((item) => (
-          <Link
-            key={item.slug}
-            href={`/search?category=${item.slug}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
-            aria-current={category === item.slug ? "page" : undefined}
-          >
-            {item.name}
-          </Link>
-        ))}
-      </nav>
+      <BrowseRail
+        label="Filter by category"
+        items={[
+          {
+            href: query ? `/search?q=${encodeURIComponent(query)}` : "/search",
+            label: "All shops",
+            current: !category,
+            shopIcon: true,
+          },
+          ...categories.map((item) => ({
+            href: `/search?category=${item.slug}${query ? `&q=${encodeURIComponent(query)}` : ""}`,
+            label: item.name,
+            current: category === item.slug,
+            symbol: item.symbol,
+          })),
+        ]}
+      />
       {result.error ? (
         <div role="alert" className="notice notice--error">
           {result.error}

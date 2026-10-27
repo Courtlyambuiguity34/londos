@@ -404,7 +404,7 @@ test("product search opens an exact later-page item and immediately respects arc
     await page.goto(searchPath);
     const shopLink = page
       .getByRole("main")
-      .getByRole("link", { name: "Fictional catalogue shop", exact: true });
+      .getByRole("link", { name: `${value.name} at Fictional catalogue shop`, exact: true });
     const productPath = `/shops/${fixture.slug}/products/${value.slug}`;
     await expect(shopLink).toHaveAttribute("href", productPath);
     await shopLink.click();
@@ -473,26 +473,32 @@ test("unpublished saved and proposal previews keep their identity through privat
     const asset = randomUUID();
     const mediaPath = `${fixture.root}/media/${asset}`;
     async function expectPrivateImage() {
-      const picture = page.getByRole("img", {
+      const pictures = page.getByRole("img", {
         name: "Fictional private preview image",
         exact: true,
       });
-      await expect
-        .poll(() =>
-          picture.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
-        )
-        .toBe(true);
-      const source = await picture.evaluate((image: HTMLImageElement) => image.currentSrc);
-      expect(new URL(source).pathname).toMatch(
-        new RegExp(`^${mediaPath}/(thumbnail|card|display)$`),
-      );
-      const response = await page.request.get(source);
-      expect(response.status()).toBe(200);
-      expect(response.headers()["content-type"]).toBe("image/webp");
-      expect(response.headers()["cache-control"]).toContain("private");
-      const bytes = await response.body();
-      expect(bytes.subarray(0, 4).toString()).toBe("RIFF");
-      expect(bytes.subarray(8, 12).toString()).toBe("WEBP");
+      expect(await pictures.count()).toBeGreaterThan(0);
+      for (const picture of await pictures.all()) {
+        // Covers, collection tiles and product cards may share an owned image.
+        // Check every rendered copy and bring lazy images into view first.
+        await picture.scrollIntoViewIfNeeded();
+        await expect
+          .poll(() =>
+            picture.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
+          )
+          .toBe(true);
+        const source = await picture.evaluate((image: HTMLImageElement) => image.currentSrc);
+        expect(new URL(source).pathname).toMatch(
+          new RegExp(`^${mediaPath}/(thumbnail|card|display)$`),
+        );
+        const response = await page.request.get(source);
+        expect(response.status()).toBe(200);
+        expect(response.headers()["content-type"]).toBe("image/webp");
+        expect(response.headers()["cache-control"]).toContain("private");
+        const bytes = await response.body();
+        expect(bytes.subarray(0, 4).toString()).toBe("RIFF");
+        expect(bytes.subarray(8, 12).toString()).toBe("WEBP");
+      }
     }
     const image = await sharp({
       create: { width: 64, height: 48, channels: 3, background: "#604050" },
