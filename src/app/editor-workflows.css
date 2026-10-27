@@ -579,3 +579,80 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.merchant-task-guide,
+.merchant-page-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  margin: 22px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #eef1e8;
+}
+.merchant-task-guide h2,
+.merchant-page-guide h2 {
+  margin: 5px 0 10px;
+  font-size: 27px;
+}
+.merchant-task-guide p,
+.merchant-page-guide p {
+  max-width: 70ch;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.merchant-list-heading {
+  margin: 32px 0 16px;
+}
+.merchant-product-options,
+.merchant-department-options {
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.merchant-product-options summary,
+.merchant-department-options summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 28px;
+}
+.merchant-product-options .editor-form-field,
+.merchant-department-options .editor-form-field {
+  margin-top: 14px;
+}
+.department-page-link {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.department-page-link svg {
+  flex: none;
+}
+.catalogue-workspace .editor-hint {
+  font-size: 13px;
+  line-height: 1.8;
+}
+@media (max-width: 900px) {
+  .merchant-task-guide,
+  .merchant-page-guide {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px;
+  }
+  .merchant-task-guide .account-links,
+  .merchant-page-guide .account-links {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .design-workspace .editor-save-bar {
+    position: static;
+    bottom: auto;
+  }
+}

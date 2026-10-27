@@ -76,6 +76,7 @@ test("semantic sections can be configured, previewed and published through nativ
   await login(page);
   await page.goto(`/shopkeeper/shops/${shop}/design`);
   await expect(page.getByRole("status")).toHaveText("Design loaded.");
+  await page.getByRole("tab", { name: /^Sections/ }).click();
   await page.getByRole("checkbox", { name: "Show Shoes department", exact: true }).uncheck();
   for (const type of [
     "entrance",
@@ -87,7 +88,7 @@ test("semantic sections can be configured, previewed and published through nativ
     "gallery",
     "contact",
   ]) {
-    await page.getByLabel("New section type", { exact: true }).selectOption(type);
+    await page.getByLabel("What would you like to add?", { exact: true }).selectOption(type);
     if (type !== "contact")
       await page.getByLabel("New section title", { exact: true }).fill(`P11 ${type}`);
     if (["entrance", "story", "offer", "service_desk"].includes(type))
@@ -118,6 +119,7 @@ test("semantic sections can be configured, previewed and published through nativ
   expect(snapshot).toContain("Fictional shoe photograph");
   await page.goto(`/shopkeeper/shops/${shop}/design`);
   await expect(page.getByRole("status")).toHaveText("Design loaded.");
+  await page.getByRole("tab", { name: /^Review & publish/ }).click();
   await page
     .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
     .check();

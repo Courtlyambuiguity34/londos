@@ -59,19 +59,19 @@ test("catalogue, contacts, native worker image processing and anonymous requests
       page.getByRole("button", { name: "Create department", exact: true }),
     ).toBeEnabled();
     await page.getByLabel("Department name", { exact: true }).fill("Browser specials");
+    await page.locator(".merchant-department-options > summary").click();
     await page.getByLabel("Department address", { exact: true }).fill("browser-specials");
     await page.getByRole("button", { name: "Create department", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Department saved.");
     await page.getByRole("tab", { name: /^Products/ }).click();
     await page.getByLabel("Product or service name", { exact: true }).fill("Browser sample shoes");
+    await page.locator(".merchant-product-options > summary").click();
     await page.getByLabel("Product address", { exact: true }).fill("browser-sample-shoes");
     await page
       .getByLabel("Department", { exact: true })
       .selectOption({ label: "Browser specials" });
     await page.getByLabel("Description", { exact: true }).fill("A fictional catalogue item.");
-    await page
-      .getByLabel("Price in minor units (leave blank for ask-for-price)", { exact: true })
-      .fill("123000");
+    await page.getByLabel("Price (optional)", { exact: true }).fill("123000");
     await page.getByRole("button", { name: "Create product or service", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Product or service saved.");
     await page.getByRole("tab", { name: /^Images/ }).click();
@@ -97,7 +97,7 @@ test("catalogue, contacts, native worker image processing and anonymous requests
     await page.getByRole("tab", { name: /^Products/ }).click();
     await page.getByRole("button", { name: "Edit Browser sample shoes", exact: true }).click();
     await page
-      .getByLabel("Ready image", { exact: true })
+      .getByLabel("Product photo", { exact: true })
       .selectOption({ label: "Fictional plum product image" });
     await page.getByRole("button", { name: "Save product or service", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Product or service saved.");

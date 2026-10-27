@@ -6,7 +6,8 @@ import { coreConfig } from "../../src/server/config";
 import { seedIds } from "../../src/server/db/seed";
 import { availableShopAddress } from "../../src/server/shop-address";
 import { transaction } from "../../src/server/db/pool";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
+import AxeBuilder from "@axe-core/playwright";
 import sharp from "sharp";
 import type { SeedAccounts } from "../../src/server/db/seed";
 
@@ -83,6 +84,8 @@ async function ownShop(page: Page) {
 async function createDepartment(page: Page, name: string, slug: string) {
   await page.getByRole("tab", { name: /^Departments/ }).click();
   await page.getByLabel("Department name", { exact: true }).fill(name);
+  const options = page.locator(".merchant-department-options");
+  if ((await options.getAttribute("open")) === null) await options.locator("summary").click();
   await page.getByLabel("Department address", { exact: true }).fill(slug);
   const submission = page.waitForResponse(
     (response) => response.url().endsWith("/departments") && response.request().method() === "POST",
@@ -94,14 +97,180 @@ async function createDepartment(page: Page, name: string, slug: string) {
 async function createProduct(page: Page, name: string, slug: string) {
   await page.getByRole("tab", { name: /^Products/ }).click();
   await page.getByLabel("Product or service name", { exact: true }).fill(name);
+  const options = page.locator(".merchant-product-options");
+  if ((await options.getAttribute("open")) === null) await options.locator("summary").click();
   await page.getByLabel("Product address", { exact: true }).fill(slug);
-  await page.getByLabel("Price in minor units", { exact: false }).fill("5000");
+  await page.getByLabel("Price", { exact: false }).fill("5000");
   const submission = page.waitForResponse(
     (response) => response.url().endsWith("/products") && response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Create product or service", exact: true }).click();
   return submission;
 }
+
+test("a merchant adds crops by name and normal price, then previews and publishes connected department and product pages", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const fixture = await ownShop(page),
+    base = `/shopkeeper/shops/${fixture.shop}`;
+  try {
+    await page.goto(`${base}/catalogue`);
+    await page.getByRole("button", { name: "Add a department", exact: true }).click();
+    await page.getByLabel("Department name", { exact: true }).fill("Crops");
+    await expect(page.getByLabel("Department address", { exact: true })).toHaveValue("");
+    await page.getByRole("button", { name: "Create department", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Department saved.");
+    await expect(page.getByText(/position 0/)).toHaveCount(0);
+    await page.getByRole("button", { name: "Add product to Crops", exact: true }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toBeFocused();
+    await expect(page.getByLabel("Department", { exact: true })).toHaveValue(
+      (await (await page.request.get(`${fixture.root}/catalogue`)).json()).departments[0].id,
+    );
+    await page.getByLabel("Product or service name", { exact: true }).fill("Maize seed");
+    await page.getByLabel("Currency", { exact: true }).selectOption("USD");
+    await page.getByLabel("Price (optional)", { exact: true }).fill("19.95");
+    await page.getByRole("button", { name: "Upload a product photo", exact: true }).click();
+    await expect(page.getByRole("tabpanel", { name: "Shop images", exact: true })).toBeVisible();
+    await page.getByRole("tab", { name: /^Products/ }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
+      "Maize seed",
+    );
+    await expect(page.getByLabel("Price (optional)", { exact: true })).toHaveValue("19.95");
+    await page.getByRole("button", { name: "Create product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    const catalogue = await (await page.request.get(`${fixture.root}/catalogue`)).json();
+    expect(catalogue.departments[0].slug).toBe("crops");
+    expect(catalogue.products[0]).toMatchObject({
+      slug: "maize-seed",
+      currency: "USD",
+      price_minor: "1995",
+      department_id: catalogue.departments[0].id,
+    });
+    await page.getByRole("button", { name: "Edit Maize seed", exact: true }).click();
+    await expect(page.getByLabel("Price (optional)", { exact: true })).toHaveValue("19.95");
+    await page
+      .getByLabel("Description", { exact: true })
+      .fill("Keep this description while adding a photo.");
+    await page.getByRole("button", { name: "Upload a product photo", exact: true }).click();
+    await page.getByLabel("Image file", { exact: true }).setInputFiles({
+      name: "fictional-seed.png",
+      mimeType: "image/png",
+      buffer: await sharp({ create: { width: 64, height: 48, channels: 3, background: "#497044" } })
+        .png()
+        .toBuffer(),
+    });
+    await page.getByLabel("Image description", { exact: true }).fill("Fictional seed photo");
+    await page.getByRole("button", { name: "Upload image", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText(
+      "Image uploaded. Processing will appear below.",
+    );
+    await page.getByRole("tab", { name: /^Products/ }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
+      "Maize seed",
+    );
+    await expect(page.getByLabel("Price (optional)", { exact: true })).toHaveValue("19.95");
+    await expect(page.getByLabel("Description", { exact: true })).toHaveValue(
+      "Keep this description while adding a photo.",
+    );
+    await mkdir("docs/evidence/images", { recursive: true });
+    for (const width of [1440, 390, 320]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      expect(
+        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+          .violations,
+      ).toEqual([]);
+      await page.evaluate(() => {
+        (document.activeElement as HTMLElement | null)?.blur();
+        window.scrollTo(0, 0);
+      });
+      if (width !== 320)
+        await page.screenshot({
+          path: `docs/evidence/images/merchant-clarity-products-${width}-2026-10-27.png`,
+          fullPage: true,
+        });
+    }
+    await page.getByRole("button", { name: "Save product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    expect(
+      (await (await page.request.get(`${fixture.root}/catalogue`)).json()).products[0].description,
+    ).toBe("Keep this description while adding a photo.");
+    await page.goto(`${base}/design#sections`);
+    await expect(page.getByRole("status")).toHaveText("Design loaded.");
+    await page.getByRole("tab", { name: /^Style/ }).click();
+    await page.getByRole("button", { name: "Customise layout & colours", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "Products per row on phones", exact: true })
+      .selectOption({ label: "One large product per row" });
+    await page
+      .getByRole("combobox", { name: "Space between items", exact: true })
+      .selectOption("airy");
+    await page.getByRole("tab", { name: /^Sections/ }).click();
+    await page.getByLabel("What would you like to add?", { exact: true }).selectOption("entrance");
+    await page.getByLabel("New section title", { exact: true }).fill("Grown for your garden");
+    await page
+      .getByLabel("New section text", { exact: true })
+      .fill("Browse our crop selection and contact us for details.");
+    await page.getByRole("button", { name: "Add section", exact: true }).click();
+    await page.getByLabel("What would you like to add?", { exact: true }).selectOption("contact");
+    await page.getByRole("button", { name: "Add section", exact: true }).click();
+    const departmentCard = page
+      .locator(".editor-section-card")
+      .filter({ has: page.locator("summary strong", { hasText: /^Crops$/ }) });
+    await departmentCard.locator("summary").click();
+    await departmentCard
+      .getByLabel("Products shown here", { exact: true })
+      .selectOption({ label: "Show up to 3 products" });
+    await page.getByRole("button", { name: "Save draft", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Draft saved.");
+    expect(
+      (await (await page.request.get(`${fixture.root}/design`)).json()).specification.presentation
+        .productColumns.mobile,
+    ).toBe(1);
+    await expect(
+      departmentCard.getByRole("link", { name: "Preview Crops page →", exact: true }),
+    ).toBeVisible();
+    await page.evaluate(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
+      window.scrollTo(0, 0);
+    });
+    await page.screenshot({
+      path: "docs/evidence/images/merchant-clarity-sections-320-2026-10-27.png",
+      fullPage: true,
+    });
+    await departmentCard.getByRole("link", { name: "Preview Crops page →", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crops");
+    await page.getByRole("link", { name: "Maize seed", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Maize seed");
+    expect(new URL(page.url()).searchParams.get("product")).toBe("maize-seed");
+    await page.goto(`${base}/design#review`);
+    await page
+      .getByRole("checkbox", {
+        name: "I reviewed this saved draft and confirm publication",
+        exact: true,
+      })
+      .check();
+    await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Shop published.");
+    await page.goto(`/shops/${fixture.slug}`);
+    await expect(
+      page.getByRole("heading", { name: "Grown for your garden", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Contact this shop", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "View all Crops", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/shops/${fixture.slug}/departments/crops$`));
+    await page.getByRole("link", { name: "Maize seed", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/shops/${fixture.slug}/products/maize-seed$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Maize seed");
+  } finally {
+    await fixture.pool.end();
+  }
+});
 
 test("catalogue has one main heading; consecutive creates reset their forms while rejected writes preserve input", async ({
   page,
@@ -132,7 +301,7 @@ test("catalogue has one main heading; consecutive creates reset their forms whil
       await expect(page.getByRole("status")).toHaveText("Product or service saved.");
       await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue("");
       await expect(page.getByLabel("Product address", { exact: true })).toHaveValue("");
-      await expect(page.getByLabel("Price in minor units", { exact: false })).toHaveValue("");
+      await expect(page.getByLabel("Price", { exact: false })).toHaveValue("");
     }
     expect(
       (await createDepartment(page, "Keep my department input", "first-department")).status(),

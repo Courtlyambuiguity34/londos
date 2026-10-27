@@ -1,5 +1,12 @@
 # Build status and next model setting
 
+**Merchant clarity update — 27 October 2026:** continuing from `9054bc4` on the
+hosted branch. The [shopkeeper quick start](SHOPKEEPER-QUICK-START.md) explains
+adding products to departments and arranging home-page sections. The
+[review](evidence/MERCHANT-CLARITY-2026-10-27.md) records simpler forms, ordinary
+currency input, named layout choices, linked department/product pages and local
+verification. No configuration or database migration is needed.
+
 **Public browsing update — 27 October 2026:** continuing from `3fd5ef4` on the
 hosted branch. The [public browsing review](evidence/PUBLIC-BROWSING-2026-10-27.md)
 records a themed purchase-information card, automatically looping category and

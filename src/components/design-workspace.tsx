@@ -11,6 +11,7 @@ import { WorkspaceSectionNav, useWorkspaceSection } from "./workspace-sections";
 import { ShopThemePicker } from "./shop-theme-picker";
 import { starterSections, distinctShopSections } from "@/modules/shop-themes/sections";
 import { DesignSections } from "./design-sections";
+import { sectionLabels } from "@/modules/merchant-editor";
 import { designResponseError } from "@/modules/design-feedback";
 import { ShopBrandingFields, type BrandingImage } from "./shop-branding-fields";
 
@@ -27,7 +28,7 @@ type State = {
   publishedRevision: number | null;
   specification: ShopSpecification;
   history: { revision: number; summary: string }[];
-  departments: { id: string; name: string }[];
+  departments: { id: string; name: string; slug?: string }[];
   products: { id: string; name: string; has_image: boolean }[];
   images?: BrandingImage[];
   canManageImages?: boolean;
@@ -143,12 +144,14 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
   const spaceName = (id: string) => {
     const space = spec.spaces.find((s) => s.id === id);
     return space?.type === "department"
-      ? (state.departments.find((d) => d.id === space.departmentId)?.name ?? id)
+      ? (state.departments.find((d) => d.id === space.departmentId)?.name ?? "Department preview")
       : space && "title" in space
         ? typeof space.title === "string"
           ? space.title
           : space.title.text
-        : id;
+        : space
+          ? sectionLabels[space.type]
+          : "Section";
   };
   return (
     <div className="catalogue-workspace design-workspace editor-workflow">
@@ -161,9 +164,38 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
       <p role="status" aria-live="polite">
         {status}
       </p>
-      <p>
-        Published revision: {state.publishedRevision ?? "None"}. Draft revision:{" "}
-        {state.revision ?? "None"}.
+      <div className="merchant-page-guide">
+        <div>
+          <p className="eyebrow">Build your shop, step by step</p>
+          <h2>Your shop, clearly organised.</h2>
+          <p>
+            Welcome, story and contact sections stay on your home page. A department such as Crops
+            opens its own page; each crop or product then opens a details page.
+          </p>
+        </div>
+        {state.canManageImages ? (
+          <div className="account-links">
+            <Link
+              className="button button--outline"
+              href={`/shopkeeper/shops/${shopId}/catalogue#products`}
+            >
+              Add products
+            </Link>
+            <Link
+              className="text-button"
+              href={`/shopkeeper/shops/${shopId}/catalogue#departments`}
+            >
+              Manage departments
+            </Link>
+          </div>
+        ) : (
+          <p>Ask a teammate with product access to add or change catalogue items.</p>
+        )}
+      </div>
+      <p className="editor-hint">
+        {state.publishedRevision
+          ? "Your published shop is live. Saving here creates a private draft until you publish again."
+          : "Your shop is not published yet. Save a draft, preview it, then publish when ready."}
       </p>
       {dirty ? (
         <p role="note" className="notice">
@@ -260,7 +292,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             <option value="blue">Blue studio</option>
           </select>
           <fieldset>
-            <legend>Responsive premises</legend>
+            <legend>Your shop’s appearance</legend>
             <p>Set your layout, colours and spacing for phones and larger screens.</p>
             {!spec.presentation ? (
               <button
@@ -268,12 +300,12 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                 className="button button--outline"
                 onClick={() => setSpec({ ...spec, presentation: defaultPresentation })}
               >
-                Enable responsive premise controls
+                Customise layout & colours
               </button>
             ) : (
               <>
                 <label>
-                  Premise style
+                  Shop look
                   <select
                     value={spec.presentation.premiseStyle}
                     onChange={(e) =>
@@ -297,13 +329,28 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                       "catalogue",
                     ].map((value) => (
                       <option key={value} value={value}>
-                        {value}
+                        {(
+                          {
+                            luxury: "Elegant boutique",
+                            streetwear: "Bold streetwear",
+                            electronics: "Technology shop",
+                            food: "Fresh food & produce",
+                            service: "Professional services",
+                            minimalist: "Clean & simple",
+                            editorial: "Magazine style",
+                            catalogue: "Product-focused catalogue",
+                            modern: "Clean & modern",
+                            classic: "Traditional",
+                            technical: "Precise & structured",
+                            friendly: "Warm & welcoming",
+                          } as Record<string, string>
+                        )[value] ?? value}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label>
-                  Density
+                  Space between items
                   <select
                     value={spec.presentation.density}
                     onChange={(e) =>
@@ -316,9 +363,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                       })
                     }
                   >
-                    <option value="airy">Airy</option>
-                    <option value="balanced">Balanced</option>
-                    <option value="compact">Compact</option>
+                    <option value="airy">Spacious — more room around each item</option>
+                    <option value="balanced">Balanced — a little breathing room</option>
+                    <option value="compact">Compact — more items on screen</option>
                   </select>
                 </label>
                 <label>
@@ -341,7 +388,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                   </select>
                 </label>
                 <label>
-                  Typography
+                  Lettering style
                   <select
                     value={spec.presentation.typography}
                     onChange={(e) =>
@@ -356,7 +403,22 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                   >
                     {["editorial", "modern", "classic", "technical", "friendly"].map((value) => (
                       <option key={value} value={value}>
-                        {value}
+                        {(
+                          {
+                            luxury: "Elegant boutique",
+                            streetwear: "Bold streetwear",
+                            electronics: "Technology shop",
+                            food: "Fresh food & produce",
+                            service: "Professional services",
+                            minimalist: "Clean & simple",
+                            editorial: "Magazine style",
+                            catalogue: "Product-focused catalogue",
+                            modern: "Clean & modern",
+                            classic: "Traditional",
+                            technical: "Precise & structured",
+                            friendly: "Warm & welcoming",
+                          } as Record<string, string>
+                        )[value] ?? value}
                       </option>
                     ))}
                   </select>
@@ -428,13 +490,13 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                       })
                     }
                   >
-                    <option value="compact">Compact</option>
+                    <option value="compact">Compact — more items on screen</option>
                     <option value="bottom">Bottom navigation</option>
                     <option value="department_bar">Department bar</option>
                   </select>
                 </label>
                 <label>
-                  Mobile product columns
+                  Products per row on phones
                   <select
                     value={spec.presentation.productColumns.mobile}
                     onChange={(e) =>
@@ -450,12 +512,12 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                       })
                     }
                   >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
+                    <option value={1}>One large product per row</option>
+                    <option value={2}>Two products side by side</option>
                   </select>
                 </label>
                 <label>
-                  Desktop product columns
+                  Products per row on computers
                   <select
                     value={spec.presentation.productColumns.desktop}
                     onChange={(e) =>
@@ -471,9 +533,9 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                       })
                     }
                   >
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
+                    <option value={2}>Two products side by side</option>
+                    <option value={3}>Three products side by side</option>
+                    <option value={4}>Four products side by side</option>
                   </select>
                 </label>
                 <button
@@ -486,7 +548,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
                     setSpec(legacy);
                   }}
                 >
-                  Use classic premise styling
+                  Use the classic shop style
                 </button>
               </>
             )}
@@ -536,7 +598,11 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             ))}
           </fieldset>
           <fieldset>
-            <legend>Departments in the shop entrance (up to four)</legend>
+            <legend>Departments to show on your home page (up to four)</legend>
+            <p>
+              Customers can open each department to browse all its products. Add products in
+              Products & contacts first.
+            </p>
             {state.departments.map((department) => {
               const selected = spec.spaces.some(
                 (space) => space.type === "department" && space.departmentId === department.id,
@@ -580,6 +646,10 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
           </fieldset>
           <DesignSections
             specification={spec}
+            shopId={shopId}
+            revision={state.revision}
+            canPreview={!dirty && !!state.revision}
+            canManageCatalogue={!!state.canManageImages}
             departments={state.departments}
             products={state.products}
             onChange={setSpec}

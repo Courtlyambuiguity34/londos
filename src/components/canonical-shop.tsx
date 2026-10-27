@@ -570,7 +570,29 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             if ("departmentId" in space && !department) return null;
             return (
               <section key={space.id} id={space.id} className="shop-content-section">
-                <h2>{"title" in space ? space.title : department?.name}</h2>
+                <div className="storefront-section-heading">
+                  <h2>
+                    {department ? (
+                      <Link
+                        prefetch={false}
+                        href={shopViewHref(view, { department: department.slug })}
+                      >
+                        {"title" in space ? space.title : department.name}
+                      </Link>
+                    ) : "title" in space ? (
+                      space.title
+                    ) : null}
+                  </h2>
+                  {department ? (
+                    <Link
+                      className="department-page-link"
+                      prefetch={false}
+                      href={shopViewHref(view, { department: department.slug })}
+                    >
+                      View all {department.name} <Icon name="arrow" />
+                    </Link>
+                  ) : null}
+                </div>
                 <div className="product-grid">
                   {products.map((product) =>
                     space.type === "gallery" ? (

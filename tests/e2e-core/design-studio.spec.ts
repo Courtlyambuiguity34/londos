@@ -238,7 +238,7 @@ test("local design directions preview on real phone/desktop canvases, apply as d
   await page.goto(`${editor}#sections`);
   const hero = page
     .locator(".editor-section-card")
-    .filter({ has: page.locator("small", { hasText: /^hero$/ }) });
+    .filter({ has: page.locator("small", { hasText: /^Welcome banner$/ }) });
   await hero.locator("summary").click();
   await hero.getByLabel("Section layout", { exact: true }).selectOption("editorial");
   await page.getByRole("button", { name: "Save draft", exact: true }).click();

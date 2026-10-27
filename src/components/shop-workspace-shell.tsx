@@ -59,18 +59,25 @@ export async function ShopWorkspaceShell({
       links={links}
       currentPath={path}
       actions={
-        permissions.includes("membership") ? (
-          <Link
-            className="button button--outline"
-            href={
-              shop.merchant_id
-                ? `/shopkeeper/merchants/${shop.merchant_id}/team#invite`
-                : "/shopkeeper/team"
-            }
-          >
-            Invite a teammate <span aria-hidden="true">+</span>
-          </Link>
-        ) : undefined
+        <div className="account-links">
+          {permissions.includes("catalogue") ? (
+            <Link className="button" href={`${base}/catalogue#products`}>
+              Add product
+            </Link>
+          ) : null}
+          {permissions.includes("membership") ? (
+            <Link
+              className="button button--outline"
+              href={
+                shop.merchant_id
+                  ? `/shopkeeper/merchants/${shop.merchant_id}/team#invite`
+                  : "/shopkeeper/team"
+              }
+            >
+              Invite a teammate <span aria-hidden="true">+</span>
+            </Link>
+          ) : null}
+        </div>
       }
       banner={
         banner ?? (

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { WorkspaceSectionNav, useWorkspaceSection } from "./workspace-sections";
 import { formatMinorMoney } from "@/modules/money";
+import { catalogueAddress, priceToMinor, editablePrice } from "@/modules/merchant-editor";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 type Department = {
@@ -95,7 +96,8 @@ export function CatalogueWorkspace({
     [busy, setBusy] = useState(false),
     [loaded, setLoaded] = useState(false),
     [department, setDepartment] = useState<Department | null>(null),
-    [product, setProduct] = useState<Product | null>(null);
+    [product, setProduct] = useState<Product | null>(null),
+    [preferredDepartment, setPreferredDepartment] = useState("");
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       const results = await Promise.all([
@@ -178,8 +180,6 @@ export function CatalogueWorkspace({
     try {
       await work();
       confirmed?.();
-      setDepartment(null);
-      setProduct(null);
       try {
         await refresh();
         setMessage(success);
@@ -197,6 +197,17 @@ export function CatalogueWorkspace({
       setBusy(false);
     }
   }
+  function addProduct(departmentId?: string) {
+    if (
+      product &&
+      !window.confirm("Start another product? Unsaved edits to this product will be cleared.")
+    )
+      return;
+    setProduct(null);
+    if (departmentId) setPreferredDepartment(departmentId);
+    select("products");
+    requestAnimationFrame(() => document.getElementById("product-name")?.focus());
+  }
   function departmentSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget,
@@ -208,7 +219,7 @@ export function CatalogueWorkspace({
           department ? "PATCH" : "POST",
           {
             name: field(data, "name"),
-            slug: field(data, "slug"),
+            slug: field(data, "slug").trim() || catalogueAddress(field(data, "name")),
             position: Number(data.get("position")),
             archived: data.get("archived") === "on",
             version: department?.version ?? 0,
@@ -217,6 +228,7 @@ export function CatalogueWorkspace({
       "Department saved.",
       () => {
         if (!department) form.reset();
+        setDepartment(null);
       },
     );
   }
@@ -245,10 +257,10 @@ export function CatalogueWorkspace({
           departmentId: field(data, "department"),
           kind: field(data, "kind"),
           name: field(data, "name"),
-          slug: field(data, "slug"),
+          slug: field(data, "slug").trim() || catalogueAddress(field(data, "name")),
           description: field(data, "description"),
           currency: field(data, "currency"),
-          priceMinor: field(data, "price") || null,
+          priceMinor: priceToMinor(field(data, "price"), field(data, "currency")),
           availability: field(data, "availability"),
           position: Number(data.get("position")),
           mediaId: field(data, "image") || null,
@@ -257,6 +269,7 @@ export function CatalogueWorkspace({
       "Product or service saved.",
       () => {
         if (!product) form.reset();
+        setProduct(null);
       },
     );
   }
@@ -315,6 +328,38 @@ export function CatalogueWorkspace({
         select={select}
         label="Catalogue sections"
       />
+      <div className="merchant-task-guide">
+        <div>
+          <span className="eyebrow">Build your catalogue</span>
+          <h2>What would you like to add?</h2>
+          <p>
+            Departments are groups, like Crops or Seeds. Add products inside a department; customers
+            can open each department and product on its own page.
+          </p>
+        </div>
+        <div className="account-links">
+          <button
+            type="button"
+            className="button"
+            disabled={busy || !loaded}
+            onClick={() =>
+              departments.some((d) => !d.archived) ? addProduct() : select("departments")
+            }
+          >
+            Add a product
+          </button>
+          <button
+            type="button"
+            className="button button--outline"
+            onClick={() => {
+              select("departments");
+              requestAnimationFrame(() => document.getElementById("department-name")?.focus());
+            }}
+          >
+            Add a department
+          </button>
+        </div>
+      </div>
       <div className="catalogue-toolbar">
         <button
           type="button"
@@ -346,13 +391,27 @@ export function CatalogueWorkspace({
         aria-labelledby="departments-title"
       >
         <h2 id="departments-title">Departments</h2>
+        <p>
+          Think of these as rooms in your shop. For example, Crops can contain maize, beans and
+          rice. Each department gets a page automatically once your shop is published.
+        </p>
         <ul className="workspace-list">
           {departments.map((d) => (
             <li key={d.id}>
               <span>
                 {d.name}
-                {d.archived ? " (archived)" : ""} · position {d.position}
+                {d.archived ? " (archived)" : ""}
               </span>
+              {!d.archived ? (
+                <button
+                  type="button"
+                  className="button button--outline button--small"
+                  disabled={busy || !loaded}
+                  onClick={() => addProduct(d.id)}
+                >
+                  Add product to {d.name}
+                </button>
+              ) : null}
               <button
                 className="text-button"
                 disabled={busy}
@@ -382,29 +441,35 @@ export function CatalogueWorkspace({
               maxLength={120}
             />
           </div>
-          <div className="editor-form-field">
-            <label htmlFor="department-slug">Department address</label>
-            <input
-              id="department-slug"
-              name="slug"
-              defaultValue={department?.slug}
-              required
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              maxLength={80}
-            />
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="department-position">Department position</label>
-            <input
-              id="department-position"
-              name="position"
-              type="number"
-              min={0}
-              max={1000000}
-              defaultValue={department?.position ?? 0}
-              required
-            />
-          </div>
+          <details className="merchant-department-options">
+            <summary>Department link (optional)</summary>
+            <p className="editor-hint">
+              We create a readable link from the department name. Only change it if you want a
+              different address.
+            </p>{" "}
+            <div className="editor-form-field">
+              <label htmlFor="department-slug">Department address</label>
+              <input
+                id="department-slug"
+                name="slug"
+                defaultValue={department?.slug}
+                placeholder="Made from the department name if left blank"
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                maxLength={80}
+              />
+            </div>
+          </details>
+          <input
+            name="position"
+            type="hidden"
+            value={
+              department?.position ??
+              Math.min(1000000, Math.max(-1, ...departments.map((d) => d.position)) + 1)
+            }
+          />
+          <p className="editor-hint">
+            You can leave the address blank. New departments are placed after your existing ones.
+          </p>
           <label className="check-label">
             <input name="archived" type="checkbox" defaultChecked={department?.archived} /> Archive
             department (archive or move its products first)
@@ -433,15 +498,185 @@ export function CatalogueWorkspace({
           <div className="catalogue-empty">
             <h3>Make room for your first product.</h3>
             <p>Start with a department, then add a product or service with its photo and price.</p>
-            <button
-              className="button button--outline"
-              type="button"
-              onClick={() => select("departments")}
-            >
-              Organise departments
-            </button>
+            {departments.some((d) => !d.archived) ? (
+              <button type="button" className="button" onClick={() => addProduct()}>
+                Add your first product
+              </button>
+            ) : (
+              <button
+                className="button button--outline"
+                type="button"
+                onClick={() => select("departments")}
+              >
+                Create your first department
+              </button>
+            )}
           </div>
         )}
+        <form
+          className="account-form editor-form-grid"
+          key={product ? `${product.id}:${product.version}` : "new-product"}
+          onSubmit={productSubmit}
+        >
+          <h3>{product ? "Edit product or service" : "Create product or service"}</h3>
+          <div className="editor-form-field">
+            <label htmlFor="product-name">Product or service name</label>
+            <input
+              id="product-name"
+              name="name"
+              defaultValue={product?.name}
+              required
+              maxLength={160}
+            />
+          </div>
+
+          <div className="editor-form-field">
+            <label htmlFor="product-department">Department</label>
+            <select
+              id="product-department"
+              name="department"
+              value={
+                product?.department_id ??
+                (preferredDepartment || departments.find((d) => !d.archived)?.id || "")
+              }
+              onChange={(event) => {
+                setPreferredDepartment(event.target.value);
+                if (product) setProduct({ ...product, department_id: event.target.value });
+              }}
+              required
+            >
+              {departments
+                .filter((d) => !d.archived)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="editor-form-field">
+            <label htmlFor="product-description">Description</label>
+            <textarea
+              id="product-description"
+              name="description"
+              defaultValue={product?.description}
+              maxLength={2000}
+            />
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-currency">Currency</label>
+            <select id="product-currency" name="currency" defaultValue={product?.currency ?? "UGX"}>
+              {["UGX", "USD", "KES", "EUR", "GBP"].map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div className="editor-form-field">
+            <label htmlFor="product-price">Price (optional)</label>
+            <input
+              id="product-price"
+              name="price"
+              defaultValue={editablePrice(product?.price_minor ?? null, product?.currency ?? "UGX")}
+              inputMode="decimal"
+              maxLength={23}
+              placeholder="For example, 5000"
+            />
+          </div>
+          <p className="editor-hint">
+            Enter the amount customers pay: for example 5000 UGX or 19.95 USD. Leave the price blank
+            if customers should ask you.
+          </p>
+          <div className="editor-form-field">
+            <label htmlFor="product-availability">Availability</label>
+            <select
+              id="product-availability"
+              name="availability"
+              defaultValue={product?.availability ?? "available"}
+            >
+              {["available", "unavailable", "archived"].map((a) => (
+                <option key={a} value={a}>
+                  {
+                    (
+                      {
+                        available: "Available to customers",
+                        unavailable: "Currently unavailable",
+                        archived: "Hidden from customers",
+                      } as Record<string, string>
+                    )[a]
+                  }
+                </option>
+              ))}
+            </select>
+          </div>
+          <input
+            name="position"
+            type="hidden"
+            value={
+              product?.position ??
+              Math.min(1000000, Math.max(-1, ...products.map((p) => p.position)) + 1)
+            }
+          />
+          <div className="editor-form-field">
+            <label htmlFor="product-image">Product photo</label>
+            <select id="product-image" name="image" defaultValue={product?.media_id ?? ""}>
+              <option value="">No image</option>
+              {media
+                .filter((m) => m.state === "ready")
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.alt}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <details className="merchant-product-options">
+            <summary>Product link & type (optional)</summary>
+            <p className="editor-hint">
+              Your link is made from the product name. You can change it, or choose Service if you
+              sell a service.
+            </p>{" "}
+            <div className="editor-form-field">
+              <label htmlFor="product-slug">Product address</label>
+              <input
+                id="product-slug"
+                name="slug"
+                defaultValue={product?.slug}
+                placeholder="Made from the product name if left blank"
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                maxLength={80}
+              />
+            </div>{" "}
+            <div className="editor-form-field">
+              <label htmlFor="product-kind">Type</label>
+              <select id="product-kind" name="kind" defaultValue={product?.kind ?? "product"}>
+                <option value="product">Product</option>
+                <option value="service">Service</option>
+              </select>
+            </div>
+          </details>
+          <p className="editor-hint">
+            Need a photo?{" "}
+            <button type="button" className="text-button" onClick={() => select("images")}>
+              Upload a product photo
+            </button>
+            . Return to Products afterwards; your entered details stay here.
+          </p>
+          <div className="account-links">
+            <button
+              className="button"
+              disabled={busy || !loaded || !departments.some((d) => !d.archived)}
+            >
+              {product ? "Save product or service" : "Create product or service"}
+            </button>
+            {product && (
+              <button className="text-button" type="button" onClick={() => setProduct(null)}>
+                Cancel product edit
+              </button>
+            )}
+          </div>
+        </form>
+        <h3 className="merchant-list-heading">Your products & services</h3>
         <ul className="workspace-list">
           {products.map((p) => (
             <li key={p.id}>
@@ -521,139 +756,6 @@ export function CatalogueWorkspace({
             Next products
           </button>
         </div>
-        <form
-          className="account-form editor-form-grid"
-          key={product ? `${product.id}:${product.version}` : "new-product"}
-          onSubmit={productSubmit}
-        >
-          <h3>{product ? "Edit product or service" : "Create product or service"}</h3>
-          <div className="editor-form-field">
-            <label htmlFor="product-name">Product or service name</label>
-            <input
-              id="product-name"
-              name="name"
-              defaultValue={product?.name}
-              required
-              maxLength={160}
-            />
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-slug">Product address</label>
-            <input
-              id="product-slug"
-              name="slug"
-              defaultValue={product?.slug}
-              required
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              maxLength={80}
-            />
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-department">Department</label>
-            <select
-              id="product-department"
-              name="department"
-              defaultValue={product?.department_id}
-              required
-            >
-              {departments
-                .filter((d) => !d.archived)
-                .map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-kind">Type</label>
-            <select id="product-kind" name="kind" defaultValue={product?.kind ?? "product"}>
-              <option value="product">Product</option>
-              <option value="service">Service</option>
-            </select>
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-description">Description</label>
-            <textarea
-              id="product-description"
-              name="description"
-              defaultValue={product?.description}
-              maxLength={2000}
-            />
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-currency">Currency</label>
-            <select id="product-currency" name="currency" defaultValue={product?.currency ?? "UGX"}>
-              {["UGX", "USD", "KES", "EUR", "GBP"].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-price">
-              Price in minor units (leave blank for ask-for-price)
-            </label>
-            <input
-              id="product-price"
-              name="price"
-              defaultValue={product?.price_minor ?? ""}
-              inputMode="numeric"
-              pattern="(0|[1-9][0-9]{0,19})"
-              maxLength={20}
-            />
-          </div>
-          <p>UGX uses whole shillings; USD, KES, EUR and GBP use hundredths.</p>
-          <div className="editor-form-field">
-            <label htmlFor="product-availability">Availability</label>
-            <select
-              id="product-availability"
-              name="availability"
-              defaultValue={product?.availability ?? "available"}
-            >
-              {["available", "unavailable", "archived"].map((a) => (
-                <option key={a}>{a}</option>
-              ))}
-            </select>
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-position">Product position</label>
-            <input
-              id="product-position"
-              name="position"
-              type="number"
-              min={0}
-              max={1000000}
-              defaultValue={product?.position ?? 0}
-              required
-            />
-          </div>
-          <div className="editor-form-field">
-            <label htmlFor="product-image">Ready image</label>
-            <select id="product-image" name="image" defaultValue={product?.media_id ?? ""}>
-              <option value="">No image</option>
-              {media
-                .filter((m) => m.state === "ready")
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.alt}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div className="account-links">
-            <button
-              className="button"
-              disabled={busy || !loaded || !departments.some((d) => !d.archived)}
-            >
-              {product ? "Save product or service" : "Create product or service"}
-            </button>
-            {product && (
-              <button className="text-button" type="button" onClick={() => setProduct(null)}>
-                Cancel product edit
-              </button>
-            )}
-          </div>
-        </form>
       </section>
       <section
         hidden={active !== "images"}

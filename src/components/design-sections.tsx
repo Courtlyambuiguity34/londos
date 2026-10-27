@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
+import { sectionLabels, layoutLabels } from "@/modules/merchant-editor";
 import { distinctShopSections } from "@/modules/shop-themes/sections";
 import {
   shopSpecification,
@@ -8,7 +10,11 @@ import {
 } from "@/modules/shop-design/specification";
 type Props = {
   specification: ShopSpecification;
-  departments: { id: string; name: string }[];
+  departments: { id: string; name: string; slug?: string }[];
+  shopId?: string;
+  revision?: number | null;
+  canPreview?: boolean;
+  canManageCatalogue?: boolean;
   products: { id: string; name: string; has_image: boolean }[];
   onChange: (spec: ShopSpecification) => void;
 };
@@ -41,7 +47,16 @@ function sectionText(
       return space;
   }
 }
-export function DesignSections({ specification, departments, products, onChange }: Props) {
+export function DesignSections({
+  specification,
+  departments,
+  products,
+  onChange,
+  shopId,
+  revision,
+  canPreview = false,
+  canManageCatalogue = false,
+}: Props) {
   const [type, setType] = useState<ShopSpace["type"]>("entrance"),
     [title, setTitle] = useState(""),
     [body, setBody] = useState(""),
@@ -102,7 +117,7 @@ export function DesignSections({ specification, departments, products, onChange 
     });
     if (!checked.success) {
       setMessage(
-        "Check the title, text and references. The page supports eight sections and 32 product cards; galleries need one to four ready images.",
+        "Choose a heading and select the products or department this section needs. The page supports eight sections and 32 product cards; galleries need one to four ready images.",
       );
       return;
     }
@@ -118,10 +133,11 @@ export function DesignSections({ specification, departments, products, onChange 
   }
   return (
     <fieldset>
-      <legend>Shop sections</legend>
+      <legend>Sections on your shop home page</legend>
       <p>
-        All text is plain text. Offers describe merchant terms; the service desk uses your saved
-        contact settings. Choose up to eight sections and 32 cards in total.
+        Arrange your welcome message, story, products and contact details here. These sections
+        appear together on your shop home page. Department and product links open their own pages.
+        You can add up to eight sections and show up to 32 products on the home page.
       </p>
       {specification.spaces.map((space, index) => {
         const title =
@@ -129,7 +145,10 @@ export function DesignSections({ specification, departments, products, onChange 
             ? typeof space.title === "string"
               ? space.title
               : space.title.text
-            : space.type;
+            : "departmentId" in space
+              ? (departments.find((d) => d.id === space.departmentId)?.name ??
+                sectionLabels[space.type])
+              : sectionLabels[space.type];
         const rich = [
           "hero",
           "featured_product",
@@ -143,7 +162,7 @@ export function DesignSections({ specification, departments, products, onChange 
               <span className="editor-section-number">{index + 1}</span>
               <span>
                 <strong>{title}</strong>
-                <small>{space.type.replaceAll("_", " ")}</small>
+                <small>{sectionLabels[space.type]}</small>
               </span>
               <span className="editor-section-edit">Edit</span>
             </summary>
@@ -210,16 +229,85 @@ export function DesignSections({ specification, departments, products, onChange 
                           } as Record<string, string[]>
                         )[space.type]?.map((variant) => (
                           <option key={variant} value={variant}>
-                            {variant.replaceAll("_", " ")}
+                            {layoutLabels[variant] ?? variant}
                           </option>
                         ))}
                       </select>
                     </label>
                   ) : null}
-                  <p>
-                    Product and department assignments stay intact. Use the design assistant to
-                    change a section’s structure.
+                  <p className="editor-hint">
+                    Choose how this part looks. Your selected products and department stay the same.
                   </p>
+                </>
+              ) : null}
+              {space.type === "department" || space.type === "collection" ? (
+                <>
+                  <label>
+                    Department to display
+                    <select
+                      aria-label="Department to display"
+                      value={space.departmentId}
+                      onChange={(event) =>
+                        onChange({
+                          ...specification,
+                          spaces: specification.spaces.map((item) =>
+                            item.id === space.id
+                              ? { ...space, departmentId: event.target.value }
+                              : item,
+                          ),
+                        })
+                      }
+                    >
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Products shown here
+                    <select
+                      aria-label="Products shown here"
+                      value={space.limit}
+                      onChange={(event) =>
+                        onChange({
+                          ...specification,
+                          spaces: specification.spaces.map((item) =>
+                            item.id === space.id
+                              ? { ...space, limit: Number(event.target.value) }
+                              : item,
+                          ),
+                        })
+                      }
+                    >
+                      {Array.from({ length: 8 }, (_, index) => (
+                        <option key={index + 1} value={index + 1}>
+                          Show up to {index + 1} {index === 0 ? "product" : "products"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="editor-hint">
+                    Customers can select this department to see its full page, then open any product
+                    for details.
+                  </p>
+                  {(() => {
+                    const d = departments.find((item) => item.id === space.departmentId);
+                    return canPreview && shopId && revision && d?.slug ? (
+                      <Link
+                        className="text-button"
+                        prefetch={false}
+                        href={`/shopkeeper/shops/${shopId}/preview?revision=${revision}&department=${encodeURIComponent(d.slug)}`}
+                      >
+                        Preview {d.name} page →
+                      </Link>
+                    ) : (
+                      <p className="editor-hint">
+                        Save your draft to preview this department page.
+                      </p>
+                    );
+                  })()}
                 </>
               ) : null}
               <div className="editor-section-actions">
@@ -264,7 +352,8 @@ export function DesignSections({ specification, departments, products, onChange 
           </details>
         );
       })}
-      <label htmlFor="new-section-type">New section type</label>
+      <h3>Add something to your home page</h3>
+      <label htmlFor="new-section-type">What would you like to add?</label>
       <select
         id="new-section-type"
         value={type}
@@ -290,7 +379,7 @@ export function DesignSections({ specification, departments, products, onChange 
           ] as const
         ).map((t) => (
           <option key={t} value={t}>
-            {t.replaceAll("_", " ")}
+            {sectionLabels[t]}
           </option>
         ))}
       </select>
@@ -333,14 +422,14 @@ export function DesignSections({ specification, departments, products, onChange 
             ))}
           </select>
           <label>
-            Maximum cards
-            <input
-              type="number"
-              min={1}
-              max={8}
-              value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
-            />
+            Products shown here
+            <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+              {Array.from({ length: 8 }, (_, index) => (
+                <option key={index + 1} value={index + 1}>
+                  Show up to {index + 1} {index === 0 ? "product" : "products"}
+                </option>
+              ))}
+            </select>
           </label>
         </>
       ) : null}
@@ -374,9 +463,14 @@ export function DesignSections({ specification, departments, products, onChange 
             {type === "gallery" ? "up to four with ready images" : "up to eight"})
           </legend>
           <p>
-            The first 32 current items and existing design references are shown. Archive or reorder
-            catalogue items to change this selection.
+            Choose products you have already added to your shop. This selection shows your first 32
+            current items and products already used in your design.
           </p>
+          {shopId && canManageCatalogue ? (
+            <Link className="text-button" href={`/shopkeeper/shops/${shopId}/catalogue#products`}>
+              Add another product →
+            </Link>
+          ) : null}
           {products
             .filter((p) => type !== "gallery" || p.has_image)
             .map((p) => (
