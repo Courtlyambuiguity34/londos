@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { designIntent } from "../../modules/ai-design/contract";
+import { designIntent, type DesignContext } from "../../modules/ai-design/contract";
+import { themeIds } from "../../modules/shop-themes/registry.generated";
 
 // Keep the provider grammar shallow. Londos reconstructs the canonical intent and
 // then runs the strict LSS, reference, provenance and protected-fact validators.
@@ -8,6 +9,7 @@ const patch = z
   .object({
     op: z.enum([
       "theme",
+      "storefront_theme",
       "presentation",
       "actions",
       "move",
@@ -17,6 +19,7 @@ const patch = z
       "remove_space",
     ]),
     theme: z.enum(["earth", "plum", "blue"]).nullable(),
+    themeId: z.enum(themeIds).nullable().optional().default(null),
     actions: z
       .array(z.enum(["call", "whatsapp", "enquiry"]))
       .max(3)
@@ -149,13 +152,14 @@ export const providerIntent = z
 
 function transportGrammar(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(transportGrammar);
-  if (value && typeof value === "object")
-    return Object.fromEntries(
+  if (value && typeof value === "object") {
+    const result = Object.fromEntries(
       Object.entries(value)
         .filter(
           ([key]) =>
             ![
               "$schema",
+              "default",
               "format",
               "pattern",
               "minimum",
@@ -168,12 +172,21 @@ function transportGrammar(value: unknown): unknown {
         )
         .map(([key, item]) => [key, transportGrammar(item)]),
     );
+    // Strict structured output requires every property to be required. The
+    // wire contract already represents unused values with null.
+    if (result.type === "object" && result.properties && typeof result.properties === "object")
+      result.required = Object.keys(result.properties);
+    return result;
+  }
   return value;
 }
 
 export const providerSchema = transportGrammar(z.toJSONSchema(providerIntent, { io: "input" }));
 export const providerGuide =
   "Return only the closed wire contract. Every patch contains every patch field; use null for unused fields. " +
+  "Prefer a storefront_theme patch using a supported themeId as a coherent design foundation, then focused section patches. " +
+  "For a NEW section use a short lowercase letter-led ID with only letters, digits and hyphens (for example garden-collection); existing section IDs must remain exact. " +
+  "You cannot browse or import reference websites. Ask for colours, typography or copied text when a URL is the only brief; never claim to have visited it. " +
   "Use existing catalogue UUIDs only. New rich copy must set provenance=ai unless the exact text is already a merchant fact in context. " +
   "Never rewrite prices, product facts, WhatsApp, phone, website, payment, delivery, pickup or fulfilment facts. " +
   "If genuinely missing information blocks a sound design, return no patches and one blocking design_decision. " +
@@ -268,7 +281,7 @@ function richSpace(p: z.infer<typeof patch>) {
   return { ...base, title: p.title, body: p.body };
 }
 
-export function decodeProviderIntent(text: string): string {
+export function decodeProviderIntent(text: string, context?: DesignContext): string {
   const wire = providerIntent.parse(JSON.parse(text));
   const spaceFields = new Set([
     "op",
@@ -310,26 +323,60 @@ export function decodeProviderIntent(text: string): string {
   const allowed = (op: z.infer<typeof patch>["op"]) =>
     op === "theme"
       ? new Set(["op", "theme"])
-      : op === "presentation"
-        ? presentationFields
-        : op === "actions"
-          ? new Set(["op", "actions"])
-          : op === "move"
-            ? new Set(["op", "spaceId", "before"])
-            : op === "announcement"
-              ? new Set(["op", "text"])
-              : op === "remove_space"
-                ? new Set(["op", "spaceId"])
-                : spaceFields;
+      : op === "storefront_theme"
+        ? new Set(["op", "themeId"])
+        : op === "presentation"
+          ? presentationFields
+          : op === "actions"
+            ? new Set(["op", "actions"])
+            : op === "move"
+              ? new Set(["op", "spaceId", "before"])
+              : op === "announcement"
+                ? new Set(["op", "text"])
+                : op === "remove_space"
+                  ? new Set(["op", "spaceId"])
+                  : spaceFields;
   for (const item of wire.patches)
     for (const [field, value] of Object.entries(item))
       if (!allowed(item.op).has(field) && value !== null && value !== undefined)
         throw new Error("provider_patch_field_not_allowed");
-  const patches = wire.patches.map((p) => {
+  // Provider-generated anchor IDs are not catalogue IDs. Allocate valid,
+  // collision-free anchors for NEW sections only and remap their move links.
+  // Existing section, product and department identities are never rewritten.
+  const occupied = new Set(context?.specification.spaces.map((space) => space.id) ?? []),
+    anchors = new Map<string, string>();
+  const additions = new Map<number, string>();
+  wire.patches.forEach((patch, index) => {
+    if (patch.op !== "add_space") return;
+    if (patch.spaceId && (occupied.has(patch.spaceId) || anchors.has(patch.spaceId)))
+      throw Error("duplicate_new_section_id");
+    const raw = patch.spaceId ?? `section-${patch.spaceType ?? "content"}`;
+    let base = raw
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    if (!/^[a-z]/.test(base)) base = `section-${base}`;
+    base = (base || "section").slice(0, 34).replace(/-+$/g, "");
+    let id = base,
+      suffix = 1;
+    while (occupied.has(id)) id = `${base}-${suffix++}`;
+    occupied.add(id);
+    additions.set(index, id);
+    if (patch.spaceId) anchors.set(patch.spaceId, id);
+  });
+  const patches = wire.patches.map((original, index) => {
+    const p =
+      original.op === "add_space" ? { ...original, spaceId: additions.get(index)! } : original;
     if (p.op === "theme") return { op: p.op, theme: p.theme };
+    if (p.op === "storefront_theme") return { op: p.op, id: p.themeId };
     if (p.op === "presentation") return presentationPatch(p);
     if (p.op === "actions") return { op: p.op, actions: p.actions };
-    if (p.op === "move") return { op: p.op, spaceId: p.spaceId, before: p.before };
+    if (p.op === "move")
+      return {
+        op: p.op,
+        spaceId: anchors.get(p.spaceId ?? "") ?? p.spaceId,
+        before: anchors.get(p.before ?? "") ?? p.before,
+      };
     if (p.op === "announcement") return { op: p.op, text: p.text };
     if (p.op === "remove_space") return { op: p.op, spaceId: p.spaceId };
     const space = richSpace(p);

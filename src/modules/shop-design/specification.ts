@@ -257,8 +257,11 @@ export function patchSpecification(
 ) {
   const patch = specificationPatch.parse(input),
     next = structuredClone(shopSpecification.parse(spec));
-  if (patch.op === "theme") next.theme = patch.theme;
-  else if (patch.op === "presentation") next.presentation = patch.presentation;
+  if (patch.op === "theme") {
+    next.theme = patch.theme;
+    delete next.storefrontTheme;
+    delete next.presentation;
+  } else if (patch.op === "presentation") next.presentation = patch.presentation;
   else if (patch.op === "storefront_theme") {
     const theme = themeDefinitions.find((theme) => theme.id === patch.id)!;
     next.storefrontTheme = theme.id;

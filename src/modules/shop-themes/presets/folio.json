@@ -1,0 +1,35 @@
+{
+  "id": "folio",
+  "name": "Folio",
+  "tagline": "Let your work do the talking.",
+  "description": "A focused editorial portfolio with a narrow canvas, precise details and spacious service cards.",
+  "category": "services",
+  "layout": {
+    "hero": "editorial",
+    "cards": "framed",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "service",
+    "palette": {
+      "primary": "navy",
+      "secondary": "sky",
+      "background": "white",
+      "surface": "cream",
+      "text": "charcoal",
+      "accent": "navy"
+    },
+    "typography": "modern",
+    "density": "airy",
+    "contentWidth": "narrow",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 2
+    }
+  }
+}

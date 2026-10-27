@@ -1,8 +1,8 @@
 # Storefront themes and focused editing
 
-Updated 26 October 2026 (Africa/Kampala).
+Updated 27 October 2026 (Africa/Kampala).
 
-Londos now has six original visual directions. The supplied retail references
+Londos now has ten original visual directions. The supplied retail references
 informed image hierarchy, collection browsing and editing workflows; their
 brand artwork, stock photographs and commercial theme files were not copied.
 
@@ -14,6 +14,10 @@ brand artwork, stock photographs and commercial theme files were not copied.
 | Signal | Electronics and specialist retail | Product-first entrance, precise type and a denser desktop grid. |
 | Studio | Services, beauty and creative businesses | Reversed editorial composition and a softer surface. |
 | Pulse | Statement clothing and lifestyle | Bold image entrance, uppercase headline and graphic card borders. |
+| Mosaic | Home, lifestyle and considered objects | A three-image collage, airy grid and warm gallery rhythm. |
+| Nocturne | Beauty, jewellery and luxury | Dark canvas, cinematic cover and luminous framed product cards. |
+| Botanica | Produce, agriculture and natural goods | Open poster entrance, forest accents and round collection tiles. |
+| Folio | Independent services and portfolios | A focused narrow canvas, editorial imagery and a two-column desktop catalogue. |
 
 These are starting points, not restrictions on a merchant’s category. The theme
 picker can show all themes or filter by their suggested category. Your own
@@ -30,7 +34,7 @@ do not receive invented products, prices, testimonials, offers or analytics.
 3. In **Branding**, select a ready cover/logo and write your announcement. Upload
    missing images from **Products & contacts → Images** if you have catalogue
    access. See [the image guide](SHOP-APPEARANCE.md).
-4. In **Sections**, edit your page content, expand a section to change its text,
+4. In **Sections**, edit your page content, expand a rich section to change its layout variant and text,
    or move it up/down. A department layout gives customers a clear way to browse
    your current catalogue. Replacing a nonempty layout asks for confirmation.
 5. In **Style**, adjust typography, colours, spacing and product columns. The
@@ -86,6 +90,17 @@ homepage card budget does not make later products unreachable. Archived items,
 archived departments, unpublished/restricted shops and private image sources
 retain their existing eligibility boundaries. Product detail pages have one
 main heading and a dedicated image/information layout.
+
+## Preview changes with the design assistant
+
+Open **Design & publish → Describe a change with the design assistant**. Named
+themes and local directions such as “Create a nature-inspired storefront” can
+prepare a design from your existing catalogue without a provider call. Use
+**Preview here** to compare a proposal and saved draft at a real 1100px desktop
+or 390px phone viewport, scaled to the available editor space. Applying still
+requires your confirmation and saves a draft; publish separately in the editor.
+See the [design studio guide](DESIGN-STUDIO.md) for reference briefs, recovery,
+independent reviews and provider diagnostics.
 
 ## Add another theme as one file
 

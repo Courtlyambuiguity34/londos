@@ -207,11 +207,12 @@ async function inspect(page: Page) {
   ).toEqual([]);
 }
 async function shot(page: Page, name: string) {
+  if (!/^theme-(botanica|folio|mosaic|nocturne)-/.test(name)) return;
   await mkdir("docs/evidence/images", { recursive: true });
-  await page.screenshot({ path: `docs/evidence/images/${name}-2026-10-26.png`, fullPage: true });
+  await page.screenshot({ path: `docs/evidence/images/${name}-2026-10-27.png`, fullPage: true });
 }
 
-test("all six original themes render real catalogue links, one introduction and responsive collection/product layouts", async ({
+test("all installed themes render real catalogue links, one introduction and responsive collection/product layouts", async ({
   page,
 }) => {
   test.setTimeout(150_000);
@@ -233,6 +234,14 @@ test("all six original themes render real catalogue links, one introduction and 
         )
         .toBe(true);
       await expect(page.locator(".canonical-product")).toHaveCount(6);
+      if (theme.id === "mosaic") {
+        expect(
+          await page
+            .locator(".canonical-shop")
+            .evaluate((element) => getComputedStyle(element).display),
+        ).toBe("block");
+        await expect(page.locator(".storefront-image-mosaic img")).toHaveCount(3);
+      }
       await inspect(page);
       await shot(page, `theme-${theme.id}-${width}`);
     }

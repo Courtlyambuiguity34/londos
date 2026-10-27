@@ -58,24 +58,44 @@ export function DesignSections({ specification, departments, products, onChange 
         space.id === id ? sectionText(space, field, value) : space,
       ),
     });
-  const narrative = ["entrance", "story", "offer", "service_desk"].includes(type),
-    curated = ["display", "products", "gallery"].includes(type),
+  const narrative = ["entrance", "story", "offer", "service_desk", "hero"].includes(type),
+    curated = ["display", "products", "gallery", "product_section"].includes(type),
     departmental = type === "department" || type === "collection";
   function add() {
     const id = `section-${crypto.randomUUID().slice(0, 8)}`,
       common = { id, type, version: 1 },
-      space = narrative
-        ? { ...common, title, body }
-        : curated
-          ? { ...common, title, productIds: ids }
-          : departmental
+      space =
+        type === "hero"
+          ? {
+              ...common,
+              variant: "split",
+              title: { text: title, provenance: "merchant" },
+              subtitle: body ? { text: body, provenance: "merchant" } : null,
+              featuredProductId: null,
+              cta: "browse",
+            }
+          : type === "product_section"
             ? {
                 ...common,
-                departmentId: department,
-                limit,
-                ...(type === "collection" ? { title, kind, availability } : {}),
+                variant: "grid",
+                title: { text: title, provenance: "merchant" },
+                departmentId: null,
+                productIds: ids,
               }
-            : common;
+            : type === "commerce_info"
+              ? { ...common, variant: "summary" }
+              : narrative
+                ? { ...common, title, body }
+                : curated
+                  ? { ...common, title, productIds: ids }
+                  : departmental
+                    ? {
+                        ...common,
+                        departmentId: department,
+                        limit,
+                        ...(type === "collection" ? { title, kind, availability } : {}),
+                      }
+                    : common;
     const checked = shopSpecification.safeParse({
       ...specification,
       spaces: [...specification.spaces, space],
@@ -162,10 +182,45 @@ export function DesignSections({ specification, departments, products, onChange 
                 </label>
               ) : null}
               {rich ? (
-                <p>
-                  Product and department assignments stay intact. Use the design assistant to change
-                  a section’s structure.
-                </p>
+                <>
+                  {"variant" in space ? (
+                    <label>
+                      Section layout
+                      <select
+                        aria-label="Section layout"
+                        value={space.variant}
+                        onChange={(event) =>
+                          onChange({
+                            ...specification,
+                            spaces: specification.spaces.map((item) =>
+                              item.id === space.id
+                                ? ({ ...item, variant: event.target.value } as ShopSpace)
+                                : item,
+                            ),
+                          })
+                        }
+                      >
+                        {(
+                          {
+                            hero: ["editorial", "split", "product_led"],
+                            featured_product: ["spotlight", "split", "compact"],
+                            product_section: ["editorial", "grid", "carousel"],
+                            department_editorial: ["editorial", "split", "compact"],
+                            commerce_info: ["summary", "split"],
+                          } as Record<string, string[]>
+                        )[space.type]?.map((variant) => (
+                          <option key={variant} value={variant}>
+                            {variant.replaceAll("_", " ")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  <p>
+                    Product and department assignments stay intact. Use the design assistant to
+                    change a section’s structure.
+                  </p>
+                </>
               ) : null}
               <div className="editor-section-actions">
                 <button
@@ -229,6 +284,9 @@ export function DesignSections({ specification, departments, products, onChange 
             "contact",
             "service_desk",
             "gallery",
+            "hero",
+            "product_section",
+            "commerce_info",
           ] as const
         ).map((t) => (
           <option key={t} value={t}>
@@ -253,7 +311,7 @@ export function DesignSections({ specification, departments, products, onChange 
           <label htmlFor="new-section-text">New section text</label>
           <textarea
             id="new-section-text"
-            maxLength={1000}
+            maxLength={type === "hero" ? 240 : 1000}
             value={body}
             placeholder="Tell customers something useful about your shop"
             onChange={(e) => setBody(e.target.value)}

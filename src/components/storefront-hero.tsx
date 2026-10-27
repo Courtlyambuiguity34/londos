@@ -4,6 +4,7 @@ import { ReadyImage } from "./ready-image";
 import { shopViewHref } from "@/modules/shop-design/view-links";
 import { categories } from "@/modules/catalogue/fixtures";
 import { shopContactActions } from "@/modules/shop-design/contact-actions";
+import { findShopTheme } from "@/modules/shop-themes/catalogue";
 import { Icon } from "./icon";
 
 export function StorefrontHero({ view }: { view: ShopView }) {
@@ -22,6 +23,20 @@ export function StorefrontHero({ view }: { view: ShopView }) {
     (image) => image.id === view.specification.branding?.logoAssetId,
   );
   const contacts = shopContactActions(view);
+  const customHero =
+    !view.selectedDepartment && view.specification.spaces.some((space) => space.type === "hero");
+  const mosaic = findShopTheme(view.specification.storefrontTheme)?.layout.hero === "mosaic";
+  const seen = new Set([image?.id]);
+  const additional = mosaic
+    ? view.products
+        .filter((item) => {
+          if (!item.media_id || !item.alt || !item.width || !item.height || seen.has(item.media_id))
+            return false;
+          seen.add(item.media_id);
+          return true;
+        })
+        .slice(0, 2)
+    : [];
   if (view.selectedProduct)
     return (
       <div className="storefront-breadcrumb">
@@ -34,7 +49,7 @@ export function StorefrontHero({ view }: { view: ShopView }) {
     );
   return (
     <header
-      className={`storefront-hero${image && !view.selectedDepartment ? " has-storefront-image" : ""}${view.selectedDepartment ? " storefront-hero--compact" : ""}`}
+      className={`storefront-hero${image && !view.selectedDepartment && !customHero ? " has-storefront-image" : ""}${view.selectedDepartment ? " storefront-hero--compact" : ""}${customHero ? " storefront-hero--identity" : ""}`}
     >
       <div className="storefront-hero-copy">
         {logo ? (
@@ -57,7 +72,7 @@ export function StorefrontHero({ view }: { view: ShopView }) {
         </p>
         <h1>{view.selectedDepartment?.name ?? view.shop.name}</h1>
         {view.shop.tagline ? <p className="storefront-introduction">{view.shop.tagline}</p> : null}
-        {!view.selectedDepartment ? (
+        {!view.selectedDepartment && !customHero ? (
           <div className="storefront-hero-actions">
             <a className="button" href="#shop-collections">
               Explore collections <Icon name="arrow" />
@@ -74,17 +89,31 @@ export function StorefrontHero({ view }: { view: ShopView }) {
           </div>
         ) : null}
       </div>
-      {image && !view.selectedDepartment ? (
-        <div className="storefront-cover">
-          <ReadyImage
-            shopId={view.shop.id}
-            assetId={image.id}
-            alt={image.alt}
-            width={image.width}
-            height={image.height}
-            privatePreview={view.privatePreview}
-            large
-          />
+      {image && !view.selectedDepartment && !customHero ? (
+        <div className={mosaic ? "storefront-image-mosaic" : "storefront-hero-media"}>
+          <div className="storefront-cover">
+            <ReadyImage
+              shopId={view.shop.id}
+              assetId={image.id}
+              alt={image.alt}
+              width={image.width}
+              height={image.height}
+              privatePreview={view.privatePreview}
+              large
+            />
+          </div>
+          {additional.map((item) => (
+            <div className="storefront-image-mosaic-detail" key={item.id}>
+              <ReadyImage
+                shopId={view.shop.id}
+                assetId={item.media_id!}
+                alt={item.alt!}
+                width={item.width!}
+                height={item.height!}
+                privatePreview={view.privatePreview}
+              />
+            </div>
+          ))}
         </div>
       ) : null}
     </header>

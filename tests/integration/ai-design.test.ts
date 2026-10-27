@@ -508,6 +508,65 @@ test("reviewer disagreement requires explicit acknowledgment and saves only vali
   await decide(p.id, 2, "apply", true);
   expect((await readDesign(pool, actors.ownerA!, shop)).specification.theme).toBe("blue");
 });
+
+test("a failed optional reviewer retains the validated primary proposal with explicit acknowledgement", async () => {
+  const g = provider(),
+    o = provider(undefined, "openai");
+  vi.mocked(o.generate).mockRejectedValue(new ProviderFailure("authentication"));
+  const p = await propose(
+    { instruction: "Please improve the presentation", externalConsent: true, qualityReview: true },
+    { config, providers: { gemini: g, openai: o } },
+  );
+  expect(p.status).toBe("proposed");
+  expect(p.reviewStatus).toBe("review_authentication");
+  expect(p.reviewWarning).toBe(true);
+  expect((await readDesign(pool, actors.ownerA!, shop)).version).toBe(0);
+  await expect(decide(p.id)).rejects.toMatchObject({ code: "ai_review_acknowledgment_required" });
+  const applied = await assistantDecision(pool, actors.ownerA!, shop, p.id, {
+    action: "apply",
+    version: p.version,
+    confirm: true,
+    acceptReviewWarning: true,
+  });
+  expect(applied.status).toBe("applied");
+  expect((await readDesign(pool, actors.ownerA!, shop)).publishedRevision).toBeNull();
+});
+
+test("status polling does not contend on the merchant mutation lock and still reports the current draft", async () => {
+  const p = await propose(),
+    blocker = await pool.connect();
+  try {
+    await blocker.query("BEGIN");
+    await blocker.query("SELECT id FROM merchants WHERE id=$1 FOR UPDATE", [merchant]);
+    const status = await assistantStatus(pool, actors.ownerA!, shop);
+    expect(status.recent[0]?.id).toBe(p.id);
+    expect(status.baseVersion).toBe(0);
+    expect(status.draftRevision).toBeNull();
+  } finally {
+    await blocker.query("ROLLBACK");
+    blocker.release();
+  }
+});
+
+test("website-only briefs ask for direction locally and cannot be applied before the decision is resolved", async () => {
+  const g = provider();
+  const p = await propose(
+    { instruction: "Use www.example.invalid as inspiration", externalConsent: true },
+    { config, providers: { gemini: g } },
+  );
+  expect(p.path).toBe("deterministic");
+  expect(p.decisions[0]?.blocking).toBe(true);
+  expect(g.generate).not.toHaveBeenCalled();
+  await expect(
+    assistantDecision(pool, actors.ownerA!, shop, p.id, {
+      action: "apply",
+      version: p.version,
+      confirm: true,
+      acceptReviewWarning: false,
+    }),
+  ).rejects.toMatchObject({ code: "ai_design_decision_required" });
+  expect((await readDesign(pool, actors.ownerA!, shop)).version).toBe(0);
+});
 test("invalid reviewer and failed repair create no revisions and keep immutable redacted usage", async () => {
   const g = provider(),
     o = provider({ unknown: true }, "openai");
@@ -570,8 +629,8 @@ test("UTC durable budgets survive failures, concurrent retries and missing usage
   expect(bad.generate).toHaveBeenCalledTimes(8);
   const b = (await pool.query("SELECT * FROM ai_daily_budgets WHERE shop_id=$1", [shop])).rows[0];
   expect(b.requests).toBe(4);
-  expect(b.reserved_tokens).toBe("811008");
-  expect(b.reserved_cost_microusd).toBe("835584");
+  expect(b.reserved_tokens).toBe("835584");
+  expect(b.reserved_cost_microusd).toBe("884736");
   const g = provider();
   await expect(
     propose(
@@ -859,7 +918,8 @@ test("overall thirty-second deadline fences a provider that ignores cancellation
   const result = await pending;
   expect(Date.now() - started).toBeGreaterThanOrEqual(29000);
   expect(Date.now() - started).toBeLessThan(34000);
-  expect(result.status).toBe("cancelled");
+  expect(result.status).toBe("failed");
+  expect(result.failureCode).toBe("provider_timeout");
   finish({ text: JSON.stringify(intent()), usage: { inputTokens: 1, outputTokens: 1 } });
   await setTimeout(50);
   expect((await readAssistantRequest(pool, actors.ownerA!, shop, result.id)).candidate).toBeNull();

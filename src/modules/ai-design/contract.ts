@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { themeIds } from "../shop-themes/registry.generated";
+import { themeIds, themeDefinitions } from "../shop-themes/registry.generated";
+import { designBriefIntent } from "./design-brief";
 import {
   shopSpecification,
   specificationPatch,
@@ -84,6 +85,7 @@ export type DesignContext = {
     } | null;
   };
   supported?: {
+    themes?: { id: string; name: string; category: string }[];
     premiseStyles: string[];
     sectionTypes: string[];
     colorTokens: string[];
@@ -273,16 +275,44 @@ export function deterministicIntent(
         review: "not_needed",
       };
   }
-  return null;
+  return designBriefIntent(context, instruction);
 }
 
-export function changeSummary(intent: DesignIntent): string[] {
+export function changeSummary(
+  intent: DesignIntent,
+  candidate?: ShopSpecification | null,
+): string[] {
+  const sectionNames: Record<ShopSpecification["spaces"][number]["type"], string> = {
+    entrance: "welcome section",
+    story: "shop story",
+    offer: "offer section",
+    service_desk: "service information",
+    display: "product display",
+    gallery: "product gallery",
+    collection: "product collection",
+    department: "department collection",
+    products: "product collection",
+    contact: "contact section",
+    hero: "main feature",
+    featured_product: "featured product",
+    product_section: "product collection",
+    department_editorial: "department feature",
+    commerce_info: "shop information",
+  };
+  const sectionLabel = (id: string) => {
+    const section = candidate?.spaces.find((space) => space.id === id);
+    if (!section) return "the selected section";
+    if ("title" in section) {
+      return `“${typeof section.title === "string" ? section.title : section.title.text}”`;
+    }
+    return `the ${sectionNames[section.type]}`;
+  };
   return [
     ...intent.patches.map((p) =>
       p.op === "theme"
         ? "Use " + p.theme + " theme"
         : p.op === "storefront_theme"
-          ? `Use ${p.id} storefront theme`
+          ? `Use ${themeDefinitions.find((theme) => theme.id === p.id)?.name ?? p.id} storefront theme`
           : p.op === "presentation"
             ? "Use " +
               p.presentation.premiseStyle +
@@ -292,14 +322,14 @@ export function changeSummary(intent: DesignIntent): string[] {
             : p.op === "actions"
               ? "Show " + (p.actions.join(", ") || "no contact actions")
               : p.op === "move"
-                ? "Move " + p.spaceId + " before " + p.before
+                ? `Move ${sectionLabel(p.spaceId)} before ${sectionLabel(p.before)}`
                 : p.op === "announcement"
                   ? "Change the shop announcement"
                   : p.op === "add_space"
-                    ? "Add " + p.space.type + " section"
+                    ? "Add " + sectionNames[p.space.type]
                     : p.op === "remove_space"
-                      ? "Remove " + p.spaceId
-                      : "Replace " + p.spaceId,
+                      ? "Remove the selected section"
+                      : "Update " + sectionLabel(p.spaceId),
     ),
     ...intent.decisions.map((decision) => "Decision: " + decision.question),
   ];

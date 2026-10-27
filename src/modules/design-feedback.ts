@@ -53,14 +53,24 @@ export function designRequestFeedback(status: number, body: unknown): string {
 
 // Only server-owned codes and a bounded random reference reach the UI. Never
 // reflect raw exceptions, SQL details or provider responses into customer copy.
-export async function designResponseError(response: Response): Promise<Error> {
+export class DesignResponseError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "DesignResponseError";
+  }
+}
+export async function designResponseError(response: Response): Promise<DesignResponseError> {
   const body: unknown = await response.json().catch(() => null);
   const reference = response.headers.get("x-request-id");
-  return new Error(
+  return new DesignResponseError(
     designRequestFeedback(response.status, body) +
       (reference &&
       /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(reference)
         ? ` Support reference: ${reference}`
         : ""),
+    response.status,
   );
 }

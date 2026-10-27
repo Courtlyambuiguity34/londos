@@ -1,5 +1,14 @@
 # Provider environment preparation
 
+Current design-studio update, checked 27 October 2026: the
+[merchant guide](DESIGN-STUDIO.md) and [verification evidence](evidence/DESIGN-STUDIO-2026-10-27.md)
+cover the richer live Gemini check, retained validated proposals when independent
+review transport is unavailable, new section-anchor allocation, ten named themes
+and same-page previews. OpenAI authentication/access was rejected in the checked
+execution environment; this is not a claim about the current Render credential.
+Use `npm run ai:verify -- --provider=gemini --studio --require-live` for the
+bounded fictional storefront check. It makes a real provider call when configured.
+
 Updated 2026-10-07, Africa/Kampala. **Gemini passed its bounded live contract; OpenAI rejected its supplied credential with HTTP 401 `invalid_api_key`.** Effective settings now include the corrected OpenAI model, and all six mapped key variables are present. [P12 provider evidence](evidence/P12-PROVIDERS.json) supersedes the earlier missing-binding result without changing [R2 evidence](evidence/R2-PROVIDERS.json).
 
 | Setting | Effective value |

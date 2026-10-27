@@ -12,7 +12,7 @@ export const themeDefinition = z
     category: z.enum(["fashion", "home", "food", "electronics", "services", "beauty", "other"]),
     layout: z
       .object({
-        hero: z.enum(["split", "cover", "editorial", "catalogue"]),
+        hero: z.enum(["split", "cover", "editorial", "catalogue", "mosaic", "poster"]),
         cards: z.enum(["clean", "framed", "soft", "bold"]),
         departments: z.enum(["tiles", "round"]),
         radius: z.enum(["soft", "sharp"]),

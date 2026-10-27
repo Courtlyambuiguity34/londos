@@ -2,6 +2,8 @@ import { loadLocalEnv } from "./local-env";
 import { aiConfiguration, estimateCost } from "../src/server/ai-design/config";
 import { GeminiProvider, OpenAIProvider, ProviderFailure } from "../src/server/ai-design/providers";
 import { designIntent, compileIntent, type DesignContext } from "../src/modules/ai-design/contract";
+import { shopThemes } from "../src/modules/shop-themes/catalogue";
+import { randomUUID } from "node:crypto";
 loadLocalEnv();
 const config = aiConfiguration(),
   observations = [];
@@ -16,6 +18,24 @@ const context: DesignContext = {
   products: [],
 };
 const selected = process.argv.find((argument) => argument.startsWith("--provider="))?.slice(11);
+const studio = process.argv.includes("--studio");
+if (studio) {
+  const department = randomUUID();
+  context.departments = [{ id: department, name: "Everyday collection", version: 1 }];
+  context.products = ["Canvas carry", "Travel pouch"].map((name) => ({
+    id: randomUUID(),
+    name,
+    departmentId: department,
+    version: 1,
+  }));
+  context.supported = {
+    themes: shopThemes.map(({ id, name, category }) => ({ id, name, category })),
+    premiseStyles: ["minimalist", "editorial"],
+    sectionTypes: ["product_section"],
+    colorTokens: ["cream", "charcoal", "forest"],
+    typography: ["modern", "editorial"],
+  };
+}
 if (selected && !["gemini", "openai"].includes(selected))
   throw new Error("Provider must be gemini or openai");
 for (const kind of ["gemini", "openai"] as const) {
@@ -36,7 +56,9 @@ for (const kind of ["gemini", "openai"] as const) {
         ? new GeminiProvider(settings.model, settings.keys)
         : new OpenAIProvider(settings.model, settings.keys);
     const reply = await provider.generate({
-      instruction: "Return one theme patch using plum, high confidence and no review.",
+      instruction: studio
+        ? "Use the Mosaic storefront theme and add one grid product_section titled Everyday collection using both supplied products. High confidence; no review. Do not change any catalogue facts."
+        : "Return one theme patch using plum, high confidence and no review.",
       context,
       purpose: "design",
       signal: AbortSignal.timeout(10000),
@@ -44,7 +66,15 @@ for (const kind of ["gemini", "openai"] as const) {
     });
     const intent = designIntent.parse(JSON.parse(reply.text)),
       candidate = compileIntent(context, intent);
-    if (candidate.theme !== "plum") throw Error("contract_failed");
+    if (
+      studio
+        ? candidate.storefrontTheme !== "mosaic" ||
+          !candidate.spaces.some(
+            (space) => space.type === "product_section" && space.productIds.length === 2,
+          )
+        : candidate.theme !== "plum"
+    )
+      throw Error("contract_failed");
     observations.push({
       provider: kind,
       model: settings.model,
@@ -73,6 +103,7 @@ if (process.argv.includes("--require-live") && observations.some((o) => o.outcom
 console.log(
   JSON.stringify({
     check: "live-ai-provider-contracts",
+    scenario: studio ? "fictional-storefront" : "fictional-theme",
     recordedAt: new Date().toISOString(),
     selectedProviders: selected ? [selected] : ["gemini", "openai"],
     observations,

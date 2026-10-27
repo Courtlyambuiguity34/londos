@@ -15,7 +15,7 @@ Next/esbuild. Commit it alongside new preset files.
 
 | Property | Supported values |
 | --- | --- |
-| `layout.hero` | `split`, `cover`, `editorial`, `catalogue` |
+| `layout.hero` | `split`, `cover`, `editorial`, `catalogue`, `mosaic`, `poster` |
 | `layout.cards` | `clean`, `framed`, `soft`, `bold` |
 | `layout.departments` | `tiles`, `round` |
 | `layout.radius` | `soft`, `sharp` |
@@ -38,7 +38,7 @@ public shop. Theme selection sets visual choices and preserves merchant content.
 `sections.ts` provides non-mutating duplicate handling and bounded department
 starters. Shared presentation validation lives in `shop-design/presentation.ts`;
 the old specification exports remain compatible. Styling lives in
-`src/app/storefronts.css` and `src/app/editor-workflows.css`; supported structures
+`src/app/storefronts.css`, `src/app/editor-workflows.css` and `src/app/design-studio.css`; supported structures
 are rendered by the existing canonical shop and `storefront-hero.tsx`.
 
 ## Review a theme

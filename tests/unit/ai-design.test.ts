@@ -187,7 +187,7 @@ test("configuration requires server credentials, model, explicit rates and proxy
   expect(aiConfiguration({ ...env, HTTPS_PROXY: "http://proxy.test" }).status.gemini).toBe(
     "proxy_initialization_required",
   );
-  expect(reservation(cfg)).toEqual({ tokens: 202752, cost: 208896n });
+  expect(reservation(cfg)).toEqual({ tokens: 208896, cost: 221184n });
   expect(estimateCost(cfg.providers.gemini!, 100, 20)).toBe(140n);
 });
 test("Gemini is initial, review is selective, disagreement requires merchant acknowledgment", async () => {

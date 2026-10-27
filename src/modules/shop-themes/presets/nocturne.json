@@ -1,0 +1,35 @@
+{
+  "id": "nocturne",
+  "name": "Nocturne",
+  "tagline": "Make an entrance.",
+  "description": "A cinematic cover, luminous type and dark product frames for beauty, jewellery and considered luxury.",
+  "category": "beauty",
+  "layout": {
+    "hero": "cover",
+    "cards": "framed",
+    "departments": "tiles",
+    "radius": "sharp"
+  },
+  "presentation": {
+    "premiseStyle": "luxury",
+    "palette": {
+      "primary": "cream",
+      "secondary": "plum",
+      "background": "black",
+      "surface": "charcoal",
+      "text": "cream",
+      "accent": "gold"
+    },
+    "typography": "classic",
+    "density": "airy",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "botanica",
+  "name": "Botanica",
+  "tagline": "Rooted in everyday goodness.",
+  "description": "An open poster layout, forest accents and rounded collections for produce, agriculture and natural goods.",
+  "category": "food",
+  "layout": {
+    "hero": "poster",
+    "cards": "clean",
+    "departments": "round",
+    "radius": "soft"
+  },
+  "presentation": {
+    "premiseStyle": "food",
+    "palette": {
+      "primary": "forest",
+      "secondary": "sand",
+      "background": "cream",
+      "surface": "white",
+      "text": "charcoal",
+      "accent": "forest"
+    },
+    "typography": "friendly",
+    "density": "balanced",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}

@@ -180,11 +180,26 @@ export class LondosDesignOrchestrator {
         reviewWarning = true;
         reviewStatus = "initial_fallback_requires_review";
       } else if (this.providers.openai && calls < aiLimits.maxAttempts) {
-        const prior = JSON.stringify(intent.patches),
-          reviewed = await call("openai", "review", 0, intent);
-        reviewWarning = reviewed.confidence === "low" || prior !== JSON.stringify(reviewed.patches);
-        reviewStatus = reviewWarning ? "review_changed_or_low_confidence" : "reviewed";
-        intent = reviewed;
+        try {
+          const prior = JSON.stringify(intent.patches),
+            reviewed = await call("openai", "review", 0, intent);
+          reviewWarning =
+            reviewed.confidence === "low" || prior !== JSON.stringify(reviewed.patches);
+          reviewStatus = reviewWarning ? "review_changed_or_low_confidence" : "reviewed";
+          intent = reviewed;
+        } catch (error) {
+          // A transport/configuration failure is not an invalid design. Retain
+          // the already validated candidate, with an explicit review warning.
+          // Invalid reviewer content, lost authority and cancellation still fail.
+          if (
+            !(error instanceof ProviderFailure) ||
+            signal.aborted ||
+            !["authentication", "unavailable", "timeout", "rate_limited"].includes(error.code)
+          )
+            throw error;
+          reviewWarning = true;
+          reviewStatus = `review_${error.code}`;
+        }
       } else {
         reviewWarning = true;
         reviewStatus = "review_unavailable";

@@ -1,5 +1,13 @@
 # Build status and next model setting
 
+**Design studio update — 27 October 2026:** continuing from `dbc9eee` on the
+hosted branch. The [design studio guide](DESIGN-STUDIO.md) explains local briefs,
+reference-website limitations, phone/desktop proposal comparison and manual
+publication. [Verification](evidence/DESIGN-STUDIO-2026-10-27.md) records request
+recovery, review transport handling, provider anchor validation, four added themes,
+section rendering, live Gemini checks and the changed-file summary. No new
+credentials, dependencies, environment keys or migration are introduced.
+
 **Private workspace experience — 26 October 2026:** continuing from `cf2bae2`
 on the hosted branch. The [workspace review](evidence/WORKSPACE-EXPERIENCE-2026-10-26.md)
 records the merchant/landlord visual refresh, explicit owner invitation shortcuts,

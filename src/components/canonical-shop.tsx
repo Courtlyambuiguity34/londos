@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 import { renderPilotContext } from "@/server/analytics";
 import { PilotObserver } from "./pilot-observer";
 import type { CaptureInput } from "@/modules/analytics/contract";
@@ -13,6 +13,7 @@ import { shopContactActions } from "@/modules/shop-design/contact-actions";
 import { coreConfig } from "@/server/config";
 import { shopViewHref } from "@/modules/shop-design/view-links";
 import { findShopTheme } from "@/modules/shop-themes/catalogue";
+import { readableForeground } from "@/modules/shop-themes/colors";
 import { distinctShopSections } from "@/modules/shop-themes/sections";
 import { StorefrontHero, StorefrontCollections } from "./storefront-hero";
 import { Icon } from "./icon";
@@ -165,6 +166,9 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
     const product = space.featuredProductId
       ? view.products.find((item) => item.id === space.featuredProductId)
       : null;
+    const cover = view.brandingImages?.find(
+      (image) => image.id === view.specification.branding?.coverAssetId,
+    );
     const collection = view.specification.spaces.find((item) => {
       if (item.type === "featured_product")
         return view.products.some((entry) => entry.id === item.productId);
@@ -177,7 +181,11 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
     return (
       <section
         id={space.id}
-        className={"designer-hero designer-hero--" + space.variant}
+        className={
+          "designer-hero designer-hero--" +
+          space.variant +
+          (product || cover ? " has-designer-image" : "")
+        }
         aria-labelledby={space.id + "-title"}
       >
         <div className="designer-hero__copy">
@@ -208,6 +216,18 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
         {product ? (
           <div className="designer-hero__product">
             <CanonicalProduct product={product} view={view} large />
+          </div>
+        ) : cover ? (
+          <div className="designer-hero__image">
+            <ReadyImage
+              shopId={view.shop.id}
+              assetId={cover.id}
+              alt={cover.alt}
+              width={cover.width}
+              height={cover.height}
+              privatePreview={view.privatePreview}
+              large
+            />
           </div>
         ) : null}
       </section>
@@ -256,16 +276,42 @@ function DesignerSection({ space, view }: { space: ShopSpace; view: ShopView }) 
         className={"designer-department designer-department--" + space.variant}
         aria-labelledby={space.id + "-title"}
       >
-        <p className="eyebrow">{department.name}</p>
-        <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
-        <p>{copyText(space.body)}</p>
-        <Link
-          className="button button--outline"
-          prefetch={false}
-          href={shopViewHref(view, { department: department.slug })}
-        >
-          Explore {department.name}
-        </Link>
+        <div className="designer-department-copy">
+          <p className="eyebrow">{department.name}</p>
+          <h2 id={space.id + "-title"}>{copyText(space.title)}</h2>
+          <p>{copyText(space.body)}</p>
+          <Link
+            className="button button--outline"
+            prefetch={false}
+            href={shopViewHref(view, { department: department.slug })}
+          >
+            Explore {department.name}
+          </Link>
+        </div>
+        {space.variant === "split"
+          ? (() => {
+              const product = view.products.find(
+                (item) =>
+                  item.department_id === department.id &&
+                  item.media_id &&
+                  item.alt &&
+                  item.width &&
+                  item.height,
+              );
+              return product ? (
+                <div className="designer-department-image">
+                  <ReadyImage
+                    shopId={view.shop.id}
+                    assetId={product.media_id!}
+                    alt={product.alt!}
+                    width={product.width!}
+                    height={product.height!}
+                    privatePreview={view.privatePreview}
+                  />
+                </div>
+              ) : null;
+            })()
+          : null}
       </section>
     );
   }
@@ -287,6 +333,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
   const development = coreConfig().localAdapters;
   const theme = findShopTheme(view.specification.storefrontTheme);
   const spaces = distinctShopSections(view.specification.spaces);
+  const primaryHero = spaces.find((space) => space.type === "hero")?.id;
   const hasProductSections = spaces.some(
     (space) =>
       "productIds" in space ||
@@ -300,6 +347,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
       ? ({
           "--shop-primary": palette[presentation.palette.primary],
           "--shop-secondary": palette[presentation.palette.secondary],
+          "--shop-on-secondary": readableForeground(presentation.palette.secondary),
           "--shop-background": palette[presentation.palette.background],
           "--shop-surface": palette[presentation.palette.surface],
           "--shop-text": palette[presentation.palette.text],
@@ -415,7 +463,7 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
             <SearchForm shopId={view.shop.id} shopName={view.shop.name} maxLength={80} />
           </div>
         ) : null}
-        {!view.selectedDepartment && !view.selectedProduct ? (
+        {!view.selectedDepartment && !view.selectedProduct && !primaryHero ? (
           <StorefrontCollections view={view} />
         ) : null}
         {view.applicationReviewed && development ? (
@@ -478,10 +526,28 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
               space.type === "department_editorial" ||
               space.type === "commerce_info"
             )
-              return <DesignerSection key={space.id} space={space} view={view} />;
+              return (
+                <Fragment key={space.id}>
+                  <DesignerSection space={space} view={view} />
+                  {space.id === primaryHero ? <StorefrontCollections view={view} /> : null}
+                </Fragment>
+              );
             if ("body" in space)
               return (
-                <section key={space.id} id={space.id} className="shop-content-section">
+                <section
+                  key={space.id}
+                  id={space.id}
+                  className={`shop-content-section storefront-narrative storefront-narrative--${space.type}`}
+                >
+                  <p className="eyebrow">
+                    {space.type === "story"
+                      ? "Our story"
+                      : space.type === "offer"
+                        ? "From the shop"
+                        : space.type === "service_desk"
+                          ? "Here to help"
+                          : "Welcome"}
+                  </p>
                   <h2>{space.title}</h2>
                   <p>{space.body}</p>
                   {space.type === "service_desk" ? <Contacts view={view} /> : null}

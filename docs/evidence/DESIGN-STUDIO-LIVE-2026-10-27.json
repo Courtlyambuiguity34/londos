@@ -1,0 +1,82 @@
+{
+  "checkedDate": "2026-10-27",
+  "timezone": "Africa/Kampala",
+  "scope": "Fictional contract requests from this execution environment; no real merchant data, Render setting change or production account change.",
+  "baseline": {
+    "check": "live-ai-provider-contracts",
+    "recordedAt": "2026-10-27T06:50:56.501Z",
+    "selectedProviders": ["gemini", "openai"],
+    "observations": [
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "outcome": "passed",
+        "liveRequest": true,
+        "usage": {
+          "inputTokens": 436,
+          "outputTokens": 272
+        },
+        "estimatedCostMicroUsd": "811"
+      },
+      {
+        "provider": "openai",
+        "model": "gpt-5.4-mini",
+        "outcome": "failed",
+        "liveRequest": true,
+        "error": "live_contract_failed_no_provider_body_logged",
+        "reason": "authentication"
+      }
+    ],
+    "limit": "Unavailable is not a passing live contract. This bounded fictional theme check does not establish general design quality, price accuracy or provider billing. No credentials, prompts or provider error bodies printed."
+  },
+  "preFixRichOutputDiagnostic": {
+    "check": "provider-output-diagnostic",
+    "http": 200,
+    "finish": "STOP",
+    "textBytes": 1541,
+    "usage": {
+      "promptTokenCount": 892,
+      "candidatesTokenCount": 461,
+      "totalTokenCount": 1672,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 892
+        }
+      ],
+      "thoughtsTokenCount": 319,
+      "serviceTier": "standard"
+    },
+    "issues": [
+      {
+        "code": "invalid_format",
+        "path": ["patches", 1, "space", "id"]
+      }
+    ]
+  },
+  "afterFixRichContract": {
+    "check": "live-ai-provider-contracts",
+    "scenario": "fictional-storefront",
+    "recordedAt": "2026-10-27T07:11:23.092Z",
+    "selectedProviders": ["gemini"],
+    "observations": [
+      {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "outcome": "passed",
+        "liveRequest": true,
+        "usage": {
+          "inputTokens": 919,
+          "outputTokens": 647
+        },
+        "estimatedCostMicroUsd": "1894"
+      }
+    ],
+    "limit": "Unavailable is not a passing live contract. This bounded fictional theme check does not establish general design quality, price accuracy or provider billing. No credentials, prompts or provider error bodies printed."
+  },
+  "limits": [
+    "OpenAI rejected authentication/access in the checked environment; no claim that Render has the same credential.",
+    "Provider-reported tokens and configured cost estimates are not independently reconciled billing.",
+    "Passing these bounded contracts is not a general design-quality or provider-availability guarantee."
+  ]
+}

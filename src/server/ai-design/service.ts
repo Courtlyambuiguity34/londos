@@ -36,6 +36,7 @@ import {
 } from "./config";
 import { GeminiProvider, OpenAIProvider, ProviderFailure, type AIProvider } from "./providers";
 import { LondosDesignOrchestrator, type AttemptResult } from "./orchestrator";
+import { shopThemes } from "../../modules/shop-themes/catalogue";
 
 type RequestRow = {
   id: string;
@@ -43,6 +44,7 @@ type RequestRow = {
   merchant_id: string;
   actor_id: string;
   fingerprint: string;
+  request_key: string;
   base_version: number;
   context_digest: string;
   lease_token: string;
@@ -102,6 +104,7 @@ async function context(db: PoolClient, actor: Actor, id: string) {
     departments,
     products,
     supported: {
+      themes: shopThemes.map(({ id, name, category }) => ({ id, name, category })),
       premiseStyles: [
         "luxury",
         "streetwear",
@@ -167,6 +170,7 @@ function present(row: RequestRow) {
     (row.status === "proposed" && row.expires_at.getTime() <= Date.now());
   return {
     id: row.id,
+    requestKey: row.request_key,
     status: expired ? "expired" : row.status,
     version: row.version,
     baseVersion: row.base_version,
@@ -179,12 +183,15 @@ function present(row: RequestRow) {
     decisions: expired ? [] : row.decisions,
     changes:
       !expired && row.patches
-        ? changeSummary({
-            patches: row.patches,
-            decisions: row.decisions,
-            confidence: "high",
-            review: "not_needed",
-          })
+        ? changeSummary(
+            {
+              patches: row.patches,
+              decisions: row.decisions,
+              confidence: "high",
+              review: "not_needed",
+            },
+            row.candidate,
+          )
         : [],
     result: row.result_revision
       ? { version: row.result_version, revision: row.result_revision }
@@ -205,9 +212,16 @@ async function requestRow(db: Pool | PoolClient, actor: Actor, shopId: string, i
 }
 export async function assistantStatus(pool: Pool, actor: Actor, shopId: string) {
   return transaction(pool, async (db) => {
-    await lock(db, actor, shopId);
+    await access(db, actor, shopId);
     const config = aiConfiguration();
-    const design = await readDesign(db, actor, shopId);
+    // Polling is a read, not a design mutation. Do not repeatedly lock the
+    // merchant/user or load catalogue/media/history on a small hosted pool.
+    const design = (
+      await db.query(
+        "SELECT d.version,r.revision FROM shop_designs d LEFT JOIN shop_revisions r ON r.id=d.draft_id WHERE d.shop_id=$1",
+        [shopId],
+      )
+    ).rows[0] as { version: number; revision: number | null } | undefined;
     const recent = (
       await db.query(
         "SELECT * FROM ai_design_requests WHERE shop_id=$1 AND actor_id=$2 ORDER BY created_at DESC,id LIMIT 10",
@@ -222,7 +236,8 @@ export async function assistantStatus(pool: Pool, actor: Actor, shopId: string) 
     ).rows;
     await access(db, actor, shopId);
     return {
-      baseVersion: design.version,
+      baseVersion: design?.version ?? 0,
+      draftRevision: design?.revision ?? null,
       capabilities: config.status,
       remoteEnabled: config.remote,
       limits: { ...aiLimits, dailyCostMicroUsd: config.dailyCostMicroUsd.toString() },
@@ -459,8 +474,10 @@ export async function proposeDesign(
       return present(updated);
     });
   } catch (error) {
-    const code =
-      error instanceof AccessError
+    const timedOut = signal.aborted && !controller.signal.aborted && !dependencies.signal?.aborted;
+    const code = timedOut
+      ? "provider_timeout"
+      : error instanceof AccessError
         ? error.code
         : error instanceof ProviderFailure
           ? `provider_${error.code}`
@@ -483,6 +500,7 @@ export async function proposeDesign(
       "UPDATE ai_design_requests SET status=$2,version=version+1,failure_code=$3 WHERE id=$1 AND status='running' AND lease_token=$4",
       [id, status, code, lease],
     );
+    console.error(JSON.stringify({ event: "ai.design.failed", proposalId: id, code }));
     if (error instanceof AccessError) throw error;
     return readAssistantRequest(pool, actor, shopId, id);
   } finally {

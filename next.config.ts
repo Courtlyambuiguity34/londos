@@ -38,6 +38,19 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "no-referrer" },
         ],
       })),
+      // Authenticated, read-only previews may be embedded by this origin only.
+      // All other pages retain DENY; preview handlers still enforce ownership,
+      // fresh authentication, proposal expiry and no-store responses.
+      ...[
+        "/shopkeeper/shops/:shopId/design/assistant/:id/preview",
+        "/shopkeeper/shops/:shopId/preview",
+      ].map((source) => ({
+        source,
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      })),
     ];
   },
 };

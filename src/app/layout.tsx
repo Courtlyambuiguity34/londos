@@ -9,6 +9,7 @@ import "./workspaces.css";
 import "./storefronts.css";
 import "./editor-workflows.css";
 import "./discovery-experience.css";
+import "./design-studio.css";
 
 export const metadata: Metadata = {
   title: { default: "Londos — A place for good shops", template: "%s | Londos" },

@@ -1,0 +1,35 @@
+{
+  "id": "mosaic",
+  "name": "Mosaic",
+  "tagline": "A little more unexpected.",
+  "description": "An image collage, generous collection cards and a warm gallery rhythm for distinctive home and lifestyle shops.",
+  "category": "home",
+  "layout": {
+    "hero": "mosaic",
+    "cards": "soft",
+    "departments": "tiles",
+    "radius": "soft"
+  },
+  "presentation": {
+    "premiseStyle": "editorial",
+    "palette": {
+      "primary": "charcoal",
+      "secondary": "sand",
+      "background": "cream",
+      "surface": "white",
+      "text": "charcoal",
+      "accent": "burgundy"
+    },
+    "typography": "editorial",
+    "density": "airy",
+    "contentWidth": "wide",
+    "navigation": {
+      "desktop": "department_bar",
+      "mobile": "compact"
+    },
+    "productColumns": {
+      "mobile": 2,
+      "desktop": 3
+    }
+  }
+}
