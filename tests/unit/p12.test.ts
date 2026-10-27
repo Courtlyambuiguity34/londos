@@ -64,9 +64,18 @@ test.each([
     title: "Images",
     productIds: Array.from({ length: 5 }, () => randomUUID()),
   },
-  { op: "add_space", spaceId: "bad id", spaceType: "contact" },
+  { op: "replace_space", spaceId: "bad id", spaceType: "contact" },
 ])("provider wire refuses extra fields and invalid canonical patch %#", (patch) => {
   expect(() => decodeProviderIntent(wire(patch))).toThrow();
+});
+test("provider-created section anchors are normalized without accepting invalid existing section IDs", () => {
+  const value = JSON.parse(
+    decodeProviderIntent(wire({ op: "add_space", spaceId: "Contact area", spaceType: "contact" })),
+  );
+  expect(compileIntent(context, value).spaces[0]?.id).toBe("contact-area");
+  expect(() =>
+    decodeProviderIntent(wire({ op: "remove_space", spaceId: "Contact area" })),
+  ).toThrow();
 });
 test("provider conversion still requires current owned catalogue references", () => {
   const value = JSON.parse(

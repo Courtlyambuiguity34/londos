@@ -108,8 +108,200 @@ async function createProduct(page: Page, name: string, slug: string) {
   return submission;
 }
 
-test("a merchant adds crops by name and normal price, then previews and publishes connected department and product pages", async ({
+test("archived departments explain the empty selector, activation connects it, and names stay unique", async ({
   page,
+}) => {
+  test.setTimeout(60000);
+  const fixture = await ownShop(page);
+  try {
+    await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    const rows = [];
+    for (const name of ["Crops", "Seeds"]) {
+      const response = await createDepartment(page, name, name.toLowerCase()),
+        row = await response.json();
+      expect(response.status()).toBe(200);
+      rows.push(row);
+      expect(
+        (
+          await page.request.patch(`${fixture.root}/departments/${row.id}`, {
+            headers: { origin },
+            data: {
+              name,
+              slug: name.toLowerCase(),
+              position: rows.length,
+              archived: true,
+              version: row.version,
+            },
+          })
+        ).status(),
+      ).toBe(200);
+    }
+    await page.getByRole("button", { name: "Reload catalogue", exact: true }).click();
+    await page.getByRole("tab", { name: /^Products/ }).click();
+    await expect(
+      page.getByRole("button", { name: "Create your first department", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "View archived departments", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Department", { exact: true })).toHaveValue("");
+    await expect(page.getByLabel("Department", { exact: true }).locator("option")).toHaveText([
+      "No active departments — activate one first",
+    ]);
+    await page.getByRole("button", { name: "View archived departments", exact: true }).click();
+    await page.getByRole("button", { name: "Activate Crops", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Department activated.");
+    await page.getByRole("button", { name: "Activate Seeds", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Department activated.");
+    await page.getByRole("button", { name: "Add product to Crops", exact: true }).click();
+    const select = page.getByLabel("Department", { exact: true });
+    await expect(select.locator("option")).toHaveText([
+      "Choose an active department",
+      "Crops",
+      "Seeds",
+    ]);
+    await select.selectOption({ label: "Seeds" });
+    await expect(select).toHaveValue(rows[1]!.id);
+    await select.selectOption({ label: "Crops" });
+    await expect(select).toHaveValue(rows[0]!.id);
+    await page.getByLabel("Product or service name", { exact: true }).fill("Connected maize");
+    await page.getByRole("button", { name: "Create product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Product or service saved.");
+    expect(
+      (await (await page.request.get(`${fixture.root}/catalogue`)).json()).products[0]
+        .department_id,
+    ).toBe(rows[0]!.id);
+    const duplicate = await createDepartment(page, " crops ", "another-crops");
+    expect(duplicate.status()).toBe(409);
+    await expect(page.getByRole("status")).toContainText(
+      "A department with this name already exists",
+    );
+  } finally {
+    await fixture.pool.end();
+  }
+});
+
+test("owners confirm deletion, recover a department and its products, and revert edits from history", async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(90000);
+  const fixture = await ownShop(page),
+    history = `${fixture.root}/catalogue/history`;
+  try {
+    await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    const departmentResponse = await createDepartment(page, "Crops", "crops"),
+      department = await departmentResponse.json();
+    expect((await createProduct(page, "Maize recovery", "maize-recovery")).status()).toBe(200);
+    await page.getByRole("button", { name: "Edit Maize recovery", exact: true }).click();
+    await page.getByLabel("Price (optional)", { exact: true }).fill("7500");
+    await page.getByRole("button", { name: "Save product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Product or service saved.");
+    await page.getByRole("tab", { name: /^History & deleted items/ }).click();
+    // Details hide buttons until expanded, so select the known edited record.
+    const edited = page
+      .locator(".catalogue-history-entry")
+      .filter({ has: page.locator("summary", { hasText: "Edited" }) })
+      .first();
+    await edited.locator("summary").click();
+    await expect(edited).toContainText("7,500");
+    await expect(edited).toContainText("5,000");
+    page.once("dialog", (dialog) => dialog.accept());
+    await edited.getByRole("button", { name: "Revert this change", exact: true }).click();
+    await expect(page.locator(".catalogue-history-message")).toContainText(
+      "Previous values restored",
+    );
+    expect(
+      (await (await page.request.get(`${fixture.root}/catalogue`)).json()).products[0].price_minor,
+    ).toBe("5000");
+    await page.getByRole("tab", { name: /^Products/ }).click();
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.getByRole("button", { name: "Delete Maize recovery", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Edit Maize recovery", exact: true }),
+    ).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Delete Maize recovery", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Product moved to Deleted items");
+    await page.getByRole("tab", { name: /^History & deleted items/ }).click();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Restore Maize recovery", exact: true }).click();
+    await expect(page.locator(".catalogue-history-message")).toContainText("Restored.");
+    await page.getByRole("tab", { name: /^Departments/ }).click();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Delete Crops", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Department and its products moved");
+    await page.getByRole("tab", { name: /^History & deleted items/ }).click();
+    await expect(page.getByRole("button", { name: "Restore Crops", exact: true })).toBeVisible();
+    const snapshot = await (await page.request.get(history)).json();
+    await expect(
+      page.getByRole("button", { name: "Restore Maize recovery", exact: true }),
+    ).toBeVisible();
+    expect((await request.get(history)).status()).toBe(401);
+    expect(
+      (
+        await request.delete(`${fixture.root}/departments/${department.id}`, {
+          headers: { origin },
+          data: { version: 1, confirm: true },
+        })
+      ).status(),
+    ).toBe(401);
+    await mkdir("docs/evidence/images", { recursive: true });
+    for (const width of [1440, 390, 320]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      expect(
+        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+          .violations,
+      ).toEqual([]);
+      if (width !== 320)
+        await page.evaluate(() => {
+          (document.activeElement as HTMLElement | null)?.blur();
+          window.scrollTo(0, 0);
+        });
+      if (width !== 320)
+        await page.screenshot({
+          path: `docs/evidence/images/catalogue-recovery-${width}-2026-10-27.png`,
+          fullPage: true,
+        });
+    }
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Restore Crops", exact: true }).click();
+    await expect(page.locator(".catalogue-history-message")).toContainText("Restored.");
+    const current = await (await page.request.get(`${fixture.root}/catalogue`)).json();
+    expect(current.departments).toHaveLength(1);
+    expect(current.products).toHaveLength(1);
+    expect(current.products[0]).toMatchObject({
+      department_id: department.id,
+      price_minor: "5000",
+      availability: "available",
+    });
+    // A stale replay cannot restore the same batch twice.
+    const deleted = snapshot.deleted.find((row: { kind: string }) => row.kind === "department");
+    expect(
+      (
+        await page.request.post(history, {
+          headers: { origin },
+          data: {
+            action: "restore",
+            kind: "department",
+            id: deleted.id,
+            version: deleted.version,
+            confirm: true,
+          },
+        })
+      ).status(),
+    ).toBe(409);
+  } finally {
+    await fixture.pool.end();
+  }
+});
+
+test("a merchant publishes connected department and product pages, then deletes and restores their public visibility", async ({
+  page,
+  request,
 }) => {
   test.setTimeout(90_000);
   const fixture = await ownShop(page),
@@ -267,6 +459,81 @@ test("a merchant adds crops by name and normal price, then previews and publishe
     await page.getByRole("link", { name: "Maize seed", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/shops/${fixture.slug}/products/maize-seed$`));
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Maize seed");
+    const latest = await (await page.request.get(`${fixture.root}/catalogue`)).json(),
+      item = latest.products[0],
+      department = latest.departments[0],
+      productUrl = `/shops/${fixture.slug}/products/maize-seed`,
+      departmentUrl = `/shops/${fixture.slug}/departments/crops`;
+    // Confirmation and accepted origin are enforced independently of the UI.
+    expect(
+      (
+        await page.request.delete(`${fixture.root}/products/${item.id}`, {
+          headers: { origin },
+          data: { version: item.version },
+        })
+      ).status(),
+    ).toBe(422);
+    expect(
+      (
+        await page.request.delete(`${fixture.root}/products/${item.id}`, {
+          headers: { origin: "https://foreign.example.invalid" },
+          data: { version: item.version, confirm: true },
+        })
+      ).status(),
+    ).toBe(403);
+    const deletion = await page.request.delete(`${fixture.root}/products/${item.id}`, {
+      headers: { origin },
+      data: { version: item.version, confirm: true },
+    });
+    expect(deletion.status()).toBe(200);
+    async function expectUnavailable(path: string) {
+      // A missing item in an otherwise live shop uses its existing helpful
+      // unavailable page (HTTP 200), with no product content and no indexing.
+      const response = await request.get(path),
+        html = await response.text();
+      expect(html).toContain("This item has moved or is unavailable.");
+      expect(html).toContain("noindex");
+      expect(html).not.toContain("Maize seed");
+    }
+    await expectUnavailable(productUrl);
+    expect(
+      (
+        await page.request.post(`${fixture.root}/catalogue/history`, {
+          headers: { origin },
+          data: {
+            action: "restore",
+            kind: "product",
+            id: item.id,
+            version: (await deletion.json()).version,
+            confirm: true,
+          },
+        })
+      ).status(),
+    ).toBe(200);
+    expect(await (await request.get(productUrl)).text()).toContain("Maize seed");
+    const departmentDeletion = await page.request.delete(
+      `${fixture.root}/departments/${department.id}`,
+      { headers: { origin }, data: { version: department.version, confirm: true } },
+    );
+    expect(departmentDeletion.status()).toBe(200);
+    await expectUnavailable(departmentUrl);
+    await expectUnavailable(productUrl);
+    expect(
+      (
+        await page.request.post(`${fixture.root}/catalogue/history`, {
+          headers: { origin },
+          data: {
+            action: "restore",
+            kind: "department",
+            id: department.id,
+            version: (await departmentDeletion.json()).version,
+            confirm: true,
+          },
+        })
+      ).status(),
+    ).toBe(200);
+    expect((await request.get(departmentUrl)).status()).toBe(200);
+    expect(await (await request.get(productUrl)).text()).toContain("Maize seed");
   } finally {
     await fixture.pool.end();
   }

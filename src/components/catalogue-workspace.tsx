@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { CatalogueHistory } from "./catalogue-history";
 import Link from "next/link";
 import { WorkspaceSectionNav, useWorkspaceSection } from "./workspace-sections";
 import { formatMinorMoney } from "@/modules/money";
@@ -62,6 +63,7 @@ const catalogueSections = [
   { id: "departments", label: "Departments", description: "Organise collections" },
   { id: "images", label: "Images", description: "Photo library" },
   { id: "contacts", label: "Contact settings", description: "How customers reach you" },
+  { id: "history", label: "History & deleted items", description: "30-day recovery" },
   { id: "requests", label: "Customer requests", description: "Your inbox" },
 ] as const;
 const blankContacts: Contacts = {
@@ -129,6 +131,13 @@ export function CatalogueWorkspace({
       });
     return () => controller.abort();
   }, [refresh]);
+  const activeDepartments = departments.filter((d) => !d.archived);
+  const desiredDepartment = product?.department_id ?? preferredDepartment;
+  const selectedDepartment = activeDepartments.some((d) => d.id === desiredDepartment)
+    ? desiredDepartment
+    : product
+      ? ""
+      : (activeDepartments[0]?.id ?? "");
   const processing = media.some((m) => m.state === "processing");
   useEffect(() => {
     if (!processing) return;
@@ -154,6 +163,10 @@ export function CatalogueWorkspace({
           "Remove this image from products and saved/published shop branding before deleting it.",
         department_contains_products:
           "Archive or move the department’s products before archiving it.",
+        department_name_in_use:
+          "A department with this name already exists, including archived departments. Activate it in Departments or choose a different name.",
+        catalogue_item_deleted:
+          "This item is deleted. Restore it from History & deleted items within 30 days.",
         slug_in_use: "This address is already used in this shop. Choose another address.",
         stale_version: "This record changed in another session. Reload before editing again.",
       };
@@ -328,7 +341,7 @@ export function CatalogueWorkspace({
         select={select}
         label="Catalogue sections"
       />
-      <div className="merchant-task-guide">
+      <div className="merchant-task-guide" hidden={active === "history"}>
         <div>
           <span className="eyebrow">Build your catalogue</span>
           <h2>What would you like to add?</h2>
@@ -342,9 +355,7 @@ export function CatalogueWorkspace({
             type="button"
             className="button"
             disabled={busy || !loaded}
-            onClick={() =>
-              departments.some((d) => !d.archived) ? addProduct() : select("departments")
-            }
+            onClick={() => (activeDepartments.length > 0 ? addProduct() : select("departments"))}
           >
             Add a product
           </button>
@@ -382,6 +393,16 @@ export function CatalogueWorkspace({
         >
           Reload catalogue
         </button>
+        {active !== "history" ? (
+          <button
+            type="button"
+            className="button button--outline button--small"
+            disabled={busy || !loaded}
+            onClick={() => select("history")}
+          >
+            History & deleted items
+          </button>
+        ) : null}
       </div>
       <section
         hidden={active !== "departments"}
@@ -395,6 +416,10 @@ export function CatalogueWorkspace({
           Think of these as rooms in your shop. For example, Crops can contain maize, beans and
           rice. Each department gets a page automatically once your shop is published.
         </p>
+        <p className="catalogue-department-summary">
+          {activeDepartments.length} active · {departments.length - activeDepartments.length}{" "}
+          archived. Only active departments appear in the product selector.
+        </p>
         <ul className="workspace-list">
           {departments.map((d) => (
             <li key={d.id}>
@@ -402,6 +427,28 @@ export function CatalogueWorkspace({
                 {d.name}
                 {d.archived ? " (archived)" : ""}
               </span>
+              {d.archived ? (
+                <button
+                  type="button"
+                  className="button button--outline button--small"
+                  disabled={busy || !loaded}
+                  onClick={() =>
+                    void act(
+                      () =>
+                        write(`/departments/${d.id}`, "PATCH", {
+                          name: d.name,
+                          slug: d.slug,
+                          position: d.position,
+                          archived: false,
+                          version: d.version,
+                        }),
+                      "Department activated. You can now add products to it.",
+                    )
+                  }
+                >
+                  Activate {d.name}
+                </button>
+              ) : null}
               {!d.archived ? (
                 <button
                   type="button"
@@ -421,6 +468,32 @@ export function CatalogueWorkspace({
                 }}
               >
                 Edit {d.name}
+              </button>
+              <button
+                type="button"
+                className="text-button catalogue-delete"
+                disabled={busy || !loaded}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Delete ${d.name} and its products? They disappear from the shop immediately and can be recovered for 30 days from History & deleted items.`,
+                    )
+                  )
+                    void act(
+                      () =>
+                        write(`/departments/${d.id}`, "DELETE", {
+                          version: d.version,
+                          confirm: true,
+                        }),
+                      "Department and its products moved to Deleted items. Recover them within 30 days.",
+                      () => {
+                        setDepartment(null);
+                        if (product?.department_id === d.id) setProduct(null);
+                      },
+                    );
+                }}
+              >
+                Delete {d.name}
               </button>
             </li>
           ))}
@@ -470,10 +543,12 @@ export function CatalogueWorkspace({
           <p className="editor-hint">
             You can leave the address blank. New departments are placed after your existing ones.
           </p>
-          <label className="check-label">
-            <input name="archived" type="checkbox" defaultChecked={department?.archived} /> Archive
-            department (archive or move its products first)
-          </label>
+          {department ? (
+            <label className="check-label">
+              <input name="archived" type="checkbox" defaultChecked={department.archived} />
+              Hide this department from customers (archive or move its products first)
+            </label>
+          ) : null}
           <div className="account-links">
             <button className="button" disabled={busy || !loaded}>
               {department ? "Save department" : "Create department"}
@@ -497,8 +572,14 @@ export function CatalogueWorkspace({
         {!products.length && (
           <div className="catalogue-empty">
             <h3>Make room for your first product.</h3>
-            <p>Start with a department, then add a product or service with its photo and price.</p>
-            {departments.some((d) => !d.archived) ? (
+            <p>
+              {activeDepartments.length
+                ? "Choose an active department below, then add your product, photo and price."
+                : departments.length
+                  ? "Your departments are archived, so they are not available for new products. Activate one in Departments, then return here."
+                  : "Create a department first, then add a product or service with its photo and price."}
+            </p>
+            {activeDepartments.length > 0 ? (
               <button type="button" className="button" onClick={() => addProduct()}>
                 Add your first product
               </button>
@@ -508,7 +589,7 @@ export function CatalogueWorkspace({
                 type="button"
                 onClick={() => select("departments")}
               >
-                Create your first department
+                {departments.length ? "View archived departments" : "Create your first department"}
               </button>
             )}
           </div>
@@ -535,24 +616,31 @@ export function CatalogueWorkspace({
             <select
               id="product-department"
               name="department"
-              value={
-                product?.department_id ??
-                (preferredDepartment || departments.find((d) => !d.archived)?.id || "")
-              }
+              value={selectedDepartment}
               onChange={(event) => {
                 setPreferredDepartment(event.target.value);
                 if (product) setProduct({ ...product, department_id: event.target.value });
               }}
               required
             >
-              {departments
-                .filter((d) => !d.archived)
-                .map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
+              <option value="" disabled>
+                {activeDepartments.length
+                  ? "Choose an active department"
+                  : departments.length
+                    ? "No active departments — activate one first"
+                    : "Create a department first"}
+              </option>
+              {activeDepartments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
             </select>
+            <p className="editor-hint">
+              {activeDepartments.length
+                ? `${activeDepartments.length} active departments available. Choose where this product belongs.`
+                : "Open Departments and activate an archived department or create a new one."}
+            </p>
           </div>
 
           <div className="editor-form-field">
@@ -663,10 +751,7 @@ export function CatalogueWorkspace({
             . Return to Products afterwards; your entered details stay here.
           </p>
           <div className="account-links">
-            <button
-              className="button"
-              disabled={busy || !loaded || !departments.some((d) => !d.archived)}
-            >
+            <button className="button" disabled={busy || !loaded || !activeDepartments.length}>
               {product ? "Save product or service" : "Create product or service"}
             </button>
             {product && (
@@ -717,6 +802,31 @@ export function CatalogueWorkspace({
                 >
                   Edit {p.name}
                 </button>
+                <button
+                  type="button"
+                  className="text-button catalogue-delete"
+                  disabled={busy || !loaded}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Delete ${p.name}? It disappears from the shop immediately and can be recovered for 30 days.`,
+                      )
+                    )
+                      void act(
+                        () =>
+                          write(`/products/${p.id}`, "DELETE", {
+                            version: p.version,
+                            confirm: true,
+                          }),
+                        "Product moved to Deleted items. Recover it within 30 days.",
+                        () => {
+                          if (product?.id === p.id) setProduct(null);
+                        },
+                      );
+                  }}
+                >
+                  Delete {p.name}
+                </button>
                 {p.availability !== "archived" && (
                   <button
                     className="text-button"
@@ -756,6 +866,22 @@ export function CatalogueWorkspace({
             Next products
           </button>
         </div>
+      </section>
+      <section
+        id="history"
+        role="tabpanel"
+        aria-label="History & deleted items"
+        hidden={active !== "history"}
+      >
+        {active === "history" ? (
+          <CatalogueHistory
+            shopId={shopId}
+            onChanged={async () => {
+              await refresh();
+              setMessage("Catalogue reloaded after recovery.");
+            }}
+          />
+        ) : null}
       </section>
       <section
         hidden={active !== "images"}

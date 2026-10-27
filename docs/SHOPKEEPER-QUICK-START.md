@@ -24,6 +24,16 @@ shops and private previews retain their normal access restrictions.
    different address. Londos makes a readable address from the name. Duplicate
    addresses within the shop are rejected; no random identifier is appended.
 
+Department names must also be unique within your shop, including archived
+departments. Capital letters and extra spaces do not make a different name.
+If you already have **Crops**, use that department or choose a genuinely different
+name. Any older duplicate names are made distinct automatically, for example
+**Crops (2)**, while their products and existing links stay attached.
+
+An archived department is hidden and cannot receive new products. In
+**Departments**, choose **Activate Crops** to use it again. The active/archived
+count explains which departments are available in the product selector.
+
 Raw ordering numbers are no longer shown in the normal form. Existing order
 values are preserved when editing; new departments follow the existing ones.
 Use the page builder's move controls to arrange sections on your home page.
@@ -47,6 +57,34 @@ Use the page builder's move controls to arrange sections on your home page.
 **Product link & type (optional)** lets you choose a different link or identify
 an item as a service. A blank address is generated from the name when saved.
 Existing product addresses stay unchanged when you edit an item.
+
+## Delete, recover or revert a change
+
+- Choose **Delete** beside a product or department and confirm. It disappears
+  from your catalogue and public shop immediately. Deleting a department also
+  deletes the products currently inside it.
+- Open **Products & contacts → History & deleted items** to see deleted items
+  and their restore deadlines. Choose **Restore** within **30 days**. Restoring
+  a department brings back the products deleted with it; products you deleted
+  separately before that stay deleted. Restore and activate a department before
+  trying to restore an individual product inside it.
+- Under **Recent changes**, expand an edit to compare the previous and new
+  values. **Revert this change** restores the values from before that edit as a
+  new saved version. It replaces the current values for that item, so review the
+  comparison and confirmation first. History starts with this feature; earlier
+  versions cannot be reconstructed.
+- Another department may have taken a deleted department's name. A previous edit's
+  link may also be in use. Resolve the conflict before restoring. Recovery checks permissions, current
+  versions, limits and required photos; a failed recovery makes no partial changes.
+
+Both deletion recovery and edit reversion expire after 30 days. Archived items
+are different from deleted items: activate an archived department from the
+Departments tab. Restores and reverts may appear immediately in a published shop.
+Maintenance removes expired recovery details; minimal non-public identity records
+remain where needed to preserve customer-request and financial references.
+
+See [catalogue recovery verification](evidence/CATALOGUE-RECOVERY-2026-10-27.md)
+for the deployment migration and tested safeguards.
 
 ## Arrange the home page
 

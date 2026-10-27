@@ -52,6 +52,8 @@
 .catalogue-toolbar {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 .portal-shell .catalogue-workspace > section {
   margin: 0;
@@ -654,5 +656,71 @@
   .design-workspace .editor-save-bar {
     position: static;
     bottom: auto;
+  }
+}
+.catalogue-delete {
+  color: #8a291a;
+}
+.merchant-task-guide[hidden] {
+  display: none;
+}
+.catalogue-department-summary {
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #eef1e8;
+  font-size: 14px;
+}
+.catalogue-history > section {
+  margin-top: 28px;
+}
+.catalogue-history-entry {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 12px 0;
+}
+.catalogue-history-entry summary {
+  cursor: pointer;
+}
+.catalogue-history-entry summary strong {
+  display: block;
+}
+.catalogue-history-entry summary span,
+.catalogue-history-entry > p,
+.catalogue-history .workspace-list p {
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.catalogue-change-details {
+  margin: 18px 0;
+}
+.catalogue-change-details > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.5fr) minmax(0, 1fr);
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.catalogue-change-details dt {
+  font-size: 13px;
+  font-weight: 600;
+}
+.catalogue-change-details dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.catalogue-change-details dd span {
+  display: block;
+}
+@media (max-width: 600px) {
+  .catalogue-change-details > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+  .catalogue-history .workspace-list > li {
+    align-items: flex-start;
   }
 }

@@ -1,5 +1,15 @@
 # Build status and next model setting
 
+**Catalogue recovery update — 27 October 2026:** continuing from `aa1a8ea` on the
+hosted branch. Department names are unique per shop, archived departments have
+activation controls, and the product selector uses active departments. Confirmed
+deletion, 30-day recovery and edit reversion are available in **History & deleted
+items**. The [review](evidence/CATALOGUE-RECOVERY-2026-10-27.md) records safeguards,
+verification and changed files. Migration `037_catalogue_recovery.sql` is required
+and runs through the existing startup migration path when
+`LONDOS_MIGRATE_ON_START=true`; deployments using a separate migration step apply
+it there instead. No new environment keys or dependencies are needed.
+
 **Merchant clarity update — 27 October 2026:** continuing from `9054bc4` on the
 hosted branch. The [shopkeeper quick start](SHOPKEEPER-QUICK-START.md) explains
 adding products to departments and arranging home-page sections. The
@@ -68,7 +78,6 @@ new design system and focused verification; `ac76c62` preserves the earlier chec
 verification results and remaining operator actions. Older branch names, schema numbers,
 missing-credential statements and local-only workflow descriptions below are historical.
 The original formal release/pilot gates are not relabelled complete by this follow-up.
-
 
 **Latest feature verification (2026-10-09):** the partial launcher/designer branch is consolidated with the completed P13/provider branch. Both independent 019 migrations remain unchanged; additive 020 verifies their combined schema contract. [Cross-platform evidence](evidence/CROSS-PLATFORM-LAUNCHERS-2026-10-09.md) records 105 focused unit checks, 55 targeted PostgreSQL checks, type/lint/docs, production build, PWA runtime, Render YAML and configured-secret scanning. Native Windows/macOS/Android installation and an actual Render deployment remain unexecuted. Historical G5 evidence does not verify this new source by itself.
 
