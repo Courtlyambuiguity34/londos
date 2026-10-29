@@ -1,4 +1,58 @@
 /* Original Londos discovery composition; scoped to canonical public browsing. */
+.shop-buying-details {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, currentColor 17%, transparent);
+  overflow-wrap: anywhere;
+}
+.shop-buying-details-source,
+.shop-buying-details > p:last-child {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.shop-buying-details dl {
+  display: grid;
+  gap: 16px;
+  margin: 14px 0;
+}
+.shop-buying-details dt {
+  font-weight: 600;
+}
+.shop-buying-details dd {
+  margin: 5px 0 0;
+  white-space: pre-line;
+}
+.shopping-help {
+  max-width: 1060px;
+}
+.shopping-help .how-to-steps h2 {
+  font-size: 22px;
+}
+.shopping-questions {
+  margin: 44px 0;
+}
+.shopping-questions > h2 {
+  margin-bottom: 20px;
+}
+.shopping-questions details {
+  border-top: 1px solid var(--line);
+}
+.shopping-questions details:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.shopping-questions summary {
+  cursor: pointer;
+  padding: 20px 0;
+  font-weight: 600;
+}
+.shopping-questions details p {
+  max-width: 760px;
+  padding-bottom: 20px;
+  line-height: 1.75;
+}
+.shopping-questions a {
+  text-decoration: underline;
+}
 .search-refinements {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -21,7 +75,7 @@
 .search-refinements form {
   padding: 2px 18px 18px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: end;
   gap: 14px 24px;
 }
@@ -61,6 +115,21 @@
   font: inherit;
   font-size: 14px;
 }
+.search-refinements input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 14px;
+}
+.search-refinements .search-price-range {
+  grid-template-columns: minmax(80px, 0.6fr) repeat(2, minmax(0, 1fr));
+}
 .search-refinements-actions {
   display: flex;
   align-items: center;
@@ -92,7 +161,8 @@
   }
 }
 @media (max-width: 359px) {
-  .search-refinements fieldset {
+  .search-refinements fieldset,
+  .search-refinements .search-price-range {
     grid-template-columns: minmax(0, 1fr);
   }
 }

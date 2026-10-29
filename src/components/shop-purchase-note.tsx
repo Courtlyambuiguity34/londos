@@ -41,11 +41,16 @@ export function ShopPurchaseNote({
           </>
         )}
       </div>
-      {shopId ? (
-        <Link prefetch={false} className="purchase-note-report" href={`/report/${shopId}`}>
-          Report a concern about this shop <Icon name="arrow" />
+      <div className="purchase-note-actions">
+        <Link className="purchase-note-report" href="/help">
+          Shopping questions? Read the buyer guide <Icon name="arrow" />
         </Link>
-      ) : null}
+        {shopId ? (
+          <Link prefetch={false} className="purchase-note-report" href={`/report/${shopId}`}>
+            Report a concern about this shop <Icon name="arrow" />
+          </Link>
+        ) : null}
+      </div>
     </aside>
   );
 }

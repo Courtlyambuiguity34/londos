@@ -37,6 +37,7 @@ export function MobileNavigation({
         <Link href="/search">Explore shops</Link>
         <Link href="/saved">Saved shops</Link>
         <Link href="/about">Our mall</Link>
+        <Link href="/help">How to shop</Link>
         {showRentCta ? <Link href="/rent-a-shop">Open your shop</Link> : null}
         {showShopkeeper ? <Link href="/shopkeeper">Shopkeeper</Link> : null}
         {showLandlord ? <Link href="/landlord">Management</Link> : null}

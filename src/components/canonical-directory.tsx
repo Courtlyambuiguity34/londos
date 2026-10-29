@@ -13,6 +13,7 @@ import { BrowseRail } from "./browse-rail";
 import { DiscoveryShopCard } from "./discovery-shop-card";
 import { SearchRefinements } from "./search-refinements";
 import { searchHref } from "@/modules/discovery/refinements";
+import { priceRangeLabel } from "@/modules/discovery/price-range";
 export { DiscoveryShopCard as CanonicalShopCard } from "./discovery-shop-card";
 export async function CanonicalDirectory({
   query = "",
@@ -21,6 +22,9 @@ export async function CanonicalDirectory({
   shopId,
   kind = "all",
   availability = "all",
+  currency = "UGX",
+  minPrice = "",
+  maxPrice = "",
   entrance = false,
 }: {
   query?: string;
@@ -29,6 +33,9 @@ export async function CanonicalDirectory({
   shopId?: string | undefined;
   kind?: string | undefined;
   availability?: string | undefined;
+  currency?: string | undefined;
+  minPrice?: string | undefined;
+  maxPrice?: string | undefined;
   entrance?: boolean;
 }) {
   let result: Awaited<ReturnType<PostgresSearch["search"]>> | null = null;
@@ -43,6 +50,9 @@ export async function CanonicalDirectory({
         limit: entrance ? 8 : 20,
         kind,
         availability,
+        currency,
+        minPrice,
+        maxPrice,
       }),
     );
   } catch (error) {
@@ -69,7 +79,7 @@ export async function CanonicalDirectory({
             title={invalid ? "Check this search." : "Search is temporarily unavailable."}
             description={
               invalid
-                ? "Choose one of the listed filters and use up to eight words and 80 characters, or start a new search."
+                ? "Use up to eight words and 80 characters, choose listed filters, and check your price range. Enter amounts without commas (whole UGX amounts; up to two decimal places for other currencies), with the minimum no greater than the maximum."
                 : "Please try again shortly. A shop you already know may still be available at its direct link."
             }
             href="/search"
@@ -80,8 +90,18 @@ export async function CanonicalDirectory({
       </section>
     );
   }
-  const filters = { query, category, shopId, kind, availability };
-  const refined = kind !== "all" || availability !== "all";
+  const filters = {
+    query,
+    category,
+    shopId,
+    kind,
+    availability,
+    currency,
+    minPrice: minPrice.trim(),
+    maxPrice: maxPrice.trim(),
+  };
+  const budget = Boolean(filters.minPrice || filters.maxPrice);
+  const refined = kind !== "all" || availability !== "all" || budget;
   const categoryHref = (value?: string) => searchHref({ ...filters, category: value });
   return (
     <PilotObserver
@@ -144,6 +164,9 @@ export async function CanonicalDirectory({
             maxLength={80}
             kind={kind}
             availability={availability}
+            currency={currency}
+            minPrice={filters.minPrice}
+            maxPrice={filters.maxPrice}
             {...(category ? { category } : {})}
             {...(shopId ? { shopId } : {})}
           />
@@ -193,6 +216,11 @@ export async function CanonicalDirectory({
             {availability !== "all" ? (
               <Link href={searchHref({ ...filters, availability: "all" })}>
                 Available listings ×
+              </Link>
+            ) : null}
+            {budget ? (
+              <Link href={searchHref({ ...filters, minPrice: undefined, maxPrice: undefined })}>
+                {priceRangeLabel(filters)} ×
               </Link>
             ) : null}
             {cursor ? <Link href={categoryHref(category)}>First page</Link> : null}

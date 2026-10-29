@@ -21,6 +21,7 @@ import { SaveShopButton } from "./save-shop-button";
 import { ShareShopButton } from "./share-shop-button";
 import { BrowseRail } from "./browse-rail";
 import { ShopPurchaseNote } from "./shop-purchase-note";
+import { ShopBuyingDetails } from "./shop-buying-details";
 
 export function CanonicalProduct({
   product,
@@ -142,8 +143,7 @@ function Contacts({ view }: { view: ShopView }) {
         ))}
       </div>
       {!actions.length ? <p>This shop has not enabled a contact method yet.</p> : null}
-      {c.delivery_instructions ? <p>{c.delivery_instructions}</p> : null}
-      {c.payment_instructions ? <p>{c.payment_instructions}</p> : null}
+      <ShopBuyingDetails contact={c} />
       <p>
         Agree purchases and payment directly with the merchant. An enquiry is not a confirmed order.
       </p>

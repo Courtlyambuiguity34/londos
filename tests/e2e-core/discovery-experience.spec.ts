@@ -669,3 +669,214 @@ test("listing refinements preserve search context, recover empty results and wor
   await expect(basic.locator(".discovery-card")).toHaveCount(1);
   await context.close();
 });
+
+test("budget discovery preserves context, shows the qualifying price and works without JavaScript", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(90_000);
+  const shop = shops[3]!,
+    row = (
+      await pool.query("SELECT merchant_id,department_id FROM products WHERE shop_id=$1 LIMIT 1", [
+        shop.id,
+      ])
+    ).rows[0];
+  for (const [slug, kind, currency, price, availability] of [
+    ["budget-repair", "service", "UGX", "45000", "available"],
+    ["budget-dollar", "product", "USD", "1299", "available"],
+    ["budget-quote", "service", "UGX", null, "available"],
+    ["budget-archived", "service", "UGX", "45000", "archived"],
+  ] as const)
+    await pool.query(
+      "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(shop_id,slug) DO NOTHING",
+      [
+        randomUUID(),
+        shop.id,
+        row.merchant_id,
+        row.department_id,
+        kind,
+        slug.replaceAll("-", " "),
+        slug,
+        currency,
+        price,
+        availability,
+      ],
+    );
+  await page.goto(`/search?q=budget&category=electronics&shop=${shop.id}`);
+  await page.locator(".search-refinements > summary").click();
+  await page.getByLabel("Listing type", { exact: true }).selectOption("service");
+  await page.getByLabel("Availability", { exact: true }).selectOption("available");
+  await page.getByLabel("Minimum price", { exact: true }).fill("45000");
+  await page.getByLabel("Maximum price", { exact: true }).fill("45000");
+  await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+  const path = new URL(page.url()).pathname + new URL(page.url()).search;
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("shop") === shop.id &&
+      url.searchParams.get("maxPrice") === "45000" &&
+      url.searchParams.get("currency") === "UGX",
+  );
+  const hit = page.getByRole("link", { name: "budget repair at Circuit Studio", exact: true });
+  await expect(hit).toHaveAttribute("href", "/shops/circuit-studio/products/budget-repair");
+  await expect(page.locator(".discovery-card")).toHaveCount(1);
+  await expect(page.locator(".discovery-card")).toContainText("45,000");
+  for (const width of [1440, 390, 320, 900]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await inspect(page);
+    if (width === 1440 || width === 390)
+      await page.screenshot({
+        path: `docs/evidence/images/competitor-budget-${width}-2026-10-29.png`,
+        fullPage: true,
+      });
+  }
+  await page.getByRole("searchbox").fill("repair");
+  await page.getByRole("button", { name: "Search this shop", exact: true }).click();
+  expect(new URL(page.url()).searchParams.get("maxPrice")).toBe("45000");
+  await page
+    .getByRole("navigation", { name: "Filter by category" })
+    .getByRole("link", { name: "Fashion & style", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "No shops matched this search.", exact: true }),
+  ).toBeVisible();
+  expect(new URL(page.url()).searchParams.get("minPrice")).toBe("45000");
+  await page.goto(path);
+  await page
+    .getByRole("navigation", { name: "Applied search filters" })
+    .getByRole("link", { name: /45,000.*×/ })
+    .click();
+  await expect(page.getByLabel("Maximum price", { exact: true })).toHaveValue("");
+  expect(new URL(page.url()).searchParams.get("kind")).toBe("service");
+  expect(new URL(page.url()).searchParams.get("shop")).toBe(shop.id);
+  await page.goto(`/search?q=budget&shop=${shop.id}&currency=USD&minPrice=12.99&maxPrice=12.99`);
+  await expect(
+    page.getByRole("link", { name: "budget dollar at Circuit Studio", exact: true }),
+  ).toBeVisible();
+  for (const range of ["minPrice=10&maxPrice=9", "minPrice=1.01", "maxPrice=10&maxPrice=20"]) {
+    await page.goto(`/search?${range}`);
+    await expect(
+      page.getByRole("heading", { name: "Check this search.", exact: true }),
+    ).toBeVisible();
+  }
+  // Keep the expanded native form in view; Chromium's smooth auto-scroll can
+  // stall Playwright's stability polling when page JavaScript is disabled.
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    viewport: { width: 1280, height: 1200 },
+  });
+  try {
+    const basic = await context.newPage();
+    await basic.bringToFront();
+    await basic.goto(`${origin}/search?q=budget&shop=${shop.id}`);
+    await basic.locator(".search-refinements > summary").click();
+    await basic.getByLabel("Maximum price", { exact: true }).fill("45000");
+    await basic.getByRole("button", { name: "Apply filters", exact: true }).click();
+    await expect(
+      basic.getByRole("link", { name: "budget repair at Circuit Studio", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test("merchant fulfilment facts use clear labels on product and enquiry pages", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const shop = shops[0]!,
+    original = (
+      await pool.query(
+        "SELECT fulfilment,delivery_instructions,payment_instructions FROM shop_contacts WHERE shop_id=$1",
+        [shop.id],
+      )
+    ).rows[0];
+  try {
+    for (const [value, label] of [
+      ["pickup", "Collection offered"],
+      ["delivery", "Delivery offered"],
+      ["pickup_and_delivery", "Collection and delivery offered"],
+      ["contact", "Ask the shop about collection or delivery"],
+    ]) {
+      await pool.query(
+        "UPDATE shop_contacts SET version=version+1,fulfilment=$2,delivery_instructions='Confirm your collection point or delivery area.',payment_instructions='Ask for the full total before paying.' WHERE shop_id=$1",
+        [shop.id, value],
+      );
+      await page.setViewportSize({ width: 390, height: 900 });
+      await page.goto(`/shops/${shop.slug}/products/city-carry`);
+      const details = page.locator("#product-contact .shop-buying-details");
+      await expect(details).toContainText(label!);
+      await expect(details).toContainText("Provided by this shop");
+      await expect(details).toContainText("Confirm your collection point or delivery area.");
+      await expect(details).toContainText("Ask for the full total before paying.");
+    }
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await inspect(page);
+    }
+    await page.screenshot({
+      path: "docs/evidence/images/competitor-buying-details-1280-2026-10-29.png",
+      fullPage: true,
+    });
+    await page.goto(`/contact/${shop.id}`);
+    await expect(page.locator(".shop-buying-details")).toContainText(
+      "Ask the shop about collection or delivery",
+    );
+    await inspect(page);
+  } finally {
+    await pool.query(
+      "UPDATE shop_contacts SET version=version+1,fulfilment=$2,delivery_instructions=$3,payment_instructions=$4 WHERE shop_id=$1",
+      [shop.id, original.fulfilment, original.delivery_instructions, original.payment_instructions],
+    );
+  }
+});
+
+test("shopping help is discoverable, keyboard accessible and usable without JavaScript", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/search");
+  await page.getByText("Menu", { exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Mobile navigation" })
+    .getByRole("link", { name: "How to shop", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/help$/);
+  const question = page
+    .locator("summary")
+    .filter({ hasText: "Can I pay or place an order through Londos?" });
+  await question.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByText("Londos does not collect payment for purchases from shops.", { exact: false }),
+  ).toBeVisible();
+  for (const width of [320, 390, 900, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await inspect(page);
+    if (width === 390) {
+      await page.evaluate(() => {
+        (document.activeElement as HTMLElement)?.blur();
+        window.scrollTo({ top: 0, behavior: "instant" });
+      });
+      await page.screenshot({
+        path: "docs/evidence/images/competitor-shopping-help-390-2026-10-29.png",
+        fullPage: true,
+      });
+    }
+  }
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const basic = await context.newPage();
+    await basic.bringToFront();
+    await basic.goto(`${origin}/help`);
+    await basic.locator("summary").filter({ hasText: "Where are my saved shops?" }).click();
+    await expect(
+      basic.getByText("They are stored in this browser on this device", { exact: false }),
+    ).toBeVisible();
+    await basic.getByRole("link", { name: "Open your own shop", exact: true }).click();
+    await expect(basic).toHaveURL(/\/rent-a-shop$/);
+  } finally {
+    await context.close();
+  }
+});

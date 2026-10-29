@@ -10,6 +10,9 @@ export function SearchForm({
   shopName,
   kind = "all",
   availability = "all",
+  currency = "UGX",
+  minPrice = "",
+  maxPrice = "",
 }: {
   query?: string;
   large?: boolean;
@@ -19,6 +22,9 @@ export function SearchForm({
   shopName?: string;
   kind?: string;
   availability?: string;
+  currency?: string;
+  minPrice?: string;
+  maxPrice?: string;
 }) {
   return (
     <form
@@ -48,6 +54,13 @@ export function SearchForm({
       {kind !== "all" ? <input type="hidden" name="kind" value={kind} /> : null}
       {availability !== "all" ? (
         <input type="hidden" name="availability" value={availability} />
+      ) : null}
+      {minPrice || maxPrice ? (
+        <>
+          <input type="hidden" name="currency" value={currency} />
+          {minPrice ? <input type="hidden" name="minPrice" value={minPrice} /> : null}
+          {maxPrice ? <input type="hidden" name="maxPrice" value={maxPrice} /> : null}
+        </>
       ) : null}
       <button type="submit" aria-label={shopId ? "Search this shop" : "Search the mall"}>
         <span>Search</span>

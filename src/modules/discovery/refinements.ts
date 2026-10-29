@@ -8,6 +8,9 @@ export type SearchLinkInput = {
   shopId?: string | undefined;
   kind?: string | undefined;
   availability?: string | undefined;
+  currency?: string | undefined;
+  minPrice?: string | undefined;
+  maxPrice?: string | undefined;
   cursor?: string | undefined;
 };
 
@@ -21,6 +24,11 @@ export function searchHref(value: SearchLinkInput) {
   if (value.kind && value.kind !== "all") params.set("kind", value.kind);
   if (value.availability && value.availability !== "all")
     params.set("availability", value.availability);
+  if (value.minPrice || value.maxPrice) {
+    params.set("currency", value.currency || "UGX");
+    if (value.minPrice) params.set("minPrice", value.minPrice);
+    if (value.maxPrice) params.set("maxPrice", value.maxPrice);
+  }
   if (value.cursor) params.set("cursor", value.cursor);
   return `/search${params.size ? `?${params}` : ""}`;
 }

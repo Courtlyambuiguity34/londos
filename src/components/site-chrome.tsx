@@ -33,6 +33,7 @@ export async function SiteHeader() {
           <Link href="/search">Explore shops</Link>
           <Link href="/saved">Saved shops</Link>
           <Link href="/about">Our mall</Link>
+          <Link href="/help">How to shop</Link>
         </nav>
         <div className="header-actions">
           {access.shopkeeper ? (
@@ -91,6 +92,7 @@ export async function SiteFooter() {
             <Link href="/rent-a-shop">Become a shopkeeper</Link>
           ) : null}
           <Link href="/about">About Londos</Link>
+          <Link href="/help">Shopping help</Link>
           <Link href="/install">Install Londos</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms of use</Link>

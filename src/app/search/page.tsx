@@ -20,9 +20,25 @@ export default async function SearchPage({
     shop?: string | string[];
     kind?: string | string[];
     availability?: string | string[];
+    currency?: string | string[];
+    minPrice?: string | string[];
+    maxPrice?: string | string[];
   }>;
 }) {
   const params = await searchParams;
+  if (Object.values(params).some(Array.isArray))
+    return (
+      <section className="shell page-section">
+        <div role="alert">
+          <EmptyState
+            title="Check this search."
+            description="Choose one value for each search field or start a new search."
+            href="/search"
+            action="Start a new search"
+          />
+        </div>
+      </section>
+    );
   const query = typeof params.q === "string" ? params.q : "";
   const category = typeof params.category === "string" ? params.category : undefined;
   if (databaseBrowsing())
@@ -34,6 +50,9 @@ export default async function SearchPage({
         shopId={typeof params.shop === "string" ? params.shop : undefined}
         kind={typeof params.kind === "string" ? params.kind : "all"}
         availability={typeof params.availability === "string" ? params.availability : "all"}
+        currency={typeof params.currency === "string" ? params.currency : "UGX"}
+        minPrice={typeof params.minPrice === "string" ? params.minPrice : ""}
+        maxPrice={typeof params.maxPrice === "string" ? params.maxPrice : ""}
       />
     );
   const result = searchPreviewShops({ query, ...(category ? { category } : {}) });
@@ -80,6 +99,12 @@ export default async function SearchPage({
           })),
         ]}
       />
+      {params.minPrice || params.maxPrice ? (
+        <p role="status" className="notice">
+          Budget filtering is available in the live mall. This sample directory is showing results
+          without a budget.
+        </p>
+      ) : null}
       {result.error ? (
         <div role="alert" className="notice notice--error">
           {result.error}

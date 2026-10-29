@@ -688,7 +688,11 @@ test("refinements qualify the full result set before paging and bind cursors wit
     cursor = result.nextCursor;
   }
   expect(found).toEqual(expected);
-  for (const changes of [{ kind: "product" as const }, { availability: "all" as const }])
+  for (const changes of [
+    { kind: "product" as const },
+    { availability: "all" as const },
+    { maxPrice: "45000" },
+  ])
     await expect(
       search.search({ ...filters, ...changes, cursor: first.nextCursor! }),
     ).rejects.toMatchObject({ status: 422, code: "invalid_cursor" });
@@ -697,7 +701,141 @@ test("refinements qualify the full result set before paging and bind cursors wit
   expect(await search.search({ ...page, kind: "all", availability: "all" })).toEqual(
     await search.search(page),
   );
+  expect(await search.search({ ...page, currency: "USD", minPrice: "", maxPrice: "" })).toEqual(
+    await search.search(page),
+  );
+  const budget = { ...filters, minPrice: "45000", maxPrice: "45000" };
+  const firstBudget = await search.search(budget);
+  expect(firstBudget.results).toHaveLength(2);
+  const budgetFound = new Set(firstBudget.results.map((row) => row.id));
+  let budgetCursor = firstBudget.nextCursor;
+  for (let page = 0; budgetCursor && page < 15; page++) {
+    const next = await search.search({ ...budget, cursor: budgetCursor });
+    for (const row of next.results) {
+      expect(budgetFound.has(row.id)).toBe(false);
+      budgetFound.add(row.id);
+      expect(row.match?.price_minor).toBe("45000");
+    }
+    budgetCursor = next.nextCursor;
+  }
+  expect(budgetCursor).toBeNull();
+  expect(budgetFound).toEqual(expected);
+  expect(
+    await search.search({ ...budget, minPrice: "045000", cursor: firstBudget.nextCursor! }),
+  ).toEqual(await search.search({ ...budget, cursor: firstBudget.nextCursor! }));
+  for (const changes of [
+    { currency: "USD" as const },
+    { minPrice: "44999" },
+    { maxPrice: "45001" },
+    { minPrice: "", maxPrice: "" },
+  ])
+    await expect(
+      search.search({ ...budget, ...changes, cursor: firstBudget.nextCursor! }),
+    ).rejects.toMatchObject({ code: "invalid_cursor" });
 });
+test("budgets match exact canonical prices and the same eligible listing across shop, department and product hits", async () => {
+  await published();
+  const care = randomUUID(),
+    cheap = randomUUID();
+  await pool.query(
+    "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$2,$3,'Care','care',1)",
+    [care, shop, seedIds.merchantA],
+  );
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability) VALUES($1,$2,$3,$4,'service','Repair visit','repair-visit','UGX',45000,'unavailable')",
+    [cheap, shop, seedIds.merchantA, care],
+  );
+  const search = new PostgresSearch(pool),
+    budget = { shopId: shop, maxPrice: "45000" };
+  for (const query of ["", "Fictional design shop", "Care", "Repair"]) {
+    const result = await search.search({ ...budget, query });
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0]).toMatchObject({
+      product_slug: "repair-visit",
+      department_slug: "care",
+      match: {
+        name: "Repair visit",
+        price_minor: "45000",
+        currency: "UGX",
+        availability: "unavailable",
+      },
+    });
+  }
+  for (const extra of [
+    { query: "Shoes" },
+    { query: "", kind: "product" as const },
+    { query: "", availability: "available" as const },
+  ])
+    expect((await search.search({ ...budget, ...extra })).results).toEqual([]);
+  expect(
+    (await search.search({ query: "", shopId: shop, minPrice: "123000", maxPrice: "123000" }))
+      .results[0]?.match?.price_minor,
+  ).toBe("123000");
+  await pool.query(
+    "UPDATE products SET currency='USD',price_minor=1234,availability='available' WHERE id=$1",
+    [cheap],
+  );
+  expect((await search.search({ ...budget, query: "" })).results).toEqual([]);
+  expect(
+    (
+      await search.search({
+        query: "",
+        shopId: shop,
+        currency: "USD",
+        minPrice: "12.34",
+        maxPrice: "12.34",
+      })
+    ).results[0]?.match?.price_minor,
+  ).toBe("1234");
+  expect(
+    (await search.search({ query: "", shopId: shop, currency: "USD", maxPrice: "12.33" })).results,
+  ).toEqual([]);
+  await pool.query("UPDATE products SET price_minor=9007199254740993 WHERE id=$1", [cheap]);
+  expect(
+    (
+      await search.search({
+        query: "",
+        shopId: shop,
+        currency: "USD",
+        minPrice: "90071992547409.93",
+        maxPrice: "90071992547409.93",
+      })
+    ).results[0]?.match?.price_minor,
+  ).toBe("9007199254740993");
+  expect(
+    (
+      await search.search({
+        query: "",
+        shopId: shop,
+        currency: "USD",
+        maxPrice: "90071992547409.92",
+      })
+    ).results,
+  ).toEqual([]);
+  await pool.query("UPDATE products SET price_minor=NULL WHERE shop_id=$1", [shop]);
+  expect((await search.search({ ...budget, query: "" })).results).toEqual([]);
+  expect((await search.search({ query: "", shopId: shop })).results).toHaveLength(1);
+  await pool.query("UPDATE products SET currency='UGX',price_minor=0 WHERE id=$1", [cheap]);
+  expect(
+    (await search.search({ query: "", shopId: shop, minPrice: "0", maxPrice: "0" })).results[0]
+      ?.match?.price_minor,
+  ).toBe("0");
+  await pool.query("UPDATE products SET currency='UGX',price_minor=45000 WHERE id=$1", [cheap]);
+  for (const [table, key, state, reset] of [
+    ["departments", "id", "archived=true", "archived=false"],
+    ["products", "id", "availability='archived'", "availability='available'"],
+    ["shop_moderation", "shop_id", "state='suspended'", "state='clear'"],
+    ["shop_publication", "shop_id", "state='unpublished'", "state='active'"],
+    ["tenancies", "shop_id", "state='closed'", "state='active'"],
+  ]) {
+    const id = table === "departments" ? care : table === "products" ? cheap : shop;
+    await pool.query(`UPDATE ${table} SET ${state} WHERE ${key}=$1`, [id]);
+    expect((await search.search({ ...budget, query: "" })).results).toEqual([]);
+    await pool.query(`UPDATE ${table} SET ${reset} WHERE ${key}=$1`, [id]);
+    expect((await search.search({ ...budget, query: "" })).results).toHaveLength(1);
+  }
+});
+
 test("live product/search changes become visible without worker projections", async () => {
   await published();
   await pool.query("UPDATE products SET name='Violet example' WHERE id=$1", [product]);

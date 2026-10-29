@@ -1,5 +1,15 @@
 # Build status and next model setting
 
+**Competitor-informed shopping improvements — 29 October 2026:** reviewed the
+15 websites from the Explee screenshot against `b056ccb` on the hosted branch.
+Live discovery now supports exact currency-specific budgets before pagination,
+with matching product prices and context-preserving links. Product/shop contact
+and enquiry pages show readable merchant collection, delivery and payment facts.
+A buyer guide at `/help` is available from public navigation and purchase cards.
+The [source-linked review](evidence/COMPETITOR-REVIEW-2026-10-29.md) records each
+website, access limitations, implementation decisions and verification. No new
+dependency, migration, environment key or service is required.
+
 **UI clarity and mall navigation — 29 October 2026:** the current hosted branch
 was reviewed from `3a87ebd` before a fresh implementation. Its image-led cards,
 saved shops, themes and newer workspace flows are retained. Public header/footer

@@ -156,17 +156,22 @@
 .shop-purchase-note .purchase-note-copy p + p {
   margin-top: 9px;
 }
+.purchase-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
 .purchase-note-report {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  grid-column: 1 / -1;
   width: fit-content;
   max-width: 100%;
   min-height: 44px;
-  padding-top: 14px;
-  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
   font-size: 12px;
   text-decoration: underline;
   text-underline-offset: 4px;

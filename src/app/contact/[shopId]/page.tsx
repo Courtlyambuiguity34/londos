@@ -4,6 +4,7 @@ import type { CaptureInput } from "@/modules/analytics/contract";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { GuestRequestForm } from "@/components/guest-request-form";
+import { ShopBuyingDetails } from "@/components/shop-buying-details";
 import { coreConfigured } from "@/server/config";
 import { database } from "@/server/db/pool";
 import { publicContact } from "@/server/contacts";
@@ -66,9 +67,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
             </a>
           )}
         </div>
-        <p>Fulfilment: {shop.fulfilment.replaceAll("_", " ")}.</p>
-        {shop.delivery_instructions && <p>{shop.delivery_instructions}</p>}
-        {shop.payment_instructions && <p>{shop.payment_instructions}</p>}
+        <ShopBuyingDetails contact={shop} />
         <GuestRequestForm shopId={shop.id} />
       </section>
     </PilotObserver>
