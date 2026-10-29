@@ -48,6 +48,16 @@ export default function ShoppingHelpPage() {
       <section aria-labelledby="shopping-questions" className="shopping-questions">
         <h2 id="shopping-questions">Your shopping questions</h2>
         <details>
+          <summary>How can I compare products?</summary>
+          <p>
+            In the live mall, choose “Add to comparison” on up to four listings, then open{" "}
+            <Link href="/compare">Compare products</Link>. Selections are stored in this browser.
+            The comparison reads current public listings; items can change or become unavailable.
+            Prices in different currencies are shown without conversion. A comparison link can be
+            shared and read without signing in.
+          </p>
+        </details>
+        <details>
           <summary>Do I need an account to browse?</summary>
           <p>
             No. You can explore shops and listings without signing in. Merchant workspaces require

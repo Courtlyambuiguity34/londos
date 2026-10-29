@@ -10,6 +10,9 @@ const fulfilmentLabels: Record<string, string> = {
   delivery: "Delivery offered",
   pickup_and_delivery: "Collection and delivery offered",
 };
+export function fulfilmentLabel(value: string) {
+  return fulfilmentLabels[value] ?? fulfilmentLabels.contact;
+}
 
 // These are merchant-provided details, never a platform fulfilment promise.
 export function ShopBuyingDetails({ contact }: { contact: BuyingDetails }) {
@@ -19,7 +22,7 @@ export function ShopBuyingDetails({ contact }: { contact: BuyingDetails }) {
       <dl>
         <div>
           <dt>Collection & delivery</dt>
-          <dd>{fulfilmentLabels[contact.fulfilment] ?? fulfilmentLabels.contact}</dd>
+          <dd>{fulfilmentLabel(contact.fulfilment)}</dd>
           {contact.delivery_instructions ? <dd>{contact.delivery_instructions}</dd> : null}
         </div>
         {contact.payment_instructions ? (

@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { categories } from "@/modules/catalogue/fixtures";
+import { CompareNavigationLink } from "./product-comparison-controls";
 
 // Native disclosure remains usable before hydration and without JavaScript.
 export function MobileNavigation({
@@ -36,6 +37,7 @@ export function MobileNavigation({
       >
         <Link href="/search">Explore shops</Link>
         <Link href="/saved">Saved shops</Link>
+        <CompareNavigationLink />
         <Link href="/about">Our mall</Link>
         <Link href="/help">How to shop</Link>
         {showRentCta ? <Link href="/rent-a-shop">Open your shop</Link> : null}

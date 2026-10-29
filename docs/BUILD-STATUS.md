@@ -1,5 +1,14 @@
 # Build status and next model setting
 
+**Alibaba, Amazon and Shopify benchmark — 29 October 2026:** compared the hosted
+branch at `bc4c971` with first-party platform guidance. Product comparison now
+supports four current public listings and shared links. Product pages show
+available alternatives from the same department, and product-aware enquiries
+carry through to the merchant inbox. The [benchmark and roadmap](evidence/ALIBABA-AMAZON-SHOPIFY-2026-10-29.md)
+distinguishes these improvements from the remaining order, payment, inventory
+and fulfilment gaps. No new migration, package, service or environment key is
+required.
+
 **Competitor-informed shopping improvements — 29 October 2026:** reviewed the
 15 websites from the Explee screenshot against `b056ccb` on the hosted branch.
 Live discovery now supports exact currency-specific budgets before pagination,

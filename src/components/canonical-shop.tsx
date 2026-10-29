@@ -22,6 +22,7 @@ import { ShareShopButton } from "./share-shop-button";
 import { BrowseRail } from "./browse-rail";
 import { ShopPurchaseNote } from "./shop-purchase-note";
 import { ShopBuyingDetails } from "./shop-buying-details";
+import { CompareProductButton } from "./product-comparison-controls";
 
 export function CanonicalProduct({
   product,
@@ -75,6 +76,7 @@ export function CanonicalProduct({
               : "Available"
             : "Currently unavailable"}
         </p>
+        {!view.privatePreview ? <CompareProductButton id={product.id} name={product.name} /> : null}
         {large && product.description ? (
           detail ? (
             <section className="product-about" aria-label="Product information">
@@ -665,6 +667,27 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           <section id="shop-contact" className="shop-content-section">
             <h2>Make a connection</h2>
             <Contacts view={view} />
+          </section>
+        ) : null}
+        {view.selectedProduct && view.relatedProducts?.length ? (
+          <section
+            className="shop-content-section related-products"
+            aria-labelledby="related-products-heading"
+          >
+            <div className="storefront-section-heading">
+              <div>
+                <h2 id="related-products-heading">More from this department</h2>
+                <p>
+                  Available {view.selectedProduct.kind === "service" ? "services" : "products"} from{" "}
+                  {view.shop.name}.
+                </p>
+              </div>
+            </div>
+            <div className="product-grid">
+              {view.relatedProducts.map((product) => (
+                <CanonicalProduct key={product.id} product={product} view={view} />
+              ))}
+            </div>
           </section>
         ) : null}
         <ShopPurchaseNote

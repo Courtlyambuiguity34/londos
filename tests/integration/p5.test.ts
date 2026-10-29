@@ -449,6 +449,26 @@ test("guest requests require eligibility, stay scoped and deduplicate without pr
   await expect(publicContact(pool, shop)).rejects.toMatchObject({ status: 404 });
   await expect(submitGuestRequest(pool, shop, guest())).rejects.toMatchObject({ status: 404 });
 });
+test("product enquiries keep an owned listing in the merchant inbox and respect availability changes", async () => {
+  const item = await saveProduct(pool, actors.ownerA!, shop, null, product());
+  await saveContacts(pool, actors.ownerA!, shop, contacts());
+  await publishFixtureShop();
+  const input = { ...guest(), productId: item.id };
+  await submitGuestRequest(pool, shop, input);
+  const request = (await listGuestRequests(pool, actors.ownerA!, shop))[0]!;
+  expect(request).toMatchObject({ product_name: "Fictional shoes", product_slug: "shoes" });
+  await expect(listGuestRequests(pool, actors.ownerB!, shop)).rejects.toMatchObject({
+    status: 404,
+  });
+  await pool.query("UPDATE products SET availability='unavailable' WHERE id=$1", [item.id]);
+  await expect(
+    submitGuestRequest(pool, shop, { ...guest(), productId: item.id }),
+  ).rejects.toMatchObject({ status: 404 });
+  expect((await listGuestRequests(pool, actors.ownerA!, shop))[0]?.product_name).toBe(
+    "Fictional shoes",
+  );
+});
+
 test("real decoding strips metadata and produces bounded responsive rebuild variants", async () => {
   const input = await sharp(await image())
     .withMetadata({ orientation: 6 })

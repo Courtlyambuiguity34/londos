@@ -1,4 +1,139 @@
 /* Original Londos discovery composition; scoped to canonical public browsing. */
+.product-compare-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  align-items: center;
+  font: 13px / 1.6 var(--sans);
+  color: inherit;
+}
+.product-compare-control button,
+.product-compare-control > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: inherit;
+}
+.product-compare-control p {
+  flex-basis: 100%;
+}
+.discovery-card > .product-compare-control {
+  padding: 0 18px 14px;
+}
+.comparison-note {
+  max-width: 850px;
+  margin: 20px 0;
+}
+.comparison-table-region {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+.comparison-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  min-width: 680px;
+}
+.comparison-table caption {
+  text-align: left;
+  padding: 16px;
+  font-weight: 600;
+}
+.comparison-table th,
+.comparison-table td {
+  padding: 18px;
+  border: 1px solid var(--line);
+  vertical-align: top;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.comparison-table th {
+  background: var(--paper);
+}
+.comparison-table th:first-child {
+  width: 155px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.comparison-scroll-help {
+  font-size: 13px;
+  margin-top: 12px;
+}
+.related-products .image-placeholder {
+  width: 100%;
+  aspect-ratio: auto;
+  padding: 16px;
+  text-align: center;
+  white-space: normal;
+  font-size: 12px;
+}
+.comparison-table a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-block;
+  padding-block: 6px;
+}
+.comparison-table td {
+  white-space: pre-line;
+}
+.comparison-table small {
+  display: inline-block;
+  margin-top: 8px;
+}
+.comparison-selection {
+  margin: 32px 0;
+  max-width: 850px;
+}
+.comparison-selection p {
+  margin-bottom: 16px;
+}
+.comparison-page .notice {
+  margin-block: 20px;
+}
+.enquiry-product {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+.enquiry-product h2 {
+  font-size: 24px;
+}
+.enquiry-product p {
+  margin: 12px 0;
+}
+.enquiry-product a {
+  text-decoration: underline;
+}
+.guest-request-fields {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+@media (min-width: 851px) and (max-width: 1100px) {
+  .site-header {
+    gap: 20px;
+  }
+  .site-header .main-nav {
+    gap: 16px;
+  }
+  .site-header .brand-logo {
+    width: 160px;
+  }
+  .site-header .header-actions {
+    gap: 12px;
+  }
+}
 .shop-buying-details {
   margin-top: 20px;
   padding-top: 16px;

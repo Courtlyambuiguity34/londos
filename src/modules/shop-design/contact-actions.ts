@@ -1,7 +1,8 @@
 import type { ShopView } from "../../server/public-shop";
 
 export function shopContactActions(
-  view: Pick<ShopView, "contact" | "specification" | "shop" | "privatePreview">,
+  view: Pick<ShopView, "contact" | "specification" | "shop" | "privatePreview"> &
+    Partial<Pick<ShopView, "selectedProduct">>,
 ) {
   const c = view.contact;
   if (!c) return [];
@@ -25,7 +26,7 @@ export function shopContactActions(
           {
             kind: "enquiry",
             label: "Send an enquiry",
-            href: `/contact/${view.shop.id}`,
+            href: `/contact/${view.shop.id}${view.selectedProduct?.availability === "available" ? `?product=${view.selectedProduct.id}` : ""}`,
             external: false,
           },
         ]
@@ -34,5 +35,5 @@ export function shopContactActions(
       ? [{ kind: "website", label: "Merchant website", href: c.website, external: true }]
       : []),
   ];
-  return actions.map((action,index)=>({...action,primary:index===0}));
+  return actions.map((action, index) => ({ ...action, primary: index === 0 }));
 }

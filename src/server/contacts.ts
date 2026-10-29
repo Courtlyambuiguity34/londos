@@ -240,7 +240,11 @@ export async function listGuestRequests(pool: Pool, actor: Actor, shopId: string
   await catalogueAccess(pool, actor, shopId);
   return (
     await pool.query(
-      "SELECT id,kind,name,reply_to,message,status,version,created_at,erased_at FROM guest_requests WHERE shop_id=$1 ORDER BY created_at DESC,id LIMIT 20 OFFSET $2",
+      `SELECT r.id,r.kind,r.name,r.reply_to,r.message,r.status,r.version,r.created_at,r.erased_at,
+        CASE WHEN r.erased_at IS NULL THEN q.name ELSE NULL END AS product_name,
+        CASE WHEN r.erased_at IS NULL THEN q.slug ELSE NULL END AS product_slug
+       FROM guest_requests r LEFT JOIN products q ON q.id=r.product_id AND q.shop_id=r.shop_id
+       WHERE r.shop_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 20 OFFSET $2`,
       [shopId, z.number().int().min(0).max(10000).parse(offset)],
     )
   ).rows;

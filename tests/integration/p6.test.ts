@@ -27,6 +27,7 @@ import {
 import { saveProduct } from "../../src/server/catalogue";
 import { publicContact, saveContacts } from "../../src/server/contacts";
 import { PostgresSearch } from "../../src/server/discovery";
+import { readComparison } from "../../src/server/product-comparison";
 import type { ShopSpecification } from "../../src/modules/shop-design/specification";
 import { publicShopHref } from "../../src/modules/discovery/shop-continuity";
 import { shopViewHref } from "../../src/modules/shop-design/view-links";
@@ -834,6 +835,71 @@ test("budgets match exact canonical prices and the same eligible listing across 
     await pool.query(`UPDATE ${table} SET ${reset} WHERE ${key}=$1`, [id]);
     expect((await search.search({ ...budget, query: "" })).results).toHaveLength(1);
   }
+});
+
+test("comparison reads current public prices and removes restricted selections instead of trusting browser IDs", async () => {
+  await published();
+  expect(await readComparison(pool, [])).toEqual([]);
+  expect(
+    (await readComparison(pool, [product, randomUUID(), product])).map((row) => row.id),
+  ).toEqual([product]);
+  await pool.query(
+    "UPDATE products SET price_minor=9007199254740993,currency='USD',availability='unavailable' WHERE id=$1",
+    [product],
+  );
+  expect((await readComparison(pool, [product]))[0]).toMatchObject({
+    name: "Sample shoes",
+    price_minor: "9007199254740993",
+    currency: "USD",
+    availability: "unavailable",
+  });
+  for (const [table, key, state, reset] of [
+    ["departments", "id", "archived=true", "archived=false"],
+    ["products", "id", "availability='archived'", "availability='available'"],
+    ["shop_moderation", "shop_id", "state='suspended'", "state='clear'"],
+    ["shop_publication", "shop_id", "state='unpublished'", "state='active'"],
+    ["tenancies", "shop_id", "state='closed'", "state='active'"],
+  ]) {
+    const id = table === "departments" ? department : table === "products" ? product : shop;
+    await pool.query(`UPDATE ${table} SET ${state} WHERE ${key}=$1`, [id]);
+    expect(await readComparison(pool, [product])).toEqual([]);
+    await pool.query(`UPDATE ${table} SET ${reset} WHERE ${key}=$1`, [id]);
+    expect(await readComparison(pool, [product])).toHaveLength(1);
+  }
+  await expect(
+    readComparison(pool, [...Array.from({ length: 5 }, () => randomUUID())]),
+  ).rejects.toThrow();
+});
+
+test("related alternatives are bounded available listings of the same kind in the current shop and department", async () => {
+  await published();
+  const expected: string[] = [];
+  for (let index = 0; index < 8; index++) {
+    const id = randomUUID();
+    await pool.query(
+      "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability,position) VALUES($1,$2,$3,$4,$5,$6,$7,'UGX',1000,$8,$9)",
+      [
+        id,
+        shop,
+        seedIds.merchantA,
+        department,
+        index === 6 ? "service" : "product",
+        `Alternative ${index}`,
+        `alternative-${index}`,
+        index === 4 ? "unavailable" : index === 5 ? "archived" : "available",
+        index + 1,
+      ],
+    );
+    if (index < 4) expected.push(id);
+  }
+  const view = await readPublicShop(pool, shop, { product: "sample-shoes" });
+  expect(view.relatedProducts?.map((row) => row.id)).toEqual(expected);
+  expect(view.relatedProducts?.some((row) => row.id === product)).toBe(false);
+  expect((await readPublicShop(pool, shop)).relatedProducts).toEqual([]);
+  await pool.query("UPDATE departments SET archived=true WHERE id=$1", [department]);
+  expect((await readPublicShop(pool, shop, { product: "sample-shoes" })).relatedProducts).toEqual(
+    [],
+  );
 });
 
 test("live product/search changes become visible without worker projections", async () => {

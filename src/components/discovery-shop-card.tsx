@@ -6,6 +6,7 @@ import { formatMinorMoney } from "@/modules/money";
 import { ReadyImage } from "./ready-image";
 import { SaveShopButton } from "./save-shop-button";
 import { Icon } from "./icon";
+import { CompareProductButton } from "./product-comparison-controls";
 
 export function DiscoveryShopCard({ result }: { result: DiscoveryResult }) {
   const href = publicShopHref({
@@ -72,6 +73,7 @@ export function DiscoveryShopCard({ result }: { result: DiscoveryResult }) {
           )}
         </div>
       </Link>
+      {result.match ? <CompareProductButton id={result.match.id} name={result.match.name} /> : null}
       <SaveShopButton id={result.id} name={result.name} compact />
     </article>
   );

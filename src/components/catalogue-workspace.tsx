@@ -57,6 +57,8 @@ type CustomerRequest = {
   message: string;
   status: string;
   version: number;
+  product_name?: string | null;
+  product_slug?: string | null;
 };
 const catalogueSections = [
   { id: "products", label: "Products", description: "Your catalogue" },
@@ -1108,6 +1110,12 @@ export function CatalogueWorkspace({
                   <p>Personal content erased; minimal closed receipt retained.</p>
                 ) : null}
                 <p>{r.reply_to}</p>
+                {r.product_name ? (
+                  <p>
+                    <strong>About: {r.product_name}</strong>{" "}
+                    <span>View the current listing in Products & services.</span>
+                  </p>
+                ) : null}
                 <p className="request-message">{r.message}</p>
                 <p>{r.status}</p>
               </div>

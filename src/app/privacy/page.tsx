@@ -67,6 +67,13 @@ export default function Page() {
         remove the list. No account is needed, and saving a shop does not subscribe you to emails.
       </p>
       <p>
+        Product comparison optionally stores up to four product identifiers in this browser. It does
+        not synchronise between devices or store price snapshots. Clear selections on the comparison
+        page or clear site data to remove them. Opening a comparison checks current public listing
+        details. A comparison link contains the selected product identifiers, so anyone you share it
+        with can see the listings that remain public.
+      </p>
+      <p>
         Essential cookies support sign-in and account security. WhatsApp, merchant websites and
         other external links have their own privacy terms. We do not require an account for ordinary
         browsing.

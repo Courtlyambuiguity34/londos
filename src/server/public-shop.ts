@@ -64,6 +64,7 @@ export type ShopView = {
   applicationReviewed: boolean;
   selectedDepartment: PublicDepartment | null;
   selectedProduct: PublicProduct | null;
+  relatedProducts?: PublicProduct[];
   missingDestination: boolean;
   nextCursor: string | null;
   paginated: boolean;
@@ -188,6 +189,17 @@ export async function assemble(
       )
     ).rows;
   products.sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  const selectedProduct = destination.product ? (products[0] ?? null) : null;
+  const relatedProducts = selectedProduct
+    ? (
+        await client.query<PublicProduct>(
+          `SELECT ${productColumns} FROM products q JOIN departments d ON d.id=q.department_id AND d.shop_id=q.shop_id AND d.archived=false ${mediaJoin}
+     WHERE q.shop_id=$1 AND q.department_id=$2 AND q.id<>$3 AND q.kind=$4 AND q.availability='available'
+     ORDER BY q.position,q.id LIMIT 4`,
+          [row.id, selectedProduct.department_id, selectedProduct.id, selectedProduct.kind],
+        )
+      ).rows
+    : [];
   const contactRow = (
     await client.query(
       "SELECT phone,whatsapp,website,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled FROM shop_contacts WHERE shop_id=$1",
@@ -243,7 +255,8 @@ export async function assemble(
       ).rowCount,
     ),
     selectedDepartment,
-    selectedProduct: destination.product ? (products[0] ?? null) : null,
+    selectedProduct,
+    relatedProducts,
     missingDestination: Boolean(
       (destination.product && !products[0]) || (destination.department && !selectedDepartment),
     ),

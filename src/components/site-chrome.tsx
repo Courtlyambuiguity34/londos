@@ -4,6 +4,7 @@ import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
 import { workspaceAccess } from "@/server/navigation";
 import { MobileNavigation } from "./mobile-navigation";
+import { CompareNavigationLink } from "./product-comparison-controls";
 
 export async function SiteHeader() {
   const mode = previewCapabilities().mode;
@@ -32,6 +33,7 @@ export async function SiteHeader() {
         <nav aria-label="Main navigation" className="main-nav">
           <Link href="/search">Explore shops</Link>
           <Link href="/saved">Saved shops</Link>
+          <CompareNavigationLink label="Compare" />
           <Link href="/about">Our mall</Link>
           <Link href="/help">How to shop</Link>
         </nav>
@@ -92,6 +94,7 @@ export async function SiteFooter() {
             <Link href="/rent-a-shop">Become a shopkeeper</Link>
           ) : null}
           <Link href="/about">About Londos</Link>
+          <CompareNavigationLink />
           <Link href="/help">Shopping help</Link>
           <Link href="/install">Install Londos</Link>
           <Link href="/privacy">Privacy</Link>

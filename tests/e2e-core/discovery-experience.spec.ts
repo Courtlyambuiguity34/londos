@@ -12,6 +12,7 @@ import { imageVariants } from "../../src/server/media";
 import { saveDesign, publishDesign } from "../../src/server/shop-design";
 import { applyShopTheme } from "../../src/modules/shop-themes/catalogue";
 import { SAVED_SHOPS_KEY } from "../../src/modules/discovery/saved-contract";
+import { COMPARISON_KEY } from "../../src/modules/discovery/comparison";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const origin = "http://127.0.0.1:3101";
@@ -226,7 +227,7 @@ test("product information and mobile contact remain readable and follow current 
           page
             .locator("#product-contact")
             .getByRole("link", { name: "Send an enquiry", exact: true }),
-        ).toHaveAttribute("href", `/contact/${shop.id}`);
+        ).toHaveAttribute("href", `/contact/${shop.id}?product=${product.id}`);
         const footer = page
           .locator(".site-footer")
           .getByRole("link", { name: "Terms of use", exact: true });
@@ -442,7 +443,7 @@ test("product contacts, scoped search and public share fallbacks work without le
   expect(new URL(href!).searchParams.get("text")).toContain(`${origin}${path}`);
   await expect(
     contacts.getByRole("link", { name: "Send an enquiry", exact: true }),
-  ).toHaveAttribute("href", `/contact/${shops[0]!.id}`);
+  ).toHaveAttribute("href", new RegExp(`^/contact/${shops[0]!.id}\\?product=[a-f0-9-]+$`));
   await page.getByRole("button", { name: "Share", exact: true }).click();
   expect(await page.evaluate(() => (window as Window & { copied?: string }).copied)).toBe(
     origin + path,
@@ -876,6 +877,273 @@ test("shopping help is discoverable, keyboard accessible and usable without Java
     ).toBeVisible();
     await basic.getByRole("link", { name: "Open your own shop", exact: true }).click();
     await expect(basic).toHaveURL(/\/rent-a-shop$/);
+  } finally {
+    await context.close();
+  }
+});
+
+test("comparison keeps only IDs, syncs tabs, rechecks prices and reads shared links without JavaScript", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(90_000);
+  const first = shops[0]!,
+    second = shops[1]!;
+  const items = (
+    await pool.query(
+      "SELECT id,shop_id,price_minor::text FROM products WHERE shop_id=ANY($1::uuid[]) AND slug='city-carry'",
+      [[first.id, second.id]],
+    )
+  ).rows;
+  const firstId = items.find((row) => row.shop_id === first.id).id,
+    secondId = items.find((row) => row.shop_id === second.id).id;
+  await page.goto(`/search?q=City&category=fashion`);
+  await page.getByRole("button", { name: "Compare City carry", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Compare City carry", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const other = await page.context().newPage();
+  try {
+    await other.goto(`/shops/${second.slug}/products/city-carry`);
+    await other.getByRole("button", { name: "Compare City carry", exact: true }).click();
+    await expect(
+      page
+        .locator(".product-compare-control")
+        .getByRole("link", { name: "View comparison (2)", exact: true }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), COMPARISON_KEY),
+    ).toEqual([firstId, secondId]);
+    await other
+      .locator(".storefront-product-detail")
+      .getByRole("link", { name: "View comparison (2)", exact: true })
+      .click();
+    await expect(other.getByRole("table")).toContainText(first.name);
+    await expect(other.getByRole("table")).toContainText(second.name);
+    const shared = other.url();
+    for (const width of [320, 390, 900, 1440]) {
+      await other.setViewportSize({ width, height: 1000 });
+      await inspect(other);
+      if (width === 390 || width === 1440) {
+        await other.evaluate(() => {
+          (document.activeElement as HTMLElement)?.blur();
+          window.scrollTo({ top: 0, behavior: "instant" });
+        });
+        await other.screenshot({
+          path: `docs/evidence/images/platform-comparison-${width}-2026-10-29.png`,
+          fullPage: true,
+        });
+      }
+    }
+    await pool.query("UPDATE products SET price_minor=99001 WHERE id=$1", [firstId]);
+    await other.reload();
+    await expect(other.getByRole("table")).toContainText("99,001");
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 1280, height: 1200 },
+    });
+    try {
+      const basic = await context.newPage();
+      await basic.goto(shared);
+      await expect(basic.getByRole("table")).toContainText("99,001");
+    } finally {
+      await context.close();
+    }
+    await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [first.id]);
+    await other.reload();
+    await expect(other.getByRole("table")).not.toContainText(first.name);
+    await expect(
+      other.getByText("Some selections are no longer public and have been left out.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await other.getByRole("link", { name: "Remove City carry", exact: true }).click();
+    await expect(other.getByRole("table")).toHaveCount(0);
+    expect(
+      await other.evaluate((key) => JSON.parse(localStorage.getItem(key)!), COMPARISON_KEY),
+    ).toEqual([firstId]);
+    for (const query of [
+      "products=invalid",
+      `products=${Array.from({ length: 5 }, () => randomUUID()).join(",")}`,
+      `products=${firstId}&products=${secondId}`,
+    ]) {
+      await other.goto(`/compare?${query}`);
+      await expect(
+        other.getByRole("heading", { name: "Check these selections.", exact: true }),
+      ).toBeVisible();
+    }
+  } finally {
+    await other.close();
+    await pool.query("UPDATE products SET price_minor=$2 WHERE id=$1", [
+      firstId,
+      items.find((row) => row.id === firstId).price_minor,
+    ]);
+    await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [first.id]);
+  }
+});
+
+test("comparison recovers from full and blocked browser storage", async ({ page, browser }) => {
+  const shop = shops[0]!,
+    product = (
+      await pool.query("SELECT id FROM products WHERE shop_id=$1 AND slug='city-carry'", [shop.id])
+    ).rows[0];
+  await page.goto(`/shops/${shop.slug}/products/city-carry`);
+  await page.evaluate(
+    ({ key, ids }) => {
+      localStorage.setItem(key, JSON.stringify(ids));
+      dispatchEvent(new StorageEvent("storage", { key }));
+    },
+    { key: COMPARISON_KEY, ids: Array.from({ length: 4 }, () => randomUUID()) },
+  );
+  await page.getByRole("button", { name: "Compare City carry", exact: true }).click();
+  await expect(
+    page.getByText("Compare up to 4 products. Remove a selection first.", { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).length, COMPARISON_KEY),
+  ).toBe(4);
+  const context = await browser.newContext();
+  try {
+    await context.addInitScript(() => {
+      Storage.prototype.setItem = () => {
+        throw new DOMException("blocked", "SecurityError");
+      };
+    });
+    const blocked = await context.newPage();
+    await blocked.goto(`${origin}/shops/${shop.slug}/products/city-carry`);
+    await blocked.getByRole("button", { name: "Compare City carry", exact: true }).click();
+    await expect(
+      blocked.getByText(
+        "Your browser could not save this selection. Allow local storage and try again.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    expect(
+      await blocked.evaluate(
+        ({ key, id }) => {
+          try {
+            return localStorage.getItem(key)?.includes(id) ?? false;
+          } catch {
+            return false;
+          }
+        },
+        { key: COMPARISON_KEY, id: product.id },
+      ),
+    ).toBe(false);
+  } finally {
+    await context.close();
+  }
+});
+
+test("related listings and product enquiries carry through to the merchant inbox", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(90_000);
+  const shop = shops[0]!,
+    source = (
+      await pool.query(
+        "SELECT id,merchant_id,department_id FROM products WHERE shop_id=$1 AND slug='city-carry'",
+        [shop.id],
+      )
+    ).rows[0];
+  for (const [slug, name, availability] of [
+    ["weekender", "Weekender bag", "available"],
+    ["retired-bag", "Retired bag", "archived"],
+    ["unavailable-bag", "Unavailable bag", "unavailable"],
+  ])
+    await pool.query(
+      "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability) VALUES($1,$2,$3,$4,'product',$5,$6,'UGX',65000,$7) ON CONFLICT(shop_id,slug) DO NOTHING",
+      [randomUUID(), shop.id, source.merchant_id, source.department_id, name, slug, availability],
+    );
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await page.goto(`/shops/${shop.slug}/products/city-carry`);
+  const related = page.getByRole("region", { name: "More from this department", exact: true });
+  await expect(related.getByRole("link", { name: "Weekender bag", exact: true })).toBeVisible();
+  await expect(related).not.toContainText("Retired bag");
+  await expect(related).not.toContainText("Unavailable bag");
+  await inspect(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement)?.blur();
+    window.scrollTo({ top: 0, behavior: "instant" });
+  });
+  await related.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "docs/evidence/images/platform-related-products-390-2026-10-29.png",
+    fullPage: false,
+  });
+  await page
+    .locator("#product-contact")
+    .getByRole("link", { name: "Send an enquiry", exact: true })
+    .click();
+  await expect(page).toHaveURL((url) => url.searchParams.get("product") === source.id);
+  await expect(
+    page.getByRole("region", { name: "Product enquiry details", exact: true }),
+  ).toContainText("City carry");
+  await page.getByLabel("Your name", { exact: true }).fill("Fictional sourcing customer");
+  await page
+    .getByLabel("Email or international phone number", { exact: true })
+    .fill("sourcing@londos.invalid");
+  await page
+    .getByLabel("Message to the shop", { exact: true })
+    .fill("Please quote for three bags, blue, needed next month.");
+  await page.getByRole("button", { name: "Send request", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Request received.");
+  await inspect(page);
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement)?.blur();
+    window.scrollTo({ top: 0, behavior: "instant" });
+  });
+  await page.screenshot({
+    path: "docs/evidence/images/platform-product-enquiry-390-2026-10-29.png",
+    fullPage: true,
+  });
+  expect(
+    (
+      await pool.query(
+        "SELECT product_id FROM guest_requests WHERE shop_id=$1 AND reply_to='sourcing@londos.invalid'",
+        [shop.id],
+      )
+    ).rows[0]?.product_id,
+  ).toBe(source.id);
+  const foreign = (
+    await pool.query("SELECT id FROM products WHERE shop_id=$1 LIMIT 1", [shops[1]!.id])
+  ).rows[0];
+  expect((await page.goto(`/contact/${shop.id}?product=${foreign.id}`))?.status()).toBe(404);
+  const auth = createAuth(pool, coreConfig(), true),
+    account = {
+      email: `sourcing-owner-${randomUUID()}@londos.invalid`,
+      password: `Fictional-${randomUUID()}`,
+    };
+  const person = await auth.api.signUpEmail({
+    body: { ...account, name: "Fictional sourcing owner" },
+  });
+  await pool.query('UPDATE "user" SET "emailVerified"=true WHERE id=$1', [person.user.id]);
+  await pool.query("INSERT INTO memberships(merchant_id,user_id,role) VALUES($1,$2,'owner')", [
+    source.merchant_id,
+    person.user.id,
+  ]);
+  const context = await browser.newContext();
+  try {
+    const owner = await context.newPage();
+    await owner.goto(`${origin}/sign-in?next=/shopkeeper`);
+    await owner.getByLabel("Email", { exact: true }).fill(account.email);
+    await owner.getByLabel("Password", { exact: true }).fill(account.password);
+    await owner.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(owner).toHaveURL((url) => url.pathname === "/shopkeeper");
+    await owner.goto(`${origin}/shopkeeper/shops/${shop.id}/catalogue`);
+    await owner.getByRole("tab", { name: /^Customer requests/ }).click();
+    await expect(owner.getByText("About: City carry", { exact: true })).toBeVisible();
+    await expect(
+      owner.getByText("Please quote for three bags, blue, needed next month.", { exact: true }),
+    ).toBeVisible();
+    await owner
+      .getByRole("button", {
+        name: "Acknowledge request from Fictional sourcing customer",
+        exact: true,
+      })
+      .click();
+    await expect(owner.getByRole("status")).toContainText("Request acknowledged.");
   } finally {
     await context.close();
   }

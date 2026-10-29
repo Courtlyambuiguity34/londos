@@ -94,6 +94,7 @@ test("primary pages have no automated WCAG A/AA violations or horizontal overflo
     "/shops/annette-fashion-house/products/everyday-canvas-sneakers",
     "/rent-a-shop",
     "/help",
+    "/compare",
     "/shopkeeper",
   ]) {
     await page.goto(path);

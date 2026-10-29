@@ -58,6 +58,7 @@ export type DiscoveryResult = {
   product_slug: string | null;
   image?: { id: string; alt: string; width: number; height: number } | null;
   match?: {
+    id: string;
     name: string;
     kind: "product" | "service";
     price_minor: string | null;
@@ -128,7 +129,7 @@ export class PostgresSearch implements SearchService {
           `WITH eligible AS (SELECT s.id,s.name,s.slug,s.tagline,s.category,s.created_at FROM shops s ${eligibilityJoins} JOIN shop_designs sd ON sd.shop_id=s.id AND sd.published_id IS NOT NULL WHERE length($1::text)<=80 AND ${eligibleStates} AND ($2::text IS NULL OR s.category=$2) AND ($3::uuid IS NULL OR s.id=$3) AND ($7::uuid[] IS NULL OR s.id=ANY($7))
      AND (($8::text='all' AND $9::text='all' AND $10::text IS NULL) OR EXISTS(SELECT 1 FROM products filter_product JOIN departments filter_department ON filter_department.id=filter_product.department_id AND filter_department.shop_id=s.id AND filter_department.archived=false WHERE filter_product.shop_id=s.id AND filter_product.availability<>'archived' AND ${listingFilter("filter_product")}))), ${query}
    SELECT e.id,e.name,e.slug,e.tagline,e.category,COALESCE(budget_match.name,b.context) AS context,COALESCE(budget_match.department_slug,b.department_slug) AS department_slug,COALESCE(budget_match.slug,b.product_slug) AS product_slug,b.score,
-     CASE WHEN match_product.id IS NOT NULL THEN json_build_object('name',match_product.name,'kind',match_product.kind,'price_minor',match_product.price_minor::text,'currency',match_product.currency,'availability',match_product.availability) ELSE NULL END AS match,
+     CASE WHEN match_product.id IS NOT NULL THEN json_build_object('id',match_product.id,'name',match_product.name,'kind',match_product.kind,'price_minor',match_product.price_minor::text,'currency',match_product.currency,'availability',match_product.availability) ELSE NULL END AS match,
      (SELECT json_build_object('id',a.id,'alt',a.alt,'width',a.width,'height',a.height)
       FROM media_assets a JOIN shops image_shop ON image_shop.id=a.shop_id AND image_shop.merchant_id=a.merchant_id
       JOIN shop_designs image_design ON image_design.shop_id=a.shop_id
