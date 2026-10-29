@@ -1,5 +1,15 @@
 # Build status and next model setting
 
+**UI clarity and mall navigation — 29 October 2026:** the current hosted branch
+was reviewed from `3a87ebd` before a fresh implementation. Its image-led cards,
+saved shops, themes and newer workspace flows are retained. Public header/footer
+visibility now follows client route changes when leaving or returning to a private
+workspace; mall entry opens at the header. Product descriptions have clearer
+sections and the existing mobile contact bar has safe-area/focus clearance.
+The [session review](evidence/SESSION-UI-NAVIGATION-2026-10-29.md) records the
+before-fix reproduction, adaptation of earlier UI goals and current verification.
+No dependency, environment or migration change is required.
+
 **Catalogue recovery update — 27 October 2026:** continuing from `aa1a8ea` on the
 hosted branch. Department names are unique per shop, archived departments have
 activation controls, and the product selector uses active departments. Confirmed

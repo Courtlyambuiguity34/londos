@@ -2,12 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "./icon";
 import { previewCapabilities } from "@/server/preview";
-import { workspaceAccess, requestPathname, isWorkspacePath } from "@/server/navigation";
+import { workspaceAccess } from "@/server/navigation";
 import { MobileNavigation } from "./mobile-navigation";
 
 export async function SiteHeader() {
-  const pathname = await requestPathname();
-  if (isWorkspacePath(pathname)) return null;
   const mode = previewCapabilities().mode;
   const access = await workspaceAccess();
   return (
@@ -19,8 +17,8 @@ export async function SiteHeader() {
             : "Preview mall · Fictional shops and illustrated products. Purchases are unavailable in this preview."}
         </div>
       ) : null}
-      <header className="site-header shell">
-        <Link href="/" className="wordmark" aria-label="Londos home">
+      <header id="mall-top" className="site-header shell">
+        <Link href="/#mall-top" className="wordmark" aria-label="Londos home">
           <Image
             src="/brand/londos-logo.png"
             alt=""
@@ -64,15 +62,13 @@ export async function SiteHeader() {
 }
 
 export async function SiteFooter() {
-  const pathname = await requestPathname();
-  if (isWorkspacePath(pathname)) return null;
   const access = await workspaceAccess();
   const mode = previewCapabilities().mode;
   return (
     <footer className="site-footer">
       <div className="shell footer-inner">
         <div>
-          <Link href="/" className="wordmark" aria-label="Londos home">
+          <Link href="/#mall-top" className="wordmark" aria-label="Londos home">
             <Image
               src="/brand/londos-logo.png"
               alt=""
@@ -89,7 +85,7 @@ export async function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer navigation">
-          <Link href="/search">Explore the mall</Link>
+          <Link href="/search#mall-top">Explore the mall</Link>
           <Link href="/saved">Saved shops</Link>
           {!access.landlord || access.shopkeeper ? (
             <Link href="/rent-a-shop">Become a shopkeeper</Link>

@@ -132,7 +132,15 @@ afterAll(async () => {
   if (original.local === undefined) delete process.env.LONDOS_LOCAL_ADAPTERS;
   else process.env.LONDOS_LOCAL_ADAPTERS = original.local;
   await pool?.end();
-  await parent.query(`DROP DATABASE IF EXISTS ${name} WITH(FORCE)`);
+  // Let authentication's background database work drain before removing the
+  // owned disposable database. FORCE can otherwise emit an idle-client error
+  // after the assertions pass and turn successful verification into a failure.
+  for (let attempt = 0; attempt < 300; attempt++) {
+    if (!(await parent.query("SELECT 1 FROM pg_stat_activity WHERE datname=$1", [name])).rowCount)
+      break;
+    await delay(50);
+  }
+  await parent.query(`DROP DATABASE IF EXISTS ${name}`);
   await parent.end();
   if (directory) await rm(directory, { recursive: true, force: true });
 });
@@ -356,7 +364,12 @@ test("hosted address edits preserve old links, reject takeover, stale versions a
       version: other.shop.version,
     }),
   ).rejects.toMatchObject({ code: "address_unavailable" });
-  expect((await paid("Harbour Address")).shop.slug).toBe("harbour-address-2");
+  // The current address contract reserves historical addresses and requires
+  // choosing another address explicitly; it no longer silently adds a suffix.
+  await expect(paid("Harbour Address")).rejects.toMatchObject({
+    status: 409,
+    code: "address_unavailable",
+  });
   const created = (
     await pool.query('SELECT "createdAt" FROM session WHERE id=$1', [actors.ownerA!.sessionId])
   ).rows[0].createdAt;

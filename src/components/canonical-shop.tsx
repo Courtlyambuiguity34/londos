@@ -74,7 +74,16 @@ export function CanonicalProduct({
               : "Available"
             : "Currently unavailable"}
         </p>
-        {large ? <p>{product.description}</p> : null}
+        {large && product.description ? (
+          detail ? (
+            <section className="product-about" aria-label="Product information">
+              <h2>{product.kind === "service" ? "About this service" : "About this product"}</h2>
+              <p>{product.description}</p>
+            </section>
+          ) : (
+            <p>{product.description}</p>
+          )
+        ) : null}
         {detail ? (
           <div id="product-contact" className="product-contact-panel">
             <h2>Interested in this {product.kind === "service" ? "service" : "product"}?</h2>
@@ -662,7 +671,10 @@ export function CanonicalShop({ view, proposal = false }: { view: ShopView; prop
           development={development}
           {...(!view.privatePreview ? { shopId: view.shop.id } : {})}
         />
-        {view.selectedProduct && shopContactActions(view).length && !view.privatePreview ? (
+        {view.selectedProduct &&
+        !view.missingDestination &&
+        shopContactActions(view).length &&
+        !view.privatePreview ? (
           <aside className="product-mobile-contact" aria-label="Quick product contact">
             <div>
               <strong>

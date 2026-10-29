@@ -3,6 +3,7 @@ import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { PwaRegistrar } from "@/components/pwa-registrar";
+import { PublicSiteChrome } from "@/components/public-site-chrome";
 import { assertPreviewConfiguration } from "@/server/preview";
 import "./globals.css";
 import "./workspaces.css";
@@ -38,9 +39,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <SiteHeader />
+        <PublicSiteChrome>
+          <SiteHeader />
+        </PublicSiteChrome>
         <main id="main">{children}</main>
-        <SiteFooter />
+        <PublicSiteChrome>
+          <SiteFooter />
+        </PublicSiteChrome>
       </body>
     </html>
   );

@@ -23,6 +23,7 @@ export default defineConfig({
     {
       name: "core-desktop",
       testMatch: [
+        "workspace-mall.spec.ts",
         "public-browsing.spec.ts",
         "design-studio.spec.ts",
         "workspace-experience.spec.ts",
@@ -57,6 +58,7 @@ export default defineConfig({
     {
       name: "core-mobile",
       testMatch: [
+        "workspace-mall.spec.ts",
         "audit.spec.ts",
         "mobile.spec.ts",
         "services.spec.ts",

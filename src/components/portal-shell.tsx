@@ -46,7 +46,7 @@ export function PortalShell({
         className="portal-sidebar"
         aria-label={kind === "landlord" ? "Landlord navigation" : "Shopkeeper navigation"}
       >
-        <Link href="/" className="portal-brand">
+        <Link href="/#mall-top" className="portal-brand">
           <Image
             src="/brand/londos-logo-dark.png"
             width={180}
@@ -72,7 +72,7 @@ export function PortalShell({
           links={safeLinks}
           currentPath={currentPath ?? homeHref}
         />
-        <Link className="portal-back" href="/">
+        <Link className="portal-back" href="/#mall-top">
           ← Back to Londos mall
         </Link>
       </aside>
@@ -95,7 +95,7 @@ export function PortalShell({
               ]}
             />
             <nav className="portal-topbar-actions" aria-label="Quick links">
-              <Link href="/" className="portal-topbar-mall">
+              <Link href="/#mall-top" className="portal-topbar-mall">
                 Visit mall
               </Link>
               <Link

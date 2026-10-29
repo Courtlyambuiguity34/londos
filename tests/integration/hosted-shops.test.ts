@@ -233,6 +233,9 @@ test("hosted merchant can create a product, preview privately, publish, discover
   expect(publicProduct.status).toBe(200);
   const productHTML = await publicProduct.text();
   expect(productHTML).toContain("34,500");
+  expect(productHTML).toContain("About this product");
+  expect(productHTML).toContain("product-contact-panel");
+  expect(productHTML).not.toContain('aria-label="Quick product contact"');
   expect(productHTML).toContain(
     `rel="canonical" href="${canonicalOrigin}${publicPath}/products/hosted-test-shoes"`,
   );

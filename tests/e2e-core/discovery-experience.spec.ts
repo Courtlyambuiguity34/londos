@@ -185,6 +185,99 @@ async function shot(page: Page, name: string, fullPage = true) {
   });
 }
 
+test("product information and mobile contact remain readable and follow current catalogue state", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const shop = shops[0]!,
+    path = `/shops/${shop.slug}/products/city-carry`;
+  const product = (
+    await pool.query(
+      "SELECT id,description,availability FROM products WHERE shop_id=$1 AND slug='city-carry'",
+      [shop.id],
+    )
+  ).rows[0];
+  const contact = (
+    await pool.query(
+      "SELECT phone,whatsapp,website,enquiries_enabled FROM shop_contacts WHERE shop_id=$1",
+      [shop.id],
+    )
+  ).rows[0];
+  try {
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      await expect(
+        page.getByRole("heading", { name: "About this product", exact: true }),
+      ).toBeVisible();
+      await expect(page.getByRole("region", { name: "Product information" })).toContainText(
+        product.description,
+      );
+      const action = page.getByRole("complementary", {
+        name: "Quick product contact",
+        exact: true,
+      });
+      if (width <= 600) {
+        await expect(action).toBeInViewport();
+        await expect(action).toContainText("125,000");
+        await action.getByRole("link", { name: "Contact shop", exact: true }).click();
+        await expect(page.locator("#product-contact")).toBeInViewport();
+        await expect(
+          page
+            .locator("#product-contact")
+            .getByRole("link", { name: "Send an enquiry", exact: true }),
+        ).toHaveAttribute("href", `/contact/${shop.id}`);
+        const footer = page
+          .locator(".site-footer")
+          .getByRole("link", { name: "Terms of use", exact: true });
+        await footer.focus();
+        await expect
+          .poll(async () => {
+            const link = await footer.boundingBox(),
+              bar = await action.boundingBox();
+            return Boolean(link && bar && link.y + link.height <= bar.y);
+          })
+          .toBe(true);
+      } else {
+        await expect(action).toBeHidden();
+      }
+      await inspect(page);
+    }
+    await pool.query("UPDATE products SET description='',version=version+1 WHERE id=$1", [
+      product.id,
+    ]);
+    await page.reload();
+    await expect(page.getByRole("region", { name: "Product information" })).toHaveCount(0);
+    await pool.query(
+      "UPDATE shop_contacts SET phone='',whatsapp='',website='',enquiries_enabled=false,version=version+1 WHERE shop_id=$1",
+      [shop.id],
+    );
+    await page.reload();
+    await expect(
+      page.getByRole("complementary", { name: "Quick product contact", exact: true }),
+    ).toHaveCount(0);
+    await pool.query("UPDATE products SET availability='archived',version=version+1 WHERE id=$1", [
+      product.id,
+    ]);
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "This item has moved or is unavailable.", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("complementary", { name: "Quick product contact", exact: true }),
+    ).toHaveCount(0);
+  } finally {
+    await pool.query(
+      "UPDATE products SET description=$2,availability=$3,version=version+1 WHERE id=$1",
+      [product.id, product.description, product.availability],
+    );
+    await pool.query(
+      "UPDATE shop_contacts SET phone=$2,whatsapp=$3,website=$4,enquiries_enabled=$5,version=version+1 WHERE shop_id=$1",
+      [shop.id, contact.phone, contact.whatsapp, contact.website, contact.enquiries_enabled],
+    );
+  }
+});
+
 test("mall cards, category context and exact product prices are accessible on desktop and phones", async ({
   page,
 }) => {

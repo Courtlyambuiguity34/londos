@@ -20,9 +20,9 @@ function fixture(web = "console.log('WEB');", worker = "console.log('WORKER');")
 const env = { NODE_ENV: "production" as const, LONDOS_EMBEDDED_WORKER: "true" };
 const staying = (label: string) => `
   if (Object.keys(process.env).some(k => k.startsWith('LONDOS_BOOTSTRAP_'))) process.exit(9);
-  console.log('${label}_READY');
   setInterval(() => {}, 1000);
   process.on('SIGTERM', () => { console.log('${label}_STOPPED'); process.exit(0); });
+  console.log('${label}_READY');
 `;
 test.each([
   ["migrate", "migrate"],
@@ -86,11 +86,15 @@ test("container termination is forwarded to both children", async () => {
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
+  let terminationSent = false;
   const timeout = setTimeout(() => child.kill("SIGKILL"), 5000);
   try {
     child.stdout.on("data", (chunk) => {
       output += String(chunk);
-      if (output.includes("WEB_READY") && output.includes("WORKER_READY")) child.kill("SIGTERM");
+      if (!terminationSent && output.includes("WEB_READY") && output.includes("WORKER_READY")) {
+        terminationSent = true;
+        child.kill("SIGTERM");
+      }
     });
     const code = await new Promise<number | null>((resolve, reject) => {
       child.on("exit", resolve);
