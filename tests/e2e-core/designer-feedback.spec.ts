@@ -141,6 +141,20 @@ test("designer failures give safe actionable references; unsaved drafts cannot p
     await page
       .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
       .check();
+    if (
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .isVisible()
+    )
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
     const publicLink = page.getByRole("region", { name: "Public shop link" });

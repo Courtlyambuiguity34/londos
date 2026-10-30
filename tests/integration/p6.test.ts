@@ -144,7 +144,7 @@ async function draft() {
 }
 async function published() {
   const d = await draft();
-  return publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true });
+  return publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true);
 }
 test("008 to 009 preserves canonical rows and new writes/revisions remain scoped and immutable", async () => {
   expect(
@@ -295,7 +295,7 @@ test("staff requires explicit design and shop grants, and publishing needs its s
     specification: specification(),
   });
   await expect(
-    publishDesign(pool, actors.staff!, shop, { ...d, confirm: true }),
+    publishDesign(pool, actors.staff!, shop, { ...d, confirm: true }, true),
   ).rejects.toMatchObject({ status: 404 });
 });
 test("concurrent draft saves cannot silently overwrite; patch and restore append new revisions", async () => {
@@ -337,7 +337,7 @@ test("publication needs fresh authentication and revalidates references/tenancy/
   ]);
   try {
     await expect(
-      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }),
+      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true),
     ).rejects.toMatchObject({ status: 403 });
   } finally {
     await pool.query('UPDATE session SET "createdAt"=now() WHERE id=$1', [
@@ -346,19 +346,19 @@ test("publication needs fresh authentication and revalidates references/tenancy/
   }
   await pool.query("UPDATE shop_moderation SET state='suspended' WHERE shop_id=$1", [shop]);
   await expect(
-    publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }),
+    publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true),
   ).rejects.toMatchObject({ status: 409 });
   await pool.query("UPDATE shop_moderation SET state='clear' WHERE shop_id=$1", [shop]);
   await pool.query("UPDATE departments SET archived=true WHERE id=$1", [department]);
   await expect(
-    publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }),
+    publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true),
   ).rejects.toMatchObject({ status: 404 });
 });
 test("publication races, rollback and catalogue changes resolve current prices without restoring business data", async () => {
   const d = await draft(),
     results = await Promise.allSettled([
-      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }),
-      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }),
+      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true),
+      publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true),
     ]);
   expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
   await saveProduct(pool, actors.ownerA!, shop, product, {
@@ -379,7 +379,7 @@ test("publication races, rollback and catalogue changes resolve current prices w
     revision: 1,
     summary: "Restore layout only",
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...restored, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...restored, confirm: true }, true);
   const view = await readPublicShop(pool, shop);
   expect(view.products[0]).toMatchObject({
     name: "Updated sample shoes",
@@ -662,7 +662,7 @@ test("refinements qualify the full result set before paging and bind cursors wit
         spaces: [{ id: "care", type: "department", version: 1, departmentId: dept, limit: 8 }],
       },
     });
-    await publishDesign(pool, actors.ownerA!, id, { ...draft, confirm: true });
+    await publishDesign(pool, actors.ownerA!, id, { ...draft, confirm: true }, true);
     if (kind === "service" && availability === "available") expected.add(id);
   }
   const search = new PostgresSearch(pool),
@@ -983,7 +983,7 @@ test("cursor pages are bounded, scope-bound and contain no duplicated shops or t
       ],
     },
   });
-  await publishDesign(pool, actors.ownerA!, sibling, { ...siblingDraft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, sibling, { ...siblingDraft, confirm: true }, true);
   const search = new PostgresSearch(pool),
     all = new Set<string>();
   let cursor: string | undefined;
@@ -1071,7 +1071,7 @@ test("discovery product matches expose current prices and eligible product image
     summary: "Product match fixture",
     specification: { ...specification(), branding: { coverAssetId: cover, logoAssetId: null } },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
   const search = new PostgresSearch(pool);
   expect((await search.search({ query: "", shopId: shop })).results[0]).toMatchObject({
     image: { id: cover },
@@ -1149,7 +1149,7 @@ test("shop branding publishes actual ready uploads on discovery without exposing
     expect.arrayContaining([cover, logo]),
   );
   await expect(readPublicVariant(pool, shop, cover, "card")).rejects.toMatchObject({ status: 404 });
-  const live = await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  const live = await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
   const discovery = new PostgresSearch(pool);
   expect((await discovery.search({ query: "", shopId: shop })).results[0]?.image).toMatchObject({
     id: cover,
@@ -1181,7 +1181,7 @@ test("shop branding publishes actual ready uploads on discovery without exposing
       status: 409,
       code: "media_in_use",
     });
-  const next = await publishDesign(pool, actors.ownerA!, shop, { ...changed, confirm: true });
+  const next = await publishDesign(pool, actors.ownerA!, shop, { ...changed, confirm: true }, true);
   expect((await discovery.search({ query: "", shopId: shop })).results[0]?.image?.id).toBe(
     replacement,
   );
@@ -1312,11 +1312,17 @@ test("theme selection remains private until publication and preserves catalogue 
     await expect(readPublicShop(pool, shop)).rejects.toMatchObject({ status: 404 });
   }
   const selected = await readDesign(pool, actors.ownerA!, shop);
-  const live = await publishDesign(pool, actors.ownerA!, shop, {
-    version,
-    revision: selected.revision!,
-    confirm: true,
-  });
+  const live = await publishDesign(
+    pool,
+    actors.ownerA!,
+    shop,
+    {
+      version,
+      revision: selected.revision!,
+      confirm: true,
+    },
+    true,
+  );
   expect((await readPublicShop(pool, shop)).specification.storefrontTheme).toBe(
     shopThemes.at(-1)!.id,
   );
@@ -1372,7 +1378,7 @@ test("a published narrative-only design still shows its current owned catalogue 
       ],
     },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
   const current = await readPublicShop(pool, shop);
   expect(current.products.map((product) => product.id)).toEqual([product]);
   expect(current.departments.map((d) => d.id)).toContain(department);

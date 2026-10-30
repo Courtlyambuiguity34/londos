@@ -1,5 +1,17 @@
 # Build status and next model setting
 
+**Shopkeeper, landlord and shopper journeys — 30 October 2026:** continued from
+`6f3065b`. Normal product entry now uses three focused steps with direct photo
+upload, automatic selection, an explicit hidden fallback and inline department
+creation. Shop readiness and publication review expose photo gaps; department
+thumbnails find photos across the whole department. A single application form
+can save, upload private evidence and submit for review, with a resumable draft
+on partial failure. Landlords have queue filters, counts and optional email
+alerts. The [journey review](evidence/PERSONA-JOURNEYS-2026-10-30.md) records
+behavior, validation and remaining limits. Migration
+`038_operator_review_alerts.sql` is required through the existing migration path;
+readiness now requires it. No new provider, environment key or package is needed.
+
 **Merchant entry and organisation — 30 October 2026:** reviewed product and shop
 setup workflows from Alibaba, Amazon and Shopify against `e8e7a69`. Merchants can
 create departments within product entry, duplicate into an unsaved hidden copy,

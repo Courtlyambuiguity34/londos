@@ -122,7 +122,12 @@ test("anonymous reporting, private image, scoped native MFA suspension and indep
       (
         await page.request.post(`/api/workspace/shops/${seedIds.shopA}/design/publish`, {
           headers: { origin },
-          data: { version: design.version, revision: design.revision, confirm: true },
+          data: {
+            version: design.version,
+            revision: design.revision,
+            confirm: true,
+            photosReviewed: true,
+          },
         })
       ).status(),
     ).toBe(200);

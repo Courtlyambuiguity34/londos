@@ -76,7 +76,7 @@ test("legacy UUID shop URL becomes a clean canonical address with permanent alia
       (
         await page.request.post(`${root}/design/publish`, {
           headers: { origin },
-          data: { ...(await saved.json()), confirm: true },
+          data: { ...(await saved.json()), confirm: true, photosReviewed: true },
         })
       ).status(),
     ).toBe(200);

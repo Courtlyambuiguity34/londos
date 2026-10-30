@@ -41,6 +41,13 @@ import {
   type Invoice,
 } from "../../src/server/rent";
 import { schedule } from "../../src/server/jobs/scheduler";
+import {
+  readReviewAlerts,
+  setReviewAlerts,
+  reviewAlertAllowed,
+} from "../../src/server/operator-review-alerts";
+import { applicationReviewSummary } from "../../src/server/application-review-summary";
+import { handle } from "../../src/server/jobs/handlers";
 import { acknowledge } from "../../src/server/jobs/queue";
 import { handleRentTick } from "../../src/server/jobs/rent";
 import { readPublicShop, readPublicVariant } from "../../src/server/public-shop";
@@ -627,7 +634,7 @@ test("reversals append once, close public access and repayment never rewrites fi
     summary: "Empty sample layout",
     specification: draft.specification,
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true }, true);
   expect((await readPublicShop(pool, shop)).shop.id).toBe(shop);
   const before = (await readInvoice(pool, actors.operator!, invoice.id, "finance")).invoice;
   const input = {
@@ -984,7 +991,7 @@ test("team revisions preserve last-owner safety and restrict staff shop grants",
 test("versioned owner address changes preserve aliases and reject SQL alias takeover", async () => {
   const row = (await pool.query("SELECT version,slug FROM shops WHERE id=$1", [seedIds.shopA]))
       .rows[0],
-    slug = `admin-${randomUUID()}`;
+    slug = `admin-${randomUUID().slice(0, 8)}-shop`;
   const input = {
     version: row.version,
     slug,
@@ -1021,7 +1028,7 @@ test("versioned owner address changes preserve aliases and reject SQL alias take
       summary: "Alias fixture",
       specification: draft.specification,
     });
-  await publishDesign(pool, actors.ownerA!, seedIds.shopA, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, seedIds.shopA, { ...saved, confirm: true }, true);
   expect((await readPublicShop(pool, row.slug)).shop.slug).toBe(slug);
   expect((await readPublicShop(pool, seedIds.shopA)).shop.id).toBe(seedIds.shopA);
 });
@@ -1131,7 +1138,7 @@ test("administrative pause gates shop, alias, discovery, contact and ready image
       summary: "Admin eligibility fixture",
       specification: draft.specification,
     });
-  await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...saved, confirm: true }, true);
   const slug = (await readPublicShop(pool, shop)).shop.slug;
   expect((await readPublicShop(pool, shop)).applicationReviewed).toBe(true);
   expect(await readPublicVariant(pool, shop, asset, "display")).toEqual(display);
@@ -1147,11 +1154,17 @@ test("administrative pause gates shop, alias, discovery, contact and ready image
     confirm: true,
   });
   const designAtPause = await readDesign(pool, actors.ownerA!, shop);
-  await publishDesign(pool, actors.ownerA!, shop, {
-    version: designAtPause.version,
-    revision: saved.revision,
-    confirm: true,
-  });
+  await publishDesign(
+    pool,
+    actors.ownerA!,
+    shop,
+    {
+      version: designAtPause.version,
+      revision: saved.revision,
+      confirm: true,
+    },
+    true,
+  );
   await synchronize(shop, new Date());
   await expect(readPublicShop(pool, slug)).rejects.toMatchObject({ status: 404 });
   await expect(publicContact(pool, shop)).rejects.toMatchObject({ status: 404 });
@@ -1508,4 +1521,116 @@ test("payment settings recheck current finance authority after a competing save 
       [actors.operator!.userId],
     );
   }
+});
+
+test("review alerts are opt in, versioned and unavailable to merchants", async () => {
+  expect(await readReviewAlerts(pool, actors.operator!)).toEqual({ enabled: false, version: 0 });
+  await expect(
+    setReviewAlerts(pool, actors.ownerA!, { enabled: true, version: 0 }),
+  ).rejects.toMatchObject({ status: 403 });
+  expect(await setReviewAlerts(pool, actors.operator!, { enabled: true, version: 0 })).toEqual({
+    enabled: true,
+    version: 1,
+  });
+  await expect(
+    setReviewAlerts(pool, actors.operator!, { enabled: false, version: 0 }),
+  ).rejects.toMatchObject({ code: "stale_version" });
+  expect(await setReviewAlerts(pool, actors.operator!, { enabled: false, version: 1 })).toEqual({
+    enabled: false,
+    version: 2,
+  });
+});
+
+test("review submissions queue one minimal alert per opted in reviewer and recheck opt out or revoked access at delivery", async () => {
+  let preference = await readReviewAlerts(pool, actors.operator!);
+  preference = await setReviewAlerts(pool, actors.operator!, {
+    enabled: true,
+    version: preference.version,
+  });
+  const id = await draft();
+  await submit(id);
+  const jobs = (
+    await pool.query(
+      "SELECT * FROM jobs WHERE payload->>'template'='application-review-queue' AND payload->>'applicationId'=$1",
+      [id],
+    )
+  ).rows;
+  expect(jobs).toHaveLength(1);
+  const job = jobs[0];
+  expect(job.payload).toEqual({
+    template: "application-review-queue",
+    operatorId: accounts.operator.id,
+    applicationId: id,
+    to: accounts.operator.email,
+  });
+  expect(await reviewAlertAllowed(pool, job.payload)).toBe(true);
+  let deliveries = 0;
+  const sink = {
+    deliver: async () => {
+      deliveries++;
+    },
+  };
+  await handle(pool, job, sink, AbortSignal.timeout(5000));
+  expect(deliveries).toBe(1);
+  await setReviewAlerts(pool, actors.operator!, { enabled: false, version: preference.version });
+  await handle(pool, job, sink, AbortSignal.timeout(5000));
+  expect(deliveries).toBe(1);
+  preference = await readReviewAlerts(pool, actors.operator!);
+  await setReviewAlerts(pool, actors.operator!, { enabled: true, version: preference.version });
+  await pool.query("DELETE FROM operator_grants WHERE user_id=$1 AND permission='review'", [
+    accounts.operator.id,
+  ]);
+  try {
+    await handle(pool, job, sink, AbortSignal.timeout(5000));
+    expect(deliveries).toBe(1);
+  } finally {
+    await pool.query("INSERT INTO operator_grants(user_id,permission) VALUES($1,'review')", [
+      accounts.operator.id,
+    ]);
+  }
+  await pool.query('UPDATE "user" SET "emailVerified"=false WHERE id=$1', [accounts.operator.id]);
+  try {
+    expect(await reviewAlertAllowed(pool, job.payload)).toBe(false);
+  } finally {
+    await pool.query('UPDATE "user" SET "emailVerified"=true WHERE id=$1', [accounts.operator.id]);
+  }
+  preference = await readReviewAlerts(pool, actors.operator!);
+  await setReviewAlerts(pool, actors.operator!, { enabled: false, version: preference.version });
+  const other = await draft();
+  await submit(other);
+  expect(
+    (
+      await pool.query(
+        "SELECT 1 FROM jobs WHERE payload->>'template'='application-review-queue' AND payload->>'applicationId'=$1",
+        [other],
+      )
+    ).rowCount,
+  ).toBe(0);
+});
+
+test("landlord report and queue filter the full result set while preserving review scopes", async () => {
+  const id = await draft();
+  await submit(id);
+  const row = (await readApplication(pool, actors.ownerA!, id)).application;
+  const queue = await applicationQueue(pool, actors.operator!, "review", 0, {
+    query: row.business_name,
+    status: "submitted",
+  });
+  expect(queue.map((r) => r.id)).toEqual([id]);
+  expect(
+    await applicationQueue(pool, actors.operator!, "review", 0, {
+      query: row.business_name,
+      status: "approved",
+    }),
+  ).toEqual([]);
+  expect(await applicationReviewSummary(pool, actors.operator!)).toMatchObject({
+    submitted: expect.any(Number),
+    oldest: expect.any(Date),
+  });
+  await expect(applicationReviewSummary(pool, actors.ownerA!)).rejects.toMatchObject({
+    status: 403,
+  });
+  await expect(
+    applicationQueue(pool, actors.operator!, "review", 0, { status: "draft" }),
+  ).rejects.toThrow();
 });

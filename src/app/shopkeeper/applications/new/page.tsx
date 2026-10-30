@@ -20,14 +20,15 @@ export default async function Page() {
     <AccountWorkspaceShell
       kind="shopkeeper"
       title="Apply for a shop"
-      subtitle="Save your business details, add evidence and submit for review."
+      subtitle="Your business details and one private photo, in one form."
       currentPath="/shopkeeper/applications/new"
     >
       <section className="portal-section account-page">
         <p>
-          Save your details first, then add private verification images and submit for review. The
-          displayed rent policy and payment instructions will be confirmed after review. Never pay
-          until you receive official instructions from Londos.
+          Add your business details and a private verification photo, then send for review. You can
+          also save a draft and finish later. The displayed rent policy and payment instructions
+          will be confirmed after review. Never pay until you receive official instructions from
+          Londos.
         </p>
         <CreateApplicationForm merchants={merchants} />
       </section>

@@ -153,7 +153,7 @@ test("archived departments explain the empty selector, activation connects it, a
     await expect(page.getByRole("status")).toContainText("Department activated.");
     await page.getByRole("button", { name: "Activate Seeds", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("Department activated.");
-    await page.getByRole("button", { name: "Add product to Crops", exact: true }).click();
+    await page.getByRole("button", { name: "Open full editor for Crops", exact: true }).click();
     const select = page.getByLabel("Department", { exact: true });
     await expect(select.locator("option")).toHaveText([
       "Choose an active department",
@@ -314,7 +314,7 @@ test("a merchant publishes connected department and product pages, then deletes 
     await page.getByRole("button", { name: "Create department", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Department saved.");
     await expect(page.getByText(/position 0/)).toHaveCount(0);
-    await page.getByRole("button", { name: "Add product to Crops", exact: true }).click();
+    await page.getByRole("button", { name: "Open full editor for Crops", exact: true }).click();
     await expect(page.getByLabel("Product or service name", { exact: true })).toBeFocused();
     await expect(page.getByLabel("Department", { exact: true })).toHaveValue(
       (await (await page.request.get(`${fixture.root}/catalogue`)).json()).departments[0].id,
@@ -445,6 +445,20 @@ test("a merchant publishes connected department and product pages, then deletes 
         exact: true,
       })
       .check();
+    if (
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .isVisible()
+    )
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("Shop published.");
     await page.goto(`/shops/${fixture.slug}`);
@@ -829,7 +843,7 @@ test("product search opens an exact later-page item and immediately respects arc
     const draft = await design.json();
     const published = await page.request.post(`${fixture.root}/design/publish`, {
       headers: { origin },
-      data: { ...draft, confirm: true },
+      data: { ...draft, confirm: true, photosReviewed: true },
     });
     expect(published.status()).toBe(200);
     const publicState = await published.json();
@@ -1300,12 +1314,12 @@ test("replacing a dirty product editor asks before discarding its contents", asy
       .getByLabel("Product or service name", { exact: true })
       .fill("Keep this unfinished product");
     page.once("dialog", (dialog) => dialog.dismiss());
-    await page.getByRole("button", { name: "Add a product", exact: true }).click();
+    await page.getByRole("link", { name: "Add a product", exact: true }).click();
     await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
       "Keep this unfinished product",
     );
     page.once("dialog", (dialog) => dialog.accept());
-    await page.getByRole("button", { name: "Add a product", exact: true }).click();
+    await page.getByRole("link", { name: "Add a product", exact: true }).click();
     await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue("");
   } finally {
     await fixture.pool.end();

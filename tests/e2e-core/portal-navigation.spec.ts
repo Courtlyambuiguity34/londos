@@ -147,7 +147,7 @@ test("publishing activates the public link and address edits preserve redirects"
     (
       await page.request.post(`/api/workspace/shops/${shop}/design/publish`, {
         headers: { origin: coreConfig().baseURL },
-        data: { ...saved, confirm: true },
+        data: { ...saved, confirm: true, photosReviewed: true },
       })
     ).status(),
   ).toBe(200);

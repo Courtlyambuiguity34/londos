@@ -201,7 +201,7 @@ async function publish(shopId: string) {
     summary: "Publish fictional hosted shop",
     specification: design.specification,
   });
-  await publishDesign(pool, actors.ownerA!, shopId, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shopId, { ...saved, confirm: true }, true);
 }
 
 test("verified hosted payment creates a clean private shop; explicit publish makes catalogue and search public", async () => {

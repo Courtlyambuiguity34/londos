@@ -146,6 +146,17 @@ export function StorefrontCollections({ view }: { view: ShopView }) {
               item.width &&
               item.height,
           );
+          const image =
+            department.image !== undefined
+              ? department.image
+              : product
+                ? {
+                    id: product.media_id!,
+                    alt: product.alt!,
+                    width: product.width!,
+                    height: product.height!,
+                  }
+                : null;
           return (
             <Link
               key={department.id}
@@ -154,14 +165,14 @@ export function StorefrontCollections({ view }: { view: ShopView }) {
               className="storefront-collection-card"
             >
               <div className="storefront-collection-art">
-                {product ? (
+                {image ? (
                   <ReadyImage
                     shopId={view.shop.id}
-                    assetId={product.media_id!}
+                    assetId={image.id}
                     allowRetry={false}
-                    alt={product.alt!}
-                    width={product.width!}
-                    height={product.height!}
+                    alt={image.alt}
+                    width={image.width}
+                    height={image.height}
                     privatePreview={view.privatePreview}
                   />
                 ) : (

@@ -120,7 +120,7 @@ async function draft() {
 }
 async function published() {
   const d = await draft();
-  return publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true });
+  return publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true);
 }
 async function manyProducts() {
   await pool.query(
@@ -260,7 +260,7 @@ test("collection resolves current filtered catalogue values and all new referenc
       ],
     },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true);
   const view = await readPublicShop(pool, shop);
   expect(view.products.map((p) => p.price_minor)).toEqual(["7654"]);
   for (const type of ["products", "display", "gallery"] as const)
@@ -320,10 +320,10 @@ test("galleries require an owned ready image with alt text and revalidate before
   const draft = await save();
   await pool.query("UPDATE media_assets SET state='failed' WHERE id=$1", [asset]);
   await expect(
-    publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }),
+    publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true),
   ).rejects.toMatchObject({ status: 404 });
   await pool.query("UPDATE media_assets SET state='ready' WHERE id=$1", [asset]);
-  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
   expect((await readPublicShop(pool, shop)).specification.spaces[0]?.type).toBe("gallery");
 });
 test("all 100 bounded departments remain reachable and unsupported future LSS falls back safely", async () => {

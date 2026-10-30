@@ -28,6 +28,10 @@ export async function handle(
     return;
   }
   if (job.kind === "notification.local") {
+    if (job.payload.template === "application-review-queue") {
+      const { reviewAlertAllowed } = await import("../operator-review-alerts");
+      if (!(await reviewAlertAllowed(pool, job.payload))) return;
+    }
     await notifications.deliver(job.id, job.payload, signal, { leaseToken: job.lease_token });
     return;
   }

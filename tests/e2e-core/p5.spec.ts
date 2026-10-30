@@ -38,7 +38,7 @@ async function publishShopFixture(page: Page) {
   const draft = await saved.json();
   const published = await page.request.post(`${root}/design/publish`, {
     headers: { Origin: origin },
-    data: { version: draft.version, revision: draft.revision, confirm: true },
+    data: { version: draft.version, revision: draft.revision, confirm: true, photosReviewed: true },
   });
   expect(published.status()).toBe(200);
 }
@@ -283,6 +283,7 @@ test("every new protected handler rejects foreign and anonymous requests; guest 
         data: { name: "Attack", slug: "attack", position: 0, archived: false, version: 1 },
       },
       { method: "POST", path: "/products", data: product },
+      { method: "POST", path: "/products/guided", data: product },
       { method: "PATCH", path: `/products/${id}`, data: { ...product, version: 1 } },
       { method: "GET", path: "/contacts" },
       { method: "PUT", path: "/contacts", data: contacts },
@@ -319,6 +320,23 @@ test("every new protected handler rejects foreign and anonymous requests; guest 
       });
       expect(anonymous.status(), attack.path).toBe(401);
     }
+    for (const method of ["GET", "PUT"]) {
+      const options = {
+        method,
+        headers: { Origin: origin },
+        ...(method === "PUT" ? { data: { enabled: true, version: 0 } } : {}),
+      };
+      expect((await page.request.fetch("/api/operator/review-alerts", options)).status()).toBe(403);
+      expect((await request.fetch("/api/operator/review-alerts", options)).status()).toBe(401);
+    }
+    expect(
+      (
+        await page.request.put("/api/operator/review-alerts", {
+          headers: { Origin: "https://attacker.example" },
+          data: { enabled: true, version: 0 },
+        })
+      ).status(),
+    ).toBe(403);
     const denial = await page.request.get(`/shopkeeper/shops/${seedIds.shopA}/catalogue`, {
       headers: { RSC: "1" },
     });

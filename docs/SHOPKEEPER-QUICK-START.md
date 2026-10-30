@@ -39,40 +39,53 @@ values are preserved when editing; new departments follow the existing ones.
 Use **Move up/down** beside an active department to change department order.
 Use the page builder's separate move controls to arrange home-page sections.
 
-## Add a product
+## Add a product in three steps
 
-1. Choose **Add product** in the shop header, **Add a product** in the catalogue,
-   or **Add product to Crops** beside that department.
-2. Enter the name, choose its department and add a useful description.
-3. Choose the currency and enter the actual price: **5000** for UGX 5,000,
-   or **19.95** for USD 19.95. Leave the price empty for **Ask for price**.
-   UGX uses whole shillings; use up to two decimal places for the other listed
-   currencies. Do not type commas or currency letters into the price box.
-4. Choose a processed photo from **Product photo**. For a new photo, choose
-   **Upload a product photo**, upload it in Images and wait for processing to
-   finish. Return to Products: the details you entered remain there. Select the
-   new photo before saving the product.
-5. Choose **Create product or service**. The form appears before the product
-   list. To change an item later, choose **Edit** beside it.
+Choose **Add product** in your shop header, **Add a product** in the catalogue,
+or **Add product to Crops** beside that department. These open the focused setup:
 
-**Product link & type (optional)** lets you choose a different link or identify
-an item as a service. A blank address is generated from the name when saved.
-Existing product addresses stay unchanged when you edit an item.
+1. **Photo & name:** enter a name and take or choose a JPEG, PNG or WebP photo
+   up to 4 MiB. Londos uploads, prepares and selects it automatically. An existing
+   image can be selected under **Choose from your uploaded photos**. Wait for
+   **Photo ready and selected for this product** before continuing.
+2. **Details:** choose a department, currency and optional price. You can create
+   a department here without losing the product details. Enter **5000** for
+   UGX 5,000 or **19.95** for USD 19.95; leave blank for **Ask for price**.
+   Description and a custom product link are under **More details (optional)**.
+3. **Review & save:** check the price, department and photo. Choose availability,
+   then **Save product**. The shop's publication status still controls public access.
 
-You can also choose **Create a department here** inside the product form. Enter
-the new department name, choose **Create & select department**, and continue with
-the product. The details you already typed remain in place.
+A physical product needs a ready photo to be made visible through this setup.
+Choose **Add the photo later**, then **Save hidden for later** to keep an unfinished
+listing private. Add its photo later, uncheck **Keep this listing hidden for now**
+and save when it is ready. Photos remain optional for services.
 
-For repeat entry, **Save & add another** confirms the current save and opens an
-empty form with the same department, currency and product/service type. To reuse
-more details, choose **Duplicate** beside a similar product. Review the new name,
-price, photo and availability, then save it. Nothing is created when you press
-Duplicate; the new copy starts hidden from customers until you change its
-Availability. The original product stays unchanged.
+After saving, choose **Add another product** to keep the same department,
+currency and product/service type while starting with an empty name and photo.
+Your shop overview lists missing product photos with direct **Add a photo** links.
+Department thumbnails come from their products: add a photographed product to
+the department rather than looking for a separate department-image field.
 
-Replacing a modified product form asks before clearing your work. A browser
-reload/close can also show its unsaved-change warning. Unsaved forms are not
-stored as persistent drafts.
+An upload failure leaves your typed details in place. A slow photo offers
+**Check photo again**. A browser reload/close or leaving the guided editor warns
+about unsaved changes; entered details are not stored as persistent drafts until
+saved. Uploaded photos remain in Images.
+
+## Full catalogue editor and duplication
+
+**Products & contacts → Products** retains the full editor for existing and
+advanced workflows. **Open full editor for Crops** selects that department.
+Choose **Edit** beside an item to change it, or use **Add a photo** to open the
+focused setup. This full editor also supports **Save & add another** and
+**Duplicate**. Duplicate prepares an unsaved hidden copy; review its name,
+price, photo and availability before saving. The original stays unchanged.
+
+The full editor retains its separate Images tab and existing-photo selection.
+It displays missing-photo notices, but existing advanced catalogue writes can
+still save a product without a photo. **Review & publish** shows remaining
+product and department photo gaps. Add the photos or explicitly acknowledge
+those gaps before publication. This preserves deliberate text-only catalogues
+without silently treating missing photos as complete.
 
 ## Find and arrange products
 
@@ -144,3 +157,17 @@ shortcuts are shown only when your account has the required catalogue access.
 Custom standalone merchant pages beyond the existing department/product pages
 are not introduced by this update. The existing section, product-card and access
 limits remain. See [verification and changed files](evidence/MERCHANT-CLARITY-2026-10-27.md).
+
+## Apply for a new shop
+
+Open **Apply for a shop**, complete the business details, add one private
+verification photo (JPEG, PNG or WebP, up to 2 MiB), accept the policies and choose
+**Send for review**. The form saves the application, uploads the photo and submits
+it for review. **Create application draft** lets you finish later. If the photo
+upload fails after the details save, use **Continue your saved application**;
+you do not need to create another application.
+
+Verification photos are private and are separate from public product photos.
+Review and verified rent coverage still precede shop provisioning. After those
+steps, the shop workspace guides you through products, contacts, design and
+publication. No fixed approval or setup duration is promised.

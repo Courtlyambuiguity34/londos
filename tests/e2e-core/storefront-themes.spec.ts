@@ -180,7 +180,7 @@ test.beforeAll(async ({ browserName }, info) => {
       summary: "Fictional theme preview",
       specification,
     });
-    await publishDesign(pool, actor, id, { ...draft, confirm: true });
+    await publishDesign(pool, actor, id, { ...draft, confirm: true }, true);
     shops.set(theme.id, {
       id,
       slug,
@@ -362,6 +362,20 @@ test("theme selection, section cleanup and review preserve drafts and require ex
       exact: true,
     })
     .check();
+  if (
+    await page
+      .getByRole("checkbox", {
+        name: "I have reviewed the missing photos and want to publish this version anyway",
+        exact: true,
+      })
+      .isVisible()
+  )
+    await page
+      .getByRole("checkbox", {
+        name: "I have reviewed the missing photos and want to publish this version anyway",
+        exact: true,
+      })
+      .check();
   await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Shop published.");
   await page.goto(`/shops/${shop.slug}`);

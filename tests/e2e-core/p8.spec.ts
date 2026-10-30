@@ -219,9 +219,24 @@ test("owner application, native MFA review, partial settlement, publication, rev
     await expect(page.getByRole("status")).toHaveText("Design loaded.");
     await page.getByRole("button", { name: "Save draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Draft saved. Preview before publishing.");
+    await page.getByRole("tab", { name: /^Review & publish/ }).click();
     await page
       .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
       .check();
+    if (
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .isVisible()
+    )
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
     const shop = await (await page.request.get(`/api/workspace/shops/${shopId}`)).json();
@@ -233,7 +248,14 @@ test("owner application, native MFA review, partial settlement, publication, rev
       publicPage.getByRole("heading", { name: businessName, exact: true }),
     ).toBeVisible();
     await publicPage.goto("/search?q=shoes");
-    await expect(publicPage.getByRole("link", { name: businessName, exact: true })).toBeVisible();
+    const discoveryCard = publicPage
+      .getByRole("article")
+      .filter({ has: publicPage.getByRole("heading", { name: businessName, exact: true }) });
+    await expect(discoveryCard).toBeVisible();
+    await expect(discoveryCard.getByRole("link")).toHaveAttribute(
+      "href",
+      `/shops/${shop.slug}/departments/shoes`,
+    );
     expect((await publicPage.request.get(`/contact/${shopId}`)).status()).toBe(200);
     await op
       .getByLabel("Reason for reversal", { exact: true })
@@ -248,6 +270,8 @@ test("owner application, native MFA review, partial settlement, publication, rev
     await expect(op.locator(".ledger-events")).toContainText("−");
     expect((await publicPage.request.get(`/shops/${shop.slug}`)).status()).toBe(404);
     expect((await publicPage.request.get(`/contact/${shopId}`)).status()).toBe(404);
+    await publicPage.reload();
+    await expect(discoveryCard).toHaveCount(0);
     await op.getByLabel("Amount in UGX (whole shillings)", { exact: true }).fill("2500");
     await op
       .getByLabel("Invoice reference from the payment record", { exact: true })

@@ -10,6 +10,8 @@ import { coreConfigured, coreConfig } from "@/server/config";
 import { pageActor } from "@/server/page-actor";
 import { AccessError } from "@/server/security/errors";
 import { readSetup, shopStorefrontStatus, effectiveShopPermissions } from "@/server/workspace";
+import { shopPhotoHealth } from "@/server/shop-photo-health";
+import { ShopReadinessPanel } from "@/components/shop-readiness-panel";
 export const metadata = { title: "Shop workspace" };
 export default async function Page({ params }: { params: Promise<{ shopId: string }> }) {
   if (!coreConfigured()) notFound();
@@ -23,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
   const shop = setup.shop,
     base = `/shopkeeper/shops/${shop.id}`;
   const status = await shopStorefrontStatus(database(), shop.id);
+  const photoHealth = await shopPhotoHealth(database(), shop.id);
   const permissions = await effectiveShopPermissions(database(), actor, shop.id);
   const canDesign = permissions.includes("design"),
     canFinance = permissions.includes("finance");
@@ -32,7 +35,18 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       done: setup.departments,
       href: `${base}/catalogue#departments`,
     },
-    { label: "Add products or services", done: setup.product_count > 0, href: `${base}/catalogue` },
+    {
+      label: "Add products or services",
+      done: setup.product_count > 0,
+      href: `${base}/products/new`,
+    },
+    {
+      label: "Check product photos",
+      done: photoHealth.missingProductCount === 0 && photoHealth.products > 0,
+      href: photoHealth.missingProducts[0]
+        ? `${base}/products/${photoHealth.missingProducts[0].id}/edit`
+        : `${base}/products/new`,
+    },
     {
       label: "Set customer contact details",
       done: setup.contacts,
@@ -110,6 +124,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
           absoluteBase={coreConfig().baseURL}
         />
       </div>
+      <ShopReadinessPanel health={photoHealth} shopId={shop.id} />
       <section className="portal-section" aria-labelledby="manage-heading">
         <div className="portal-section-heading">
           <div>

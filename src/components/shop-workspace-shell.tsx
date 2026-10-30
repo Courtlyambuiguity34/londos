@@ -15,6 +15,7 @@ export async function ShopWorkspaceShell({
   subtitle,
   children,
   banner,
+  focused = false,
 }: {
   shop: ShopRef;
   section:
@@ -24,6 +25,7 @@ export async function ShopWorkspaceShell({
   children: ReactNode;
   published?: boolean;
   banner?: ReactNode;
+  focused?: boolean;
 }) {
   const base = `/shopkeeper/shops/${shop.id}`;
   const path =
@@ -59,45 +61,51 @@ export async function ShopWorkspaceShell({
       links={links}
       currentPath={path}
       actions={
-        <div className="account-links">
-          {permissions.includes("catalogue") ? (
-            <Link className="button" href={`${base}/catalogue#products`}>
-              Add product
-            </Link>
-          ) : null}
-          {permissions.includes("membership") ? (
-            <Link
-              className="button button--outline"
-              href={
-                shop.merchant_id
-                  ? `/shopkeeper/merchants/${shop.merchant_id}/team#invite`
-                  : "/shopkeeper/team"
-              }
-            >
-              Invite a teammate <span aria-hidden="true">+</span>
-            </Link>
-          ) : null}
-        </div>
-      }
-      banner={
-        banner ?? (
-          <div className="portal-next-step portal-next-step--compact">
-            <div>
-              <p className="portal-next-step__label">{shop.name}</p>
-              <strong>{status.label}</strong>
-              <p>{status.detail}</p>
-            </div>
-            <ShopPublicLink
-              slug={shop.slug}
-              shopId={shop.id}
-              absoluteBase={coreConfig().baseURL}
-              storefront={status}
-              canDesign={permissions.includes("design")}
-              canManageRent={permissions.includes("finance")}
-              compact
-            />
+        focused ? (
+          <Link href={base}>Back to shop setup</Link>
+        ) : (
+          <div className="account-links">
+            {permissions.includes("catalogue") ? (
+              <Link className="button" href={`${base}/products/new`}>
+                Add product
+              </Link>
+            ) : null}
+            {permissions.includes("membership") ? (
+              <Link
+                className="button button--outline"
+                href={
+                  shop.merchant_id
+                    ? `/shopkeeper/merchants/${shop.merchant_id}/team#invite`
+                    : "/shopkeeper/team"
+                }
+              >
+                Invite a teammate <span aria-hidden="true">+</span>
+              </Link>
+            ) : null}
           </div>
         )
+      }
+      banner={
+        focused
+          ? null
+          : (banner ?? (
+              <div className="portal-next-step portal-next-step--compact">
+                <div>
+                  <p className="portal-next-step__label">{shop.name}</p>
+                  <strong>{status.label}</strong>
+                  <p>{status.detail}</p>
+                </div>
+                <ShopPublicLink
+                  slug={shop.slug}
+                  shopId={shop.id}
+                  absoluteBase={coreConfig().baseURL}
+                  storefront={status}
+                  canDesign={permissions.includes("design")}
+                  canManageRent={permissions.includes("finance")}
+                  compact
+                />
+              </div>
+            ))
       }
     >
       {children}

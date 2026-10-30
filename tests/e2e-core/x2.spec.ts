@@ -111,6 +111,20 @@ test("manual templates, private preview, publication, canonical rollback and ano
     await page
       .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
       .check();
+    if (
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .isVisible()
+    )
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
     const published = await (await page.request.get(root)).json();
@@ -160,6 +174,20 @@ test("manual templates, private preview, publication, canonical rollback and ano
     await page
       .getByRole("checkbox", { name: "I reviewed this saved draft and confirm publication" })
       .check();
+    if (
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .isVisible()
+    )
+      await page
+        .getByRole("checkbox", {
+          name: "I have reviewed the missing photos and want to publish this version anyway",
+          exact: true,
+        })
+        .check();
     await page.getByRole("button", { name: "Publish reviewed draft", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Shop published.");
     const republished = await (await page.request.get(root)).json();

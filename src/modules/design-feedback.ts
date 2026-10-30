@@ -1,4 +1,6 @@
 const instructions: Record<string, string> = {
+  photo_review_required:
+    "Review the missing product and department photos below. Add the photos or acknowledge the gaps before publishing.",
   ai_context_limit:
     "This saved layout is too large for an assistant request. Simplify its sections or continue with the manual editor; you do not need to delete your products.",
   invalid_input:

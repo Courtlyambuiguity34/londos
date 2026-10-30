@@ -218,6 +218,7 @@ test("hosted merchant can create a product, preview privately, publish, discover
   const published = await request(`${root}/design/publish`, cookie, "POST", {
     ...saved,
     confirm: true,
+    photosReviewed: true,
   });
   expect(published.status).toBe(200);
   const publishedState = await published.json();
@@ -363,7 +364,13 @@ test("hosted public images and enquiry intake keep visibility, origin, privacy a
   expect(savedResponse.status).toBe(200);
   const saved = await savedResponse.json();
   expect(
-    (await request(`${root}/design/publish`, cookie, "POST", { ...saved, confirm: true })).status,
+    (
+      await request(`${root}/design/publish`, cookie, "POST", {
+        ...saved,
+        confirm: true,
+        photosReviewed: true,
+      })
+    ).status,
   ).toBe(200);
   const contacts = await (await request(`${root}/contacts`, cookie)).json();
   expect(

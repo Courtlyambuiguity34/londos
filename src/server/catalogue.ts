@@ -7,6 +7,7 @@ import { audit } from "./security/audit";
 import { AccessError } from "./security/errors";
 import { catalogueSnapshot, journalChanges } from "./catalogue-journal";
 import { catalogueFilters } from "../modules/catalogue-tools";
+import { shopPhotoHealth } from "./shop-photo-health";
 
 const slug = z
   .string()
@@ -99,6 +100,7 @@ export async function readCatalogue(
     products: products.slice(0, 20),
     offset: page,
     hasMore: products.length > 20,
+    photoHealth: await shopPhotoHealth(pool, shopId),
     nextProductPosition: (
       await pool.query(
         "SELECT least(1000000,coalesce(max(position),-1)+1)::int AS position FROM products WHERE shop_id=$1 AND deleted_at IS NULL",

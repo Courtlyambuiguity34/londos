@@ -21,6 +21,7 @@ import {
   reasonInput,
 } from "./lifecycle-common";
 import { imageVariants } from "./media";
+import { notifyReviewQueue } from "./operator-review-alerts";
 
 export const applicationDetails = z
   .object({
@@ -228,6 +229,7 @@ export async function submitApplication(
     await audit(client, actor, "application.submitted", id, row.merchant_id, {
       version: row.version + 1,
     });
+    await notifyReviewQueue(client, id, row.version + 1);
     await notifyOwners(client, row.merchant_id, `application:${id}:${row.version + 1}`, {
       template: "application-status",
       applicationId: id,
@@ -305,19 +307,41 @@ export async function applicationQueue(
   actor: Actor,
   permission: "review" | "finance",
   offset = 0,
+  filters: { query?: string; status?: string } = {},
 ) {
   await requireOperator(pool, actor, permission);
   z.number().int().min(0).max(10000).parse(offset);
+  const query = z
+    .string()
+    .trim()
+    .max(80)
+    .parse(filters.query ?? "");
+  const status = z
+    .enum([
+      "all",
+      "actionable",
+      "submitted",
+      "reviewing",
+      "needs_information",
+      "approved",
+      "rejected",
+    ])
+    .parse(filters.status ?? "all");
   return (
     await pool.query(
-      `SELECT a.id,a.business_name,a.state,a.version,EXISTS(SELECT 1 FROM operator_application_scopes s WHERE s.application_id=a.id AND s.user_id=$1 AND s.permission=$2) AS claimed,EXISTS(SELECT 1 FROM applications b WHERE b.id<>a.id AND b.state<>'rejected' AND lower(b.business_name)=lower(a.business_name)) AS possible_duplicate FROM applications a WHERE a.state=ANY($3::text[]) ORDER BY a.submitted_at,a.id LIMIT 20 OFFSET $4`,
+      `SELECT a.id,a.business_name,a.state,a.version,a.submitted_at,EXISTS(SELECT 1 FROM operator_application_scopes s WHERE s.application_id=a.id AND s.user_id=$1 AND s.permission=$2) AS claimed,EXISTS(SELECT 1 FROM applications b WHERE b.id<>a.id AND b.state<>'rejected' AND lower(b.business_name)=lower(a.business_name)) AS possible_duplicate FROM applications a WHERE a.state=ANY($3::text[]) AND ($5::text='' OR strpos(lower(a.business_name),lower($5))>0) ORDER BY a.submitted_at,a.id LIMIT 20 OFFSET $4`,
       [
         actor.userId,
         permission,
         permission === "review"
-          ? ["submitted", "reviewing", "needs_information", "approved", "rejected"]
+          ? status === "all"
+            ? ["submitted", "reviewing", "needs_information", "approved", "rejected"]
+            : status === "actionable"
+              ? ["submitted", "reviewing"]
+              : [status]
           : ["approved"],
         offset,
+        query,
       ],
     )
   ).rows as {
@@ -325,6 +349,7 @@ export async function applicationQueue(
     business_name: string;
     state: string;
     version: number;
+    submitted_at: Date | null;
     claimed: boolean;
     possible_duplicate: boolean;
   }[];

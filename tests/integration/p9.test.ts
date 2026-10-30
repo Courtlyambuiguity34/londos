@@ -226,7 +226,7 @@ async function published() {
       summary: "Trust test fixture",
       specification: draft.specification,
     });
-  await publishDesign(pool, actors.ownerA!, s.id, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, s.id, { ...saved, confirm: true }, true);
   await pool.query(
     "INSERT INTO media_assets(id,shop_id,merchant_id,state,storage_key,alt) VALUES($1,$2,$3,'ready',$4,'Fictional trust image')",
     [asset, s.id, seedIds.merchantA, `trust:${asset}`],
@@ -568,11 +568,17 @@ test("canonical suspension blocks shops, aliases, search, contacts, media, enqui
   await expect(submitGuestRequest(pool, s.id, guest())).rejects.toMatchObject({ status: 404 });
   const design = await readDesign(pool, actors.ownerA!, s.id);
   await expect(
-    publishDesign(pool, actors.ownerA!, s.id, {
-      version: design.version,
-      revision: design.publishedRevision!,
-      confirm: true,
-    }),
+    publishDesign(
+      pool,
+      actors.ownerA!,
+      s.id,
+      {
+        version: design.version,
+        revision: design.publishedRevision!,
+        confirm: true,
+      },
+      true,
+    ),
   ).rejects.toMatchObject({ code: "shop_not_eligible" });
 });
 test("owner appeal is versioned and pending until a different scoped reviewer reinstates", async () => {

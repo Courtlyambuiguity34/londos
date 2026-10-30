@@ -515,6 +515,13 @@
   font-size: 13px;
   color: var(--muted);
 }
+.portal-shell .account-form .application-entry-fields {
+  display: grid;
+  gap: 10px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 .portal-shell .button {
   min-height: 44px;
   padding: 10px 18px;
@@ -1500,4 +1507,82 @@
 }
 .catalogue-order-actions button {
   min-height: 44px;
+}
+.guided-product {
+  max-width: 760px;
+  margin-inline: auto;
+}
+.guided-product .account-form {
+  max-width: none;
+}
+.guided-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.guided-progress [aria-current="step"] {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.product-photo-picker {
+  display: grid;
+  gap: 10px;
+}
+.product-photo-preview {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  text-align: center;
+}
+.product-photo-preview img {
+  max-height: 220px;
+  max-width: 100%;
+  object-fit: contain;
+}
+.photo-readiness {
+  margin-block: 20px;
+}
+.photo-readiness ul {
+  padding-left: 20px;
+  margin-block: 12px;
+}
+.photo-readiness li {
+  padding-block: 7px;
+}
+.photo-gap-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.review-queue-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.review-queue-summary a {
+  display: grid;
+  gap: 7px;
+  flex: 1 1 150px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.review-queue-summary strong {
+  font-size: 28px;
+}
+.application-quick-start .guided-progress {
+  margin-bottom: 0;
 }

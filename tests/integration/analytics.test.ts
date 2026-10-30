@@ -123,7 +123,7 @@ beforeAll(async () => {
       actions: ["call", "enquiry"],
     },
   });
-  await publishDesign(pool, actors.ownerA!, seedIds.shopA, { ...d, confirm: true });
+  await publishDesign(pool, actors.ownerA!, seedIds.shopA, { ...d, confirm: true }, true);
 });
 beforeEach(async () => {
   process.env.LONDOS_PILOT_ANALYTICS = "true";
@@ -492,17 +492,29 @@ test("analytics table outage cannot roll back catalogue/publication; canonical c
     });
     expect(p.version).toBe(1);
     const d = await readDesign(pool, actors.ownerA!, seedIds.shopA);
-    await publishDesign(pool, actors.ownerA!, seedIds.shopA, {
-      version: d.version,
-      revision: d.revision!,
-      confirm: true,
-    });
-    await expect(
-      publishDesign(pool, actors.ownerA!, seedIds.shopA, {
+    await publishDesign(
+      pool,
+      actors.ownerA!,
+      seedIds.shopA,
+      {
         version: d.version,
         revision: d.revision!,
         confirm: true,
-      }),
+      },
+      true,
+    );
+    await expect(
+      publishDesign(
+        pool,
+        actors.ownerA!,
+        seedIds.shopA,
+        {
+          version: d.version,
+          revision: d.revision!,
+          confirm: true,
+        },
+        true,
+      ),
     ).rejects.toMatchObject({ status: 409 });
   } finally {
     await pool.query("ALTER TABLE pilot_metrics_offline RENAME TO pilot_metrics");
@@ -582,11 +594,17 @@ test("platform activation and renewals distinguish unpublished, actual payment, 
     [app, seedIds.merchantA, actors.ownerA!.userId, policy, seedIds.shopA],
   );
   const design = await readDesign(pool, actors.ownerA!, seedIds.shopA);
-  await publishDesign(pool, actors.ownerA!, seedIds.shopA, {
-    version: design.version,
-    revision: design.revision!,
-    confirm: true,
-  });
+  await publishDesign(
+    pool,
+    actors.ownerA!,
+    seedIds.shopA,
+    {
+      version: design.version,
+      revision: design.revision!,
+      confirm: true,
+    },
+    true,
+  );
   const before = await readOperatorPilot(pool, actors.operator!);
   expect(before.activation).toEqual({ applications: "1", provisioned: "1" });
   // The application was created after the shop's historical first publication,
@@ -644,7 +662,7 @@ test("platform activation and renewals distinguish unpublished, actual payment, 
     summary: "Fictional first cohort publication",
     specification: { schemaVersion: 1, theme: "earth", announcement: "", spaces: [], actions: [] },
   });
-  await publishDesign(pool, actors.ownerA!, newShop, { ...saved, confirm: true });
+  await publishDesign(pool, actors.ownerA!, newShop, { ...saved, confirm: true }, true);
   const result = await readOperatorPilot(pool, actors.operator!);
   expect(result.activation).toEqual({ applications: "2", provisioned: "2" });
   expect(result.firstPublish.measured).toBe("1");

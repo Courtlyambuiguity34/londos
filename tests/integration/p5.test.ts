@@ -47,6 +47,8 @@ import { LocalNotifications, LocalPrivateStorage } from "../../src/server/jobs/a
 import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-design";
 import { moveCatalogueItem } from "../../src/server/catalogue-arrangement";
 import { readPublicShop } from "../../src/server/public-shop";
+import { readGuidedProduct, saveGuidedProduct } from "../../src/server/guided-product";
+import { shopPhotoHealth } from "../../src/server/shop-photo-health";
 
 const parent = new Pool({ connectionString: process.env.DATABASE_URL }),
   databaseName = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -417,7 +419,7 @@ async function publishFixtureShop() {
     specification: current.specification,
     summary: "Published contact fixture",
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
 }
 test("guest requests require eligibility, stay scoped and deduplicate without promising a sale", async () => {
   const input = guest();
@@ -1002,4 +1004,130 @@ test("notification fanout limit rolls back contact changes and guest receipt ato
     await pool.query("DELETE FROM memberships WHERE user_id=ANY($1::text[])", [ids]);
     await pool.query('DELETE FROM "user" WHERE id=ANY($1::text[])', [ids]);
   }
+});
+
+test("guided entry requires a processed photo for visible products and preserves hidden drafts and services", async () => {
+  const input = product();
+  await expect(saveGuidedProduct(pool, actors.ownerA!, shop, input)).rejects.toMatchObject({
+    code: "product_photo_required",
+  });
+  const hidden = await saveGuidedProduct(pool, actors.ownerA!, shop, {
+    ...input,
+    availability: "archived",
+  });
+  expect((await readGuidedProduct(pool, actors.ownerA!, shop, hidden.id)).product).toMatchObject({
+    availability: "archived",
+    price_minor: input.priceMinor,
+  });
+  await saveGuidedProduct(pool, actors.ownerA!, shop, {
+    ...input,
+    slug: "service",
+    kind: "service",
+  });
+  const asset = await upload(await image());
+  await expect(
+    saveGuidedProduct(pool, actors.ownerA!, shop, { ...input, mediaId: asset }),
+  ).rejects.toMatchObject({ code: "photo_not_ready" });
+  const job = await mediaJob(asset);
+  await processMedia(pool, job, AbortSignal.timeout(5000));
+  await acknowledge(pool, job);
+  const saved = await saveGuidedProduct(pool, actors.ownerA!, shop, {
+    ...input,
+    productId: hidden.id,
+    version: hidden.version,
+    mediaId: asset,
+  });
+  expect((await readGuidedProduct(pool, actors.ownerA!, shop, saved.id)).product).toMatchObject({
+    media_id: asset,
+    price_minor: input.priceMinor,
+  });
+  await expect(
+    saveGuidedProduct(pool, actors.ownerA!, shop, {
+      ...input,
+      productId: saved.id,
+      mediaId: asset,
+      version: 0,
+    }),
+  ).rejects.toMatchObject({ code: "stale_version" });
+  await expect(
+    saveGuidedProduct(pool, actors.ownerB!, shop, { ...input, mediaId: asset }),
+  ).rejects.toMatchObject({ status: 404 });
+  await expect(
+    saveGuidedProduct(pool, actors.ownerA!, shop, {
+      ...input,
+      productId: randomUUID(),
+      mediaId: asset,
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  await expect(readGuidedProduct(pool, actors.ownerB!, shop, saved.id)).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(
+    saveGuidedProduct(pool, actors.ownerA!, shop, {
+      ...input,
+      slug: "foreign-photo",
+      mediaId: randomUUID(),
+    }),
+  ).rejects.toMatchObject({ code: "photo_not_ready" });
+});
+
+test("photo health and department thumbnails find images beyond the home page and ignore hidden listings", async () => {
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,availability,position) SELECT gen_random_uuid(),$1,$2,$3,'product','Unpictured '||n,'unpictured-'||n,'UGX','available',n FROM generate_series(1,40) n",
+    [shop, seedIds.merchantA, department],
+  );
+  await saveGuidedProduct(pool, actors.ownerA!, shop, {
+    ...product(),
+    slug: "hidden",
+    availability: "archived",
+  });
+  const asset = await upload(await image()),
+    job = await mediaJob(asset);
+  await processMedia(pool, job, AbortSignal.timeout(5000));
+  await acknowledge(pool, job);
+  const photographed = await saveGuidedProduct(pool, actors.ownerA!, shop, {
+    ...product(),
+    mediaId: asset,
+    position: 100,
+  });
+  const health = await shopPhotoHealth(pool, shop);
+  expect(health).toMatchObject({
+    products: 41,
+    pictured: 1,
+    missingProductCount: 40,
+    missingDepartments: [],
+  });
+  expect(health.missingProducts).toHaveLength(8);
+  await publishFixtureShop();
+  const publicShop = await readPublicShop(pool, shop);
+  expect(publicShop?.products.some((p) => p.media_id === asset)).toBe(false);
+  expect(publicShop?.departments.find((d) => d.id === department)?.image?.id).toBe(asset);
+  await pool.query("DELETE FROM media_blobs WHERE asset_id=$1 AND variant='display'", [asset]);
+  expect(
+    (await readGuidedProduct(pool, actors.ownerA!, shop, photographed.id)).product.media_id,
+  ).toBeNull();
+  expect(await shopPhotoHealth(pool, shop)).toMatchObject({
+    pictured: 0,
+    missingProductCount: 41,
+    missingDepartments: [{ id: department, name: "New arrivals" }],
+  });
+  expect(
+    (await readPublicShop(pool, shop))?.departments.find((d) => d.id === department)?.image,
+  ).toBeNull();
+});
+
+test("publication requires explicit photo review when catalogue gaps remain", async () => {
+  await saveProduct(pool, actors.ownerA!, shop, null, product());
+  const design = await readDesign(pool, actors.ownerA!, shop),
+    draft = await saveDesign(pool, actors.ownerA!, shop, {
+      version: design.version,
+      specification: design.specification,
+      summary: "Review photo gaps",
+    });
+  await expect(
+    publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }),
+  ).rejects.toMatchObject({ code: "photo_review_required" });
+  expect((await readDesign(pool, actors.ownerA!, shop)).photoHealth.missingProductCount).toBe(1);
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
+  expect(await readPublicShop(pool, shop)).not.toBeNull();
 });

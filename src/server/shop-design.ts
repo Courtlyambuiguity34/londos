@@ -15,6 +15,7 @@ import { requireShop, requireStepUp, type Actor } from "./security/authorization
 import { AccessError } from "./security/errors";
 import { audit } from "./security/audit";
 import { findShopTheme } from "../modules/shop-themes/catalogue";
+import { shopPhotoHealth } from "./shop-photo-health";
 
 export const saveDesignInput = z
   .object({
@@ -230,6 +231,7 @@ export async function readDesign(pool: Pool | PoolClient, actor: Actor, shopId: 
     departments,
     products,
     canManageImages,
+    photoHealth: await shopPhotoHealth(pool, shopId),
     images: (
       await pool.query(
         `SELECT a.id,a.alt,a.width,a.height FROM media_assets a
@@ -334,6 +336,7 @@ export async function publishDesign(
   actor: Actor,
   shopId: string,
   input: z.infer<typeof publishDesignInput>,
+  photosReviewed = false,
 ) {
   const value = publishDesignInput.parse(input);
   return transaction(pool, async (client) => {
@@ -348,6 +351,11 @@ export async function publishDesign(
     ).rows[0];
     if (!draft || draft.revision !== value.revision) throw new AccessError(409, "stale_version");
     await validateReferences(client, shopId, shopSpecification.parse(draft.design));
+    if (!photosReviewed) {
+      const health = await shopPhotoHealth(client, shopId);
+      if (health.missingProductCount || health.missingDepartments.length)
+        throw new AccessError(422, "photo_review_required");
+    }
     const allowed = await client.query(
       "SELECT 1 FROM tenancies t JOIN shop_moderation m ON m.shop_id=t.shop_id JOIN shop_publication p ON p.shop_id=t.shop_id WHERE t.shop_id=$1 AND t.state IN ('active','due','grace') AND m.state='clear' AND p.state NOT IN ('archived','provisioning') FOR UPDATE OF t,m,p",
       [shopId],

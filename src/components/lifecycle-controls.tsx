@@ -159,11 +159,29 @@ export function CreateApplicationForm({
   const router = useRouter(),
     key = useRef<string | null>(null);
   const [pending, setPending] = useState(false),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [savedDraft, setSavedDraft] = useState<string | null>(null);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget,
       f = new FormData(form);
+    const submitForReview =
+      (e.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "review";
+    const image = f.get("verification");
+    if (submitForReview && (!(image instanceof File) || !image.size)) {
+      setMessage(
+        "Choose one private verification photo before sending for review. You can save a draft instead.",
+      );
+      return;
+    }
+    if (
+      image instanceof File &&
+      image.size &&
+      (!["image/jpeg", "image/png", "image/webp"].includes(image.type) || image.size > 2097152)
+    ) {
+      setMessage("Choose a JPEG, PNG or WebP verification photo up to 2 MiB.");
+      return;
+    }
     setPending(true);
     setMessage("");
     try {
@@ -173,6 +191,40 @@ export function CreateApplicationForm({
         key: key.current,
         ...(f.get("merchantId") ? { merchantId: String(f.get("merchantId")) } : {}),
       });
+      setSavedDraft(data.id);
+      if (image instanceof File && image.size) {
+        setMessage("Your details are saved. Uploading the private verification photo…");
+        const draftResponse = await fetch(`/api/workspace/applications/${data.id}`, {
+          cache: "no-store",
+        });
+        if (!draftResponse.ok)
+          throw Error("Your draft is saved. Open it below to finish uploading.");
+        const draft = await draftResponse.json();
+        const uploaded = await fetch(`/api/workspace/applications/${data.id}/evidence/1`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": image.type,
+            "X-Record-Version": String(draft.application.version),
+          },
+          body: image,
+        });
+        if (!uploaded.ok)
+          throw Error(
+            "Your application draft is saved, but the photo was not confirmed. Continue your saved application below to finish.",
+          );
+      }
+      if (submitForReview) {
+        setMessage("Sending your application for review…");
+        const response = await fetch(`/api/workspace/applications/${data.id}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) throw Error("Your draft is saved. Open it below to finish submitting.");
+        const current = await response.json();
+        await send(`/api/workspace/applications/${data.id}/submit`, "POST", {
+          version: current.application.version,
+          confirm: true,
+        });
+      }
       router.push(`/shopkeeper/applications/${data.id}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The service is unavailable.");
@@ -181,48 +233,90 @@ export function CreateApplicationForm({
     }
   }
   return (
-    <form className="account-form" onSubmit={submit}>
-      <BusinessFields />
-      <label htmlFor="merchant-account">Merchant account</label>
-      <select id="merchant-account" name="merchantId">
-        <option value="">Create my own merchant account</option>
-        {merchants.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </select>
-      <fieldset className="application-policy-consent">
-        <legend>Before creating your application</legend>
-        <p>Read these two separate documents. Each opens in a new tab:</p>
+    <form className="account-form application-quick-start" method="post" onSubmit={submit}>
+      <ol className="guided-progress" aria-label="Application steps">
+        <li>1. Business details</li>
+        <li>2. Private verification photo</li>
+        <li>3. Send for review</li>
+      </ol>
+      <fieldset className="application-entry-fields" disabled={pending || Boolean(savedDraft)}>
+        <legend className="sr-only">Your application</legend>
+        <BusinessFields />
+        {merchants.length ? (
+          <>
+            <label htmlFor="merchant-account">Merchant account</label>
+            <select id="merchant-account" name="merchantId">
+              <option value="">Create my own merchant account</option>
+              {merchants.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </>
+        ) : null}
+        <label htmlFor="application-verification">Private verification photo</label>
+        <input
+          id="application-verification"
+          type="file"
+          name="verification"
+          accept="image/jpeg,image/png,image/webp"
+        />
         <p>
-          <Link
-            className="application-policy-link"
-            href="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span aria-hidden="true">↗ </span>Read Terms of Use
-          </Link>
-          {" · "}
-          <Link
-            className="application-policy-link"
-            href="/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span aria-hidden="true">↗ </span>Read Privacy Policy
-          </Link>
+          This photo is only for verification, not for your public shop. Choose a JPEG, PNG or WebP
+          up to 2 MiB. You will add product photos in your shop workspace after approval and rent
+          setup.
         </p>
-        <label className="checkbox-label">
-          <input name="acceptPolicies" type="checkbox" required />I have read and agree to the Terms
-          of Use and acknowledge the Privacy Policy.
-        </label>
+        <fieldset className="application-policy-consent">
+          <legend>Before creating your application</legend>
+          <p>Read these two separate documents. Each opens in a new tab:</p>
+          <p>
+            <Link
+              className="application-policy-link"
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span aria-hidden="true">↗ </span>Read Terms of Use
+            </Link>
+            {" · "}
+            <Link
+              className="application-policy-link"
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span aria-hidden="true">↗ </span>Read Privacy Policy
+            </Link>
+          </p>
+          <label className="checkbox-label">
+            <input name="acceptPolicies" type="checkbox" required />I have read and agree to the
+            Terms of Use and acknowledge the Privacy Policy.
+          </label>
+        </fieldset>
+        <button
+          className="button"
+          name="intent"
+          value="review"
+          disabled={pending || Boolean(savedDraft)}
+        >
+          {pending ? "Working…" : "Send for review"}
+        </button>
+        <button
+          className="button button--outline"
+          name="intent"
+          value="draft"
+          disabled={pending || Boolean(savedDraft)}
+        >
+          {pending ? "Saving…" : "Create application draft"}
+        </button>
       </fieldset>
-      <button className="button" disabled={pending}>
-        {pending ? "Saving…" : "Create application draft"}
-      </button>
       <p role="status">{message}</p>
+      {savedDraft ? (
+        <Link href={`/shopkeeper/applications/${savedDraft}`}>
+          Continue your saved application →
+        </Link>
+      ) : null}
     </form>
   );
 }
@@ -346,6 +440,17 @@ export function ApplicationPanel({
       <p>
         <strong>Application status: {a.state.replaceAll("_", " ")}</strong>
       </p>
+      {!operator ? (
+        <p className="workspace-notice">
+          {editable
+            ? "Next: check your details, add a private verification photo, then send for review."
+            : ["submitted", "reviewing"].includes(a.state)
+              ? "Your application is with the landlord. Check here for the decision or a request for information. After approval, follow the rent instructions to open your shop workspace and add products."
+              : a.state === "approved"
+                ? "Your application is approved. Follow the rent instructions below. Once coverage is confirmed, your shop workspace will guide you through product photos and publication."
+                : "Read the reviewer’s message below for the outcome."}
+        </p>
+      ) : null}
       {a.review_reason ? <p>Reviewer message: {a.review_reason}</p> : null}
       {!operator && editable ? (
         <form className="account-form" onSubmit={save} key={a.version}>

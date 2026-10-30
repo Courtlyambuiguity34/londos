@@ -165,7 +165,7 @@ test.beforeAll(async () => {
         entry.theme,
       ),
     });
-    await publishDesign(pool, actor, id, { ...draft, confirm: true });
+    await publishDesign(pool, actor, id, { ...draft, confirm: true }, true);
     shops.push({ id, slug: entry.slug, name: entry.name, asset });
   }
 });

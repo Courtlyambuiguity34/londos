@@ -53,7 +53,7 @@ beforeAll(async () => {
       summary: "Fictional optional mirror layout",
       specification: design.specification,
     });
-  await publishDesign(pool, actor, seedIds.shopA, { ...saved, confirm: true });
+  await publishDesign(pool, actor, seedIds.shopA, { ...saved, confirm: true }, true);
   baseline = (await pool.query("SELECT * FROM shops ORDER BY id")).rows;
   const m = await owned.run("mongo", [
     "--user",

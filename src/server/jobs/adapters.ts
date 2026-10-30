@@ -77,6 +77,14 @@ const paymentDetails = z
 export const messageSchema = z.discriminatedUnion("template", [
   z
     .object({
+      template: z.literal("application-review-queue"),
+      to: z.email(),
+      operatorId: z.string().min(1).max(128),
+      applicationId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
       template: z.literal("incident-status"),
       to: z.email(),
       caseId: z.uuid(),

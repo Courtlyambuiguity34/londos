@@ -14,6 +14,7 @@ import { DesignSections } from "./design-sections";
 import { sectionLabels } from "@/modules/merchant-editor";
 import { designResponseError } from "@/modules/design-feedback";
 import { ShopBrandingFields, type BrandingImage } from "./shop-branding-fields";
+import type { PhotoHealth } from "@/server/shop-photo-health";
 
 const editorSections = [
   { id: "themes", label: "Themes", description: "Choose your look" },
@@ -32,6 +33,7 @@ type State = {
   products: { id: string; name: string; has_image: boolean }[];
   images?: BrandingImage[];
   canManageImages?: boolean;
+  photoHealth?: PhotoHealth;
 };
 const defaultPresentation: ShopPresentation = {
   premiseStyle: "minimalist",
@@ -77,6 +79,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
     [status, setStatus] = useState("Loading design…"),
     [busy, setBusy] = useState(false),
     [confirmed, setConfirmed] = useState(false),
+    [photosReviewed, setPhotosReviewed] = useState(false),
     [moving, setMoving] = useState(""),
     [before, setBefore] = useState(""),
     [rollback, setRollback] = useState("");
@@ -88,6 +91,7 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
       setState(current);
       setSpec(current.specification);
       setConfirmed(false);
+      setPhotosReviewed(false);
     },
     [root],
   );
@@ -765,6 +769,35 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
               </button>
             </form>
             <h2>Publish</h2>
+            {state.photoHealth &&
+            (state.photoHealth.missingProductCount ||
+              state.photoHealth.missingDepartments.length) ? (
+              <aside className="notice" aria-label="Photo review before publication">
+                <h3>Some photos are still missing</h3>
+                <p>
+                  {state.photoHealth.missingProductCount} current products have no ready photo.
+                  Departments without thumbnails:{" "}
+                  {state.photoHealth.missingDepartments.map((d) => d.name).join(", ") || "none"}.
+                </p>
+                <ul>
+                  {state.photoHealth.missingProducts.map((p) => (
+                    <li key={p.id}>
+                      <Link href={`/shopkeeper/shops/${shopId}/products/${p.id}/edit`}>
+                        Add a photo to {p.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={photosReviewed}
+                    onChange={(e) => setPhotosReviewed(e.target.checked)}
+                  />
+                  I have reviewed the missing photos and want to publish this version anyway
+                </label>
+              </aside>
+            ) : null}
             <p>
               Publishing makes the shop's approved catalogue and contact details visible. Preview
               the saved revision first.
@@ -779,12 +812,23 @@ export function DesignWorkspace({ shopId }: { shopId: string }) {
             </label>
             <button
               className="button"
-              disabled={busy || dirty || !confirmed}
+              disabled={
+                busy ||
+                dirty ||
+                !confirmed ||
+                Boolean(
+                  state.photoHealth &&
+                  (state.photoHealth.missingProductCount ||
+                    state.photoHealth.missingDepartments.length) &&
+                  !photosReviewed,
+                )
+              }
               onClick={() =>
                 void command("/publish", {
                   version: state.version,
                   revision: state.revision,
                   confirm: true,
+                  photosReviewed,
                 })
               }
             >

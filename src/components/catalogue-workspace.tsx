@@ -6,6 +6,7 @@ import { WorkspaceSectionNav, useWorkspaceSection } from "./workspace-sections";
 import { formatMinorMoney } from "@/modules/money";
 import { catalogueAddress, priceToMinor, editablePrice } from "@/modules/merchant-editor";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import type { PhotoHealth } from "@/server/shop-photo-health";
 
 type Department = {
   id: string;
@@ -112,6 +113,7 @@ export function CatalogueWorkspace({
     [nextProductPosition, setNextProductPosition] = useState(0),
     [filters, setFilters] = useState({ query: "", departmentId: "", availability: "all" });
   const editValues = product ?? copy;
+  const [photoHealth, setPhotoHealth] = useState<PhotoHealth | null>(null);
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       const results = await Promise.all([
@@ -130,6 +132,7 @@ export function CatalogueWorkspace({
       setDepartments(catalogue.departments);
       setProducts(catalogue.products);
       setMore(catalogue.hasMore);
+      setPhotoHealth(catalogue.photoHealth ?? null);
       setNextProductPosition(catalogue.nextProductPosition);
       setMedia(assets);
       setContacts(contact);
@@ -474,14 +477,15 @@ export function CatalogueWorkspace({
           </p>
         </div>
         <div className="account-links">
-          <button
-            type="button"
+          <Link
+            href={`/shopkeeper/shops/${shopId}/products/new`}
             className="button"
-            disabled={busy || !loaded}
-            onClick={() => (activeDepartments.length > 0 ? addProduct() : select("departments"))}
+            onClick={(event) => {
+              if (!replaceProductEditor()) event.preventDefault();
+            }}
           >
             Add a product
-          </button>
+          </Link>
           <button
             type="button"
             className="button button--outline"
@@ -534,6 +538,13 @@ export function CatalogueWorkspace({
         id="departments"
         aria-labelledby="departments-title"
       >
+        {photoHealth?.missingDepartments.length ? (
+          <p className="notice">
+            Department thumbnails come from product photos.{" "}
+            {photoHealth.missingDepartments.map((item) => item.name).join(", ")} still need a
+            photographed product.
+          </p>
+        ) : null}
         <h2 id="departments-title">Departments</h2>
         <p>
           Think of these as rooms in your shop. For example, Crops can contain maize, beans and
@@ -549,6 +560,11 @@ export function CatalogueWorkspace({
               <span>
                 {d.name}
                 {d.archived ? " (archived)" : ""}
+                {!d.archived && photoHealth?.missingDepartments.some((item) => item.id === d.id) ? (
+                  <small className="photo-gap-label">
+                    No department thumbnail yet. Add a photographed product.
+                  </small>
+                ) : null}
               </span>
               {d.archived ? (
                 <button
@@ -573,13 +589,24 @@ export function CatalogueWorkspace({
                 </button>
               ) : null}
               {!d.archived ? (
+                <Link
+                  className="button button--small"
+                  href={`/shopkeeper/shops/${shopId}/products/new?department=${d.id}`}
+                  onClick={(event) => {
+                    if (!replaceProductEditor()) event.preventDefault();
+                  }}
+                >
+                  Add product to {d.name}
+                </Link>
+              ) : null}
+              {!d.archived ? (
                 <button
                   type="button"
                   className="button button--outline button--small"
                   disabled={busy || !loaded}
                   onClick={() => addProduct(d.id)}
                 >
-                  Add product to {d.name}
+                  Open full editor for {d.name}
                 </button>
               ) : null}
               <button
@@ -714,6 +741,28 @@ export function CatalogueWorkspace({
         aria-labelledby="products-title"
       >
         <h2 id="products-title">Products and services</h2>
+        {photoHealth &&
+        (photoHealth.missingProductCount > 0 || photoHealth.missingDepartments.length > 0) ? (
+          <aside className="notice photo-readiness" aria-label="Photos to finish">
+            <strong>Photos still to finish.</strong>
+            <p>
+              {photoHealth.missingProductCount} current products need a ready photo. Department
+              thumbnails come from their product photos.
+            </p>
+            <ul>
+              {photoHealth.missingProducts.map((item) => (
+                <li key={item.id}>
+                  <Link href={`/shopkeeper/shops/${shopId}/products/${item.id}/edit`}>
+                    Add a photo to {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link href={`/shopkeeper/shops/${shopId}/products/new`}>
+              Use the simple photo & product setup →
+            </Link>
+          </aside>
+        ) : null}
         {!products.length &&
           !filters.query &&
           !filters.departmentId &&
@@ -728,9 +777,9 @@ export function CatalogueWorkspace({
                     : "Create a department first, then add a product or service with its photo and price."}
               </p>
               {activeDepartments.length > 0 ? (
-                <button type="button" className="button" onClick={() => addProduct()}>
+                <Link className="button" href={`/shopkeeper/shops/${shopId}/products/new`}>
                   Add your first product
-                </button>
+                </Link>
               ) : (
                 <button
                   className="button button--outline"
@@ -1104,6 +1153,18 @@ export function CatalogueWorkspace({
                 )}
                 <div>
                   <strong>{p.name}</strong>
+                  {!p.media_id ? (
+                    <small className="photo-gap-label">
+                      {p.kind === "service"
+                        ? "A photo can help explain this service."
+                        : p.availability === "archived"
+                          ? "Hidden listing — no photo yet."
+                          : "Photo missing."}{" "}
+                      <Link href={`/shopkeeper/shops/${shopId}/products/${p.id}/edit`}>
+                        Add photo
+                      </Link>
+                    </small>
+                  ) : null}
                   <span>
                     {formatMinorMoney(p.price_minor, p.currency)} ·{" "}
                     {p.availability.replaceAll("_", " ")}

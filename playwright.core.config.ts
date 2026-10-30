@@ -35,6 +35,7 @@ export default defineConfig({
         "invitation-entry.spec.ts",
         "team-workflow.spec.ts",
         "shopkeeper-workflows.spec.ts",
+        "persona-journeys.spec.ts",
         "designer-feedback.spec.ts",
         "portal-navigation.spec.ts",
         "audit.spec.ts",

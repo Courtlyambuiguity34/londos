@@ -137,7 +137,12 @@ test("owner team and address forms, invitation acceptance and scoped MFA operati
       (
         await page.request.post(`/api/workspace/shops/${seedIds.shopA}/design/publish`, {
           headers: { origin },
-          data: { version: initialDesign.version, revision: initialDesign.revision, confirm: true },
+          data: {
+            version: initialDesign.version,
+            revision: initialDesign.revision,
+            confirm: true,
+            photosReviewed: true,
+          },
         })
       ).status(),
     ).toBe(200);
@@ -213,7 +218,12 @@ test("owner team and address forms, invitation acceptance and scoped MFA operati
       (
         await page.request.post(`/api/workspace/shops/${seedIds.shopA}/design/publish`, {
           headers: { origin },
-          data: { version: design.version, revision: design.revision, confirm: true },
+          data: {
+            version: design.version,
+            revision: design.revision,
+            confirm: true,
+            photosReviewed: true,
+          },
         })
       ).status(),
     ).toBe(200);

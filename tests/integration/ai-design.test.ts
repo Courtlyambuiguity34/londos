@@ -253,11 +253,17 @@ test("deterministic proposal previews without saving, atomic confirmation create
   const d = await readDesign(pool, actors.ownerA!, shop);
   expect(d.revision).toBe(1);
   expect(d.publishedRevision).toBeNull();
-  await publishDesign(pool, actors.ownerA!, shop, {
-    version: d.version,
-    revision: 1,
-    confirm: true,
-  });
+  await publishDesign(
+    pool,
+    actors.ownerA!,
+    shop,
+    {
+      version: d.version,
+      revision: 1,
+      confirm: true,
+    },
+    true,
+  );
   expect((await readDesign(pool, actors.ownerA!, shop)).publishedRevision).toBe(1);
   expect(
     (await pool.query("SELECT count(*)::int AS n FROM shop_revisions WHERE shop_id=$1", [shop]))
@@ -872,11 +878,17 @@ test("unavailable/consent states preserve manual editing and public reads make z
     specification: d.specification,
   });
   const saved = await readDesign(pool, actors.ownerA!, shop);
-  await publishDesign(pool, actors.ownerA!, shop, {
-    version: saved.version,
-    revision: saved.revision!,
-    confirm: true,
-  });
+  await publishDesign(
+    pool,
+    actors.ownerA!,
+    shop,
+    {
+      version: saved.version,
+      revision: saved.revision!,
+      confirm: true,
+    },
+    true,
+  );
   for (let i = 0; i < 3; i++) await readPublicShop(pool, shop);
   expect(g.generate).not.toHaveBeenCalled();
 });

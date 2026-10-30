@@ -138,6 +138,15 @@ export function brevoMessage(message: Record<string, unknown>, origin: string) {
       `${value.shopName} now has a private Londos workspace. Add products and departments, confirm your contact details, customise the design, then publish when you are ready.`,
     );
     action = { label: "Open shop workspace", url: link.href };
+  } else if (value.template === "application-review-queue") {
+    link.pathname = "/landlord/applications";
+    link.search = "?status=submitted";
+    subject = "A shop application is ready for review";
+    text = `A new or updated shop application is waiting for review. Sign in with your operator account to open the review queue.\n${link.href}\n\nManage application email alerts from the review queue.`;
+    body = paragraphs(
+      "A new or updated shop application is waiting for review. Open your queue to claim it and check the private details. You can turn these alerts off under Application email alerts.",
+    );
+    action = { label: "Open review queue", url: link.href };
   } else if (value.template === "monthly-report") {
     link.pathname = `/shopkeeper/shops/${value.shopId}/analytics`;
     subject = `${value.shopName} · Londos report for ${value.month}`;

@@ -18,7 +18,12 @@ import {
 } from "./catalogue-pagination";
 import type { PreviewNavigation, ShopDestination } from "../modules/shop-design/view-links";
 
-export type PublicDepartment = { id: string; name: string; slug: string };
+export type PublicDepartment = {
+  id: string;
+  name: string;
+  slug: string;
+  image?: { id: string; alt: string; width: number; height: number } | null;
+};
 export type PublicProduct = {
   id: string;
   department_id: string;
@@ -110,7 +115,14 @@ export async function assemble(
   const specification = parsedSpecification.data ?? emptySpec;
   const departments = (
     await client.query(
-      "SELECT id,name,slug FROM departments WHERE shop_id=$1 AND archived=false ORDER BY position,id LIMIT 100",
+      `SELECT d.id,d.name,d.slug,(SELECT json_build_object('id',a.id,'alt',a.alt,'width',a.width,'height',a.height)
+       FROM products q JOIN product_media pm ON pm.product_id=q.id AND pm.shop_id=q.shop_id AND pm.merchant_id=q.merchant_id
+       JOIN media_assets a ON a.id=pm.asset_id AND a.shop_id=q.shop_id AND a.merchant_id=q.merchant_id
+       WHERE q.shop_id=d.shop_id AND q.department_id=d.id AND q.availability<>'archived' AND q.deleted_at IS NULL
+         AND a.state='ready' AND a.created_by IS NOT NULL AND a.alt<>'' AND a.width>0 AND a.height>0
+         AND (SELECT count(*) FROM media_blobs b WHERE b.asset_id=a.id AND b.variant IN ('thumbnail','card','display'))=3
+       ORDER BY q.position,q.id LIMIT 1) AS image
+       FROM departments d WHERE d.shop_id=$1 AND d.archived=false AND d.deleted_at IS NULL ORDER BY d.position,d.id LIMIT 100`,
       [row.id],
     )
   ).rows as PublicDepartment[];

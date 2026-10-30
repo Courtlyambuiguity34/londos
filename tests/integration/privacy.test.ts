@@ -644,7 +644,7 @@ test("analytics erasure stops future capture, preserves platform counters and ca
       actions: ["call"],
     },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true);
   await pool.query(
     "INSERT INTO pilot_metrics(day,shop_id,merchant_id,event,source,detail,count) VALUES(current_date,$1,$2,'shop_viewed','direct','none',5)",
     [shop, merchant],
@@ -923,7 +923,7 @@ test("a real guest retry after enquiry erasure cannot recreate primary personal 
     summary: "Public privacy retry fixture",
     specification: { schemaVersion: 1, theme: "earth", announcement: "", spaces: [], actions: [] },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...draft, confirm: true }, true);
   await pool.query(
     "INSERT INTO shop_contacts(shop_id,merchant_id,version,fulfilment,payment_instructions,delivery_instructions,enquiries_enabled) VALUES($1,$2,1,'contact','','',true)",
     [shop, merchant],
@@ -1023,7 +1023,7 @@ test("a captured observation waiting behind erasure cannot recreate erased shop 
       actions: ["call"],
     },
   });
-  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true });
+  await publishDesign(pool, actors.ownerA!, shop, { ...d, confirm: true }, true);
   const token = renderPilotContext({
     page: "shop",
     shopId: shop,

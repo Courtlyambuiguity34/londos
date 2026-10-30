@@ -5,11 +5,9 @@ import { publishDesign, publishDesignInput } from "@/server/shop-design";
 export async function POST(request: Request, context: { params: Promise<{ shopId: string }> }) {
   return workspaceRequest(request, async (actor) => {
     const shopId = z.uuid().parse((await context.params).shopId);
-    return publishDesign(
-      database(),
-      actor,
-      shopId,
-      publishDesignInput.parse(await boundedBody(request)),
-    );
+    const { photosReviewed, ...input } = publishDesignInput
+      .extend({ photosReviewed: z.boolean().default(false) })
+      .parse(await boundedBody(request));
+    return publishDesign(database(), actor, shopId, input, photosReviewed);
   });
 }
