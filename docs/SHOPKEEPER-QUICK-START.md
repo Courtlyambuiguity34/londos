@@ -1,6 +1,6 @@
 # Add products and organise your Londos shop
 
-Updated 27 October 2026.
+Updated 30 October 2026.
 
 ## The three parts of your shop
 
@@ -36,7 +36,8 @@ count explains which departments are available in the product selector.
 
 Raw ordering numbers are no longer shown in the normal form. Existing order
 values are preserved when editing; new departments follow the existing ones.
-Use the page builder's move controls to arrange sections on your home page.
+Use **Move up/down** beside an active department to change department order.
+Use the page builder's separate move controls to arrange home-page sections.
 
 ## Add a product
 
@@ -57,6 +58,35 @@ Use the page builder's move controls to arrange sections on your home page.
 **Product link & type (optional)** lets you choose a different link or identify
 an item as a service. A blank address is generated from the name when saved.
 Existing product addresses stay unchanged when you edit an item.
+
+You can also choose **Create a department here** inside the product form. Enter
+the new department name, choose **Create & select department**, and continue with
+the product. The details you already typed remain in place.
+
+For repeat entry, **Save & add another** confirms the current save and opens an
+empty form with the same department, currency and product/service type. To reuse
+more details, choose **Duplicate** beside a similar product. Review the new name,
+price, photo and availability, then save it. Nothing is created when you press
+Duplicate; the new copy starts hidden from customers until you change its
+Availability. The original product stays unchanged.
+
+Replacing a modified product form asks before clearing your work. A browser
+reload/close can also show its unsaved-change warning. Unsaved forms are not
+stored as persistent drafts.
+
+## Find and arrange products
+
+Use **Find a product**, **In department** and **Listing status** above the product
+list, then choose **Find products**. The search covers the whole catalogue and
+keeps the same filters when moving between pages. **Clear product filters**
+returns to the full list without clearing the product form.
+
+To arrange products, choose one active department and clear the name/status
+filters. **Move up/down** beside a non-hidden product changes its order within
+that department, including across catalogue pages. Hidden and deleted items are
+not rearranged. These order changes save immediately and affect published
+department pages and department-based displays. Products explicitly selected in
+a home-page section keep the order chosen in **Design & publish**.
 
 ## Delete, recover or revert a change
 

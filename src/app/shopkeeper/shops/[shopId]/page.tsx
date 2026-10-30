@@ -27,6 +27,11 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
   const canDesign = permissions.includes("design"),
     canFinance = permissions.includes("finance");
   const steps = [
+    {
+      label: "Create your first department",
+      done: setup.departments,
+      href: `${base}/catalogue#departments`,
+    },
     { label: "Add products or services", done: setup.product_count > 0, href: `${base}/catalogue` },
     {
       label: "Set customer contact details",
@@ -41,6 +46,7 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
       : []),
   ];
   const completed = steps.filter((step) => step.done).length;
+  const nextStep = steps.find((step) => !step.done);
   return (
     <ShopWorkspaceShell
       shop={shop}
@@ -82,6 +88,16 @@ export default async function Page({ params }: { params: Promise<{ shopId: strin
               </li>
             ))}
           </ol>
+          {nextStep ? (
+            <Link className="button button--small" href={nextStep.href}>
+              Continue: {nextStep.label} →
+            </Link>
+          ) : (
+            <p>
+              Your setup steps are complete. Keep your catalogue and customer information up to
+              date.
+            </p>
+          )}
         </section>
         <ShopPublicLink
           slug={shop.slug}

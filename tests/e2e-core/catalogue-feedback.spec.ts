@@ -1098,3 +1098,216 @@ test("unpublished saved and proposal previews keep their identity through privat
     await fixture.pool.end();
   }
 });
+
+test("a merchant creates a department inline, repeats product entry and duplicates without changing the source", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const fixture = await ownShop(page);
+  try {
+    await page.goto(`/shopkeeper/shops/${fixture.shop}`);
+    await expect(
+      page.getByRole("link", { name: "Continue: Create your first department →", exact: true }),
+    ).toBeVisible();
+    await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    await page.getByLabel("Product or service name", { exact: true }).fill("Blue carry bag");
+    await page
+      .getByLabel("Description", { exact: true })
+      .fill("Keep this description while creating a room.");
+    await page.getByLabel("Currency", { exact: true }).selectOption("USD");
+    await page.getByLabel("Price (optional)", { exact: true }).fill("19.95");
+    await page.getByRole("button", { name: "Create a department here", exact: true }).click();
+    await page.getByLabel("New department name", { exact: true }).fill("Bags");
+    await page.getByRole("button", { name: "Create & select department", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Department created and selected");
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
+      "Blue carry bag",
+    );
+    await expect(page.getByLabel("Description", { exact: true })).toHaveValue(
+      "Keep this description while creating a room.",
+    );
+    const department = (
+      await fixture.pool.query("SELECT id FROM departments WHERE shop_id=$1 AND name='Bags'", [
+        fixture.shop,
+      ])
+    ).rows[0].id;
+    await expect(page.getByLabel("Department", { exact: true })).toHaveValue(department);
+    await page.getByRole("button", { name: "Save & add another", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Ready for the next item");
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue("");
+    await expect(page.getByLabel("Currency", { exact: true })).toHaveValue("USD");
+    await expect(page.getByLabel("Department", { exact: true })).toHaveValue(department);
+    await page.getByLabel("Product or service name", { exact: true }).fill("Green carry bag");
+    await page.getByLabel("Price (optional)", { exact: true }).fill("25.00");
+    await page.getByRole("button", { name: "Create product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    await page.getByRole("button", { name: "Duplicate Blue carry bag", exact: true }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
+      "Blue carry bag (copy)",
+    );
+    await expect(page.getByLabel("Price (optional)", { exact: true })).toHaveValue("19.95");
+    await expect(page.getByLabel("Availability", { exact: true })).toHaveValue("archived");
+    expect(
+      (
+        await fixture.pool.query("SELECT count(*)::int AS n FROM products WHERE shop_id=$1", [
+          fixture.shop,
+        ])
+      ).rows[0].n,
+    ).toBe(2);
+    await page.getByLabel("Product or service name", { exact: true }).fill("Travel carry bag");
+    await page.getByRole("button", { name: "Create product or service", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Product or service saved.");
+    const rows = (
+      await fixture.pool.query(
+        "SELECT name,price_minor::text,currency,availability FROM products WHERE shop_id=$1 ORDER BY position",
+        [fixture.shop],
+      )
+    ).rows;
+    expect(rows).toEqual([
+      { name: "Blue carry bag", price_minor: "1995", currency: "USD", availability: "available" },
+      { name: "Green carry bag", price_minor: "2500", currency: "USD", availability: "available" },
+      { name: "Travel carry bag", price_minor: "1995", currency: "USD", availability: "archived" },
+    ]);
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      expect(
+        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
+          .violations,
+      ).toEqual([]);
+      if (width === 390 || width === 1280) {
+        await mkdir("docs/evidence/images", { recursive: true });
+        await page.evaluate(() => {
+          (document.activeElement as HTMLElement)?.blur();
+          window.scrollTo({ top: 0, behavior: "instant" });
+        });
+        if (width === 390)
+          await page
+            .getByRole("heading", { name: "Create product or service", exact: true })
+            .scrollIntoViewIfNeeded();
+        await page.screenshot({
+          path: `docs/evidence/images/merchant-product-entry-${width}-2026-10-29.png`,
+          fullPage: width !== 390,
+        });
+      }
+    }
+  } finally {
+    await fixture.pool.end();
+  }
+});
+
+test("catalogue filters find later products and arrangement works for products and departments", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(90_000);
+  const fixture = await ownShop(page);
+  try {
+    const merchant = (
+      await fixture.pool.query("SELECT merchant_id FROM shops WHERE id=$1", [fixture.shop])
+    ).rows[0].merchant_id;
+    const department = randomUUID(),
+      other = randomUUID();
+    await fixture.pool.query(
+      "INSERT INTO departments(id,shop_id,merchant_id,name,slug,position) VALUES($1,$3,$4,'Accessories','accessories',0),($2,$3,$4,'Home','home',1)",
+      [department, other, fixture.shop, merchant],
+    );
+    const ids: string[] = [];
+    for (let index = 0; index < 24; index++) {
+      const id = randomUUID();
+      ids.push(id);
+      await fixture.pool.query(
+        "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability,position) VALUES($1,$2,$3,$4,'product',$5,$6,'UGX',5000,'available',$7)",
+        [id, fixture.shop, merchant, department, `Bag ${index}`, `bag-${index}`, index],
+      );
+    }
+    await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    await page.getByLabel("Find a product", { exact: true }).fill("Bag 23");
+    await page.getByRole("button", { name: "Find products", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Edit Bag 23", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Bag 0", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Clear product filters", exact: true }).click();
+    await page.getByLabel("In department", { exact: true }).selectOption(department);
+    await page.getByRole("button", { name: "Find products", exact: true }).click();
+    await page.getByRole("button", { name: "Next products", exact: true }).click();
+    await page.getByRole("button", { name: "Move Bag 20 up", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Display order updated.");
+    const ordered = (
+      await fixture.pool.query("SELECT name FROM products WHERE shop_id=$1 ORDER BY position,id", [
+        fixture.shop,
+      ])
+    ).rows.map((row) => row.name);
+    expect(ordered[19]).toBe("Bag 20");
+    expect(ordered[20]).toBe("Bag 19");
+    await page.getByRole("tab", { name: /^Departments/ }).click();
+    await page.getByRole("button", { name: "Move Home up", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Display order updated.");
+    expect(
+      (
+        await fixture.pool.query(
+          "SELECT name FROM departments WHERE shop_id=$1 ORDER BY position,id",
+          [fixture.shop],
+        )
+      ).rows.map((row) => row.name),
+    ).toEqual(["Home", "Accessories"]);
+    const move = { kind: "product", id: ids[0], version: 1, direction: "down" };
+    expect(
+      (
+        await page.request.post(`${fixture.root}/catalogue/move`, {
+          headers: { origin: "https://untrusted.invalid" },
+          data: move,
+        })
+      ).status(),
+    ).toBe(403);
+    const anonymous = await browser.newContext();
+    try {
+      expect(
+        (
+          await anonymous.request.post(`${origin}${fixture.root}/catalogue/move`, {
+            headers: { origin },
+            data: move,
+          })
+        ).status(),
+      ).toBe(401);
+    } finally {
+      await anonymous.close();
+    }
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+    await page.getByRole("heading", { name: "Departments", exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: "docs/evidence/images/merchant-department-order-390-2026-10-29.png",
+      fullPage: false,
+    });
+  } finally {
+    await fixture.pool.end();
+  }
+});
+
+test("replacing a dirty product editor asks before discarding its contents", async ({ page }) => {
+  const fixture = await ownShop(page);
+  try {
+    await page.goto(`/shopkeeper/shops/${fixture.shop}/catalogue`);
+    await createDepartment(page, "Draft room", "draft-room");
+    await expect(page.getByRole("status")).toHaveText("Department saved.");
+    await page.getByRole("tab", { name: /^Products/ }).click();
+    await expect(
+      page.getByRole("button", { name: "Create a department here", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByLabel("Product or service name", { exact: true })
+      .fill("Keep this unfinished product");
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.getByRole("button", { name: "Add a product", exact: true }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue(
+      "Keep this unfinished product",
+    );
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Add a product", exact: true }).click();
+    await expect(page.getByLabel("Product or service name", { exact: true })).toHaveValue("");
+  } finally {
+    await fixture.pool.end();
+  }
+});

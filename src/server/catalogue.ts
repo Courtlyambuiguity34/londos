@@ -6,6 +6,7 @@ import { requireShop, requireOperatorShop, type Actor } from "./security/authori
 import { audit } from "./security/audit";
 import { AccessError } from "./security/errors";
 import { catalogueSnapshot, journalChanges } from "./catalogue-journal";
+import { catalogueFilters } from "../modules/catalogue-tools";
 
 const slug = z
   .string()
@@ -67,9 +68,16 @@ export async function catalogueLock(client: PoolClient, actor: Actor, shopId: st
   await requireShop(client, actor, shopId, "catalogue");
   return shop;
 }
-export async function readCatalogue(pool: Pool, actor: Actor, shopId: string, offset = 0) {
+export async function readCatalogue(
+  pool: Pool,
+  actor: Actor,
+  shopId: string,
+  offset = 0,
+  input: z.input<typeof catalogueFilters> = {},
+) {
   await catalogueAccess(pool, actor, shopId, "catalogue", "support");
   const page = z.number().int().min(0).max(1000000).parse(offset);
+  const filters = catalogueFilters.parse(input);
   const departments = (
     await pool.query(
       "SELECT id,name,slug,position,archived,version FROM departments WHERE shop_id=$1 AND deleted_at IS NULL ORDER BY position,id LIMIT 100",
@@ -78,8 +86,12 @@ export async function readCatalogue(pool: Pool, actor: Actor, shopId: string, of
   ).rows;
   const products = (
     await pool.query(
-      `SELECT p.id,p.department_id,p.kind,p.name,p.slug,p.description,p.currency,p.price_minor,p.availability,p.position,p.version,pm.asset_id AS media_id FROM products p LEFT JOIN product_media pm ON pm.product_id=p.id WHERE p.shop_id=$1 AND p.deleted_at IS NULL ORDER BY p.position,p.id LIMIT 21 OFFSET $2`,
-      [shopId, page],
+      `SELECT p.id,p.department_id,p.kind,p.name,p.slug,p.description,p.currency,p.price_minor::text,p.availability,p.position,p.version,pm.asset_id AS media_id FROM products p LEFT JOIN product_media pm ON pm.product_id=p.id WHERE p.shop_id=$1 AND p.deleted_at IS NULL
+       AND ($3::text='' OR strpos(lower(p.name),lower($3))>0)
+       AND ($4::uuid IS NULL OR p.department_id=$4)
+       AND ($5::text='all' OR p.availability=$5)
+       ORDER BY p.position,p.id LIMIT 21 OFFSET $2`,
+      [shopId, page, filters.query, filters.departmentId, filters.availability],
     )
   ).rows;
   return {
@@ -87,6 +99,12 @@ export async function readCatalogue(pool: Pool, actor: Actor, shopId: string, of
     products: products.slice(0, 20),
     offset: page,
     hasMore: products.length > 20,
+    nextProductPosition: (
+      await pool.query(
+        "SELECT least(1000000,coalesce(max(position),-1)+1)::int AS position FROM products WHERE shop_id=$1 AND deleted_at IS NULL",
+        [shopId],
+      )
+    ).rows[0].position as number,
   };
 }
 export async function saveDepartment(

@@ -102,10 +102,23 @@ export function CatalogueWorkspace({
     [department, setDepartment] = useState<Department | null>(null),
     [product, setProduct] = useState<Product | null>(null),
     [preferredDepartment, setPreferredDepartment] = useState("");
+  const [copy, setCopy] = useState<Product | null>(null),
+    [productFormKey, setProductFormKey] = useState(0),
+    [productDirty, setProductDirty] = useState(false),
+    [entryDefaults, setEntryDefaults] = useState({ currency: "UGX", kind: "product" }),
+    [quickDepartment, setQuickDepartment] = useState(false),
+    [quickDepartmentName, setQuickDepartmentName] = useState(""),
+    [quickDepartmentSlug, setQuickDepartmentSlug] = useState(""),
+    [nextProductPosition, setNextProductPosition] = useState(0),
+    [filters, setFilters] = useState({ query: "", departmentId: "", availability: "all" });
+  const editValues = product ?? copy;
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       const results = await Promise.all([
-        fetch(`${root}/catalogue?offset=${offset}`, { signal: signal ?? null }),
+        fetch(
+          `${root}/catalogue?${new URLSearchParams({ offset: String(offset), q: filters.query, department: filters.departmentId, availability: filters.availability })}`,
+          { signal: signal ?? null },
+        ),
         fetch(`${root}/media`, { signal: signal ?? null }),
         fetch(`${root}/contacts`, { signal: signal ?? null }),
         fetch(`${root}/requests?offset=${requestOffset}`, { signal: signal ?? null }),
@@ -117,12 +130,13 @@ export function CatalogueWorkspace({
       setDepartments(catalogue.departments);
       setProducts(catalogue.products);
       setMore(catalogue.hasMore);
+      setNextProductPosition(catalogue.nextProductPosition);
       setMedia(assets);
       setContacts(contact);
       setRequests(inbox);
       setLoaded(true);
     },
-    [root, offset, requestOffset],
+    [root, offset, requestOffset, filters],
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -134,12 +148,21 @@ export function CatalogueWorkspace({
     return () => controller.abort();
   }, [refresh]);
   const activeDepartments = departments.filter((d) => !d.archived);
-  const desiredDepartment = product?.department_id ?? preferredDepartment;
+  const desiredDepartment = editValues?.department_id ?? preferredDepartment;
   const selectedDepartment = activeDepartments.some((d) => d.id === desiredDepartment)
     ? desiredDepartment
-    : product
+    : editValues
       ? ""
       : (activeDepartments[0]?.id ?? "");
+  useEffect(() => {
+    if (!productDirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [productDirty]);
   const processing = media.some((m) => m.state === "processing");
   useEffect(() => {
     if (!processing) return;
@@ -213,15 +236,103 @@ export function CatalogueWorkspace({
     }
   }
   function addProduct(departmentId?: string) {
-    if (
-      product &&
-      !window.confirm("Start another product? Unsaved edits to this product will be cleared.")
-    )
-      return;
+    if (!replaceProductEditor()) return;
     setProduct(null);
+    setCopy(null);
+    setProductDirty(false);
+    setProductFormKey((key) => key + 1);
     if (departmentId) setPreferredDepartment(departmentId);
     select("products");
     requestAnimationFrame(() => document.getElementById("product-name")?.focus());
+  }
+  function replaceProductEditor() {
+    return (
+      !productDirty ||
+      window.confirm("Replace this product form? Your unsaved product changes will be cleared.")
+    );
+  }
+  function editProduct(value: Product, duplicate = false) {
+    if (!replaceProductEditor()) return;
+    setProduct(duplicate ? null : value);
+    setCopy(
+      duplicate
+        ? {
+            ...value,
+            name: `${value.name.slice(0, 153)} (copy)`,
+            slug: "",
+            availability: "archived",
+          }
+        : null,
+    );
+    setProductFormKey((key) => key + 1);
+    setProductDirty(duplicate);
+    select("products");
+    setMessage(
+      duplicate
+        ? "Copy ready to edit. Nothing has been saved. Review the name and availability before saving."
+        : "",
+    );
+    requestAnimationFrame(() => document.getElementById("product-name")?.focus());
+  }
+  function createInlineDepartment() {
+    const name = quickDepartmentName.trim(),
+      slug = quickDepartmentSlug.trim() || catalogueAddress(name);
+    if (!name || !slug) {
+      setMessage("Enter a department name and a readable link using letters a–z or numbers.");
+      return;
+    }
+    void act(
+      async () => {
+        const created = await write("/departments", "POST", {
+          name,
+          slug,
+          position: Math.min(1000000, Math.max(-1, ...departments.map((d) => d.position)) + 1),
+          archived: false,
+          version: 0,
+        });
+        setPreferredDepartment(created.id);
+        if (product) setProduct({ ...product, department_id: created.id });
+        if (copy) setCopy({ ...copy, department_id: created.id });
+      },
+      "Department created and selected. Continue adding your product.",
+      () => {
+        setQuickDepartment(false);
+        setQuickDepartmentName("");
+        setQuickDepartmentSlug("");
+      },
+    );
+  }
+  function moveItem(
+    kind: "department" | "product",
+    value: { id: string; version: number },
+    direction: "up" | "down",
+  ) {
+    if (kind === "product" && productDirty) {
+      setMessage("Save or cancel your product edits before changing the order.");
+      return;
+    }
+    void act(
+      async () => {
+        const result = await write("/catalogue/move", "POST", {
+          kind,
+          id: value.id,
+          version: value.version,
+          direction,
+        });
+        if (!result.moved)
+          throw Error(
+            `This item is already ${direction === "up" ? "first" : "last"} in its display order.`,
+          );
+      },
+      "Display order updated.",
+      () => {
+        if (kind === "product") {
+          setProduct(null);
+          setCopy(null);
+          setProductFormKey((key) => key + 1);
+        }
+      },
+    );
   }
   function departmentSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -266,6 +377,8 @@ export function CatalogueWorkspace({
     event.preventDefault();
     const form = event.currentTarget,
       data = new FormData(form);
+    const another =
+      (event.nativeEvent as SubmitEvent).submitter?.getAttribute("value") === "another";
     void act(
       () =>
         write(product ? `/products/${product.id}` : "/products", product ? "PATCH" : "POST", {
@@ -281,10 +394,18 @@ export function CatalogueWorkspace({
           mediaId: field(data, "image") || null,
           version: product?.version ?? 0,
         }),
-      "Product or service saved.",
+      another
+        ? "Product or service saved. Ready for the next item in this department."
+        : "Product or service saved.",
       () => {
-        if (!product) form.reset();
+        if (another) {
+          setPreferredDepartment(field(data, "department"));
+          setEntryDefaults({ currency: field(data, "currency"), kind: field(data, "kind") });
+        }
+        setProductDirty(false);
         setProduct(null);
+        setCopy(null);
+        setProductFormKey((key) => key + 1);
       },
     );
   }
@@ -471,6 +592,28 @@ export function CatalogueWorkspace({
               >
                 Edit {d.name}
               </button>
+              {!d.archived ? (
+                <div className="catalogue-order-actions" aria-label={`Arrange ${d.name}`}>
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={busy || !loaded || activeDepartments[0]?.id === d.id}
+                    onClick={() => moveItem("department", d, "up")}
+                    aria-label={`Move ${d.name} up`}
+                  >
+                    Move up
+                  </button>
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={busy || !loaded || activeDepartments.at(-1)?.id === d.id}
+                    onClick={() => moveItem("department", d, "down")}
+                    aria-label={`Move ${d.name} down`}
+                  >
+                    Move down
+                  </button>
+                </div>
+              ) : null}
               <button
                 type="button"
                 className="text-button catalogue-delete"
@@ -571,43 +714,64 @@ export function CatalogueWorkspace({
         aria-labelledby="products-title"
       >
         <h2 id="products-title">Products and services</h2>
-        {!products.length && (
-          <div className="catalogue-empty">
-            <h3>Make room for your first product.</h3>
-            <p>
-              {activeDepartments.length
-                ? "Choose an active department below, then add your product, photo and price."
-                : departments.length
-                  ? "Your departments are archived, so they are not available for new products. Activate one in Departments, then return here."
-                  : "Create a department first, then add a product or service with its photo and price."}
-            </p>
-            {activeDepartments.length > 0 ? (
-              <button type="button" className="button" onClick={() => addProduct()}>
-                Add your first product
-              </button>
-            ) : (
-              <button
-                className="button button--outline"
-                type="button"
-                onClick={() => select("departments")}
-              >
-                {departments.length ? "View archived departments" : "Create your first department"}
-              </button>
-            )}
-          </div>
-        )}
+        {!products.length &&
+          !filters.query &&
+          !filters.departmentId &&
+          filters.availability === "all" && (
+            <div className="catalogue-empty">
+              <h3>Make room for your first product.</h3>
+              <p>
+                {activeDepartments.length
+                  ? "Choose an active department below, then add your product, photo and price."
+                  : departments.length
+                    ? "Your departments are archived, so they are not available for new products. Activate one in Departments, then return here."
+                    : "Create a department first, then add a product or service with its photo and price."}
+              </p>
+              {activeDepartments.length > 0 ? (
+                <button type="button" className="button" onClick={() => addProduct()}>
+                  Add your first product
+                </button>
+              ) : (
+                <button
+                  className="button button--outline"
+                  type="button"
+                  onClick={() => {
+                    if (departments.length) select("departments");
+                    else {
+                      setQuickDepartment(true);
+                      requestAnimationFrame(() =>
+                        document.getElementById("quick-department-name")?.focus(),
+                      );
+                    }
+                  }}
+                >
+                  {departments.length
+                    ? "View archived departments"
+                    : "Create your first department"}
+                </button>
+              )}
+            </div>
+          )}
         <form
           className="account-form editor-form-grid"
-          key={product ? `${product.id}:${product.version}` : "new-product"}
+          key={`${product?.id ?? "new"}:${productFormKey}`}
           onSubmit={productSubmit}
+          onChange={() => setProductDirty(true)}
         >
           <h3>{product ? "Edit product or service" : "Create product or service"}</h3>
+          {productDirty ? <p className="editor-hint">Unsaved product changes</p> : null}
+          {copy ? (
+            <p className="notice">
+              You are editing a new copy. It starts hidden from customers; choose Availability when
+              it is ready.
+            </p>
+          ) : null}
           <div className="editor-form-field">
             <label htmlFor="product-name">Product or service name</label>
             <input
               id="product-name"
               name="name"
-              defaultValue={product?.name}
+              defaultValue={editValues?.name}
               required
               maxLength={160}
             />
@@ -622,6 +786,7 @@ export function CatalogueWorkspace({
               onChange={(event) => {
                 setPreferredDepartment(event.target.value);
                 if (product) setProduct({ ...product, department_id: event.target.value });
+                if (copy) setCopy({ ...copy, department_id: event.target.value });
               }}
               required
             >
@@ -643,6 +808,55 @@ export function CatalogueWorkspace({
                 ? `${activeDepartments.length} active departments available. Choose where this product belongs.`
                 : "Open Departments and activate an archived department or create a new one."}
             </p>
+            <button
+              type="button"
+              className="text-button"
+              disabled={busy || !loaded}
+              onClick={() => setQuickDepartment((value) => !value)}
+            >
+              Create a department here
+            </button>
+            {quickDepartment ? (
+              <div
+                className="inline-department"
+                role="group"
+                aria-label="Create a department without leaving this product"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && event.target instanceof HTMLInputElement) {
+                    event.preventDefault();
+                    if (!busy && loaded) createInlineDepartment();
+                  }
+                }}
+              >
+                <label htmlFor="quick-department-name">New department name</label>
+                <input
+                  id="quick-department-name"
+                  value={quickDepartmentName}
+                  onChange={(event) => setQuickDepartmentName(event.target.value)}
+                  maxLength={120}
+                />
+                <details>
+                  <summary>Department link (optional)</summary>
+                  <label htmlFor="quick-department-link">New department link</label>
+                  <input
+                    id="quick-department-link"
+                    value={quickDepartmentSlug}
+                    onChange={(event) => setQuickDepartmentSlug(event.target.value)}
+                    maxLength={80}
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    placeholder="Made from the name"
+                  />
+                </details>
+                <button
+                  type="button"
+                  className="button button--small"
+                  disabled={busy || !loaded || !quickDepartmentName.trim()}
+                  onClick={createInlineDepartment}
+                >
+                  Create & select department
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="editor-form-field">
@@ -650,13 +864,17 @@ export function CatalogueWorkspace({
             <textarea
               id="product-description"
               name="description"
-              defaultValue={product?.description}
+              defaultValue={editValues?.description}
               maxLength={2000}
             />
           </div>
           <div className="editor-form-field">
             <label htmlFor="product-currency">Currency</label>
-            <select id="product-currency" name="currency" defaultValue={product?.currency ?? "UGX"}>
+            <select
+              id="product-currency"
+              name="currency"
+              defaultValue={editValues?.currency ?? entryDefaults.currency}
+            >
               {["UGX", "USD", "KES", "EUR", "GBP"].map((c) => (
                 <option key={c}>{c}</option>
               ))}
@@ -667,7 +885,10 @@ export function CatalogueWorkspace({
             <input
               id="product-price"
               name="price"
-              defaultValue={editablePrice(product?.price_minor ?? null, product?.currency ?? "UGX")}
+              defaultValue={editablePrice(
+                editValues?.price_minor ?? null,
+                editValues?.currency ?? entryDefaults.currency,
+              )}
               inputMode="decimal"
               maxLength={23}
               placeholder="For example, 5000"
@@ -682,7 +903,7 @@ export function CatalogueWorkspace({
             <select
               id="product-availability"
               name="availability"
-              defaultValue={product?.availability ?? "available"}
+              defaultValue={editValues?.availability ?? "available"}
             >
               {["available", "unavailable", "archived"].map((a) => (
                 <option key={a} value={a}>
@@ -699,17 +920,10 @@ export function CatalogueWorkspace({
               ))}
             </select>
           </div>
-          <input
-            name="position"
-            type="hidden"
-            value={
-              product?.position ??
-              Math.min(1000000, Math.max(-1, ...products.map((p) => p.position)) + 1)
-            }
-          />
+          <input name="position" type="hidden" value={product?.position ?? nextProductPosition} />
           <div className="editor-form-field">
             <label htmlFor="product-image">Product photo</label>
-            <select id="product-image" name="image" defaultValue={product?.media_id ?? ""}>
+            <select id="product-image" name="image" defaultValue={editValues?.media_id ?? ""}>
               <option value="">No image</option>
               {media
                 .filter((m) => m.state === "ready")
@@ -731,7 +945,7 @@ export function CatalogueWorkspace({
               <input
                 id="product-slug"
                 name="slug"
-                defaultValue={product?.slug}
+                defaultValue={editValues?.slug}
                 placeholder="Made from the product name if left blank"
                 pattern="[a-z0-9]+(-[a-z0-9]+)*"
                 maxLength={80}
@@ -739,7 +953,11 @@ export function CatalogueWorkspace({
             </div>{" "}
             <div className="editor-form-field">
               <label htmlFor="product-kind">Type</label>
-              <select id="product-kind" name="kind" defaultValue={product?.kind ?? "product"}>
+              <select
+                id="product-kind"
+                name="kind"
+                defaultValue={editValues?.kind ?? entryDefaults.kind}
+              >
                 <option value="product">Product</option>
                 <option value="service">Service</option>
               </select>
@@ -756,16 +974,115 @@ export function CatalogueWorkspace({
             <button className="button" disabled={busy || !loaded || !activeDepartments.length}>
               {product ? "Save product or service" : "Create product or service"}
             </button>
-            {product && (
-              <button className="text-button" type="button" onClick={() => setProduct(null)}>
+            <button
+              type="submit"
+              name="afterSave"
+              value="another"
+              className="button button--outline"
+              disabled={busy || !loaded || !activeDepartments.length}
+            >
+              Save & add another
+            </button>
+            {product || copy ? (
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => {
+                  if (replaceProductEditor()) {
+                    setProduct(null);
+                    setCopy(null);
+                    setProductDirty(false);
+                    setProductFormKey((key) => key + 1);
+                  }
+                }}
+              >
                 Cancel product edit
               </button>
-            )}
+            ) : null}
           </div>
         </form>
         <h3 className="merchant-list-heading">Your products & services</h3>
+        <form
+          key={JSON.stringify(filters)}
+          className="catalogue-filters"
+          aria-label="Find catalogue products"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            setOffset(0);
+            const next = {
+              query: field(data, "query").trim(),
+              departmentId: field(data, "department"),
+              availability: field(data, "availability"),
+            };
+            setFilters(next);
+            if (!editValues && !productDirty && next.departmentId)
+              setPreferredDepartment(next.departmentId);
+          }}
+        >
+          <div>
+            <label htmlFor="catalogue-query">Find a product</label>
+            <input
+              id="catalogue-query"
+              name="query"
+              type="search"
+              maxLength={80}
+              defaultValue={filters.query}
+              placeholder="Search product names"
+            />
+          </div>
+          <div>
+            <label htmlFor="catalogue-department-filter">In department</label>
+            <select
+              id="catalogue-department-filter"
+              name="department"
+              defaultValue={filters.departmentId}
+            >
+              <option value="">All departments</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                  {d.archived ? " (archived)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="catalogue-availability-filter">Listing status</label>
+            <select
+              id="catalogue-availability-filter"
+              name="availability"
+              defaultValue={filters.availability}
+            >
+              <option value="all">All statuses</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+              <option value="archived">Hidden</option>
+            </select>
+          </div>
+          <button className="button button--small" disabled={busy}>
+            Find products
+          </button>
+          {filters.query || filters.departmentId || filters.availability !== "all" ? (
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                setFilters({ query: "", departmentId: "", availability: "all" });
+                setOffset(0);
+              }}
+            >
+              Clear product filters
+            </button>
+          ) : null}
+        </form>
+        <p className="editor-hint">
+          {products.length} on this page. Choose one active department and clear name/status filters
+          to arrange its visible products.
+        </p>
+        {!products.length && loaded ? <p>No products match these filters.</p> : null}
         <ul className="workspace-list">
-          {products.map((p) => (
+          {products.map((p, index) => (
             <li key={p.id}>
               <div className="catalogue-product-identity">
                 {p.media_id ? (
@@ -794,16 +1111,44 @@ export function CatalogueWorkspace({
                 </div>
               </div>
               <div className="account-links">
-                <button
-                  className="text-button"
-                  disabled={busy}
-                  onClick={() => {
-                    select("products");
-                    setProduct(p);
-                  }}
-                >
+                <button className="text-button" disabled={busy} onClick={() => editProduct(p)}>
                   Edit {p.name}
                 </button>
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy || !loaded}
+                  onClick={() => editProduct(p, true)}
+                  aria-label={`Duplicate ${p.name}`}
+                >
+                  Duplicate
+                </button>
+                {filters.departmentId &&
+                !filters.query &&
+                filters.availability === "all" &&
+                !departments.find((d) => d.id === filters.departmentId)?.archived &&
+                p.availability !== "archived" ? (
+                  <div className="catalogue-order-actions">
+                    <button
+                      type="button"
+                      className="text-button"
+                      disabled={busy || !loaded || (offset === 0 && index === 0)}
+                      onClick={() => moveItem("product", p, "up")}
+                      aria-label={`Move ${p.name} up`}
+                    >
+                      Move up
+                    </button>
+                    <button
+                      type="button"
+                      className="text-button"
+                      disabled={busy || !loaded || (!more && index === products.length - 1)}
+                      onClick={() => moveItem("product", p, "down")}
+                      aria-label={`Move ${p.name} down`}
+                    >
+                      Move down
+                    </button>
+                  </div>
+                ) : null}
                 <button
                   type="button"
                   className="text-button catalogue-delete"

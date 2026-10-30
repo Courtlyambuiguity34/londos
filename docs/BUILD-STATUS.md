@@ -1,5 +1,15 @@
 # Build status and next model setting
 
+**Merchant entry and organisation — 30 October 2026:** reviewed product and shop
+setup workflows from Alibaba, Amazon and Shopify against `e8e7a69`. Merchants can
+create departments within product entry, duplicate into an unsaved hidden copy,
+save and add another, search/filter the full catalogue, and arrange active
+departments/products with version-checked writes and recovery history. Setup
+links to its first incomplete task. The [review](evidence/MERCHANT-WORKFLOWS-2026-10-29.md)
+records sources, safeguards and validation, including the 10,000-product case.
+The [shopkeeper guide](SHOPKEEPER-QUICK-START.md) explains the controls. No new
+migration, dependency, provider or environment key is required.
+
 **Alibaba, Amazon and Shopify benchmark — 29 October 2026:** compared the hosted
 branch at `bc4c971` with first-party platform guidance. Product comparison now
 supports four current public listings and shared links. Product pages show

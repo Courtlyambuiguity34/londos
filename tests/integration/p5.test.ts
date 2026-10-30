@@ -45,6 +45,8 @@ import {
 import { claim, acknowledge, fail, type Job } from "../../src/server/jobs/queue";
 import { LocalNotifications, LocalPrivateStorage } from "../../src/server/jobs/adapters";
 import { readDesign, saveDesign, publishDesign } from "../../src/server/shop-design";
+import { moveCatalogueItem } from "../../src/server/catalogue-arrangement";
+import { readPublicShop } from "../../src/server/public-shop";
 
 const parent = new Pool({ connectionString: process.env.DATABASE_URL }),
   databaseName = `londos_test_${randomUUID().replaceAll("-", "")}`;
@@ -466,6 +468,251 @@ test("product enquiries keep an owned listing in the merchant inbox and respect 
   ).rejects.toMatchObject({ status: 404 });
   expect((await listGuestRequests(pool, actors.ownerA!, shop))[0]?.product_name).toBe(
     "Fictional shoes",
+  );
+});
+
+test("catalogue filters qualify the full collection before paging and preserve literal search characters", async () => {
+  const other = (
+    await saveDepartment(pool, actors.ownerA!, shop, null, {
+      name: "Other room",
+      slug: "other-room",
+      position: 1,
+      archived: false,
+      version: 0,
+    })
+  ).id;
+  const expected: string[] = [];
+  for (let index = 0; index < 25; index++) {
+    const created = await saveProduct(pool, actors.ownerA!, shop, null, {
+      ...product(),
+      name: `Needle ${index}`,
+      slug: `needle-${index}`,
+      position: index,
+      availability: index % 2 ? "available" : "unavailable",
+    });
+    if (index % 2) expected.push(created.id);
+  }
+  await saveProduct(pool, actors.ownerA!, shop, null, {
+    ...product(),
+    departmentId: other,
+    name: "Needle other",
+    slug: "needle-other",
+    position: 100,
+  });
+  await saveProduct(pool, actors.ownerA!, shop, null, {
+    ...product(),
+    name: "50%_off",
+    slug: "literal",
+    position: 101,
+  });
+  const filters = { query: "needle", departmentId: department, availability: "available" as const };
+  expect(
+    (await readCatalogue(pool, actors.ownerA!, shop, 0, filters)).products.map((p) => p.id),
+  ).toEqual(expected);
+  const first = await readCatalogue(pool, actors.ownerA!, shop, 0, {
+    query: "needle",
+    departmentId: department,
+  });
+  const second = await readCatalogue(pool, actors.ownerA!, shop, 20, {
+    query: "needle",
+    departmentId: department,
+  });
+  expect(first.products).toHaveLength(20);
+  expect(first.hasMore).toBe(true);
+  expect(second.products).toHaveLength(5);
+  expect(second.hasMore).toBe(false);
+  expect(new Set([...first.products, ...second.products].map((p) => p.id)).size).toBe(25);
+  expect(
+    (await readCatalogue(pool, actors.ownerA!, shop, 0, { query: "%_" })).products.map(
+      (p) => p.name,
+    ),
+  ).toEqual(["50%_off"]);
+  expect(
+    (await readCatalogue(pool, actors.ownerA!, shop, 0, { departmentId: randomUUID() })).products,
+  ).toEqual([]);
+  expect((await readCatalogue(pool, actors.ownerA!, shop)).nextProductPosition).toBe(102);
+  await expect(readCatalogue(pool, actors.ownerB!, shop, 0, filters)).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+test("arrangement crosses page boundaries, resolves tied positions, journals all changes and rejects stale or foreign writes", async () => {
+  const ids: string[] = [];
+  for (let index = 0; index < 24; index++)
+    ids.push(
+      (
+        await saveProduct(pool, actors.ownerA!, shop, null, {
+          ...product(),
+          name: `Order ${index}`,
+          slug: `order-${index}`,
+          position: 0,
+        })
+      ).id,
+    );
+  const original = (
+    await pool.query("SELECT id,version FROM products WHERE shop_id=$1 ORDER BY position,id", [
+      shop,
+    ])
+  ).rows;
+  const target = original[20]!;
+  await publishFixtureShop();
+  await expect(
+    moveCatalogueItem(pool, actors.ownerB!, shop, {
+      kind: "product",
+      id: target.id,
+      version: target.version,
+      direction: "up",
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  const foreign = (
+    await pool.query("SELECT id,version FROM products WHERE shop_id=$1 LIMIT 1", [seedIds.shopB])
+  ).rows[0];
+  await expect(
+    moveCatalogueItem(pool, actors.ownerA!, shop, {
+      kind: "product",
+      id: foreign.id,
+      version: foreign.version,
+      direction: "up",
+    }),
+  ).rejects.toMatchObject({ status: 404 });
+  expect(
+    await moveCatalogueItem(pool, actors.ownerA!, shop, {
+      kind: "product",
+      id: target.id,
+      version: target.version,
+      direction: "up",
+    }),
+  ).toEqual({ moved: true });
+  const ordered = (
+    await pool.query(
+      "SELECT id,position,version FROM products WHERE shop_id=$1 ORDER BY position,id",
+      [shop],
+    )
+  ).rows;
+  const expected = original.map((row) => row.id);
+  [expected[19], expected[20]] = [expected[20]!, expected[19]!];
+  expect(ordered.map((row) => row.id)).toEqual(expected);
+  expect(
+    (await readPublicShop(pool, shop, { department: "new-arrivals" })).products.map(
+      (row) => row.id,
+    ),
+  ).toEqual(expected.slice(0, 20));
+  expect(new Set(ordered.map((row) => row.position)).size).toBe(24);
+  await expect(
+    moveCatalogueItem(pool, actors.ownerA!, shop, {
+      kind: "product",
+      id: target.id,
+      version: target.version,
+      direction: "down",
+    }),
+  ).rejects.toMatchObject({ code: "stale_version" });
+  const history = (
+    await pool.query(
+      "SELECT before_state,after_state,batch_id FROM catalogue_history WHERE shop_id=$1 AND batch_id IS NOT NULL",
+      [shop],
+    )
+  ).rows;
+  expect(history).toHaveLength(24);
+  expect(new Set(history.map((row) => row.batch_id)).size).toBe(1);
+  for (const row of history)
+    expect(row.after_state.data.priceMinor).toBe(row.before_state.data.priceMinor);
+  const first = ordered[0]!;
+  expect(
+    await moveCatalogueItem(pool, actors.ownerA!, shop, {
+      kind: "product",
+      id: first.id,
+      version: first.version,
+      direction: "up",
+    }),
+  ).toEqual({ moved: false });
+  const concurrent = await Promise.allSettled(
+    [0, 1].map(() =>
+      moveCatalogueItem(pool, actors.ownerA!, shop, {
+        kind: "product",
+        id: first.id,
+        version: first.version,
+        direction: "down",
+      }),
+    ),
+  );
+  expect(concurrent.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  expect(concurrent.find((r) => r.status === "rejected")).toMatchObject({
+    reason: { code: "stale_version" },
+  });
+});
+
+test("department arrangement preserves other scopes and does not move archived records", async () => {
+  const another = await saveDepartment(pool, actors.ownerA!, shop, null, {
+    name: "Second room",
+    slug: "second-room",
+    position: 1,
+    archived: false,
+    version: 0,
+  });
+  const item = await saveProduct(pool, actors.ownerA!, shop, null, product());
+  await moveCatalogueItem(pool, actors.ownerA!, shop, {
+    kind: "department",
+    id: another.id,
+    version: another.version,
+    direction: "up",
+  });
+  expect((await readCatalogue(pool, actors.ownerA!, shop)).departments.map((d) => d.id)).toEqual([
+    another.id,
+    department,
+  ]);
+  expect(
+    (await pool.query("SELECT position,version FROM products WHERE id=$1", [item.id])).rows[0],
+  ).toMatchObject({ position: 1, version: 1 });
+  await pool.query("UPDATE products SET availability='archived' WHERE id=$1", [item.id]);
+  await expect(
+    moveCatalogueItem(pool, actors.ownerA!, shop, {
+      kind: "product",
+      id: item.id,
+      version: 1,
+      direction: "down",
+    }),
+  ).rejects.toMatchObject({ code: "arrangement_requires_active_item" });
+});
+
+test("first arrangement handles the full ten-thousand-product catalogue without changing listing data", async () => {
+  await pool.query(
+    "INSERT INTO products(id,shop_id,merchant_id,department_id,kind,name,slug,currency,price_minor,availability,position) SELECT gen_random_uuid(),$1,$2,$3,'product','Large '||n,'large-'||n,'UGX',5000,'available',0 FROM generate_series(1,10000) n",
+    [shop, seedIds.merchantA, department],
+  );
+  const target = (
+    await pool.query(
+      "SELECT id,version FROM products WHERE shop_id=$1 ORDER BY position,id OFFSET 5000 LIMIT 1",
+      [shop],
+    )
+  ).rows[0];
+  const started = performance.now();
+  await moveCatalogueItem(pool, actors.ownerA!, shop, {
+    kind: "product",
+    id: target.id,
+    version: target.version,
+    direction: "up",
+  });
+  const result = (
+    await pool.query(
+      "SELECT count(*)::int AS n,count(DISTINCT position)::int AS positions,bool_and(price_minor=5000 AND currency='UGX' AND availability='available') AS preserved FROM products WHERE shop_id=$1",
+      [shop],
+    )
+  ).rows[0];
+  expect(result).toEqual({ n: 10000, positions: 10000, preserved: true });
+  expect(
+    (
+      await pool.query(
+        "SELECT id FROM products WHERE shop_id=$1 ORDER BY position,id OFFSET 4999 LIMIT 1",
+        [shop],
+      )
+    ).rows[0].id,
+  ).toBe(target.id);
+  console.info(
+    JSON.stringify({
+      check: "catalogue-reorder-limit",
+      products: 10000,
+      elapsedMs: Math.round(performance.now() - started),
+    }),
   );
 });
 
